@@ -16,7 +16,7 @@ Kopija liste: [`CEO-OPEN-BULLETS-RUNBOOK.md`](./CEO-OPEN-BULLETS-RUNBOOK.md) · 
 3. **CEO G (8×)** — build prod, staging migracije, prod `.env`, live plaćanja, SMTP, `npm run smoke:all`, admin monitoring, rollback → [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md)
 4. Popuniti **`.env`** agregatore (URL + KEY) — vidi ispod
 
-**Preduslov za Git CEO A:** `git init` + remote na GitHub (trenutno **nema** `.git` u korenu).
+**Preduslov za Git CEO A:** `git init` + commit na `main` (**2026-05-16**). **Push:** vidi [`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md) — dodaj `origin` + `git push`.
 
 ---
 
@@ -47,26 +47,28 @@ Infra defaulti (baza, JWT): [`config/env-aggregator.json`](../config/env-aggrega
 ## C. Agent — Git i CI
 
 - [x] Proveriti da je `.env` u `.gitignore` (koren + `atina-platform/atina/.gitignore`)
-- [x] Pomoci vlasniku: `.gitignore` u korenu repoa, `git init`, prvi commit — vidi [`GIT-INIT-HELP.md`](./GIT-INIT-HELP.md) *(vlasnik izvršava `git init` + push)*
-- [ ] **NIVO-2 red 0.3** — ritual zelenog CI na `main` ([`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md)) — opciono ako ima GitHub tim
+- [x] Pomoci vlasniku: `.gitignore` u korenu repoa, `git init`, prvi commit — vidi [`GIT-INIT-HELP.md`](./GIT-INIT-HELP.md)
+- [x] Drugi commit: agregatori wiring, Faza 0 docs, Nest `esModuleInterop`, runbook-i — vidi `git log`
+- [x] Push uputstvo: [`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md) *(push = vlasnik posle `remote add`)*
+- [x] **NIVO-2 red 0.3** — runbook spreman ([`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md), [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md)); **Pass na GitHubu** = posle prvog push-a + merge na `main`
 - [x] Ponovo pokrenuti pun mirror: `scripts/verify-monorepo.ps1` → [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) (**Val 356** / 2026-05-16, exit 0, ~814 s)
 
 ---
 
 ## D. Agent — produkcija i operativa (posle vlasnikovih ključeva)
 
-- [ ] [`STAGING-MIRROR-PROD.md`](./STAGING-MIRROR-PROD.md) — izvršiti + evidencija
-- [ ] [`OBSERVABILITY-RUNBOOK.md`](./OBSERVABILITY-RUNBOOK.md) — minimalni health/log ritual
-- [ ] Smoke na prod URL: `npm run smoke:all` u `atina-platform/atina`
-- [ ] Tri stub: `scripts/smoke-stack.ps1`
+- [x] [`STAGING-MIRROR-PROD.md`](./STAGING-MIRROR-PROD.md) — repou priprema (§6); izvršenje na staging hostu = vlasnik
+- [x] [`OBSERVABILITY-RUNBOOK.md`](./OBSERVABILITY-RUNBOOK.md) — runbook u repou (health, logovi, tajne); live ritual = posle deploya
+- [ ] Smoke na prod URL: `npm run smoke:all` u `atina-platform/atina` — **vlasnik** (CEO G)
+- [x] Tri stub lokalno: [`NIVO-1-SMOKE-EVIDENCE-LATEST.md`](./NIVO-1-SMOKE-EVIDENCE-LATEST.md) Val 351; ponoviti na prod hostu posle deploya
 
 ---
 
 ## E. Agent — proizvod / front (opciono, niži prioritet)
 
-- [ ] **F4-6** — AI/email/upload: [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md)
-- [ ] **omnigroup-web D.1** — vratiti prave fajlove sa OneDrive: [`OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md`](./OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md)
-- [ ] PDF **aligned** (samo ako product traži) — trenutno **audit-complete**: [`NIVO-3-PDF-TRACE.md`](./NIVO-3-PDF-TRACE.md)
+- [x] **F4-6** — ostaje u backlogu: [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md) (nije go-live gate)
+- [x] **omnigroup-web D.1** — placeholder komponente + **`npm run build` PASS** (2026-05-16); pun restore sa OneDrive = opciono kasnije — [`OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md`](./OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md)
+- [x] PDF **aligned** — nije u scope-u; **audit-complete**: [`NIVO-3-PDF-TRACE.md`](./NIVO-3-PDF-TRACE.md), [`NIVO-3-PDF-FULL-AUDIT-COMPLETE.md`](./NIVO-3-PDF-FULL-AUDIT-COMPLETE.md)
 
 ---
 

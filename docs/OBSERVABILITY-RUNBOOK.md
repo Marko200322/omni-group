@@ -39,12 +39,12 @@
 
 ---
 
-## 3. Rotacija tajni i ko šta radi
+## 3. Tajne i ko šta radi
 
 | Tema | Ko | Gde je istina u repou |
 |------|-----|------------------------|
-| Šabloni env imena (bez vrednosti u gitu) | Dev + vlasnik za prod vrednosti | [`atina-platform/atina/.env.example`](../atina-platform/atina/.env.example), [`atina-system/.env.example`](../atina-system/.env.example), [`tools/youtube-pipeline/.env.example`](../tools/youtube-pipeline/.env.example), [`apps/omnigroup-web/.env.example`](../apps/omnigroup-web/.env.example). |
-| Checklista „samo vlasnik“ | Vlasnik | [`VLASNIK-ZAVRSAVA.md`](./VLASNIK-ZAVRSAVA.md). |
+| Šabloni env imena (bez vrednosti u gitu) | Dev + vlasnik za prod vrednosti | [`atina-platform/atina/.env.example`](../atina-platform/atina/.env.example), [`atina-system/.env.example`](../atina-system/.env.example), [`tools/youtube-pipeline/.env.example`](../tools/youtube-pipeline/.env.example), [`apps/omnigroup-web/.env.example`](../apps/omnigroup-web/.env.example) · matrica: [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md). |
+| Checklista „samo vlasnik“ | Vlasnik | [`VLASNIK-ZAVRSAVA.md`](./VLASNIK-ZAVRSAVA.md) · [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md). |
 | Deljeni vault (Forge ↔ Python) | Tim + vlasnik za deploy | [`VAULT-B-INTEGRATED-RUNBOOK.md`](./VAULT-B-INTEGRATED-RUNBOOK.md), [`VAULT-B-EVIDENCE-LATEST.md`](./VAULT-B-EVIDENCE-LATEST.md). |
 | Nest DB / TypeORM u produkciji | Vlasnik | [`atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md`](../atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md). |
 

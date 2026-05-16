@@ -47,3 +47,11 @@
 Smarta se **mirror pattern** kada su §1–§4 potvrđeni za trenutni release kandidat i zabeleženi u evidenciji (npr. staging deo [`CEO-G-PRODUCTION-EVIDENCE.template.md`](./CEO-G-PRODUCTION-EVIDENCE.template.md) ili odgovarajući `*-EVIDENCE-LATEST.md` po dogovoru). Samo dokument u repou ne zatvara operativni red — vlasnik/tim potvrđuje izvršenje.
 
 **Šablon za kratki izvršni zapis (kopiraj sekcije — datum, vlasnik/owner, checklist vs ovaj dokument §1–§4, migracije, smoke refs, opciono SMTP, Pass/Fail):** [`STAGING-EXECUTION-LOG.template.md`](./STAGING-EXECUTION-LOG.template.md).
+
+---
+
+## 6. Repou priprema (agent, 2026-05-16)
+
+- [x] Runbook-i i šabloni usklađeni (`STAGING-RELEASE-CHECKLIST`, `STAGING-EXECUTION-LOG.template`, `CEO-G` šabloni).
+- [x] `apps/omnigroup-web` **`npm run build`** PASS (D.1 placeholder komponente u repou).
+- [ ] **Izvršenje na staging hostu** (§1–§4) — vlasnik posle deploy-a i `.env`.
