@@ -1,0 +1,123 @@
+# Monorepo CI — jobs: `python`, `atina-saas`, `omnigroup-web`, `atina-system`, `compose` (docker compose config: Nest merge, root Python, Atina Node).
+# Job `python` first runs `scripts/audit-doc-gate-references.ps1` (pwsh): Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md — obuhvat *.md, *.txt, *.yml, *.yaml, *.ps1, *.ini. Pairing: omnigroup or SkipOmnigroup with `verify-monorepo`, and `smoke:all` wherever `verify-monorepo` or `smoke-stack` is cited, and `NIVO-1-DRYRUN-LOG` wherever `EVIDENCE-INDEX` is cited (Get-Help on that script). jobs.python.name is the GitHub checks UI label; required-check updates: docs/GIT-BRANCH-PROTECTION.md.
+# Python tests use `python -m pytest`; ensure `pytest` is in root requirements.txt (pip install -r requirements.txt).
+# Runbook: repo root NIVO-1-START.md, merge/pre-PR: CONTRIBUTING.md, F.4: docs/NIVO-1-F4-TIM-CHECKLIST.md.
+# LATEST local exemplars: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+# Lokalni paritet bez Actions: scripts/verify-monorepo.ps1 (full gate: Postgres + Docker + apps/omnigroup-web build); opciono scripts/smoke-stack.ps1 kad su Astra+Nest podignuti (HTTP). Lokalno bez Postgresa: -SkipNestVerifyCi (atina-system verify:n1; CI atina-system job still runs verify:ci). Lokalno bez Next build: -SkipOmnigroupWeb (CI omnigroup-web job unchanged). Lokalno bez doc gate audita (Doslednost dok doc gate md/txt+yaml/ps1/ini, uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md): -SkipDocAudit (job python u Actions i dalje pokreće audit; GitHub prikaz obavezne provere: Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md). Get-Help: scripts/README.md. Lokalni Nest verify:ci: POSTGRES_* mora pratiti objavljeni host DB port — Port mismatch: scripts/README.md.
+# Atina Express SaaS (van ovog workflow-a): iz atina-platform/atina pokreni npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Local notes — Smoke tests). smoke-stack.ps1 za Atina Node šalje samo GET /health kada je stub uključen.
+
+name: CI (monorepo)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # PR branches: cancel superseded pushes. Default branch: let each run finish (audit / release hygiene).
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    # Status-check label in branch protection: CI (monorepo) / Python (Doslednost dok + pytest). Legacy runs may still list "Python (doc audit + pytest)" until a fresh workflow run. See docs/GIT-BRANCH-PROTECTION.md when updating required checks.
+    name: Python (Doslednost dok + pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Doslednost dok — doc gate (audit-doc-gate-references.ps1; md/txt + yaml/ps1/ini; uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG; scripts/README.md)
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/audit-doc-gate-references.ps1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python -m pytest
+
+  atina-saas:
+    name: Atina SaaS (test:ci)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: atina-platform/atina
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: atina-platform/atina/.nvmrc
+          cache: npm
+          cache-dependency-path: atina-platform/atina/package-lock.json
+      - run: npm ci
+      - run: npm run test:ci
+
+  omnigroup-web:
+    name: Omnigroup web (Next.js build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/omnigroup-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/omnigroup-web/.nvmrc
+          cache: npm
+          cache-dependency-path: apps/omnigroup-web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  atina-system:
+    name: Atina System (verify:ci)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: atina
+          POSTGRES_PASSWORD: atina
+          POSTGRES_DB: atina
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U atina -d atina"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+      NODE_ENV: test
+      JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+      E2E_WITH_DB: "1"
+    defaults:
+      run:
+        working-directory: atina-system
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: atina-system/.nvmrc
+          cache: npm
+          cache-dependency-path: atina-system/package-lock.json
+      - run: npm ci
+      - run: npm run verify:ci
+
+  compose:
+    name: Compose (docker compose config)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Nest stack compose (atina + port 3001 override)
+        run: docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml config --quiet
+      - name: Validate root Python stack compose
+        run: docker compose -f docker-compose.yml config --quiet
+      - name: Validate Atina Node SaaS compose (atina-platform/atina)
+        run: docker compose -f atina-platform/atina/docker-compose.yml config --quiet

@@ -1,0 +1,18 @@
+# PRIMER — ne učitava se automatski. Kopiraj kao `docker-compose.override.yml` pored ovog fajla
+# kad želiš da Node Forge u kontejneru koristi ISTI SQLite kao root Python stack (bind mount).
+#
+# Preduslov: u korenu repoa postoji folder `omni-shared-vault/` i root `docker-compose.override.yml`
+# (iz `docker-compose.override.vault-bindmount.example.yml`) takođe mapira taj folder na `/data`.
+#
+# U kontejneru: FORGE_VAULT_PATH=/data/vault.db (isti fajl kao Python VAULT_PATH=/data/vault.db).
+# Putanja ../../omni-shared-vault je od ovog direktorijuma (atina-platform/atina) do korena repoa.
+#
+# Dokumentacija: ../../../docs/VAULT-B-INTEGRATED-RUNBOOK.md · ../../../docs/VAULT-ALIGNMENT-NOTES.md
+
+services:
+  app:
+    environment:
+      # Isti fajl kao Python VAULT_PATH kada root compose mapira omni-shared-vault → /data
+      FORGE_VAULT_PATH: /data/vault.db
+    volumes:
+      - ../../omni-shared-vault:/data

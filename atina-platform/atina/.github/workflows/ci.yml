@@ -1,0 +1,97 @@
+# Runs from repository root when this folder is the repo root.
+# Monorepo: set defaults.run.working-directory to this package path and set
+# cache-dependency-path to e.g. atina-platform/atina/package-lock.json
+# Full monorepo CI lives at repo root: ../../../../.github/workflows/ci-monorepo.yml — see ../../../../NIVO-1-START.md.
+# From monorepo root: ../../../../scripts/verify-monorepo.ps1 runs audit-doc-gate-references.ps1 (Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u ../../../../scripts/README.md), pytest, this package test:ci, apps/omnigroup-web build (unless -SkipOmnigroupWeb), Nest verify, then compose config (first step matches monorepo job python; GitHub required-check label: Python (Doslednost dok + pytest) — ../../../../docs/GIT-BRANCH-PROTECTION.md); ../../../../scripts/smoke-stack.ps1 = multi-stack HTTP smoke when services are up; see ../../../../scripts/README.md (-SkipOmnigroupWeb, -SkipNestVerifyCi, -SkipCompose, -SkipDocAudit local only; Port mismatch for Nest/pg vs POSTGRES_*).
+# Atina bundled gate (this package): npm run smoke:all — formalni Atina release gate: docs/operations/release-gate-checklist.md (Local notes — Smoke tests). smoke-stack.ps1 for Atina Node only GET /health when the stub is enabled.
+# LATEST exemplars: ../../../../docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), ../../../../docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): ../../../../docs/EVIDENCE-INDEX.md · ../../../../docs/NIVO-1-DRYRUN-LOG.md.
+# F.4: ../../../../docs/NIVO-1-F4-TIM-CHECKLIST.md
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-lint-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: CI (build, lint, unit tests + coverage)
+        run: npm run test:ci
+
+  integration:
+    needs: build-lint-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: atina_user
+          POSTGRES_PASSWORD: atina_password
+          POSTGRES_DB: atina_saas_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U atina_user -d atina_saas_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_NAME: atina_saas_db
+      DB_USER: atina_user
+      DB_PASSWORD: atina_password
+      NODE_ENV: test
+      APP_URL: http://localhost:3000
+      JWT_SECRET: ci-jwt-secret-not-for-production
+      JWT_REFRESH_SECRET: ci-jwt-refresh-secret-not-for-production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript build
+        run: npm run build
+
+      - name: Run database migrations
+        run: npm run migrate
+
+      - name: Integration tests (auth + DB)
+        run: npm run test:integration

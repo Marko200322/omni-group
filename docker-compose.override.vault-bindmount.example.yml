@@ -1,0 +1,24 @@
+# PRIMER — ne učitava se automatski. Preimenuj u `docker-compose.override.yml` SAMO ako želiš
+# da Python stack (`docker-compose.yml`) koristi isti SQLite fajl na hostu umesto named volume `vault_data`.
+#
+# Pre upotrebe:
+# 1) Napravi folder (npr. `mkdir omni-shared-vault` u korenu repoa).
+# 2) Uskladi Node Forge: `FORGE_VAULT_PATH` mora pokazivati na ISTI fajl (apsolutna putanja do `vault.db`).
+# 3) Jedan writer u SQLite — ne pokretaj dva procesa koji istovremeno pišu.
+#
+# Node SaaS (Forge): isti folder montiraj u atina-platform/atina — vidi
+#   atina-platform/atina/docker-compose.override.forge-vault-bindmount.example.yml
+# i   docs/VAULT-B-INTEGRATED-RUNBOOK.md
+#
+# Dokumentacija: docs/VAULT-ALIGNMENT-NOTES.md · CHECKLIST-CEO-SISTEM.md — CEO sekcija B (deljeni vault)
+
+services:
+  forge:
+    volumes:
+      - ./omni-shared-vault:/data
+  atina:
+    volumes:
+      - ./omni-shared-vault:/data
+  astra:
+    volumes:
+      - ./omni-shared-vault:/data

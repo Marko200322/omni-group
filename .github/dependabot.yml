@@ -1,0 +1,48 @@
+# Monorepo: jedan fajl na korenu (GitHub ignoriše podfolder `.github` u paketima ako je git root ovde).
+# Posle merge-a dependency PR-ova: lokalno scripts/verify-monorepo.ps1 (ili CI monorepo u Actions — job python prikaz: Python (Doslednost dok + pytest); docs/GIT-BRANCH-PROTECTION.md) — prvo audit-doc-gate-references.ps1 (Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md); pun red uključuje i apps/omnigroup-web build osim -SkipOmnigroupWeb; kad su stackovi podignuti opciono scripts/smoke-stack.ps1 (HTTP) — detalji scripts/README.md (Port mismatch za Nest/pg); F.4: docs/NIVO-1-F4-TIM-CHECKLIST.md
+# Atina Node bundled: atina-platform/atina npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Smoke tests); smoke-stack Node = GET /health.
+# LATEST exemplars: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /atina-system
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  - package-ecosystem: npm
+    directory: /atina-platform/atina
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  # apps/omnigroup-web (Next 14 marketing / dev hub). Dodato 2026-05-14 (Val 355) — pre toga nije bio
+  # pokriven, što je značilo da `next` 14 → 16 advisory-ji (4 high u prod, vidi docs/NPM-AUDIT-MONOREPO.md
+  # P1.C) nikad nisu dobijali automatske PR-ove. Read-only audit pregled iz korena:
+  # `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\audit-npm-monorepo.ps1 -OmitDev`.
+  - package-ecosystem: npm
+    directory: /apps/omnigroup-web
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies

@@ -1,0 +1,169 @@
+ATINA PLATFORM LOCAL RUNBOOK (ATINA + FORGE)
+===========================================
+
+Repository
+----------
+- Relativna putanja u monorepu: `atina-platform/atina` (ovaj fajl je u tom folderu).
+
+Purpose
+-------
+- Practical local guide for startup, verification checks, and troubleshooting.
+- Covers both core Atina API and Forge workflows.
+
+----------------------------------------------------------------------
+1) PRE-REQUISITES
+----------------------------------------------------------------------
+- Node.js 20.x
+- Docker Desktop running
+- Local `.env` created from `.env.example`
+
+Quick setup:
+1. npm install
+2. copy .env.example to .env
+3. verify core values (DB/JWT) and Forge values:
+   - FORGE_VAULT_PATH
+   - FORGE_MIN_RESERVE_RSD
+   - FORGE_HARD_STOP_MODE
+
+----------------------------------------------------------------------
+2) STANDARD STARTUP (RECOMMENDED)
+----------------------------------------------------------------------
+Run from repo root:
+
+1. npm run dev:ready
+   - starts postgres/redis
+   - applies migrations
+   - seeds base data
+   - runs lint
+
+2. npm run dev:start
+   - ensures db services are up
+   - frees local app port 3000
+   - starts API dev server
+
+3. npm run dev:check
+   - runs npm run smoke:all (scripts/smoke-all.ps1: /health, one login, /me, Forge status, workflow stats smoke, forge-admin)
+   - runs lint
+
+Core health URLs:
+- http://localhost:3000/health
+- http://localhost:3000/api/v1
+
+----------------------------------------------------------------------
+2b) DOCKER COMPOSE API (optional)
+----------------------------------------------------------------------
+Use this when the API runs in docker compose instead of `npm run dev:start` on the host.
+
+- Align `.env` with the `postgres` service (`DB_HOST`/`DB_PORT`/`DB_NAME` — default name in `.env.example`: `atina_saas_db`). Host `npm run migrate` and the `app` container must target the same logical database.
+- `npm run docker:migrate` — runs the migrate service against the compose Postgres.
+- `npm run docker:seed` — seeds bootstrap data (compose profile `seed`).
+- After changing `DB_NAME` (or other DB env) for `app`, recreate: `docker compose up -d --force-recreate app`.
+- Smokes from the host: `npm run smoke:all` (if the API is not on port 3000, pass `-BaseUrl`, see formalni Atina release gate: `docs/operations/release-gate-checklist.md`).
+- Forge vault: default `docker-compose.override.yml` uses a named volume on `/app/data` (`FORGE_VAULT_PATH=/app/data/vault.db`). Bind mounts with wrong permissions often cause `SQLITE_READONLY` / `SQLITE_CANTOPEN` — see the same release-gate Local notes.
+
+----------------------------------------------------------------------
+3) ATINA + FORGE CHECKS
+----------------------------------------------------------------------
+After startup, run these checks in order:
+
+1. API health
+   - GET /health must return success
+
+2. Smoke verification
+   - Recommended: npm run smoke:all (scripts/smoke-all.ps1: /health, one login, /me, Forge status, workflow stats, forge-admin)
+   - Narrow: npm run smoke:auth when isolating login + /me only
+
+3. Forge route checks (authenticated)
+   - GET  /api/v1/forge/status
+   - GET  /api/v1/forge
+   - POST /api/v1/forge
+   - POST /api/v1/forge/:id/run
+
+5. Admin reliability checks (admin token)
+   - GET /api/v1/admin/overview
+   - GET /api/v1/admin/workflow/templates/execution-stats?days=30
+
+Forge validation notes:
+- Use a valid user token for Forge routes.
+- `/forge/:id/run` supports `Idempotency-Key` for safe retries.
+- Ensure the vault path exists/writable (`FORGE_VAULT_PATH`).
+
+----------------------------------------------------------------------
+4) QUICK COMMANDS
+----------------------------------------------------------------------
+- npm run dev:bootstrap   (db up + migrate + seed)
+- npm run docker:migrate  (compose stack: run migrations in migrate container)
+- npm run docker:seed     (compose stack: seed job; requires seed profile)
+- npm run dev:restart     (stop then start)
+- npm run dev:stop        (free app port + stop postgres/redis)
+- npm run smoke:health    (health smoke)
+- npm run smoke:auth      (auth smoke)
+- npm run smoke:all       (bundled suite via scripts/smoke-all.ps1; see formalni Atina release gate: docs/operations/release-gate-checklist.md)
+- npm run free:port       (free port 3000)
+
+----------------------------------------------------------------------
+5) TROUBLESHOOTING (ATINA + FORGE)
+----------------------------------------------------------------------
+
+A) Port already in use (3000)
+1. npm run free:port
+2. npm run dev:start
+
+B) App boots but /health fails
+1. npm run db:up
+2. npm run dev:bootstrap
+3. npm run smoke:health
+
+C) Auth smoke failing
+1. check DB_* and JWT_* values in `.env`
+2. npm run smoke:auth
+3. if `Invalid email or password` against Docker API: seed the DB the container uses (`npm run docker:seed`) or fix `DB_NAME` + recreate `app`
+
+C2) Smoke/auth error `relation "plans" does not exist`
+1. migrations not applied on the database the running API uses, or host migrate vs Docker `app` pointed at different DBs
+2. for compose: `npm run docker:migrate`; confirm `DB_NAME` inside `atina_app` matches Postgres (`docker inspect atina_app`, env section)
+
+D) Forge calls failing with config/path errors
+1. confirm FORGE_VAULT_PATH is set
+2. confirm parent directory exists and is writable
+3. restart app with npm run dev:start
+
+E) Forge execution blocked unexpectedly
+1. check FORGE_MIN_RESERVE_RSD value
+2. check FORGE_HARD_STOP_MODE (true blocks execution on reserve failure)
+3. test with a known valid template and current token
+
+F) Forge run retries produce duplicate behavior
+1. send a stable Idempotency-Key per logical run
+2. repeat request with same key only for retry, not for a new run
+
+G) Need full local reset cycle
+1. npm run dev:stop
+2. npm run dev:ready
+3. npm run dev:start
+4. npm run dev:check
+
+----------------------------------------------------------------------
+6) DAILY CHECKLIST
+----------------------------------------------------------------------
+- [ ] npm run dev:ready succeeded
+- [ ] npm run dev:start running
+- [ ] /health returns OK
+- [ ] npm run dev:check succeeded
+- [ ] Forge endpoints tested when Forge code changed
+- [ ] Admin monitoring endpoints reviewed after workflow changes
+- [ ] npm run dev:stop executed at end of day
+
+----------------------------------------------------------------------
+7) SHUTDOWN
+----------------------------------------------------------------------
+- npm run dev:stop
+
+If you only need to stop the API process, run:
+- npm run free:port
+
+----------------------------------------------------------------------
+8) MONOREPO (parent repo)
+----------------------------------------------------------------------
+Same workspace root: ../../NIVO-1-START.md — audit-doc-gate-references.ps1 first (Doslednost dok doc gate md/txt+yaml/ps1/ini, uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u ../../scripts/README.md) then root pytest (GitHub job python display name: Python (Doslednost dok + pytest) — ../../docs/GIT-BRANCH-PROTECTION.md); here npm run test:ci; ../../apps/omnigroup-web npm ci + npm run build (CI job omnigroup-web); ../../atina-system npm run verify:ci (POSTGRES_* must match host port — Port mismatch: ../../scripts/README.md); ../../scripts/verify-monorepo.ps1 (optional -SkipOmnigroupWeb, -SkipCompose, -SkipNestVerifyCi — latter runs Nest verify:n1 locally without Postgres; -SkipDocAudit skips doc gate audit locally only; Actions job python (same required-check label: Python (Doslednost dok + pytest) — ../../docs/GIT-BRANCH-PROTECTION.md) still runs audit); ../../scripts/smoke-stack.ps1 (multi-stack HTTP smoke when stacks are up — Atina Node probe is GET /health only when enabled; tri-stub -SkipNode:$false: ako :3000 sa hosta prazan odgovor a u kontejneru atina_app /health OK, docker restart atina_app; full Atina bundled gate: here npm run smoke:all — formalni Atina release gate: docs/operations/release-gate-checklist.md Local notes — Smoke tests; LATEST smoke (sekcija H) ../../docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351 / 2026-05-14; ranije Val 350 / 2026-05-13)); LATEST verify ../../docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355 / 2026-05-14 sa D.1 placeholder Iter 2 — ../../docs/D1-ITER2-PR-BODY.md; ranije Val 354 / 2026-05-13 sa D.1 placeholder rekonstrukcijom za apps/omnigroup-web — ../../docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md; Val 349 / 2026-05-08); monorepo evidencija (indeks + dry-run): ../../docs/EVIDENCE-INDEX.md · ../../docs/NIVO-1-DRYRUN-LOG.md; CI ../../.github/workflows/ci-monorepo.yml (five jobs; python job required-check display: Python (Doslednost dok + pytest) — ../../docs/GIT-BRANCH-PROTECTION.md; includes python audit+pytest and omnigroup-web; compose job validates this docker-compose.yml among others). Get-Help and script options: ../../scripts/README.md. F.4: ../../docs/NIVO-1-F4-TIM-CHECKLIST.md
+Kad podižeš novi Val širom dokova: ../../scripts/README.md — odeljak Kad podigneš novi broj.

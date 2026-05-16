@@ -1,0 +1,131 @@
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { query } from '../../../database/connection';
+import logger from '../../../utils/logger';
+import { sendError } from '../../../utils/response';
+
+const PHASE_ORDER = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'] as const;
+export type Phase = (typeof PHASE_ORDER)[number];
+
+const FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES: Record<'atina-system' | 'sistem-naplate' | 'forge', Phase> = {
+  'atina-system': 'v3',
+  'sistem-naplate': 'v3',
+  forge: 'v3',
+};
+
+// Initial gating map for ecosystem modules. This can expand as modules mature.
+const MODULE_MIN_PHASE: Record<string, Phase> = {
+  craftor: 'v1',
+  'digital-signature': 'v2',
+  titanis: 'v1',
+  dominus360: 'v2',
+  omnitube: 'v2',
+  titanix: 'v2',
+  omnigame: 'v3',
+  'apex-predator': 'v3',
+  'titan-score': 'v3',
+  'client-hunter': 'v2',
+  'lead-scoring': 'v2',
+  'proxy-rotation': 'v2',
+  outreach: 'v2',
+  'follow-up': 'v2',
+  'follow-up-automation': 'v2',
+  'package-pricing': 'v2',
+  'deal-offer': 'v2',
+  'template-engine': 'v2',
+  validator: 'v2',
+  ...FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES,
+};
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const CACHE_TTL_MS = 15000;
+
+let cachedPhase: Phase = 'v1';
+let cachedAt = 0;
+
+/** Clears cached phase (for tests). */
+export function resetPhaseActivationCache(): void {
+  cachedPhase = 'v1';
+  cachedAt = 0;
+}
+
+function comparePhase(current: Phase, required: Phase): number {
+  return PHASE_ORDER.indexOf(current) - PHASE_ORDER.indexOf(required);
+}
+
+async function readCurrentPhase(): Promise<Phase> {
+  const now = Date.now();
+  if (now - cachedAt <= CACHE_TTL_MS) return cachedPhase;
+
+  const { rows } = await query<{ config: Record<string, unknown> }>(
+    `SELECT config FROM modules WHERE slug = 'phase-launch-control' LIMIT 1`
+  );
+
+  const config = rows[0]?.config ?? {};
+  const raw = String(config.current_phase ?? 'v1') as Phase;
+  const resolved = (PHASE_ORDER as readonly string[]).includes(raw) ? raw : 'v1';
+
+  cachedPhase = resolved;
+  cachedAt = now;
+  return cachedPhase;
+}
+
+export async function getCurrentPhase(): Promise<Phase> {
+  return readCurrentPhase();
+}
+
+export function getPhaseOrder(): readonly Phase[] {
+  return PHASE_ORDER;
+}
+
+export function getModulePhaseRequirements(): Record<string, Phase> {
+  return { ...MODULE_MIN_PHASE };
+}
+
+export function getModulePhaseGatingStatus(currentPhase: Phase): Array<{
+  moduleSlug: string;
+  requiredPhase: Phase;
+  unlocked: boolean;
+}> {
+  return Object.entries(MODULE_MIN_PHASE)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([moduleSlug, requiredPhase]) => ({
+      moduleSlug,
+      requiredPhase,
+      unlocked: comparePhase(currentPhase, requiredPhase) >= 0,
+    }));
+}
+
+export function createPhaseActivationGuard(moduleSlug: string): RequestHandler {
+  const requiredPhase = MODULE_MIN_PHASE[moduleSlug];
+  if (!requiredPhase) {
+    return (_req: Request, _res: Response, next: NextFunction) => next();
+  }
+
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (SAFE_METHODS.has(req.method)) return next();
+
+    try {
+      const currentPhase = await readCurrentPhase();
+      if (comparePhase(currentPhase, requiredPhase) >= 0) return next();
+
+      return sendError(
+        res,
+        `Module '${moduleSlug}' requires phase ${requiredPhase}. Current phase is ${currentPhase}.`,
+        403,
+        'PHASE_LOCKED',
+        {
+          moduleSlug,
+          requiredPhase,
+          currentPhase,
+        }
+      );
+    } catch (error) {
+      logger.warn('Phase activation guard fallback (allowing request)', {
+        moduleSlug,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return next();
+    }
+  };
+}
+

@@ -1,0 +1,76 @@
+# Atina System — Node + PostgreSQL + Redis (PDF Titanomnigroup / TSC)
+# Pokretanje: docker compose -f docker-compose.atina.yml up -d --build
+# Note: no SQLite vault here — Python VAULT_PATH / platform FORGE_VAULT_PATH are separate stacks; see docs/VAULT-ALIGNMENT-NOTES.md.
+#
+# Nivo 1 / produkcija: u pravem deployu koristiti TYPEORM_SYNC=false + migracije;
+# ovde je sync true samo radi brzog bootstrapa u dev compose-u.
+# Nest na hostu :3001 (Node SaaS :3000). Merge `docker-compose.nest-port-3001.yml` i dalje za CI/dok — NIVO-1-START.md, SYSTEM-MAP.md, scripts/smoke-stack.ps1 — Atina Node stub = GET /health; bundled Atina gate: atina-platform/atina npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Local notes — Smoke tests).
+# Monorepo CI mirror (repo root): scripts/verify-monorepo.ps1 (prvo audit-doc-gate-references.ps1 — Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md; pun red uklj. apps/omnigroup-web; -SkipOmnigroupWeb / lokalno -SkipDocAudit u Get-Help; job python u Actions — Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md) — scripts/README.md (Port mismatch za Nest/pg) — F.4 docs/NIVO-1-F4-TIM-CHECKLIST.md
+# LATEST exemplars: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+#
+# Bull / POST `internal/queue/smoke`: Dockerfile postavlja `NODE_ENV=production`; ovde ga compose **pregazi**.
+# Podrazumevano ostaje **production**; za lokalni smoke + Bull postavi npr. `NEST_NODE_ENV=development` u okruženju pri `docker compose up`.
+# Opciono: `INTERNAL_QUEUE_SMOKE_*` (ključ + rate limit tog POST-a), `TRUST_PROXY=1` iza reverse proxy-ja — vidi `atina-system/README.md` i `.env.example`.
+
+services:
+  atina-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+    ports:
+      - "5433:5432"
+    volumes:
+      - atina_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atina -d atina"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis: BullMQ u Nest-u (`QueueModule`) kad `atina-api` ima REDIS_HOST; red `system` + worker u kodu.
+  atina-redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+  atina-api:
+    build:
+      context: ./atina-system
+      dockerfile: Dockerfile
+    # Host :3001 (Node SaaS zadržava :3000). Ne dodavati :3000 ovde — merge sa starim override-om je duplirao port.
+    ports:
+      - "3001:3000"
+    environment:
+      POSTGRES_HOST: atina-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+      # Min. 32 znaka u NODE_ENV=production (validate-production-env).
+      JWT_SECRET: ${JWT_SECRET:-atina-docker-compose-dev-secret-min-32chars}
+      # Lokalni compose: bez ovoga Nest pada u production režimu (validate-production-env).
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:8080,http://127.0.0.1:3001,http://localhost:8080,http://localhost:3001}
+      NODE_ENV: ${NEST_NODE_ENV:-production}
+      PHASE: ${PHASE:-v1}
+      PORT: "3000"
+      TYPEORM_SYNC: "true"
+      # Opciono: isti ključ kao u `smoke-stack.ps1` / `.env` za POST /internal/queue/smoke
+      INTERNAL_QUEUE_SMOKE_KEY: ${INTERNAL_QUEUE_SMOKE_KEY:-}
+      # Opciono: rate limit tog POST-a (0 = isključeno; prazno = podrazumevano u Nest-u)
+      INTERNAL_QUEUE_SMOKE_RATE_MAX_PER_WINDOW: ${INTERNAL_QUEUE_SMOKE_RATE_MAX_PER_WINDOW:-}
+      INTERNAL_QUEUE_SMOKE_RATE_WINDOW_MS: ${INTERNAL_QUEUE_SMOKE_RATE_WINDOW_MS:-}
+      # Opciono: Express trust proxy (1 / true) — tačniji req.ip iza LB
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      # BullMQ / ioredis (kada se uvede u Nest): host je ime servisa u Docker mreži.
+      REDIS_HOST: atina-redis
+      REDIS_PORT: "6379"
+    depends_on:
+      atina-postgres:
+        condition: service_healthy
+      atina-redis:
+        condition: service_started
+
+volumes:
+  atina_pg_data:

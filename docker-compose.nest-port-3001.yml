@@ -1,0 +1,15 @@
+# Override for docker-compose.atina.yml — expose Nest API on host :3001
+# so Atina Node SaaS can keep localhost:3000.
+#
+# Usage:
+#   docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml up -d --build
+# Multi-stack smoke: NIVO-1-START.md, SYSTEM-MAP.md, scripts/smoke-stack.ps1 — Atina Node stub = GET /health; bundled Atina gate: atina-platform/atina npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Local notes — Smoke tests).
+# Monorepo CI mirror (repo root): scripts/verify-monorepo.ps1 (prvo audit-doc-gate-references.ps1 — Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md; pun red uklj. apps/omnigroup-web; vidi Get-Help za -SkipOmnigroupWeb / lokalno -SkipDocAudit; job python u Actions — Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md) — scripts/README.md (Port mismatch za Nest/pg) — F.4 docs/NIVO-1-F4-TIM-CHECKLIST.md
+# LATEST exemplars: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+# (NEST_NODE_ENV / INTERNAL_QUEUE_SMOKE_* / TRUST_PROXY idu u bazni docker-compose.atina.yml za `atina-api`.)
+
+# Port 3001:3000 je u `docker-compose.atina.yml`. Ovaj fajl ostaje radi CI / `verify-monorepo.ps1` i postojeće dokumentacije (isti merge kao ranije). GitHub job python (Python (Doslednost dok + pytest)): docs/GIT-BRANCH-PROTECTION.md. Nest/pg Port mismatch: `scripts/README.md`. LATEST: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+services:
+  atina-api:
+    labels:
+      com.omnigroup.compose.nest-port-3001: "1"

@@ -1,0 +1,38 @@
+﻿
+> atina-saas@1.0.0 test:ci
+> npm run build && npm run lint && jest --runInBand --coverage --testPathIgnorePatterns=integration
+
+
+> atina-saas@1.0.0 build
+> tsc
+
+
+> atina-saas@1.0.0 lint
+> eslint src --ext .ts
+
+node.exe : PASS src/tests/unit/modules/admin/admin-onboarding.test.ts (58.531 s)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/tests/...t.ts (58.531 s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+PASS src/tests/unit/payments.service.test.ts
+PASS src/tests/unit/auth.service.test.ts
+PASS src/tests/unit/modules/admin/admin.module.test.ts
+PASS src/tests/unit/core-engine.test.ts (76.893 s)
+PASS src/tests/unit/modules/contracts/contracts.module.routes.test.ts (27.106 s)
+PASS src/tests/unit/automation.module.routes.test.ts (29.305 s)
+PASS src/tests/unit/modules/digital-signature/digital-signature.module.routes.test.ts (78.897 s)
+PASS src/tests/unit/tasks.service.test.ts
+PASS src/tests/unit/scraper.module.routes.test.ts (31.36 s)
+PASS src/tests/unit/analytics.module.routes.test.ts (74.033 s)
+PASS src/tests/unit/notifications.module.routes.test.ts (62.941 s)
+PASS src/tests/unit/modules/crm/crm.module.routes.test.ts (21.357 s)
+PASS src/tests/unit/crm.module.routes.test.ts (127.841 s)
+PASS src/tests/unit/forge.service.test.ts (10.556 s)
+PASS src/tests/unit/rate-limit.middleware.test.ts (13.214 s)
+PASS src/tests/unit/notifications.module.test.ts (22.672 s)
+PASS src/tests/unit/titan-forge.service.test.ts (26.358 s)
+PASS src/tests/unit/tasks.module.routes.test.ts (28.648 s)
+PASS src/tests/unit/workflow-chain.controller.test.ts (13.825 s)

@@ -1,0 +1,27 @@
+data/*.db
+# Lokalni deljeni vault za §B (bind-mount; vidi docs/VAULT-B-INTEGRATED-RUNBOOK.md)
+omni-shared-vault/
+docker-compose.override.yml
+atina-platform/atina/docker-compose.override.yml
+# Lokalni Jest/CI izlaz (ne commit-ovati — sadrži apsolutne putanje)
+atina-platform/atina/ci-jest-out.txt
+**/ci-jest-out.txt
+__pycache__/
+*.py[cod]
+.Python
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+node_modules/
+dist/
+coverage/
+.next/
+*.log
+atina-platform/atina/data/
+atina-platform/atina/logs/
+sistem_naplate/pdfs/*.pdf
+# Lokalni snapshot izlazi iz read-only audit suite-a (audit-npm-monorepo.ps1, scan-todo-markers.ps1, ...)
+# Skripte i runbook-i upućuju na docs/* za commit-able nalaze; tmp/ ostaje lokalno (npr. JSON / CSV za dashboard).
+tmp/

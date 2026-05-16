@@ -1,0 +1,54 @@
+# Nest-only workflow (push/PR u ovom folderu). Ceo monorepo (od ovog fajla): ../../../.github/workflows/ci-monorepo.yml — vidi ../../../NIVO-1-START.md.
+# Iz korena monorepa: ../../../scripts/verify-monorepo.ps1 — red: audit-doc-gate-references.ps1 (Doslednost dok doc gate md/txt+yaml/ps1/ini, uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u ../../../scripts/README.md), pytest, Atina test:ci, apps/omnigroup-web build (osim -SkipOmnigroupWeb), zatim ovaj verify:ci kad ima Postgres; sa -SkipNestVerifyCi ide verify:n1 (build+unit); lokalno -SkipDocAudit bez doc gate audita (job python u monorepo CI i dalje radi audit; GitHub prikaz obavezne provere: Python (Doslednost dok + pytest) — ../../../docs/GIT-BRANCH-PROTECTION.md). Multi-stack HTTP smoke: ../../../scripts/smoke-stack.ps1 — ../../../scripts/README.md (Port mismatch za verify:ci / POSTGRES_*).
+# Atina Express SaaS (van ovog workflow-a): iz atina-platform/atina pokreni npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Local notes — Smoke tests). smoke-stack.ps1 za Atina Node šalje samo GET /health kada je stub uključen.
+# LATEST exemplars: ../../../docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), ../../../docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): ../../../docs/EVIDENCE-INDEX.md · ../../../docs/NIVO-1-DRYRUN-LOG.md.
+# F.4 (Actions ili lokalno): ../../../docs/NIVO-1-F4-TIM-CHECKLIST.md
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: atina
+          POSTGRES_PASSWORD: atina
+          POSTGRES_DB: atina
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U atina -d atina"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+      NODE_ENV: test
+      JWT_SECRET: ci-jwt-secret-at-least-32-characters-long
+      E2E_WITH_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build, test, migrations (Nivo 1+)
+        run: npm run verify:ci

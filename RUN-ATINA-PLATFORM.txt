@@ -1,0 +1,70 @@
+ATINA Platform — lokacija u ovom monorepu:
+  atina-platform/atina/
+
+Prerequisites: Node.js 20.x, Docker (za Postgres + Redis).
+Napomena: projekat ima engine ">=20 <21" (Node 20 LTS).
+
+1) Baza (jednom):
+   cd atina-platform/atina
+   docker compose up -d postgres redis
+
+2) Env:
+   copy .env.example .env
+   (uredi kredencijale: DB_*, JWT_*, Stripe, SMTP, itd.)
+   Dev default: SMTP_ENABLED=false (bez SMTP warning-a i bez slanja mejlova)
+   Ako testiras email: postavi SMTP_ENABLED=true i unesi validne SMTP_* vrednosti
+
+3) Instalacija i šema:
+   npm install
+   npm run migrate
+   npm run seed
+
+4) Dev server:
+   npm run dev
+   (robust start: npm run dev:start)
+   stop: npm run dev:stop
+   http://localhost:3000/health
+   API: http://localhost:3000/api/v1
+
+Napomene:
+- Seed admin: vidi ADMIN_EMAIL / ADMIN_PASSWORD u .env.example
+- Ispravljeni npm skriptovi: migrate/seed/dev koriste npx (Windows)
+- Dodat devDependency @types/pg za migrate/seed
+- Uklonjeni prazni pogrešni folderi iz zipa: src\{core,...}, database\{migrations,seeds}
+
+Pun stack u Dockeru (app + db + redis):
+   cd atina-platform/atina
+   docker compose up -d --build
+
+Troubleshooting:
+- Ako dobijes "EADDRINUSE :::3000", ugasi stari Node proces pa ponovo pokreni:
+  PowerShell: Get-NetTCPConnection -LocalPort 3000 -State Listen | Select-Object OwningProcess
+  PowerShell: Stop-Process -Id <PID> -Force
+  Ili: npm run free:port
+- Ako vidis SMTP warning, ostavi SMTP_ENABLED=false u dev okruzenju
+
+Daily checklist:
+1) cd atina-platform/atina
+2) npm run dev:ready
+3) npm run dev:start
+4) npm run dev:check
+5) npm run dev:restart (po potrebi)
+6) npm run dev:stop (na kraju rada)
+
+Ready checks:
+- Health: http://localhost:3000/health
+- API root: http://localhost:3000/api/v1
+- Quick health smoke: powershell -ExecutionPolicy Bypass -File .\scripts\smoke-health.ps1
+- NPM smoke health: npm run smoke:health
+- NPM smoke all: npm run smoke:all (scripts/smoke-all.ps1: health, one login, /me, forge/status, workflow stats, forge-admin — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md *Smoke tests*)
+- Dev readiness check (smoke + lint): npm run dev:check
+- Pre-start ready (bootstrap + lint): npm run dev:ready
+
+Quick auth smoke test (PowerShell):
+cd atina-platform/atina
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-auth.ps1
+- NPM smoke auth: npm run smoke:auth
+
+---
+Monorepo (isti repo): u korenu vidi NIVO-1-START.md — prvo audit-doc-gate-references.ps1 (Doslednost dok doc gate md/txt+yaml/ps1/ini, uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md), zatim pytest (job python u CI — GitHub prikaz obavezne provere: Python (Doslednost dok + pytest); vidi docs/GIT-BRANCH-PROTECTION.md); ovde npm run test:ci; apps/omnigroup-web npm ci + npm run build (job omnigroup-web u CI); u atina-system npm run verify:ci (Postgres — POSTGRES_* mora pratiti host port; Port mismatch: scripts/README.md); scripts/verify-monorepo.ps1 (opciono -SkipOmnigroupWeb bez Next build-a; -SkipCompose; -SkipNestVerifyCi bez Postgresa = Nest verify:n1; -SkipDocAudit samo lokalno bez doc gate audita — u Actions job python (isti prikaz: Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md) i dalje radi audit); scripts/smoke-stack.ps1 (multi-stack HTTP smoke kad su servisi podignuti — za Atina Node samo GET /health kad je stub uključen; tri-stub -SkipNode:$false: ako :3000 sa hosta prazan odgovor a u kontejneru atina_app /health OK, docker restart atina_app; širi Atina gate: atina-platform/atina npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md Local notes — Smoke tests; LATEST smoke (sekcija H) docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351 / 2026-05-14; ranije Val 350 / 2026-05-13)); LATEST verify docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355 / 2026-05-14 sa D.1 placeholder Iter 2 — docs/D1-ITER2-PR-BODY.md; ranije Val 354 / 2026-05-13 sa D.1 placeholder rekonstrukcijom za apps/omnigroup-web — docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md; Val 349 / 2026-05-08); monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md; GitHub CI (monorepo): .github/workflows/ci-monorepo.yml (pet jobova; job python = obavezna provera Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md; uklj. omnigroup-web; job compose = tri docker compose config). Detalji i Get-Help za .ps1 skripte: scripts/README.md. F.4 (Actions na main ili lokalno): docs/NIVO-1-F4-TIM-CHECKLIST.md
+Kad podižeš novi Val širom dokova: scripts/README.md — odeljak Kad podigneš novi broj.

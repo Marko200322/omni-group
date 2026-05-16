@@ -1,0 +1,164 @@
+# Local development (host app + DB in Docker):
+#   npm run db:up     → postgres + redis only (typical with npm run dev on the host)
+#   npm run db:down   → stop those services
+# Full stack in containers: docker compose up -d, then npm run docker:migrate (host migrate ≠ container DB). Optional: npm run docker:seed (--profile seed).
+# Override defaults via environment or a .env file next to this file (see .env.example).
+# Forge vault: default override uses named volume `forge_vault_app_data:/app/data` + FORGE_VAULT_PATH=/app/data/vault.db (matches Dockerfile chown for non-root). For shared SQLite with root Python stack, replace override with `docker-compose.override.forge-vault-bindmount.example.yml` — see repo root docs/VAULT-ALIGNMENT-NOTES.md.
+# Monorepo CI mirror from repo root: ../../../../scripts/verify-monorepo.ps1 (prvo audit-doc-gate-references.ps1 — Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u ../../../../scripts/README.md; pun red uklj. apps/omnigroup-web osim -SkipOmnigroupWeb) — ../../../../scripts/README.md (Port mismatch; GitHub job python required-check: Python (Doslednost dok + pytest) — ../../../../docs/GIT-BRANCH-PROTECTION.md); bundled Atina gate: npm run smoke:all — formalni Atina release gate: docs/operations/release-gate-checklist.md (Local notes — Smoke tests). LATEST exemplars: ../../../../docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), ../../../../docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): ../../../../docs/EVIDENCE-INDEX.md · ../../../../docs/NIVO-1-DRYRUN-LOG.md.
+services:
+  # ── Application ──────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: atina_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Lokalni compose: production + compose-ovi „dev” tajni ne prolaze validaciju u src/config; development = očekivano za `docker compose up`.
+      NODE_ENV: ${APP_NODE_ENV:-development}
+      PORT: 3000
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-atina_saas_db}
+      DB_USER: ${DB_USER:-atina_user}
+      DB_PASSWORD: ${DB_PASSWORD:-atina_password}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-this-refresh-secret}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@atina.io}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@atina.io}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - atina_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: atina_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-atina_saas_db}
+      POSTGRES_USER: ${DB_USER:-atina_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-atina_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # Host port: default 5432. On some Windows + Docker Desktop setups, Node `pg` (Nest `migration:run`, `verify:ci`)
+    # fails against localhost:5432 with ECONNRESET / "Connection terminated unexpectedly". Workaround: set
+    # DB_PORT_EXPOSE=5433 in the environment (or `.env` next to this file) and run verify with POSTGRES_PORT=5433
+    # (see repo `scripts/README.md` — incl. Port mismatch if POSTGRES_PORT ≠ host port — and `scripts/verify-monorepo.ps1` help; full CI order: Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u ../../../../scripts/README.md; zatim pytest, …, includes `apps/omnigroup-web` unless `-SkipOmnigroupWeb`; locally `-SkipDocAudit` skips doc gate audit only; GitHub job python: Python (Doslednost dok + pytest) — ../../../../docs/GIT-BRANCH-PROTECTION.md).
+    ports:
+      - "${DB_PORT_EXPOSE:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - atina_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-atina_user} -d ${DB_NAME:-atina_saas_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: atina_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT_EXPOSE:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - atina_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Migration Runner (one-shot) ───────────────────────────────────────────────
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: atina_migrate
+    command: ["npx", "ts-node", "src/database/migrate.ts"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-atina_saas_db}
+      DB_USER: ${DB_USER:-atina_user}
+      DB_PASSWORD: ${DB_PASSWORD:-atina_password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - atina_net
+    restart: "no"
+
+  # ── Seed Runner (one-shot) ────────────────────────────────────────────────────
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: atina_seed
+    command: ["npx", "ts-node", "src/database/seed.ts"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-atina_saas_db}
+      DB_USER: ${DB_USER:-atina_user}
+      DB_PASSWORD: ${DB_PASSWORD:-atina_password}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@atina.io}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123456}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - atina_net
+    restart: "no"
+    profiles:
+      - seed
+
+# ── Volumes ──────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local
+
+# ── Networks ──────────────────────────────────────────────────────────────────────
+networks:
+  atina_net:
+    driver: bridge
+    name: atina_network

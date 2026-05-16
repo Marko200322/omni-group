@@ -1,0 +1,8 @@
+# Root Python + CI (monorepo job `python`): see tests/README.md and NIVO-1-START.md.
+# Verzije pinovane radi reprodukcije CI / produkcije (ažuriraj namerno).
+flask==3.0.3
+gunicorn==23.0.0
+fpdf2==2.8.2
+requests==2.32.3
+pytest==8.3.5
+pytest-cov==6.0.0

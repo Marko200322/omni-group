@@ -1,0 +1,10 @@
+# When git root is omni group: after merges run ../../../../scripts/verify-monorepo.ps1 or root CI (monorepo) in Actions (job python display: Python (Doslednost dok + pytest) — ../../../../docs/GIT-BRANCH-PROTECTION.md); pun red uključuje apps/omnigroup-web osim -SkipOmnigroupWeb; bundled Atina: npm run smoke:all — formalni Atina release gate: ../../../../atina-platform/atina/docs/operations/release-gate-checklist.md. LATEST verify/smoke exemplars: ../../../../docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md, ../../../../docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md. Monorepo evidencija (indeks + dry-run): ../../../../docs/EVIDENCE-INDEX.md · ../../../../docs/NIVO-1-DRYRUN-LOG.md.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies

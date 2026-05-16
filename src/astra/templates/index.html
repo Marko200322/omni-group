@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Astra — Omni Group · Master Forge</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='astra.css') }}" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__inner">
+      <p class="eyebrow">omnigroup · .com</p>
+      <h1>Astra kontrolna tabla</h1>
+      <p class="lead">Status kovanja u realnom vremenu i preostali budžet (centralni Vault).</p>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card card--accent">
+      <h2>Preostali budžet</h2>
+      <p class="big" id="remaining">—</p>
+      <p class="muted">Početni budžet: <span id="initial">—</span> RSD · Resursa u sefu: <span id="rcount">—</span></p>
+    </section>
+
+    <section class="card">
+      <h2>Rotacija Forge-a</h2>
+      <p class="providers"><span class="pill pill--o">Oracle</span> → <span class="pill pill--a">AWS</span> → <span class="pill pill--z">Azure</span></p>
+      <p class="muted">Poslednji aktivni slot: <strong id="lastp">—</strong></p>
+    </section>
+
+    <section class="card card--wide">
+      <h2>Poslednji događaji kovanja</h2>
+      <ul class="log" id="log"></ul>
+    </section>
+
+    <section class="card card--wide">
+      <h2>Atina — Supply Core</h2>
+      <p class="muted">
+        Obrađeno supply zapisa: <strong id="atina_count">—</strong> ·
+        Na čekanju (Forge bez Atina): <strong id="atina_pending">—</strong>
+      </p>
+      <ul class="log log--atina" id="atina_log"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Vault: SQLite (<code>vault.db</code>) · Forge kuje, Atina Supply Core pakuje, Astra prikazuje.</span>
+  </footer>
+
+  <script src="{{ url_for('static', filename='astra.js') }}"></script>
+</body>
+</html>

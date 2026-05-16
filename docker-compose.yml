@@ -1,0 +1,61 @@
+# Local dev: Python stack — forge (budget loop), atina (batch worker), astra (Flask API/UI).
+# Astra maps host port 8080 → container PORT (see astra service).
+# Shared named volume `vault_data` is mounted at /data; VAULT_PATH=/data/vault.db for all services.
+# Node Forge (atina-platform/atina) uses FORGE_VAULT_PATH, not VAULT_PATH — same file only if you share a mount/volume; see docs/VAULT-ALIGNMENT-NOTES.md.
+# Adjust env vars (intervals, budgets) per service as needed.
+# Start: docker compose up --build
+# Data: remove volume to reset the vault: docker compose down -v
+# Sa Node/Nest stackom i smoke skriptama: NIVO-1-START.md, SYSTEM-MAP.md, scripts/smoke-stack.ps1 — Atina Node stub = GET /health; bundled Atina gate: atina-platform/atina npm run smoke:all — formalni Atina release gate: atina-platform/atina/docs/operations/release-gate-checklist.md (Local notes — Smoke tests).
+# Lokalni CI (monorepo) mirror iz korena: scripts/verify-monorepo.ps1 (prvo audit-doc-gate-references.ps1 — Doslednost dok doc gate (md/txt + yaml/ps1/ini), uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG, u scripts/README.md; pun red uklj. apps/omnigroup-web build; opciono -SkipOmnigroupWeb — Get-Help; prvi korak kao job python u Actions — Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md) — scripts/README.md (Port mismatch za Nest/pg) — F.4 docs/NIVO-1-F4-TIM-CHECKLIST.md
+# LATEST exemplars: docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 354), docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 350). Monorepo evidencija (indeks + dry-run): docs/EVIDENCE-INDEX.md · docs/NIVO-1-DRYRUN-LOG.md.
+services:
+  forge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: forge
+    environment:
+      VAULT_PATH: /data/vault.db
+      INITIAL_BUDGET_RSD: "4000"
+      FORGE_INTERVAL_SEC: "8"
+      FORGE_COST_MIN_RSD: "5"
+      FORGE_COST_MAX_RSD: "25"
+    volumes:
+      - vault_data:/data
+    restart: unless-stopped
+
+  atina:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: atina
+    environment:
+      VAULT_PATH: /data/vault.db
+      INITIAL_BUDGET_RSD: "4000"
+      ATINA_INTERVAL_SEC: "12"
+      ATINA_BATCH_LIMIT: "50"
+    volumes:
+      - vault_data:/data
+    depends_on:
+      - forge
+    restart: unless-stopped
+
+  astra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: astra
+    ports:
+      - "8080:8080"
+    environment:
+      VAULT_PATH: /data/vault.db
+      PORT: "8080"
+    volumes:
+      - vault_data:/data
+    depends_on:
+      - forge
+      - atina
+    restart: unless-stopped
+
+volumes:
+  vault_data:
