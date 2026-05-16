@@ -1,6 +1,6 @@
 # Git init — pomoć za vlasnika (CEO A preduslov)
 
-Repo trenutno **nema** `.git` u korenu. `.env` je već u `.gitignore` (koren + `atina-platform/atina/.gitignore`).
+Repo ima `.git` na grani `main` (commit `3027b15` + agent prep). **Push na GitHub:** vidi [`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md). `.env` je u `.gitignore`.
 
 ## Jednokratno (PowerShell, iz korena repoa)
 
