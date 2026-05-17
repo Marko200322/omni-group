@@ -198,7 +198,7 @@ npm run build
 | 3 | **GitHub:** [`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md) — `pre-push-check.ps1` → commit → `git remote add` + push | Zeleni CI jobovi |
 | 4 | **Staging:** deploy na staging host → [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) | Smoke sa staging URL-ovima |
 
-**Agent checklist:** sve faze **A–C, E, F** završene; **D** čeka samo Resend ključ (D.2); **D.5** opciono (Atina SMTP).
+**Agent checklist:** sve faze **A–C, E, F** završene; **D** čeka samo Resend ključ (D.2); **D.5** opciono (Atina SMTP). **Vlasnik/admin:** stavke prebačene u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) **sekcija I** + [`VLASNIK-ZAVRSAVA.md`](./VLASNIK-ZAVRSAVA.md).
 
 ---
 

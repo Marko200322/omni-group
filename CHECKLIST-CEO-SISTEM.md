@@ -247,4 +247,19 @@ Za **Nivo 1** se ne traži celokupan red modula u **CEO sekciji C** (auth–core
 
 ---
 
-*Poslednja izmena: generisano kao master lista; **revizija stanja 2026-05-10** (bez novih `[x]` dok evidencije ne budu Pass); inače ažuriraj datume i vlasnike stavki po timu.*
+## I. Agent deploy handoff — Omni Group web (vlasnik / admin)
+
+*Agent završio [`docs/AGENT-DEPLOY-CHECKLIST.md`](./docs/AGENT-DEPLOY-CHECKLIST.md) (faze A–C, E, F). Ispod su stavke **namerno van agent opsega** — zahtevaju tvoj nalog, tajne ili host. Ne dupliraju ceo **CEO sekciju G** (prod Node), već dopunjuju web + prvi push.*
+
+- [ ] **GitHub prv push:** `git remote add origin` + push `main` — [`docs/GITHUB-PUSH-READY.md`](./docs/GITHUB-PUSH-READY.md) · `.\scripts\verify-agent-handoff.ps1` · `.\scripts\git-push-first-time.ps1 -RepoUrl ...`
+- [ ] **Disk C:** oslobodi **≥5 GB** pre punog `npm ci` / `verify-monorepo` bez skipova (inače **ENOSPC**) — `.\scripts\disk-report.ps1` · `.\scripts\free-disk-space.ps1 -CleanTemp -SkipNext`
+- [ ] **Resend kontakt (D.2):** `RESEND_API_KEY`, `CONTACT_EMAIL_FROM`, `CONTACT_EMAIL_TO` u `apps/omnigroup-web/.env.local` → restart `npm run dev:clean` → `.\scripts\test-contact-resend.ps1` (`sent_via_resend` + inbox)
+- [ ] **Atina agregatori + Stripe:** popuni `atina-platform/atina/.env` (7 agregatora + `FINANCE_KEY`, `ENTERPRISE_PRICE_ID`, …) — `.\scripts\check-atina-aggregators.ps1` · `.\scripts\check-stripe-env.ps1` · infra ostaje u `config/env-aggregator.json`
+- [ ] **Staging deploy:** web + Atina na staging host — [`docs/STAGING-RELEASE-CHECKLIST.md`](./docs/STAGING-RELEASE-CHECKLIST.md) · [`docs/STAGING-MIRROR-PROD.md`](./docs/STAGING-MIRROR-PROD.md)
+- [ ] (Opciono) **Atina SMTP staging (D.5)** — [`docs/SMTP-STAGING-RUNBOOK.md`](./docs/SMTP-STAGING-RUNBOOK.md) (odvojeno od Next Resend kontakta)
+
+*Van ovog handoff-a (već u **CEO sekcijama A, C, G** ili backlogu): branch protection posle push-a, Nest prod migracije, live Stripe/PayPal ritual na produkciji, K8s/Faza 6, Nest `npm audit` major bump, dubinski `supply-core` PRO.*
+
+---
+
+*Poslednja izmena: generisano kao master lista; **revizija stanja 2026-05-17** (+ sekcija **I** agent deploy handoff); inače ažuriraj datume i vlasnike stavki po timu.*

@@ -6,7 +6,7 @@
 
 **Sve env varijable za prod u jednom dokumentu (uz primere i validaciona pravila):** [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md).
 
-**Povezano:** [`AKCIONI-PLAN-NOVITETI-I-CEO.md`](./AKCIONI-PLAN-NOVITETI-I-CEO.md) · [`CEO-OPEN-BULLETS-RUNBOOK.md`](./CEO-OPEN-BULLETS-RUNBOOK.md) · [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md).
+**Povezano:** [`AKCIONI-PLAN-NOVITETI-I-CEO.md`](./AKCIONI-PLAN-NOVITETI-I-CEO.md) · [`CEO-OPEN-BULLETS-RUNBOOK.md`](./CEO-OPEN-BULLETS-RUNBOOK.md) · [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) · **Agent deploy handoff (sekcija I):** [`AGENT-DEPLOY-CHECKLIST.md`](./AGENT-DEPLOY-CHECKLIST.md).
 
 **Monorepo evidencija (indeks + dry-run):** [`EVIDENCE-INDEX.md`](./EVIDENCE-INDEX.md) · [`NIVO-1-DRYRUN-LOG.md`](./NIVO-1-DRYRUN-LOG.md).
 
@@ -70,6 +70,21 @@ Popuni [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATES
 
 - **Isporučeno u repou:** Next.js sajt + dashboard/admin shell — [`apps/omnigroup-web/`](../apps/omnigroup-web/); YouTube/Celery pipeline — [`tools/youtube-pipeline/`](../tools/youtube-pipeline/). Detalji: [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md). Kanonski SaaS backend (F4-3): [`FAZA-4-SAAS-DECISION.md`](./FAZA-4-SAAS-DECISION.md). Ostaje na tebi: povezivanje fronta na Atina API, live plaćanja u frontu ako želiš odvojeno od Express stacka.
 
+### Agent deploy handoff — Omni Group web (2026-05-17)
+
+Agent je završio [`AGENT-DEPLOY-CHECKLIST.md`](./AGENT-DEPLOY-CHECKLIST.md). **Ti zatvaraš** stavke u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) **sekcija I**:
+
+| # | Ti uradiš | Dokaz / skripta |
+|---|-----------|-----------------|
+| I.1 | GitHub prv push (`origin` + `main`) | [`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md) · `verify-agent-handoff.ps1` · `git-push-first-time.ps1` |
+| I.2 | Disk **≥5 GB** na `C:` | `disk-report.ps1` · `free-disk-space.ps1` |
+| I.3 | Resend u `apps/omnigroup-web/.env.local` | `test-contact-resend.ps1` → `sent_via_resend` |
+| I.4 | `atina-platform/atina/.env` agregatori + Stripe | `check-atina-aggregators.ps1` · `check-stripe-env.ps1` |
+| I.5 | Staging deploy | [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) |
+| I.6 | (Opciono) Atina SMTP staging | [`SMTP-STAGING-RUNBOOK.md`](./SMTP-STAGING-RUNBOOK.md) |
+
+U PowerShell-u za npm koristi **`npm.cmd`** (ne `npm`) ako ExecutionPolicy blokira `npm.ps1` — ili `.\scripts\run-local-gates.ps1`.
+
 ---
 
 ## Jedan red provere kad misliš da si gotov
@@ -77,6 +92,6 @@ Popuni [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATES
 1. [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) — Pass.  
 2. [`TYPEORM-PROD-EVIDENCE-LATEST.md`](./TYPEORM-PROD-EVIDENCE-LATEST.md) — Pass.  
 3. [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md) — sve PASS ili N/A sa razlogom.  
-4. Ažuriraj [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) sve `- [ ]` koje si zatvorio → `[x]`.
+4. Ažuriraj [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) sve `- [ ]` koje si zatvorio → `[x]` (uklj. **sekcija I** agent deploy handoff).
 
-*Poslednji put ažurirano: 2026-05-08.*
+*Poslednji put ažurirano: 2026-05-17.*
