@@ -26,6 +26,8 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $SkipSmoke) {
   Write-Host ''
+  & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   & (Join-Path $scriptsDir 'smoke-web-integration.ps1')
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }

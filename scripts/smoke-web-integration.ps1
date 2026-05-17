@@ -23,6 +23,9 @@ $atina = $AtinaBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
 
+& (Join-Path $scriptsDir 'ensure-web-dev.ps1')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 function Invoke-BffLogin {
   param(
     [Microsoft.PowerShell.Commands.WebRequestSession]$Session,

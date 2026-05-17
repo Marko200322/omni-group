@@ -25,6 +25,9 @@ function Invoke-QuickWebGet {
       $_.Exception.Response.Close()
       throw [System.Net.WebException]::new("HTTP $statusCode", $null, [System.Net.WebExceptionStatus]::ProtocolError, $_.Exception.Response)
     }
+    if ($_.Exception.Status -eq [System.Net.WebExceptionStatus]::ConnectFailure) {
+      throw [System.Net.WebException]::new("Connection refused - servis nije pokrenut ($Uri)", $_.Exception, [System.Net.WebExceptionStatus]::ConnectFailure, $null)
+    }
     throw
   }
 }
