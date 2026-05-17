@@ -100,4 +100,5 @@ Write-Host 'Login: admin@atina.io / Admin@123456 (config/env-aggregator.json)' -
 Write-Host 'Status: powershell -ExecutionPolicy Bypass -File .\scripts\owner-status.ps1' -ForegroundColor DarkGray
 Write-Host 'Smoke: powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web-integration.ps1' -ForegroundColor DarkGray
 Write-Host 'Contact: powershell -ExecutionPolicy Bypass -File .\scripts\test-contact-resend.ps1' -ForegroundColor DarkGray
+Write-Host 'Stripe: powershell -ExecutionPolicy Bypass -File .\scripts\check-stripe-env.ps1' -ForegroundColor DarkGray
 Write-Host 'Agregatori: powershell -ExecutionPolicy Bypass -File .\scripts\check-atina-aggregators.ps1' -ForegroundColor DarkGray

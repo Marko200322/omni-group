@@ -31,6 +31,7 @@ $paths = @(
   'scripts/pre-push-check.ps1',
   'scripts/git-push-first-time.ps1',
   'scripts/check-atina-aggregators.ps1',
+  'scripts/check-stripe-env.ps1',
   'scripts/rate-limit-retry.ps1',
   'scripts/smoke-web-integration.ps1',
   'scripts/test-contact-resend.ps1',
