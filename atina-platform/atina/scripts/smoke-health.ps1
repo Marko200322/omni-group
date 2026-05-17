@@ -7,7 +7,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$health = Invoke-RestMethod -Method GET -Uri "$BaseUrl/health"
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$retryHelper = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $here))) 'scripts\rate-limit-retry.ps1'
+. $retryHelper
+
+$health = Invoke-WithRateLimitRetry -Label 'GET /health' -Action {
+  Invoke-RestMethod -Method GET -Uri "$BaseUrl/health"
+}
 
 [pscustomobject]@{
   ok = ($health.status -eq 'ok')

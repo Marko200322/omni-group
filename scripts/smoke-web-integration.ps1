@@ -20,55 +20,24 @@ param(
 $ErrorActionPreference = 'Stop'
 $web = $WebBase.TrimEnd('/')
 $atina = $AtinaBase.TrimEnd('/')
+$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $scriptsDir 'rate-limit-retry.ps1')
 
 function Invoke-BffLogin {
   param(
     [Microsoft.PowerShell.Commands.WebRequestSession]$Session,
     [string]$LoginBody
   )
-  $maxAttempts = 4
-  for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-    try {
-      $login = Invoke-WebRequest -Uri "$web/api/auth/login" -Method POST -ContentType 'application/json' -Body $LoginBody -WebSession $Session -UseBasicParsing
-      return ($login.Content | ConvertFrom-Json)
-    } catch {
-      $status = $null
-      $detail = [string]$_.ErrorDetails.Message
-      if ($_.Exception.Response) {
-        $status = [int]$_.Exception.Response.StatusCode
-        if (-not $detail) {
-          try {
-            $stream = $_.Exception.Response.GetResponseStream()
-            if ($stream) {
-              $reader = New-Object System.IO.StreamReader($stream)
-              $detail = $reader.ReadToEnd()
-              $reader.Close()
-            }
-          } catch {
-            $detail = ''
-          }
-        }
-      }
-      $rateLimited = ($status -eq 429) -or ($detail -and $detail -match 'RATE_LIMIT')
-      if ($rateLimited) {
-        $waitSec = 90
-        if ($detail -match 'retryAfterSeconds[^0-9]*(\d+)') {
-          $waitSec = [int]$Matches[1] + 3
-        }
-        if ($attempt -lt $maxAttempts) {
-          Write-Host "  rate limit - cekam ${waitSec}s (pokusaj $attempt/$maxAttempts)..." -ForegroundColor Yellow
-          Start-Sleep -Seconds $waitSec
-          continue
-        }
-      }
-      throw
-    }
+  return Invoke-WithRateLimitRetry -Label 'BFF login' -Action {
+    $login = Invoke-WebRequest -Uri "$web/api/auth/login" -Method POST -ContentType 'application/json' -Body $LoginBody -WebSession $Session -UseBasicParsing
+    return ($login.Content | ConvertFrom-Json)
   }
-  throw 'BFF login failed after retries'
 }
 
 Write-Host "== Atina /health ==" -ForegroundColor Cyan
-$h = Invoke-WebRequest -Uri "$atina/health" -UseBasicParsing -TimeoutSec 15
+$h = Invoke-WithRateLimitRetry -Label 'Atina /health' -Action {
+  Invoke-WebRequest -Uri "$atina/health" -UseBasicParsing -TimeoutSec 15
+}
 if ($h.StatusCode -ne 200) { throw "Atina health HTTP $($h.StatusCode)" }
 Write-Host "  OK" -ForegroundColor Green
 

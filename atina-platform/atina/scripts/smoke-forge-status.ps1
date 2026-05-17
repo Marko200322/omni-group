@@ -29,7 +29,13 @@ if (-not $token) {
   throw 'Smoke forge status failed: access token missing.'
 }
 
-$status = Invoke-RestMethod @t15 -Method GET -Uri "$base/api/v1/forge/status" -Headers @{ Authorization = "Bearer $token" }
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$retryHelper = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $here))) 'scripts\rate-limit-retry.ps1'
+. $retryHelper
+
+$status = Invoke-WithRateLimitRetry -Label 'forge status' -Action {
+  Invoke-RestMethod @t15 -Method GET -Uri "$base/api/v1/forge/status" -Headers @{ Authorization = "Bearer $token" }
+}
 $data = $status.data
 
 if (-not $data) {

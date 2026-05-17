@@ -34,8 +34,38 @@ if (Test-Path $envLocal) {
   }
 }
 
+function Read-DotEnvValue {
+  param([string]$Path, [string]$Key)
+  if (-not (Test-Path $Path)) { return '' }
+  foreach ($line in Get-Content -LiteralPath $Path) {
+    $t = $line.Trim()
+    if ($t -eq '' -or $t.StartsWith('#')) { continue }
+    if ($t -like "$Key=*") {
+      return $t.Substring($Key.Length + 1).Trim()
+    }
+  }
+  return ''
+}
+
+Write-Host ''
+Write-Host '== Web env (D.2 Resend) ==' -ForegroundColor Cyan
+$resendKey = Read-DotEnvValue -Path $envLocal -Key 'RESEND_API_KEY'
+$contactFrom = Read-DotEnvValue -Path $envLocal -Key 'CONTACT_EMAIL_FROM'
+$contactTo = Read-DotEnvValue -Path $envLocal -Key 'CONTACT_EMAIL_TO'
+if ([string]::IsNullOrWhiteSpace($resendKey)) {
+  Write-Host '  RESEND: stub mode (queued_local_stub) - odkomentarisi RESEND_* u .env.local za D.2' -ForegroundColor Yellow
+} elseif (-not $contactFrom -or -not $contactTo) {
+  Write-Host '  RESEND: ključ set ali CONTACT_EMAIL_FROM/TO nedostaju' -ForegroundColor Yellow
+} else {
+  Write-Host '  RESEND: spreman za live test (test-contact-resend.ps1)' -ForegroundColor Green
+}
+
+Write-Host ''
+& (Join-Path $scriptsDir 'check-atina-aggregators.ps1')
+Write-Host ''
 if (-not $SkipSmoke) {
   & (Join-Path $scriptsDir 'owner-smoke-all.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 Push-Location (Join-Path $repoRoot 'apps\omnigroup-web')
