@@ -2,10 +2,16 @@
 .SYNOPSIS
   Brz pregled stanja — bez smoke testova (sekunde, ne minute).
 
+.PARAMETER Quick
+  Preskace health checkove (samo git, disk, env).
+
 .EXAMPLE
   .\scripts\owner-status.ps1
+.EXAMPLE
+  .\scripts\owner-status.ps1 -Quick
 #>
 #Requires -Version 5.1
+param([switch]$Quick)
 $ErrorActionPreference = 'Continue'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
@@ -53,6 +59,10 @@ foreach ($svc in @(
   @{ Name = 'Atina'; Url = 'http://127.0.0.1:3000/health' },
   @{ Name = 'Web'; Url = 'http://127.0.0.1:3010/api/health' }
 )) {
+  if ($Quick) {
+    Write-Host "$($svc.Name): (preskoceno -Quick)" -ForegroundColor DarkGray
+    continue
+  }
   try {
     $r = Invoke-QuickWebGet -Uri $svc.Url -TimeoutSec 4
     Write-Host "$($svc.Name): $($r.StatusCode)" -ForegroundColor Green
@@ -71,6 +81,9 @@ if ([string]::IsNullOrWhiteSpace($resend)) {
 
 $atinaEnv = Join-Path $repoRoot 'atina-platform\atina\.env'
 if (Test-Path $atinaEnv) {
+  if ($Quick) {
+    Write-Host 'Atina env: vidi check-atina-aggregators.ps1 / check-stripe-env.ps1' -ForegroundColor DarkGray
+  } else {
   $filled = 0
   $total = 0
   foreach ($line in Get-Content -LiteralPath $atinaEnv) {
@@ -88,6 +101,7 @@ if (Test-Path $atinaEnv) {
     Write-Host 'Stripe: nije konfigurisan (check-stripe-env.ps1)' -ForegroundColor Yellow
   } else {
     Write-Host 'Stripe: delimično/kompletno (check-stripe-env.ps1)' -ForegroundColor Green
+  }
   }
 }
 

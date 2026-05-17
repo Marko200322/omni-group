@@ -18,7 +18,7 @@ Set-Location $repoRoot
 Write-Host '=== verify-agent-handoff ===' -ForegroundColor Cyan
 Write-Host ''
 
-& (Join-Path $scriptsDir 'owner-status.ps1')
+& (Join-Path $scriptsDir 'owner-status.ps1') -Quick
 Write-Host ''
 
 & (Join-Path $scriptsDir 'pre-push-check.ps1') -SkipSmoke
@@ -31,4 +31,4 @@ if (-not $SkipSmoke) {
 }
 
 Write-Host ''
-Write-Host 'verify-agent-handoff: PASS — spremno za git-push-first-time.ps1 -RepoUrl ...' -ForegroundColor Green
+Write-Host 'verify-agent-handoff: PASS - spremno za git-push-first-time.ps1 -RepoUrl ...' -ForegroundColor Green
