@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Continue'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 Set-Location $repoRoot
+. (Join-Path $scriptsDir 'rate-limit-retry.ps1')
 
 function Read-DotEnvValue {
   param([string]$Path, [string]$Key)
@@ -53,7 +54,7 @@ foreach ($svc in @(
   @{ Name = 'Web'; Url = 'http://127.0.0.1:3010/api/health' }
 )) {
   try {
-    $r = Invoke-WebRequest -Uri $svc.Url -UseBasicParsing -TimeoutSec 4
+    $r = Invoke-QuickWebGet -Uri $svc.Url -TimeoutSec 4
     Write-Host "$($svc.Name): $($r.StatusCode)" -ForegroundColor Green
   } catch {
     Write-Host "$($svc.Name): down (restart: .\scripts\restart-web-dev.ps1)" -ForegroundColor Red

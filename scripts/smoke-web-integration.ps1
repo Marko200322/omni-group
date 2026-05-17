@@ -36,13 +36,13 @@ function Invoke-BffLogin {
 
 Write-Host "== Atina /health ==" -ForegroundColor Cyan
 $h = Invoke-WithRateLimitRetry -Label 'Atina /health' -Action {
-  Invoke-WebRequest -Uri "$atina/health" -UseBasicParsing -TimeoutSec 15
+  Invoke-QuickWebGet -Uri "$atina/health" -TimeoutSec 15
 }
 if ($h.StatusCode -ne 200) { throw "Atina health HTTP $($h.StatusCode)" }
 Write-Host "  OK" -ForegroundColor Green
 
 Write-Host "== Web /api/health ==" -ForegroundColor Cyan
-$wh = Invoke-WebRequest -Uri "$web/api/health" -UseBasicParsing -TimeoutSec 15
+$wh = Invoke-QuickWebGet -Uri "$web/api/health" -TimeoutSec 15
 if ($wh.StatusCode -ne 200) { throw "Web health HTTP $($wh.StatusCode)" }
 Write-Host "  OK" -ForegroundColor Green
 

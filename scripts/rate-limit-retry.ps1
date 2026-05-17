@@ -1,3 +1,34 @@
+function Invoke-QuickWebGet {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Uri,
+    [int]$TimeoutSec = 4
+  )
+
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    return Invoke-WebRequest -Uri $Uri -UseBasicParsing -TimeoutSec $TimeoutSec -Method GET
+  }
+
+  $request = [System.Net.HttpWebRequest]::Create($Uri)
+  $request.Method = 'GET'
+  $request.Timeout = $TimeoutSec * 1000
+  $request.ReadWriteTimeout = $TimeoutSec * 1000
+  $request.UserAgent = 'omnigroup-scripts'
+  try {
+    $response = $request.GetResponse()
+    $statusCode = [int]$response.StatusCode
+    $response.Close()
+    return [PSCustomObject]@{ StatusCode = $statusCode }
+  } catch [System.Net.WebException] {
+    if ($_.Exception.Response) {
+      $statusCode = [int]$_.Exception.Response.StatusCode
+      $_.Exception.Response.Close()
+      throw [System.Net.WebException]::new("HTTP $statusCode", $null, [System.Net.WebExceptionStatus]::ProtocolError, $_.Exception.Response)
+    }
+    throw
+  }
+}
+
 function Invoke-WithRateLimitRetry {
   param(
     [Parameter(Mandatory = $true)]
