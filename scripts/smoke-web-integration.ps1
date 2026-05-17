@@ -21,6 +21,52 @@ $ErrorActionPreference = 'Stop'
 $web = $WebBase.TrimEnd('/')
 $atina = $AtinaBase.TrimEnd('/')
 
+function Invoke-BffLogin {
+  param(
+    [Microsoft.PowerShell.Commands.WebRequestSession]$Session,
+    [string]$LoginBody
+  )
+  $maxAttempts = 4
+  for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+    try {
+      $login = Invoke-WebRequest -Uri "$web/api/auth/login" -Method POST -ContentType 'application/json' -Body $LoginBody -WebSession $Session -UseBasicParsing
+      return ($login.Content | ConvertFrom-Json)
+    } catch {
+      $status = $null
+      $detail = [string]$_.ErrorDetails.Message
+      if ($_.Exception.Response) {
+        $status = [int]$_.Exception.Response.StatusCode
+        if (-not $detail) {
+          try {
+            $stream = $_.Exception.Response.GetResponseStream()
+            if ($stream) {
+              $reader = New-Object System.IO.StreamReader($stream)
+              $detail = $reader.ReadToEnd()
+              $reader.Close()
+            }
+          } catch {
+            $detail = ''
+          }
+        }
+      }
+      $rateLimited = ($status -eq 429) -or ($detail -and $detail -match 'RATE_LIMIT')
+      if ($rateLimited) {
+        $waitSec = 90
+        if ($detail -match 'retryAfterSeconds[^0-9]*(\d+)') {
+          $waitSec = [int]$Matches[1] + 3
+        }
+        if ($attempt -lt $maxAttempts) {
+          Write-Host "  rate limit - cekam ${waitSec}s (pokusaj $attempt/$maxAttempts)..." -ForegroundColor Yellow
+          Start-Sleep -Seconds $waitSec
+          continue
+        }
+      }
+      throw
+    }
+  }
+  throw 'BFF login failed after retries'
+}
+
 Write-Host "== Atina /health ==" -ForegroundColor Cyan
 $h = Invoke-WebRequest -Uri "$atina/health" -UseBasicParsing -TimeoutSec 15
 if ($h.StatusCode -ne 200) { throw "Atina health HTTP $($h.StatusCode)" }
@@ -34,9 +80,8 @@ Write-Host "  OK" -ForegroundColor Green
 Write-Host "== Web BFF login ==" -ForegroundColor Cyan
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $body = @{ email = $Email; password = $Password } | ConvertTo-Json -Compress
-$login = Invoke-WebRequest -Uri "$web/api/auth/login" -Method POST -ContentType 'application/json' -Body $body -WebSession $session -UseBasicParsing
-$lj = $login.Content | ConvertFrom-Json
-if (-not $lj.ok) { throw "BFF login failed: $($login.Content)" }
+$lj = Invoke-BffLogin -Session $session -LoginBody $body
+if (-not $lj.ok) { throw "BFF login failed" }
 Write-Host "  OK user=$($lj.user.email) redirect=$($lj.redirectTo)" -ForegroundColor Green
 
 Write-Host "== Web BFF ai-memory ==" -ForegroundColor Cyan
@@ -44,7 +89,7 @@ $memBody = '{"key":"smoke","value":{"ts":"' + (Get-Date -Format o) + '"},"namesp
 $rem = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/remember" -Method POST -ContentType 'application/json' -Body $memBody -WebSession $session -UseBasicParsing
 $rj = $rem.Content | ConvertFrom-Json
 if (-not $rj.ok) { throw "remember failed: $($rem.Content)" }
-$rec = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/recall?namespace=global&key=smoke" -WebSession $session -UseBasicParsing
+$rec = Invoke-WebRequest -Uri ($web + '/api/atina/ai-memory/recall?namespace=global&key=smoke') -WebSession $session -UseBasicParsing
 $rc = $rec.Content | ConvertFrom-Json
 if (-not $rc.ok -or $rc.items.Count -lt 1) { throw "recall failed: $($rec.Content)" }
 Write-Host "  OK recall items=$($rc.items.Count)" -ForegroundColor Green
