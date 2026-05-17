@@ -1,14 +1,14 @@
 # GitHub push — spremno lokalno
 
-**Stanje (2026-05-17):** Commit **`75b3ffc`** na `main` — working tree čist. Brzi pregled: `.\scripts\owner-status.ps1`. **Nema** `origin` dok vlasnik ne doda URL.
+**Stanje (2026-05-17):** Commit **`2b4e366`** na `main`. Brzi pregled: `.\scripts\owner-status.ps1`. Handoff gate: `.\scripts\verify-agent-handoff.ps1`. **Nema** `origin` dok vlasnik ne doda URL.
 
 **Pre push-a:**
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\pre-push-check.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\stage-agent-work.ps1
-git commit -m "Omni Group web: brend, auth BFF, smoke skripte"
-git push -u origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-agent-handoff.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\git-push-first-time.ps1 -RepoUrl "https://github.com/TVOJ-USER/TVOJ-REPO.git"
 ```
+
+`git-push-first-time.ps1` automatski pokreće `pre-push-check.ps1 -SkipSmoke` pre push-a.
 
 ## Koraci (vlasnik, ~5 min)
 
@@ -16,8 +16,6 @@ git push -u origin main
 cd "c:\Users\Marko Kosic\OneDrive\Desktop\omni group"
 powershell -ExecutionPolicy Bypass -File .\scripts\git-push-first-time.ps1 -RepoUrl "https://github.com/TVOJ-USER/TVOJ-REPO.git"
 ```
-
-Skripta automatski pokreće `pre-push-check.ps1 -SkipSmoke` pre push-a.
 
 Posle prvog push-a:
 

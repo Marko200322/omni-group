@@ -33,6 +33,7 @@ $paths = @(
   'scripts/check-atina-aggregators.ps1',
   'scripts/check-stripe-env.ps1',
   'scripts/disk-report.ps1',
+  'scripts/verify-agent-handoff.ps1',
   'scripts/rate-limit-retry.ps1',
   'scripts/smoke-web-integration.ps1',
   'scripts/test-contact-resend.ps1',

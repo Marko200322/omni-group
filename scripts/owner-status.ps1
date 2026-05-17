@@ -102,4 +102,4 @@ if ([string]::IsNullOrWhiteSpace($resend)) {
 if ($freeGb -lt 5) {
   Write-Host '  3. disk-report.ps1 / free-disk-space.ps1 -CleanTemp -SkipNext' -ForegroundColor DarkGray
 }
-Write-Host '  Pun gate: pre-push-check.ps1 | Smoke: owner-smoke-all.ps1' -ForegroundColor DarkGray
+Write-Host '  Pun gate: verify-agent-handoff.ps1 | owner-smoke-all.ps1' -ForegroundColor DarkGray
