@@ -1,103 +1,252 @@
 'use client';
 
-// Placeholder Admin UI — D.1 (2026-05-13, OneDrive dehidracija).
-// Pun runbook: docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md.
-// Helper `loadAtinaPublicSnapshot` (lib/atina.ts) je rekonstruisan po dokumentovanom
-// ugovoru (apps/omnigroup-web/README.md, .env.example) pa Admin sad prikazuje
-// realan podatak sa Atina API-ja kad je `NEXT_PUBLIC_ATINA_API_BASE` dostupan.
-// PRAVI Admin UI (auth gate, panels, akcije) je i dalje izgubljen — vrati ga
-// iz OneDrive cloud-a / Git remote-a pre produkcionog deploy-a.
-// TODO[D.1-restore]: rekonstruisati pravi AdminClient (auth gate, snapshot panel, akcije).
-
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import {
+  Users,
+  CreditCard,
+  Workflow,
+  AlertTriangle,
+  Server,
+  RefreshCw,
+  ExternalLink,
+} from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
+import type { SessionUser } from '@/lib/auth-session';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
+import { buildAdminMetrics } from '@/lib/platform-metrics';
+import { PlatformShell } from '@/components/platform/PlatformShell';
+import { StatCard } from '@/components/ui/StatCard';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { StatusPill } from '@/components/ui/StatusPill';
+import { SparkChart } from '@/components/ui/SparkChart';
+import { FormatLocalDateTime } from '@/components/ui/FormatLocalDateTime';
+type Props = {
+  snapshot: AtinaPublicSnapshot;
+  sessionUser: SessionUser | null;
+  isDemo: boolean;
+};
 
-type Props = { snapshot: AtinaPublicSnapshot };
+const severityColor = {
+  info: 'border-l-cyan-500/60',
+  warn: 'border-l-amber-500/60',
+  error: 'border-l-rose-500/60',
+};
 
-export default function AdminClient({ snapshot }: Props) {
+export default function AdminClient({ snapshot, sessionUser, isDemo }: Props) {
+  const router = useRouter();
+  const metrics = buildAdminMetrics(snapshot);
+  const status = snapshot.source === 'live' ? 'live' : snapshot.source;
+
   return (
-    <main
-      data-placeholder="admin-client"
-      style={{
-        padding: '2rem',
-        fontFamily: 'system-ui, sans-serif',
-        maxWidth: 960,
-        margin: '0 auto',
-      }}
+    <PlatformShell
+      variant="admin"
+      title="Operator pregled"
+      subtitle={
+        isDemo
+          ? 'Demo operator sesija · monitoring kad je Atina API dostupan.'
+          : `Omni Group operator konzola — ${sessionUser?.email ?? 'ulogovan korisnik'}.`
+      }
+      badge={<StatusPill status={status} />}
+      sessionUser={sessionUser}
+      isDemo={isDemo}
     >
-      <h1 style={{ marginBottom: '0.5rem' }}>Admin (placeholder)</h1>
-      <p style={{ marginTop: 0 }}>
-        Ovaj ekran je <strong>privremeni placeholder</strong> dok se ne vrati pravi
-        UI iz OneDrive cloud-a / Git remote-a (D.1). Runbook:{' '}
-        <code>docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md</code>.
-      </p>
+      <div id="users" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Aktivni korisnici"
+          value={metrics.activeUsers}
+          sub="30d rolling"
+          icon={Users}
+          accent="violet"
+          trend={{ value: '+8.2% vs prošli mesec', positive: true }}
+          delay={0}
+        />
+        <StatCard
+          label="MRR"
+          value={metrics.mrr}
+          sub="Stripe + interni katalog"
+          icon={CreditCard}
+          accent="cyan"
+          trend={{ value: '+12% QoQ', positive: true }}
+          delay={0.05}
+        />
+        <StatCard
+          label="Workflow uspeh"
+          value={metrics.workflowSuccess}
+          sub="7d prosek"
+          icon={Workflow}
+          accent="emerald"
+          delay={0.1}
+        />
+        <StatCard
+          label="Otvoreni alerti"
+          value={metrics.openAlerts}
+          sub="Forge + execution stats"
+          icon={AlertTriangle}
+          accent="rose"
+          trend={
+            Number(metrics.openAlerts) > 0
+              ? { value: 'Pregledaj execution-stats', positive: false }
+              : undefined
+          }
+          delay={0.15}
+        />
+      </div>
 
-      <section
-        aria-labelledby="atina-status-h2"
-        style={{
-          marginTop: '1.5rem',
-          padding: '1rem',
-          border: '1px solid #e5e7eb',
-          borderRadius: 8,
-          background: '#fafafa',
-        }}
-      >
-        <h2 id="atina-status-h2" style={{ marginTop: 0 }}>
-          Atina API status
-        </h2>
-        <p>
-          <strong>Source:</strong> <code>{snapshot.source}</code> · <strong>Base:</strong>{' '}
-          <code>{snapshot.apiBase}</code> · <strong>Plans:</strong> {snapshot.plansCount}
-        </p>
-        <p>{describeSource(snapshot)}</p>
-        {snapshot.errors.length > 0 && (
-          <details>
-            <summary>Greške ({snapshot.errors.length})</summary>
-            <ul>
-              {snapshot.errors.map((e, i) => (
-                <li key={i}>
-                  <code>{e}</code>
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </section>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <GlassCard delay={0.2}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-white">Workflow performanse</h2>
+            <span className="text-xs text-slate-500">7 dana</span>
+          </div>
+          <SparkChart data={metrics.sparkWorkflow} gradientFrom="#8b5cf6" gradientTo="#22d3ee" />
+        </GlassCard>
+        <GlassCard delay={0.25}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-white">Prihod (indeks)</h2>
+            <span className="text-xs text-slate-500">YTD</span>
+          </div>
+          <SparkChart data={metrics.sparkRevenue} gradientFrom="#22d3ee" gradientTo="#34d399" />
+        </GlassCard>
+      </div>
 
-      {snapshot.plans.length > 0 && (
-        <section
-          aria-labelledby="atina-plans-h2"
-          style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8,
-          }}
-        >
-          <h2 id="atina-plans-h2" style={{ marginTop: 0 }}>
-            Billing plans (javni katalog)
-          </h2>
-          <ul>
-            {snapshot.plans.map((p, i) => (
-              <li key={p.slug ?? i}>{formatPlanLine(p)}</li>
+      <div className="mt-6 grid gap-6 xl:grid-cols-3" id="system">
+        <GlassCard delay={0.3} className="xl:col-span-2">
+          <div className="mb-4 flex items-center gap-2">
+            <Server className="h-5 w-5 text-violet-400" />
+            <h2 className="font-display text-lg font-semibold text-white">Atina API</h2>
+          </div>
+          <p className="text-sm text-slate-400">{describeSource(snapshot)}</p>
+          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <dt className="text-slate-500">Base URL</dt>
+              <dd className="mt-1 font-mono text-xs text-cyan-300">{snapshot.apiBase}</dd>
+            </div>
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <dt className="text-slate-500">Snapshot</dt>
+              <dd className="mt-1 text-white">
+                <FormatLocalDateTime iso={snapshot.generatedAt} />
+              </dd>
+            </div>
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <dt className="text-slate-500">Health</dt>
+              <dd className="mt-1">{snapshot.health?.ok ? 'OK' : '—'}</dd>
+            </div>
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+              <dt className="text-slate-500">Planovi u katalogu</dt>
+              <dd className="mt-1 text-2xl font-bold text-white">{snapshot.plansCount}</dd>
+            </div>
+          </dl>
+          {snapshot.errors.length > 0 && (
+            <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">
+              <p className="font-medium">Greške pri fetch-u</p>
+              <ul className="mt-2 list-inside list-disc text-rose-300/90">
+                {snapshot.errors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </GlassCard>
+
+        <GlassCard delay={0.35}>
+          <h2 className="font-display text-lg font-semibold text-white">Live feed</h2>
+          <ul className="mt-4 space-y-3">
+            {metrics.recentEvents.map((ev, i) => (
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.05 }}
+                className={`border-l-2 pl-3 ${severityColor[ev.severity]}`}
+              >
+                <p className="text-xs text-slate-500">
+                  {ev.time} · {ev.type}
+                </p>
+                <p className="text-sm text-slate-200">{ev.message}</p>
+              </motion.li>
             ))}
           </ul>
-        </section>
-      )}
+        </GlassCard>
+      </div>
 
-      <details style={{ marginTop: '1.5rem' }}>
-        <summary>Sirov snapshot (JSON)</summary>
-        <pre
-          style={{
-            background: '#f3f4f6',
-            padding: '1rem',
-            borderRadius: 8,
-            overflow: 'auto',
-          }}
-        >
-          {JSON.stringify(snapshot, null, 2)}
-        </pre>
-      </details>
-    </main>
+      <section id="billing" className="mt-6">
+        <GlassCard delay={0.4}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-lg font-semibold text-white">Billing planovi</h2>
+            <button
+              type="button"
+              className="btn-ghost flex items-center gap-1 text-violet-300"
+              onClick={() => router.refresh()}
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Osveži katalog
+            </button>
+          </div>
+          {snapshot.plans.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {snapshot.plans.map((p, i) => (
+                <motion.div
+                  key={p.slug ?? i}
+                  whileHover={{ scale: 1.02 }}
+                  className="rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 to-transparent p-4"
+                >
+                  <p className="font-semibold text-white">{p.name ?? p.slug}</p>
+                  <p className="mt-1 text-sm text-slate-400">{formatPlanLine(p)}</p>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">
+              Pokreni Atina API sa billing modulom ili postavi{' '}
+              <code className="text-violet-300">NEXT_PUBLIC_ATINA_API_BASE</code>.
+            </p>
+          )}
+        </GlassCard>
+      </section>
+
+      <section id="settings" className="mt-6">
+        <GlassCard delay={0.42}>
+          <h2 className="font-display text-lg font-semibold text-white">Podešavanja</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Brzi linkovi za marketing sajt, klijentski workspace i internu dokumentaciju.
+          </p>
+          <motion.div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/" className="btn-glass text-sm">
+              Marketing sajt
+            </Link>
+            <Link href="/dashboard" className="btn-glass text-sm">
+              Klijent workspace
+            </Link>
+            <Link href="/dev/docs" className="btn-primary text-sm">
+              Dev dokumentacija
+            </Link>
+          </motion.div>
+        </GlassCard>
+      </section>
+
+      <section id="workflows" className="mt-6 grid gap-4 md:grid-cols-3">
+        {['Onboarding chain', 'Forge health', 'Proxy rotation'].map((name, i) => (
+          <GlassCard key={name} delay={0.45 + i * 0.05}>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Modul</p>
+            <p className="mt-1 font-display text-lg font-semibold text-white">{name}</p>
+            <p className="mt-2 text-sm text-slate-400">
+              Poveži admin token za pun{' '}
+              <code className="text-xs text-cyan-400">/api/v1/admin/overview</code>.
+            </p>
+            <a
+              href={`${snapshot.apiBase}/health`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1 text-xs text-violet-300 hover:text-white"
+            >
+              Health probe <ExternalLink className="h-3 w-3" />
+            </a>
+          </GlassCard>
+        ))}
+      </section>
+    </PlatformShell>
   );
 }
+
+

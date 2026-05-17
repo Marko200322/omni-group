@@ -12,6 +12,7 @@ export async function POST(req: Request) {
   }
   const email = typeof body.email === 'string' ? body.email : '';
   const name = typeof body.name === 'string' ? body.name : '';
+  const company = typeof body.company === 'string' ? body.company.trim() : '';
   if (!email || !name) {
     return NextResponse.json({ ok: false, error: 'name_and_email_required' }, { status: 400 });
   }
@@ -43,8 +44,14 @@ export async function POST(req: Request) {
   }
 
   const subject = `Contact: ${name} <${email}>`;
-  const text = [`Name: ${name}`, `Email: ${email}`, '', 'Message:', messageText].join('\n');
-  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p><p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
+  const companyLine = company ? `Company: ${company}` : '';
+  const text = [`Name: ${name}`, `Email: ${email}`, companyLine, '', 'Message:', messageText]
+    .filter(Boolean)
+    .join('\n');
+  const companyHtml = company
+    ? `<p><strong>Company:</strong> ${escapeHtml(company)}</p>`
+    : '';
+  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
 
   let res: Response;
   try {
@@ -70,7 +77,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'email_provider_error' }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true, message: 'sent_via_resend' });
+  let providerId: string | undefined;
+  try {
+    const sent = (await res.json()) as { id?: string };
+    providerId = typeof sent.id === 'string' ? sent.id : undefined;
+  } catch {
+    providerId = undefined;
+  }
+
+  return NextResponse.json({ ok: true, message: 'sent_via_resend', id: providerId });
 }
 
 function escapeHtml(s: string): string {
@@ -80,3 +95,4 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+

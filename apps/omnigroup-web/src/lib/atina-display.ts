@@ -37,3 +37,4 @@ export function describeSource(s: AtinaPublicSnapshot): string {
       return 'Privremeni placeholder — originalni helper nije rekonstruisan.';
   }
 }
+

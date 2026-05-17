@@ -11,7 +11,7 @@ Ranije: samo backlog. **Sada:** glavni delovi implementirani ispod; proširenja 
 | F4-3 | Pun SaaS (Prisma, NextAuth, Stripe) | **Izvor istine: Atina Node** | Zapisana odluka: [`FAZA-4-SAAS-DECISION.md`](./FAZA-4-SAAS-DECISION.md). Koristi postojeći [`atina-platform/atina`](../atina-platform/atina); ne uvoditi drugi Prisma izvorni sloj bez migracionog plana |
 | F4-4 | YouTube / Celery pipeline | **Gotovo (lokalni fake)** | [`tools/youtube-pipeline/`](../tools/youtube-pipeline/) — Celery lanac, MoviePy, README |
 | F4-5 | Logo SVG / HTML | **Gotovo** | [`apps/omnigroup-web/src/components/LogoRing.tsx`](../apps/omnigroup-web/src/components/LogoRing.tsx) |
-| F4-6 | AI / email / upload | **Backlog** | Sledeći sprint: [`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md) — mapa Atina `notifications`/SMTP, `ai-memory`/`recommendation`, Next kontakt stub; proširenja po tom dokumentu |
+| F4-6 | AI / email / upload | **U toku** | Web: kontakt stub + Resend put; `ai-memory` mini UI na dashboardu; upload spike odluka u checklisti — vidi [`AGENT-DEPLOY-CHECKLIST.md`](./AGENT-DEPLOY-CHECKLIST.md) Faza D/E |
 
 ### Triage (za MASTER #20)
 

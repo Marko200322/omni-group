@@ -1,110 +1,273 @@
 'use client';
 
-// Placeholder Dashboard UI — D.1 (2026-05-13, OneDrive dehidracija).
-// Pun runbook: docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md.
-// Helper `loadAtinaPublicSnapshot` (lib/atina.ts) je rekonstruisan po dokumentovanom
-// ugovoru (apps/omnigroup-web/README.md, .env.example) pa Dashboard sad prikazuje
-// realan podatak sa Atina API-ja kad je `NEXT_PUBLIC_ATINA_API_BASE` dostupan.
-// PRAVI Dashboard UI (KPI panel, status widget-i) je i dalje izgubljen — vrati ga
-// iz OneDrive cloud-a / Git remote-a pre produkcionog deploy-a.
-// TODO[D.1-restore]: rekonstruisati pravi DashboardClient (KPI grid, snapshot summary).
-
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import {
+  FolderKanban,
+  Zap,
+  Gauge,
+  Crown,
+  Play,
+  CheckCircle2,
+  Clock,
+  ArrowUpRight,
+} from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
+import type { SessionUser } from '@/lib/auth-session';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
+import { buildClientMetrics } from '@/lib/platform-metrics';
+import { PlatformShell } from '@/components/platform/PlatformShell';
+import { StatCard } from '@/components/ui/StatCard';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
+import { StatusPill } from '@/components/ui/StatusPill';
+import { SparkChart } from '@/components/ui/SparkChart';
 
-type Props = { snapshot: AtinaPublicSnapshot };
+type Props = {
+  snapshot: AtinaPublicSnapshot;
+  sessionUser: SessionUser | null;
+  isDemo: boolean;
+  unreadCount: number | null;
+  unreadError?: string;
+};
 
-export default function DashboardClient({ snapshot }: Props) {
+const taskStatus = {
+  running: { label: 'U toku', color: 'text-cyan-400', icon: Play },
+  queued: { label: 'U redu', color: 'text-amber-400', icon: Clock },
+  done: { label: 'Završeno', color: 'text-emerald-400', icon: CheckCircle2 },
+};
+
+export default function DashboardClient({
+  snapshot,
+  sessionUser,
+  isDemo,
+  unreadCount,
+  unreadError,
+}: Props) {
+  const metrics = buildClientMetrics(snapshot);
+  const status = snapshot.source === 'live' ? 'live' : snapshot.source;
+  const greeting = sessionUser?.name ? `Zdravo, ${sessionUser.name.split(' ')[0]}` : 'Dobrodošli nazad';
+
   return (
-    <main
-      data-placeholder="dashboard-client"
-      style={{
-        padding: '2rem',
-        fontFamily: 'system-ui, sans-serif',
-        maxWidth: 960,
-        margin: '0 auto',
-      }}
+    <PlatformShell
+      variant="client"
+      title={greeting}
+      subtitle={
+        isDemo
+          ? 'Demo sesija · podaci su ilustrativni dok ne povežeš Atina API.'
+          : `Plan ${metrics.planName} · live podaci kad je Atina API dostupan.`
+      }
+      badge={<StatusPill status={status} />}
+      sessionUser={sessionUser}
+      isDemo={isDemo}
     >
-      <h1 style={{ marginBottom: '0.5rem' }}>Dashboard (placeholder)</h1>
-      <p style={{ marginTop: 0 }}>
-        Ovaj ekran je <strong>privremeni placeholder</strong> dok se ne vrati pravi
-        UI iz OneDrive cloud-a / Git remote-a (D.1). Runbook:{' '}
-        <code>docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md</code>.
-      </p>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Aktivni projekti"
+          value={metrics.projectsActive}
+          icon={FolderKanban}
+          accent="emerald"
+          delay={0}
+        />
+        <StatCard
+          label="Automacije (30d)"
+          value={metrics.automationsRun}
+          icon={Zap}
+          accent="cyan"
+          trend={{ value: '+340 ovaj mesec', positive: true }}
+          delay={0.05}
+        />
+        <StatCard
+          label="Potrošnja kvote"
+          value={metrics.creditsUsed}
+          sub="reset za 8 dana"
+          icon={Gauge}
+          accent="violet"
+          delay={0.1}
+        />
+        <StatCard
+          label="Trenutni plan"
+          value={metrics.planName}
+          icon={Crown}
+          accent="rose"
+          delay={0.15}
+        />
+      </div>
 
-      <section
-        aria-labelledby="atina-status-h2"
-        style={{
-          marginTop: '1.5rem',
-          padding: '1rem',
-          border: '1px solid #e5e7eb',
-          borderRadius: 8,
-          background: '#fafafa',
-        }}
-      >
-        <h2 id="atina-status-h2" style={{ marginTop: 0 }}>
-          Atina health
-        </h2>
-        <p>
-          <strong>Source:</strong> <code>{snapshot.source}</code> · <strong>Base:</strong>{' '}
-          <code>{snapshot.apiBase}</code>
-        </p>
-        <p>{describeSource(snapshot)}</p>
-        {snapshot.errors.length > 0 && (
-          <details>
-            <summary>Greške ({snapshot.errors.length})</summary>
-            <ul>
-              {snapshot.errors.map((e, i) => (
-                <li key={i}>
-                  <code>{e}</code>
+      <div id="automations" className="mt-6 grid gap-6 lg:grid-cols-3">
+        <GlassCard delay={0.2} className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-white">Potrošnja resursa</h2>
+            <span className="text-xs text-slate-500">Poslednjih 6 perioda</span>
+          </div>
+          <SparkChart data={metrics.sparkUsage} gradientFrom="#34d399" gradientTo="#60a5fa" />
+        </GlassCard>
+
+        <GlassCard delay={0.25}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-white">Obaveštenja</h2>
+            {!isDemo && unreadCount !== null && (
+              <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
+                {unreadCount} nepročitanih
+              </span>
+            )}
+          </div>
+          {!isDemo && unreadCount === null && unreadError && (
+            <p className="mb-3 text-xs text-slate-500">
+              Live broj sa Atina API: {unreadError === 'no_access_token' ? 'nema tokena' : unreadError}
+            </p>
+          )}
+          <ul className="mt-4 space-y-3">
+            {metrics.notifications.map((n) => (
+              <motion.li
+                key={n.id}
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.02, x: 4 }}
+                className={`rounded-xl border p-3 text-sm ${
+                  n.read
+                    ? 'border-white/5 bg-white/[0.02] text-slate-400'
+                    : 'border-emerald-500/20 bg-emerald-500/5 text-slate-200'
+                }`}
+              >
+                <p className="font-medium">{n.title}</p>
+                <p className="mt-1 text-xs text-slate-500">{n.time}</p>
+              </motion.li>
+            ))}
+          </ul>
+        </GlassCard>
+      </div>
+
+      <section id="projects" className="mt-6">
+        <GlassCard delay={0.3}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold text-white">Aktivni zadaci</h2>
+            <Link href="/contact" className="btn-ghost flex items-center gap-1 text-emerald-300">
+              Novi projekat <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {metrics.tasks.map((task) => {
+              const meta = taskStatus[task.status];
+              const Icon = meta.icon;
+              return (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, x: -12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  whileHover={{ x: 6 }}
+                  className="rounded-xl border border-white/5 bg-white/[0.02] p-4 transition-colors hover:border-emerald-500/20"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-white">{task.title}</p>
+                      <p className={`mt-1 flex items-center gap-1 text-xs ${meta.color}`}>
+                        <Icon className="h-3.5 w-3.5" /> {meta.label}
+                      </p>
+                    </div>
+                    <span className="font-display text-lg font-bold text-white">{task.progress}%</span>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-400"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${task.progress}%` }}
+                      transition={{ duration: 1, delay: 0.3 }}
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </GlassCard>
+      </section>
+
+      <section id="billing" className="mt-6 grid gap-6 lg:grid-cols-2">
+        <GlassCard delay={0.35}>
+          <h2 className="font-display text-lg font-semibold text-white">Atina modul — status</h2>
+          <p className="mt-2 text-sm text-slate-400">{describeSource(snapshot)}</p>
+          <p className="mt-4 font-mono text-xs text-cyan-300/80">{snapshot.apiBase}</p>
+        </GlassCard>
+        <GlassCard delay={0.4}>
+          <h2 className="font-display text-lg font-semibold text-white">Dostupni planovi</h2>
+          {snapshot.plans.length > 0 ? (
+            <ul className="mt-4 space-y-2">
+              {snapshot.plans.map((p, i) => (
+                <li
+                  key={p.slug ?? i}
+                  className="flex items-center justify-between rounded-lg border border-white/5 px-3 py-2 text-sm"
+                >
+                  <span className="text-white">{p.name ?? p.slug}</span>
+                  <span className="text-slate-400">{formatPlanLine(p)}</span>
                 </li>
               ))}
             </ul>
-          </details>
-        )}
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">Katalog planova će se učitati sa Atina API-ja.</p>
+          )}
+          <Link href="/pricing" className="btn-primary mt-6 inline-block text-sm">
+            Nadogradi plan
+          </Link>
+        </GlassCard>
       </section>
 
-      <section
-        aria-labelledby="atina-plans-h2"
-        style={{
-          marginTop: '1.5rem',
-          padding: '1rem',
-          border: '1px solid #e5e7eb',
-          borderRadius: 8,
-        }}
-      >
-        <h2 id="atina-plans-h2" style={{ marginTop: 0 }}>
-          Billing plans
-        </h2>
-        <p>
-          <strong>Plans count:</strong> {snapshot.plansCount}
-        </p>
-        {snapshot.plans.length > 0 ? (
-          <ul>
-            {snapshot.plans.map((p, i) => (
-              <li key={p.slug ?? i}>{formatPlanLine(p)}</li>
-            ))}
-          </ul>
-        ) : (
-          <p style={{ fontStyle: 'italic', color: '#6b7280' }}>
-            Nema dostupnih planova (Atina API nije dohvatljiv ili lista je prazna).
+      <section id="support" className="mt-6">
+        <GlassCard delay={0.45}>
+          <h2 className="font-display text-lg font-semibold text-white">Podrška</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Treba pomoć sa planom, integracijom ili deploy-om? Javi se Omni Group timu.
           </p>
-        )}
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/contact" className="btn-primary text-sm">
+              Kontaktiraj tim
+            </Link>
+            <Link href="/services" className="btn-glass text-sm">
+              Pogledaj usluge
+            </Link>
+          </div>
+        </GlassCard>
       </section>
 
-      <details style={{ marginTop: '1.5rem' }}>
-        <summary>Sirov snapshot (JSON)</summary>
-        <pre
-          style={{
-            background: '#f3f4f6',
-            padding: '1rem',
-            borderRadius: 8,
-            overflow: 'auto',
-          }}
-        >
-          {JSON.stringify(snapshot, null, 2)}
-        </pre>
-      </details>
-    </main>
+      <section id="account" className="mt-6">
+        <GlassCard delay={0.5}>
+          <h2 className="font-display text-lg font-semibold text-white">Nalog</h2>
+          {sessionUser ? (
+            <div className="mt-3 space-y-1 text-sm text-slate-300">
+              <p>
+                <span className="text-slate-500">Email:</span> {sessionUser.email}
+              </p>
+              <p>
+                <span className="text-slate-500">Uloga:</span> {sessionUser.role}
+              </p>
+              {isDemo && (
+                <p className="text-xs text-amber-400/90">Demo sesija — ai-memory zahteva pravu Atina prijavu.</p>
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-slate-400">Niste prijavljeni.</p>
+          )}
+          <Link href="/login" className="btn-glass mt-4 inline-block text-sm">
+            Prijava / podešavanja
+          </Link>
+        </GlassCard>
+
+        {!isDemo && sessionUser && (
+          <GlassCard delay={0.55} className="mt-6">
+            <h2 className="font-display text-lg font-semibold text-white">AI memorija</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Testiraj Atina <span className="font-mono text-violet-300">ai-memory</span> tok bez izlaganja JWT-a u
+              browseru.
+            </p>
+            <div className="mt-4">
+              <AiMemoryPanel />
+            </div>
+          </GlassCard>
+        )}
+      </section>
+    </PlatformShell>
   );
 }
+
+

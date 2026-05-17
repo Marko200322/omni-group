@@ -1,39 +1,90 @@
+'use client';
+
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { staggerContainer, fadeUp } from '@/lib/animations';
+import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
+import { MODULES } from '@/lib/brand';
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-black/40 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 md:flex-row md:justify-between">
-        <div>
-          <p className="font-semibold text-gradient">Omnigroup</p>
-          <p className="mt-2 max-w-sm text-sm text-gray-400">
-            Web systems, automation, and AI infrastructure — built for operators who ship.
+    <motion.footer
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="relative border-t border-white/[0.06] bg-black/50 py-14"
+    >
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent"
+        animate={{ opacity: [0.2, 0.7, 0.2] }}
+        transition={{ duration: 4, repeat: Infinity }}
+      />
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="mx-auto flex max-w-6xl flex-col gap-10 px-4 md:flex-row md:justify-between"
+      >
+        <motion.div variants={fadeUp}>
+          <OmniGroupLogo href="/" size="sm" />
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
+            Premium web sistemi, moduli Atina · Astra · Titan i operator alati — izgrađeno za timove koji
+            ship-uju u produkciju.
           </p>
-        </div>
-        <div className="flex gap-8 text-sm text-gray-400">
-          <div className="flex flex-col gap-2">
-            <span className="text-white">Product</span>
-            <Link href="/services" className="hover:text-white">
-              Services
-            </Link>
-            <Link href="/pricing" className="hover:text-white">
-              Pricing
-            </Link>
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-white">App</span>
-            <Link href="/dashboard" className="hover:text-white">
-              Client dashboard
-            </Link>
-            <Link href="/admin" className="hover:text-white">
-              Admin
-            </Link>
-          </div>
-        </div>
-      </div>
-      <p className="mt-8 text-center text-xs text-gray-500">
-        © {new Date().getFullYear()} Omnigroup. Monorepo app — see repo README.
-      </p>
-    </footer>
+        </motion.div>
+        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
+          <motion.div className="flex flex-col gap-2">
+            <span className="font-medium text-white">Proizvod</span>
+            {[
+              { href: '/', label: 'Početna' },
+              { href: '/services', label: 'Usluge' },
+              { href: '/pricing', label: 'Cene' },
+              { href: '/contact', label: 'Kontakt' },
+            ].map(({ href, label }) => (
+              <motion.div key={href} whileHover={{ x: 4 }}>
+                <Link href={href} className="text-slate-400 transition hover:text-white">
+                  {label}
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.div className="flex flex-col gap-2">
+            <span className="font-medium text-white">Platforma</span>
+            {[
+              { href: '/dashboard', label: 'Klijent' },
+              { href: '/admin', label: 'Admin' },
+              { href: '/login', label: 'Prijava' },
+            ].map(({ href, label }) => (
+              <motion.div key={href} whileHover={{ x: 4 }}>
+                <Link href={href} className="text-slate-400 transition hover:text-white">
+                  {label}
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.div className="flex flex-col gap-2">
+            <span className="font-medium text-white">Moduli</span>
+            {MODULES.map((m) => (
+              <motion.div key={m.id} whileHover={{ x: 4 }}>
+                <Link href={m.href} className="text-slate-400 transition hover:text-white">
+                  {m.name} · {m.tagline}
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        className="mt-10 text-center text-xs text-slate-600"
+      >
+        © {new Date().getFullYear()} Omni Group · monorepo
+      </motion.p>
+    </motion.footer>
   );
 }
+

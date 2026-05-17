@@ -4,6 +4,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/** OneDrive kvari `.next` symlink-e — keš u node_modules (obično lokalno). */
+const distDir = 'node_modules/.cache/omnigroup-next';
+
 function loadOmnigroupEnvFromAggregator() {
   let dir = path.resolve(__dirname, '..', '..');
   for (let i = 0; i < 6; i++) {
@@ -30,6 +33,7 @@ function loadOmnigroupEnvFromAggregator() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir,
   env: loadOmnigroupEnvFromAggregator(),
 };
 

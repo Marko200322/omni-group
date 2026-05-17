@@ -73,24 +73,30 @@ function describeError(err: unknown): string {
   return String(err);
 }
 
+function unwrapPlansList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+  const root = payload as Record<string, unknown>;
+  if (Array.isArray(root.data)) return root.data;
+  if (Array.isArray(root.plans)) return root.plans;
+  return [];
+}
+
 function normalizePlans(payload: unknown): AtinaPlanSummary[] {
-  const list = Array.isArray((payload as { plans?: unknown })?.plans)
-    ? ((payload as { plans: unknown[] }).plans)
-    : Array.isArray(payload)
-      ? (payload as unknown[])
-      : [];
-  return list.slice(0, 10).map((p) => {
-    const o = (p ?? {}) as Record<string, unknown>;
-    return {
-      slug: typeof o.slug === 'string' ? o.slug : undefined,
-      name: typeof o.name === 'string' ? o.name : undefined,
-      priceMonthly:
-        typeof o.priceMonthly === 'number' || typeof o.priceMonthly === 'string'
-          ? (o.priceMonthly as number | string)
-          : null,
-      currency: typeof o.currency === 'string' ? o.currency : null,
-    };
-  });
+  return unwrapPlansList(payload)
+    .slice(0, 20)
+    .map((p) => {
+      const o = (p ?? {}) as Record<string, unknown>;
+      const priceRaw = o.priceMonthly ?? o.price_monthly;
+      const priceMonthly =
+        typeof priceRaw === 'number' || typeof priceRaw === 'string' ? priceRaw : null;
+      return {
+        slug: typeof o.slug === 'string' ? o.slug : undefined,
+        name: typeof o.name === 'string' ? o.name : undefined,
+        priceMonthly,
+        currency: typeof o.currency === 'string' ? o.currency : null,
+      };
+    });
 }
 
 export async function loadAtinaPublicSnapshot(
@@ -146,3 +152,4 @@ export async function loadAtinaPublicSnapshot(
     errors,
   };
 }
+

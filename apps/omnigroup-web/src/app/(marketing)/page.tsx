@@ -1,0 +1,255 @@
+'use client';
+
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { LogoRing } from '@/components/LogoRing';
+import { ModulesSection } from '@/components/ModulesSection';
+import {
+  Sparkles,
+  Server,
+  Bot,
+  Zap,
+  Shield,
+  LineChart,
+  ArrowRight,
+  Layers,
+  Globe2,
+} from 'lucide-react';
+
+const stats = [
+  { label: 'Godina iskustva', value: '10+' },
+  { label: 'Sistema', value: '250+' },
+  { label: 'Uptime', value: '99.99%' },
+  { label: 'Eksperata', value: '50+' },
+];
+
+const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
+
+export default function HomePage() {
+  return (
+    <div>
+      <section className="relative overflow-hidden px-4 pb-28 pt-20">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(124,58,237,0.2),transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0 mesh-grid opacity-40" />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-6xl"
+        >
+          <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-200">
+                <Sparkles className="h-3.5 w-3.5" /> Omni Group · AI · Automatizacija
+              </p>
+              <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
+                Sistemi koji{' '}
+                <span className="text-gradient">rade u produkciji</span>, ne u prezentaciji
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
+                Omni Group isporučuje premium web, operator konzolu i klijentski workspace — moduli
+                Atina, Astra i Titan pokrivaju API, automatizaciju i operacije.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
+                  Otvori platformu <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/services" className="btn-glass">
+                  Pogledaj usluge
+                </Link>
+              </div>
+              <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {stats.map((s, i) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.08 }}
+                    className="glass-strong px-4 py-4 text-center"
+                  >
+                    <p className="font-display text-2xl font-bold text-white">{s.value}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">{s.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="relative flex justify-center"
+            >
+              <LogoRing />
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1 text-xs text-cyan-200">
+                Atina · Astra · Titan
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      <section className="overflow-hidden border-y border-white/[0.06] bg-white/[0.02] py-6">
+        <motion.div
+          animate={{ x: [0, -600] }}
+          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+          className="flex gap-12 whitespace-nowrap text-sm font-medium uppercase tracking-[0.25em] text-slate-600"
+        >
+          {[...logos, ...logos, ...logos].map((name, i) => (
+            <span key={i} className="text-slate-500">
+              {name}
+            </span>
+          ))}
+        </motion.div>
+      </section>
+
+      <section className="px-4 py-24">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mb-12 text-center"
+          >
+            <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+              Tri stuba <span className="text-gradient">jedne platforme</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-400">
+              Marketing sajt, klijentski dashboard i admin konzola — jedan brend, tri modula ispod haube.
+            </p>
+          </motion.div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: Server,
+                title: 'Web & API',
+                body: 'Next.js front, Express/Nest backend, TypeORM, integracije.',
+                href: '/services',
+              },
+              {
+                icon: Bot,
+                title: 'Klijent workspace',
+                body: 'Dashboard, projekti, automacije i billing — live kad je API dostupan.',
+                href: '/dashboard',
+              },
+              {
+                icon: Zap,
+                title: 'Operator konzola',
+                body: 'Monitoring, workflow statistika, billing katalog i sistemski signali.',
+                href: '/admin',
+              },
+            ].map(({ icon: Icon, title, body, href }, i) => (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -6 }}
+              >
+                <Link
+                  href={href}
+                  className="glass-strong group block h-full p-8 transition hover:border-violet-500/30 hover:shadow-glow"
+                >
+                  <Icon className="mb-5 h-9 w-9 text-violet-400 transition group-hover:scale-110" />
+                  <h3 className="font-display text-xl font-semibold text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-400">{body}</p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <ModulesSection />
+
+      <section className="border-t border-white/[0.06] px-4 py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+          <div>
+            <h2 className="font-display text-3xl font-bold text-white">
+              Platforma za <span className="text-gradient-client">klijente</span> i{' '}
+              <span className="text-gradient-admin">operatore</span>
+            </h2>
+            <ul className="mt-8 space-y-4">
+              {[
+                { icon: Layers, text: 'Klijentski dashboard — projekti, automacije, billing.' },
+                { icon: Shield, text: 'Admin konzola — monitoring, planovi, workflow statistika.' },
+                { icon: LineChart, text: 'Live Atina API snapshot — health + javni katalog planova.' },
+                { icon: Globe2, text: 'Spremno za produkciju kad popuniš .env i deploy.' },
+              ].map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-3 text-slate-300">
+                  <span className="mt-0.5 rounded-lg bg-white/5 p-2">
+                    <Icon className="h-4 w-4 text-cyan-400" />
+                  </span>
+                  {text}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link href="/dashboard" className="btn-primary">
+                Klijent workspace
+              </Link>
+              <Link href="/admin" className="btn-glass">
+                Admin konzola
+              </Link>
+            </div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="glass-strong relative overflow-hidden p-8"
+          >
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
+            <p className="relative text-sm text-slate-400">Proces isporuke</p>
+            <ol className="relative mt-6 space-y-6">
+              {['Discovery & arhitektura', 'Implementacija + test gates', 'Staging mirror & CEO checklist'].map(
+                (step, i) => (
+                  <li key={step} className="flex gap-4">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 font-display text-sm font-bold">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="font-medium text-white">{step}</p>
+                      <p className="mt-1 text-xs text-slate-500">Faza {i + 1} · dokumentovano u monorepo</p>
+                    </div>
+                  </li>
+                ),
+              )}
+            </ol>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-28">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mx-auto max-w-4xl rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-600/20 via-transparent to-cyan-500/10 p-10 text-center shadow-glow md:p-14"
+        >
+          <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
+            Spremni za sledeći nivo?
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-slate-300">
+            Pokreni demo dashboard ili zakaži poziv — platforma je već u repou, čeka tvoj produkcioni cutover.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <Link href="/contact" className="btn-primary">
+              Kontaktiraj tim
+            </Link>
+            <Link href="/login" className="btn-glass">
+              Prijava
+            </Link>
+          </div>
+        </motion.div>
+      </section>
+    </div>
+  );
+}
+
+
+

@@ -1,26 +1,24 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Syne } from 'next/font/google';
 import './globals.css';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const syne = Syne({ subsets: ['latin'], variable: '--font-display' });
 
 export const metadata: Metadata = {
-  title: 'Omnigroup — Systems That Scale',
-  description: 'Automation, AI infrastructure, and web systems.',
+  title: {
+    default: 'Omni Group',
+    template: '%s · Omni Group',
+  },
+  description:
+    'Omni Group — premium web, klijentski workspace i operator konzola. Moduli: Atina, Astra, Titan.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sr">
-      <body className={inter.className}>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-      </body>
+    <html lang="sr" className={`${inter.variable} ${syne.variable}`}>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }
+

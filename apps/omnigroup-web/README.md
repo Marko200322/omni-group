@@ -17,9 +17,70 @@ Part of **Faza 4** delivery in the monorepo. Futuristic dark UI (Tailwind + Fram
 ```bash
 cd apps/omnigroup-web
 npm install
-npm run dev    # http://localhost:3000
+npm run dev    # http://localhost:3010 (Atina API obično na :3000)
 npm run build
 ```
+
+## Lokalni stack (web + Atina API)
+
+**Web (uvek prvo):**
+
+```cmd
+cd /d "c:\Users\Marko Kosic\OneDrive\Desktop\omni group\apps\omnigroup-web"
+copy .env.example .env.local
+npm run dev:clean
+```
+
+Otvori **http://localhost:3010**. Demo prijava: `/login` → **Klijent demo** / **Admin demo** (bez Atina API-ja).
+
+**Atina API (live podaci + prava prijava):**
+
+1. Uključi **Docker Desktop**.
+2. Infra defaulti su u [`config/env-aggregator.json`](../../config/env-aggregator.json) (`DB_*`, `JWT_*`, `ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+3. Agregatori (opciono) u `atina-platform/atina/.env` — vidi taj fajl u repou.
+
+```cmd
+cd /d "c:\Users\Marko Kosic\OneDrive\Desktop\omni group\atina-platform\atina"
+npm run db:up
+npm run docker:migrate
+npm run docker:seed
+npm run dev
+```
+
+> **Dev + build:** ne pokreći `npm run build` dok `npm run dev` radi na `:3010` — korumpira keš (`Cannot find module './948.js'`). Rešenje: `npm run dev:clean`.
+
+Ili jednom iz root-a:
+
+```powershell
+.\scripts\start-local-stack.ps1
+```
+
+4. Provera: **http://localhost:3000/health** → JSON OK.
+5. U `apps/omnigroup-web/.env.local`: `NEXT_PUBLIC_ATINA_API_BASE=http://127.0.0.1:3000`
+6. Restart web dev servera. Na `/login` koristi seed admin nalog iz `env-aggregator.json` (`ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+
+**Auth BFF:** `POST /api/auth/login` · demo `POST /api/auth/demo` · `POST /api/auth/logout` · cookie `og_session` · middleware štiti `/dashboard` i `/admin`.
+
+**Smoke (web + Atina):** iz repo root-a: `powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web-integration.ps1`
+
+**Kontakt (D.2/D.3):** `npm run test:contact` u ovom folderu ili `.\scripts\test-contact-resend.ps1` iz root-a. Bez `RESEND_API_KEY` → stub; sa ključem → pravi email (restart dev posle `.env.local`).
+
+**Disk:** ako `npm ci` padne (**ENOSPC**), iz root-a: `.\scripts\free-disk-space.ps1` (cilj ≥5 GB slobodno na `C:`).
+
+## Staging (vlasnik)
+
+Web env na staging hostu (isti ključevi kao lokalno, druge vrednosti):
+
+| Varijabla | Primer |
+|-----------|--------|
+| `NEXT_PUBLIC_ATINA_API_BASE` | `https://api.staging.example` |
+| `NEXT_PUBLIC_SITE_URL` | `https://staging.example` |
+| `SESSION_SECRET` | dug random string (secret store) |
+| `RESEND_API_KEY` | Resend staging key |
+| `CONTACT_EMAIL_FROM` | verifikovan domen |
+| `CONTACT_EMAIL_TO` | tim inbox |
+
+Gate redosled: [`docs/STAGING-MIRROR-PROD.md`](../../docs/STAGING-MIRROR-PROD.md) → [`docs/STAGING-RELEASE-CHECKLIST.md`](../../docs/STAGING-RELEASE-CHECKLIST.md) → `npm run build` u ovom folderu.
 
 ## Routes
 
@@ -28,7 +89,7 @@ npm run build
 - `/robots.txt` — generisan iz `app/robots.ts`
 - `/` — landing
 - `/services`, `/pricing`, `/contact`
-- `/dashboard`, `/admin` — load **public** Atina data via **server-side** `fetch` (`GET /health`, `GET /api/v1/billing/plans`). Set `NEXT_PUBLIC_ATINA_API_BASE` (see `.env.example`). This avoids browser CORS to Atina; if you later fetch Atina from the browser, allow the Next origin in Atina’s CORS config.
+- `/dashboard`, `/admin` — zaštićeno sesijom; javni Atina snapshot + (kad nije demo) autentifikovani pozivi (`notifications/unread-count`). `NEXT_PUBLIC_ATINA_API_BASE` u `.env.local`.
 
 ## Contact / email (F4-6)
 
@@ -36,4 +97,4 @@ The `/contact` page posts to **`/api/contact`**. With **no** `RESEND_API_KEY`, t
 
 ## Note
 
-Runs on port **3000** by default. If Atina Node also uses 3000 locally, set `PORT=3005` for one of them.
+`npm run dev` koristi port **3010** da ne kolidira sa Atina API na **3000**. Za produkciju: `next start -p 3010` ili postavi `PORT`.

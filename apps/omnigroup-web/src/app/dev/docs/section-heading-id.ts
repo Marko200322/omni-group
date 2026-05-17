@@ -12,3 +12,4 @@ export function sectionHeadingId(title: string): string {
       .replace(/^-|-$/g, '')
   );
 }
+
