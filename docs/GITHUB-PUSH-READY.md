@@ -1,6 +1,6 @@
 # GitHub push — spremno lokalno
 
-**Stanje (2026-05-17):** Commit **`36b34f5`** na `main` — working tree čist, `pre-push-check` PASS. **Nema** `origin` dok vlasnik ne doda URL.
+**Stanje (2026-05-17):** Commit **`75b3ffc`** na `main` — working tree čist. Brzi pregled: `.\scripts\owner-status.ps1`. **Nema** `origin` dok vlasnik ne doda URL.
 
 **Pre push-a:**
 ```powershell

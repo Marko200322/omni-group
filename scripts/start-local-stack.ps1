@@ -97,6 +97,7 @@ Write-Host '=== start-local-stack: gotovo ===' -ForegroundColor Green
 Write-Host 'Web:   http://localhost:3010' -ForegroundColor DarkGray
 Write-Host 'Atina: http://localhost:3000/health' -ForegroundColor DarkGray
 Write-Host 'Login: admin@atina.io / Admin@123456 (config/env-aggregator.json)' -ForegroundColor DarkGray
+Write-Host 'Status: powershell -ExecutionPolicy Bypass -File .\scripts\owner-status.ps1' -ForegroundColor DarkGray
 Write-Host 'Smoke: powershell -ExecutionPolicy Bypass -File .\scripts\smoke-web-integration.ps1' -ForegroundColor DarkGray
 Write-Host 'Contact: powershell -ExecutionPolicy Bypass -File .\scripts\test-contact-resend.ps1' -ForegroundColor DarkGray
 Write-Host 'Agregatori: powershell -ExecutionPolicy Bypass -File .\scripts\check-atina-aggregators.ps1' -ForegroundColor DarkGray

@@ -78,4 +78,5 @@ Write-Host "Git: $changed fajlova izmenjeno/netracked" -ForegroundColor DarkGray
 Write-Host ''
 Write-Host 'pre-push-check: PASS' -ForegroundColor Green
 Write-Host 'Sledece: git add / commit / git remote add origin ... / git push' -ForegroundColor DarkGray
+Write-Host 'Brzi pregled: .\scripts\owner-status.ps1' -ForegroundColor DarkGray
 Write-Host 'Vidi docs/GITHUB-PUSH-READY.md' -ForegroundColor DarkGray
