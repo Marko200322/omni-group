@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Doslednost dok — doc gate (audit-doc-gate-references.ps1; md/txt + yaml/ps1/ini; uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG; scripts/README.md)
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/audit-doc-gate-references.ps1
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
