@@ -14,8 +14,7 @@ git push -u origin main
 
 ```powershell
 cd "c:\Users\Marko Kosic\OneDrive\Desktop\omni group"
-git remote add origin https://github.com/TVOJ-USER/TVOJ-REPO.git
-git push -u origin main
+powershell -ExecutionPolicy Bypass -File .\scripts\git-push-first-time.ps1 -RepoUrl "https://github.com/TVOJ-USER/TVOJ-REPO.git"
 ```
 
 Posle prvog push-a:

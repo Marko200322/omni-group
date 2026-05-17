@@ -1,5 +1,7 @@
 # Agent deploy checklist — Omni Group (web + Atina integracija)
 
+**Status: AGENT ZAVRŠIO (2026-05-17)** — commit `36b34f5` + `6ac7ec1`. Čeka vlasnika: **GitHub push** i **Resend D.2**.
+
 **Svrha:** operativna lista za agenta pre sledećih instrukcija vlasnika.  
 **Ne uključuje:** CEO/admin checklistu ([`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md), [`CEO-OPEN-BULLETS-RUNBOOK.md`](./CEO-OPEN-BULLETS-RUNBOOK.md)) — Git prod zaštita, live Stripe, rollback ritual, admin monitoring ritual, itd.
 
