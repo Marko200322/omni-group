@@ -17,6 +17,8 @@ cd "c:\Users\Marko Kosic\OneDrive\Desktop\omni group"
 powershell -ExecutionPolicy Bypass -File .\scripts\git-push-first-time.ps1 -RepoUrl "https://github.com/TVOJ-USER/TVOJ-REPO.git"
 ```
 
+Skripta automatski pokreće `pre-push-check.ps1 -SkipSmoke` pre push-a.
+
 Posle prvog push-a:
 
 1. **Settings → Branches** — zaštiti `main` ([`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)).

@@ -8,7 +8,10 @@
   .\scripts\free-disk-space.ps1 -SkipDocker
 #>
 #Requires -Version 5.1
-param([switch]$SkipDocker)
+param(
+  [switch]$SkipDocker,
+  [switch]$SkipNext
+)
 
 $ErrorActionPreference = 'Continue'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -28,9 +31,11 @@ $paths = @(
   (Join-Path $repoRoot 'atina-platform\atina\coverage'),
   (Join-Path $repoRoot 'atina-platform\atina\dist'),
   (Join-Path $repoRoot 'atina-system\dist'),
-  (Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache'),
-  (Join-Path $repoRoot 'apps\omnigroup-web\.next')
+  (Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache')
 )
+if (-not $SkipNext) {
+  $paths += (Join-Path $repoRoot 'apps\omnigroup-web\.next')
+}
 foreach ($p in $paths) {
   if (Test-Path $p) {
     Remove-Item -Recurse -Force $p -ErrorAction SilentlyContinue
