@@ -19,8 +19,10 @@ Write-Host '=== pre-push-check ===' -ForegroundColor Cyan
 
 $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
-Write-Host "Disk C: free ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 5) { 'Yellow' } else { 'DarkGray' })
-if ($freeGb -lt 5) {
+Write-Host "Disk C: free ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 5) { 'Yellow' } else { 'DarkGray' })
+if ($freeGb -lt 1) {
+  Write-Host '  KRITICNO: disk ispod 1 GB — zaustavi dev servere i pokreni free-disk-space.ps1' -ForegroundColor Red
+} elseif ($freeGb -lt 5) {
   Write-Host '  Upozorenje: pre npm ci / verify-monorepo oslobodi >=5 GB' -ForegroundColor Yellow
 }
 

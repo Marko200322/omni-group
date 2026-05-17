@@ -31,15 +31,26 @@ $paths = @(
   (Join-Path $repoRoot 'atina-platform\atina\coverage'),
   (Join-Path $repoRoot 'atina-platform\atina\dist'),
   (Join-Path $repoRoot 'atina-system\dist'),
-  (Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache')
+  (Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache'),
+  (Join-Path $repoRoot 'atina-platform\atina\node_modules\.cache'),
+  (Join-Path $repoRoot 'atina-system\node_modules\.cache'),
+  (Join-Path $repoRoot 'node_modules\.cache')
 )
 if (-not $SkipNext) {
   $paths += (Join-Path $repoRoot 'apps\omnigroup-web\.next')
 }
 foreach ($p in $paths) {
   if (Test-Path $p) {
+    $sizeMb = 0
+    try {
+      $sizeMb = [math]::Round((Get-ChildItem -LiteralPath $p -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
+    } catch { }
     Remove-Item -Recurse -Force $p -ErrorAction SilentlyContinue
-    Write-Host "removed $p"
+    if ($sizeMb -gt 0) {
+      Write-Host "removed $p (${sizeMb} MB)"
+    } else {
+      Write-Host "removed $p"
+    }
   }
 }
 

@@ -43,7 +43,10 @@ if ($dirty) {
 
 $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
-Write-Host "Disk C: ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 5) { 'Yellow' } else { 'DarkGray' })
+Write-Host "Disk C: ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 5) { 'Yellow' } else { 'DarkGray' })
+if ($freeGb -lt 1) {
+  Write-Host '  KRITICNO: odmah pokreni free-disk-space.ps1 (zaustavi dev servere pre punog ciscenja)' -ForegroundColor Red
+}
 
 foreach ($svc in @(
   @{ Name = 'Atina'; Url = 'http://127.0.0.1:3000/health' },
@@ -79,6 +82,12 @@ if (Test-Path $atinaEnv) {
     }
   }
   Write-Host "Atina agregatori: $filled/$total popunjeno (detalji: check-atina-aggregators.ps1)" -ForegroundColor DarkGray
+  $financeKey = Read-DotEnvValue -Path $atinaEnv -Key 'FINANCE_KEY'
+  if ([string]::IsNullOrWhiteSpace($financeKey)) {
+    Write-Host 'Stripe: nije konfigurisan (check-stripe-env.ps1)' -ForegroundColor Yellow
+  } else {
+    Write-Host 'Stripe: delimično/kompletno (check-stripe-env.ps1)' -ForegroundColor Green
+  }
 }
 
 Write-Host ''
