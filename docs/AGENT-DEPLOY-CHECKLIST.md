@@ -183,7 +183,7 @@ npm run build
 | 2026-05-17 | E | PASS | ai-memory UI, robots, dev auth gate |
 | 2026-05-17 | F | PASS | `free-disk-space.ps1`; verify + smoke |
 | 2026-05-17 | Ops | PASS | `owner-smoke-all.ps1`; fix putanja skripti; dev:clean |
-| 2026-05-17 | Git | PASS | commit `85c7487` — 87 fajlova; push čeka remote |
+| 2026-05-17 | Git | PASS | commit `36b34f5`; working tree čist; push čeka `origin` |
 
 ---
 

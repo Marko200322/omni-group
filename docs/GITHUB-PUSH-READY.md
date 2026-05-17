@@ -1,6 +1,6 @@
 # GitHub push — spremno lokalno
 
-**Stanje (2026-05-17):** Omni Group web + auth BFF + agent checklist završeni lokalno. **`owner-smoke-all` PASS.** Ima **necommitovanih** izmena (brend, auth, skripte, docs) — vlasnik odlučuje kada `git add` + commit.
+**Stanje (2026-05-17):** Commit **`36b34f5`** na `main` — working tree čist, `pre-push-check` PASS. **Nema** `origin` dok vlasnik ne doda URL.
 
 **Pre push-a:**
 ```powershell
