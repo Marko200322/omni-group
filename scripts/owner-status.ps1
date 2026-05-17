@@ -53,7 +53,7 @@ foreach ($svc in @(
     $r = Invoke-WebRequest -Uri $svc.Url -UseBasicParsing -TimeoutSec 4
     Write-Host "$($svc.Name): $($r.StatusCode)" -ForegroundColor Green
   } catch {
-    Write-Host "$($svc.Name): down" -ForegroundColor Red
+    Write-Host "$($svc.Name): down (restart: .\scripts\restart-web-dev.ps1)" -ForegroundColor Red
   }
 }
 
