@@ -10,7 +10,8 @@
 #Requires -Version 5.1
 param(
   [switch]$SkipDocker,
-  [switch]$SkipNext
+  [switch]$SkipNext,
+  [switch]$CleanTemp
 )
 
 $ErrorActionPreference = 'Continue'
@@ -56,6 +57,17 @@ foreach ($p in $paths) {
 
 if (-not $SkipDocker) {
   docker system prune -f 2>$null
+}
+
+if ($CleanTemp -and $env:TEMP -and (Test-Path $env:TEMP)) {
+  $removed = 0
+  Get-ChildItem -LiteralPath $env:TEMP -Force -ErrorAction SilentlyContinue | ForEach-Object {
+    try {
+      Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction Stop
+      $removed++
+    } catch { }
+  }
+  Write-Host "cleaned TEMP ($removed stavki u $env:TEMP)"
 }
 
 Write-Host 'After:' -ForegroundColor Cyan

@@ -99,6 +99,6 @@ if ([string]::IsNullOrWhiteSpace($resend)) {
   Write-Host '  2. Resend u .env.local + test-contact-resend.ps1' -ForegroundColor DarkGray
 }
 if ($freeGb -lt 5) {
-  Write-Host '  3. free-disk-space.ps1 -SkipNext (dev gore) ili puno bez -SkipNext' -ForegroundColor DarkGray
+  Write-Host '  3. disk-report.ps1 / free-disk-space.ps1 -CleanTemp -SkipNext' -ForegroundColor DarkGray
 }
 Write-Host '  Pun gate: pre-push-check.ps1 | Smoke: owner-smoke-all.ps1' -ForegroundColor DarkGray
