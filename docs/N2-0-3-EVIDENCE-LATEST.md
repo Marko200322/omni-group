@@ -1,8 +1,10 @@
 # Evidencija — N2 red 0.3 (CI green na svakom merge-u na `main`)
 
-**Poslednji pregled repoa (2026-05-13):** nije zatvoreno — čeka prvi zelen `CI (monorepo)` run na `main` posle merge-a.
+**Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Status:** _čeka ritual pošto Korak 1 (branch protection) bude zatvoren_
+**Poslednji push na `main` (agent, 2026-05-21):** `5f6461b` — [Actions run 26196348887](https://github.com/Marko200322/omni-group/actions/runs/26196348887) (proveri 5/5 jobova pre sign-off-a). Raniji pad #25 (`a628906`): doc gate — fix `e6a80ec` / `342b2c0`.
+
+**Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 
 **Cilj:** zatvoriti red **0.3** u [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md):
 

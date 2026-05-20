@@ -61,7 +61,23 @@ Ako vlasnik repoa uključi **Require status checks**, imena u UI-u često izgled
 
 ---
 
-## 5. Kad je crveno
+## 5. Kad novi push na `main` ostaje **Pending** (queue)
+
+Workflow [`ci-monorepo.yml`](../.github/workflows/ci-monorepo.yml) na **`main`** **ne otkazuje** stariji run (`cancel-in-progress: false`) — novi run čeka dok prethodni ne završi.
+
+**Tipičan uzrok (2026-05-21):** run [26195848715](https://github.com/Marko200322/omni-group/actions/runs/26195848715) (`a628906`) — job **Atina SaaS (test:ci)** ostao **`in_progress`** satima; run [26196348887](https://github.com/Marko200322/omni-group/actions/runs/26196348887) (`5f6461b`) stoji **pending**.
+
+**Šta uraditi (vlasnik, ~1 min):**
+
+1. **Actions → CI (monorepo)** → otvori **zaglavljeni** run na `main`.
+2. **Cancel workflow** (gornji desni ugao).
+3. Sačekaj da se pokrene ili ručno **Re-run** poslednji commit (`5f6461b` ili noviji).
+
+Posle fix-a doc gate-a (`e6a80ec`+) očekuj **zelen** job **Python (Doslednost dok + pytest)**; lokalno: `.\scripts\audit-doc-gate-references.ps1` + `python -m pytest -q`.
+
+---
+
+## 6. Kad je crveno
 
 1. **Otvori padajući job** u tom run-u i pročitaj poslednje log linije (koji korak je pao — pytest, `npm run build`, `verify:ci`, `docker compose config`, itd.).
 2. **Lokalna reprodukcija:** [`scripts/README.md`](../scripts/README.md) → **`verify-monorepo.ps1`** (isti red kao CI job **`python`** i ostatak mirror-a; switch-evi **`-SkipOmnigroupWeb`**, **`-SkipCompose`**, **`-SkipNestVerifyCi`**, **`-SkipDocAudit`** za užu dijagnostiku). Kad su Astra/Nest/Node gore, za Atina Node dodatno **`npm run smoke:all`** (`smoke:all`) u `atina-platform/atina` — isti release gate link kao u odeljku 2 iznad.
