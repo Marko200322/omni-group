@@ -12,7 +12,8 @@
 **Agent checklista sekcije 1–8:** zatvorene (osim **§7.2** restore pravog UI = **vlasnik**).  
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
 **Git:** push na `origin/main` (2026-05-21); glavni commit **`a370c25`**. CI job **`python`** / **`Python (Doslednost dok + pytest)`** — proveri Actions; doc gate fix posle prvog pada. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).  
-**`.env`:** agregatori i Stripe polja još **prazni** (lokalni dev radi); provera: `.\scripts\check-atina-aggregators.ps1` i `.\scripts\check-stripe-env.ps1`.
+**`.env`:** agregatori i Stripe polja još **prazni** (lokalni dev radi); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md); provera: `.\scripts\check-atina-aggregators.ps1` i `.\scripts\check-stripe-env.ps1`.  
+**CI:** poslednji push `e6a80ec` (doc gate fix) — proveri [Actions](https://github.com/Marko200322/omni-group/actions) (run #26 treba da prođe posle #25).
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom
 
@@ -44,7 +45,7 @@
 
 #### Ostaje vlasniku `[V]`
 
-- Popuniti `atina-platform/atina/.env` (agregatori + Stripe live polja) — **ne commitovati**
+- Popuniti `atina-platform/atina/.env` (agregatori + Stripe live polja) — **ne commitovati** — [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md)
 - Git push, prod deploy, `TYPEORM_SYNC=false` + migracije na pravoj Nest bazi
 - `npm run smoke:all` na prod URL posle deploya
 

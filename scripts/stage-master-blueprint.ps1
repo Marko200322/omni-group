@@ -50,6 +50,13 @@ if ($staged -eq 0) {
   throw 'Nema staged izmena za commit.'
 }
 
+Write-Host ''
+Write-Host '== Doslednost dok (pre commit) ==' -ForegroundColor Cyan
+& (Join-Path $scriptsDir 'audit-doc-gate-references.ps1')
+if ($LASTEXITCODE -ne 0) {
+  throw 'audit-doc-gate-references FAIL — popravi docs pre commit-a (CI job python).'
+}
+
 $msg = @'
 feat(atina): Master Blueprint integracije, agregatori, Val 357 gate
 
