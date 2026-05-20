@@ -68,6 +68,23 @@ describe('ModuleRegistry', () => {
     await expect(r.initializeAll()).rejects.toThrow("Core module 'core-bad' failed");
   });
 
+  it('runHealthProbe returns null when probe throws', async () => {
+    const r = ModuleRegistry.getInstance();
+    r.registerHealthProbe('forge', async () => {
+      throw new Error('probe down');
+    });
+    await expect(r.runHealthProbe('forge')).resolves.toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Health probe failed: forge',
+      expect.objectContaining({ error: 'probe down' })
+    );
+  });
+
+  it('runHealthProbe returns null for unknown slug', async () => {
+    const r = ModuleRegistry.getInstance();
+    await expect(r.runHealthProbe('missing')).resolves.toBeNull();
+  });
+
   it('shutdownAll calls shutdown when present', async () => {
     const r = ModuleRegistry.getInstance();
     const shutdown = jest.fn().mockResolvedValue(undefined);

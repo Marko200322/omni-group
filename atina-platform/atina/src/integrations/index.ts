@@ -7,3 +7,6 @@ export * from './finance-client';
 export * from './comms-client';
 export * from './storage-client';
 export * from './infrastructure-client';
+export * from './captcha-client';
+export * from './domain-client';
+export * from './web3-storage-client';

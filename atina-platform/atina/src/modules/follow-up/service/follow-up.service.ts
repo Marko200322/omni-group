@@ -10,6 +10,7 @@ import {
   FollowUpStatusDtoType,
   RunFollowUpDtoType,
 } from '../dto/follow-up.dto';
+import { getCommsClient } from '../../../integrations';
 import { FollowUpRepository } from '../repository/follow-up.repository';
 
 export class FollowUpService {
@@ -40,6 +41,17 @@ export class FollowUpService {
         dto.mode === 'schedule' ? 1.15 : dto.mode === 'escalate' ? 1.25 : 0.9;
       const touchpointsScheduled = Math.max(1, Math.round((dto.intensity / 10) * touchMultiplier));
       const completionScore = Math.min(100, 52 + Math.round(dto.intensity / 3));
+      const comms = getCommsClient();
+      let commsDispatched = false;
+      if (comms.isConfigured() && (dto.mode === 'schedule' || dto.mode === 'escalate')) {
+        await comms.request('POST', '/v1/follow-up/dispatch', {
+          systemId,
+          mode: dto.mode,
+          touchpointsScheduled,
+          intensity: dto.intensity,
+        });
+        commsDispatched = true;
+      }
 
       const outputPayload = {
         touchpointsScheduled,
@@ -47,6 +59,7 @@ export class FollowUpService {
         estimatedRevenue: estRevenue,
         mode: dto.mode,
         intensity: dto.intensity,
+        comms_dispatched: commsDispatched,
         idempotency_key: idempotencyKey || null,
       };
 

@@ -5,6 +5,15 @@ import logger from '../../utils/logger';
 
 jest.mock('../../database/connection');
 jest.mock('../../queue/queue');
+jest.mock('../../queue/register-workers', () => ({
+  registerAuxiliaryQueueWorkers: jest.fn(),
+}));
+jest.mock('../../modules/tasks/task-executors', () => ({
+  executeScrapeUrl: jest.fn().mockResolvedValue({ status: 'scraped', url: 'https://x.com', fallback: true, data: {} }),
+  executeTitanixPipeline: jest.fn().mockResolvedValue({ status: 'completed' }),
+  executeOmnitubePipeline: jest.fn().mockResolvedValue({ status: 'queued', jobId: 'yt-1' }),
+  executeOmnigameValidate: jest.fn().mockResolvedValue({ validation_score: 80 }),
+}));
 
 const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
 const mockGetQueue = queue.getQueue as jest.MockedFunction<typeof queue.getQueue>;
@@ -90,6 +99,14 @@ describe('TasksModule', () => {
       await worker(job('generate_report', {}));
       await worker(job('custom_type', { a: 1 }));
       expect(mockQuery.mock.calls.length).toBeGreaterThan(4);
+    });
+
+    it('omnitube_pipeline and omnigame_validate task types', async () => {
+      await worker(job('titanix_pipeline', { pipeline: 'p1' }));
+      await worker(job('omnitube_pipeline', { systemId: 's1' }));
+      await worker(job('omnigame_validate', { genre: 'indie' }));
+      const completed = mockQuery.mock.calls.map((c) => (c[1] as unknown[])[1]);
+      expect(completed.filter((s) => s === 'completed').length).toBeGreaterThanOrEqual(3);
     });
 
     it('on failure retries when not last attempt', async () => {

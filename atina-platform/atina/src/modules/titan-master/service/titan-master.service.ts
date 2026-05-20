@@ -3,6 +3,7 @@ import {
   CreateTitanMasterDtoType,
   RunTitanMasterDtoType,
 } from '../dto/titan-master.dto';
+import { getAiClient } from '../../../integrations';
 import { TitanMasterRepository } from '../repository/titan-master.repository';
 
 export class TitanMasterService {
@@ -28,15 +29,25 @@ export class TitanMasterService {
     const { rows: systems } = await this.repo.getOwned(systemId, userId);
     if (!systems[0]) throw new NotFoundError('Titan Master system');
 
-    const projectedGain = this.getProjectedGain(dto.mode);
+    let projectedGain = this.getProjectedGain(dto.mode);
+    let recommendationText = 'Rebalance resources toward highest-conversion workflows.';
+    const ai = getAiClient();
+    if (ai.isConfigured()) {
+      const rec = await ai.fetchRecommendations({ mode: dto.mode, systemId, objective: dto.input });
+      if (rec?.recommendations?.length) {
+        recommendationText = rec.recommendations.join(' ');
+        projectedGain = Math.min(500, projectedGain + rec.recommendations.length * 12);
+      }
+    }
     const normalizedInput = this.normalizePayload(dto.input);
     const normalizedOutput = {
       strategy: dto.mode,
       projected_gain: projectedGain,
-      recommendation: 'Rebalance resources toward highest-conversion workflows.',
+      recommendation: recommendationText,
       audit: {
         normalized: true,
         mode: dto.mode,
+        ai_enriched: ai.isConfigured(),
       },
     };
 

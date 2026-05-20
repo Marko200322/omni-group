@@ -120,6 +120,29 @@ export const config = {
       url: optional('STORAGE_URL', ''),
       key: optional('STORAGE_KEY', ''),
     },
+    captcha: {
+      url: optional('CAPTCHA_URL', ''),
+      key: optional('CAPTCHA_KEY', ''),
+    },
+    domain: {
+      url: optional('DOMAIN_URL', ''),
+      key: optional('DOMAIN_KEY', ''),
+    },
+    web3Storage: {
+      url: optional('WEB3_STORAGE_URL', ''),
+      key: optional('WEB3_STORAGE_KEY', ''),
+    },
+  },
+  phase: {
+    env: optional('PHASE', ''),
+  },
+  pipelines: {
+    youtubeWorkerUrl: optional('YOUTUBE_PIPELINE_URL', ''),
+    elevenLabsKey: optional('ELEVENLABS_API_KEY', ''),
+  },
+  apex: {
+    maxSimBatchProfiles: optionalNumber('APEX_MAX_SIM_BATCH_PROFILES', 1000),
+    suicideSwitchArmed: optionalBool('APEX_SUICIDE_SWITCH_ARMED', false),
   },
   stripe: {
     secretKey: envFirst('FINANCE_KEY', 'STRIPE_SECRET_KEY'),

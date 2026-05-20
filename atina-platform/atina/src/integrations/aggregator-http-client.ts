@@ -2,10 +2,19 @@ import axios, { AxiosRequestConfig } from 'axios';
 import logger from '../utils/logger';
 import { AggregatorCredentials, isAggregatorConfigured } from './types';
 
+const DEFAULT_MAX_ATTEMPTS = 4;
+const DEFAULT_BASE_DELAY_MS = 500;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export class AggregatorHttpClient {
   constructor(
     private readonly creds: AggregatorCredentials,
-    private readonly aggregatorName: string
+    private readonly aggregatorName: string,
+    private readonly maxAttempts = DEFAULT_MAX_ATTEMPTS,
+    private readonly baseDelayMs = DEFAULT_BASE_DELAY_MS
   ) {}
 
   isConfigured(): boolean {
@@ -35,20 +44,40 @@ export class AggregatorHttpClient {
     }
 
     const url = this.resolveUrl(path);
-    try {
-      const response = await axios.request<T>({
-        method,
-        url,
-        data: body,
-        headers: this.authHeaders(),
-        timeout: config?.timeout ?? 30000,
-        validateStatus: (status) => status >= 200 && status < 300,
-      });
-      return response.data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      logger.warn(`${this.aggregatorName} aggregator request failed`, { path, message });
-      return null;
+    const timeout = config?.timeout ?? 30000;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
+      try {
+        const response = await axios.request<T>({
+          method,
+          url,
+          data: body,
+          headers: this.authHeaders(),
+          timeout,
+          validateStatus: (status) => status >= 200 && status < 300,
+        });
+        return response.data;
+      } catch (err) {
+        lastError = err;
+        const message = err instanceof Error ? err.message : String(err);
+        if (attempt >= this.maxAttempts) {
+          logger.warn(`${this.aggregatorName} aggregator request failed after retries`, {
+            path,
+            attempts: attempt,
+            message,
+          });
+          break;
+        }
+        const delayMs = this.baseDelayMs * 2 ** (attempt - 1);
+        logger.debug(`${this.aggregatorName} aggregator retry`, { path, attempt, delayMs });
+        await sleep(delayMs);
+      }
     }
+
+    if (lastError instanceof Error) {
+      logger.warn(`${this.aggregatorName} aggregator exhausted`, { path, message: lastError.message });
+    }
+    return null;
   }
 }

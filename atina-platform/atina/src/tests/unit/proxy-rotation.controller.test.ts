@@ -66,8 +66,14 @@ describe('ProxyRotationController', () => {
     mockService.run.mockResolvedValue({ ok: true });
     const sendSpy = jest.spyOn(response, 'sendSuccess').mockReturnValue(undefined as never);
     const res = mockRes();
-    await controller.run({ ...authed(), params: { id: 'ws-1' }, body } as unknown as Request, res);
-    expect(mockService.run).toHaveBeenCalledWith('ws-1', 'u1', body);
+    const req = {
+      ...authed(),
+      params: { id: 'ws-1' },
+      body,
+      header: jest.fn().mockReturnValue(undefined),
+    } as unknown as Request;
+    await controller.run(req, res);
+    expect(mockService.run).toHaveBeenCalledWith('ws-1', 'u1', body, undefined);
     expect(sendSpy).toHaveBeenCalledWith(res, { ok: true }, 'Proxy Rotation run completed');
     sendSpy.mockRestore();
   });

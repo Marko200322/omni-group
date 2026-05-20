@@ -3,6 +3,7 @@ import axios from 'axios';
 import { config } from '../../../config';
 import { query, transaction } from '../../../database/connection';
 import { PaymentError, NotFoundError } from '../../../utils/errors';
+import { getFinanceClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
 import logger from '../../../utils/logger';
 
@@ -291,6 +292,34 @@ export class PaymentsService {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
 
+    const finance = getFinanceClient();
+    if (finance.isConfigured()) {
+      const remote = await finance.createPayPalOrder({
+        userId,
+        planSlug,
+        billingCycle,
+        amount,
+        currency: 'USD',
+        returnUrl: `${config.app.url}/billing/paypal/success`,
+        cancelUrl: `${config.app.url}/billing/cancel`,
+      });
+      if (remote?.orderId) {
+        await query(
+          `INSERT INTO payments
+             (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
+           VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
+          [
+            userId,
+            amount,
+            remote.orderId,
+            `PayPal ${plan.name} ${billingCycle}`,
+            JSON.stringify({ planSlug, billingCycle, orderId: remote.orderId, via: 'finance_aggregator' }),
+          ]
+        );
+        return { orderId: remote.orderId, approveUrl: remote.approveUrl ?? '' };
+      }
+    }
+
     const token = await this.getPayPalToken();
     const base = config.paypal.mode === 'live'
       ? 'https://api-m.paypal.com'
@@ -332,8 +361,8 @@ export class PaymentsService {
   }
 
   async capturePayPalOrder(orderId: string, userId: string): Promise<void> {
-    const { rows: ownerRows } = await query<{ user_id: string }>(
-      `SELECT user_id FROM payments
+    const { rows: ownerRows } = await query<{ user_id: string; metadata: string | Record<string, unknown> }>(
+      `SELECT user_id, metadata FROM payments
        WHERE provider_payment_id = $1 AND provider = 'paypal' AND status = 'pending'`,
       [orderId]
     );
@@ -341,24 +370,53 @@ export class PaymentsService {
       throw new NotFoundError('Order');
     }
 
-    const token = await this.getPayPalToken();
-    const base = config.paypal.mode === 'live'
-      ? 'https://api-m.paypal.com'
-      : 'https://api-m.sandbox.paypal.com';
+    const storedMeta =
+      typeof ownerRows[0].metadata === 'string'
+        ? (JSON.parse(ownerRows[0].metadata || '{}') as Record<string, unknown>)
+        : (ownerRows[0].metadata ?? {});
 
-    const res = await axios.post(
-      `${base}/v2/checkout/orders/${orderId}/capture`,
-      {},
-      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
-    );
+    let planSlug = String(storedMeta.planSlug ?? '');
+    let billingCycle = String(storedMeta.billingCycle ?? '') as 'monthly' | 'yearly';
+    let chargeId: string | undefined;
 
-    const captureData = res.data;
-    const unit = captureData.purchase_units?.[0];
-    const capture = unit?.payments?.captures?.[0];
-    const [customUserId, planSlug, billingCycle] = (unit?.custom_id || '').split(':');
+    const finance = getFinanceClient();
+    if (finance.isConfigured() && storedMeta.via === 'finance_aggregator') {
+      const remote = await finance.capturePayPalOrder(orderId, { userId });
+      if (!remote) throw new PaymentError('Finance aggregator PayPal capture failed');
+      chargeId =
+        typeof remote.captureId === 'string'
+          ? remote.captureId
+          : typeof remote.chargeId === 'string'
+            ? remote.chargeId
+            : orderId;
+      if (!planSlug) planSlug = String(remote.planSlug ?? '');
+      if (!billingCycle) billingCycle = String(remote.billingCycle ?? 'monthly') as 'monthly' | 'yearly';
+    } else {
+      const token = await this.getPayPalToken();
+      const base = config.paypal.mode === 'live'
+        ? 'https://api-m.paypal.com'
+        : 'https://api-m.sandbox.paypal.com';
 
-    if (!customUserId || !planSlug) throw new PaymentError('Invalid PayPal order metadata');
-    if (customUserId !== userId) throw new PaymentError('PayPal order user mismatch');
+      const res = await axios.post(
+        `${base}/v2/checkout/orders/${orderId}/capture`,
+        {},
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
+
+      const captureData = res.data;
+      const unit = captureData.purchase_units?.[0];
+      const capture = unit?.payments?.captures?.[0];
+      const [customUserId, customPlanSlug, customBillingCycle] = (unit?.custom_id || '').split(':');
+
+      if (!customUserId || !customPlanSlug) throw new PaymentError('Invalid PayPal order metadata');
+      if (customUserId !== userId) throw new PaymentError('PayPal order user mismatch');
+
+      planSlug = customPlanSlug;
+      billingCycle = customBillingCycle as 'monthly' | 'yearly';
+      chargeId = capture?.id;
+    }
+
+    if (!planSlug || !billingCycle) throw new PaymentError('Invalid PayPal order metadata');
 
     const plan = await billingService.getPlanBySlug(planSlug);
 
@@ -367,7 +425,7 @@ export class PaymentsService {
       await client.query(
         `UPDATE payments SET status = 'completed', provider_charge_id = $2, updated_at = NOW()
          WHERE provider_payment_id = $1`,
-        [orderId, capture?.id]
+        [orderId, chargeId ?? null]
       );
 
       // Create subscription
@@ -386,7 +444,7 @@ export class PaymentsService {
       await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [userId, plan.id]);
     });
 
-    logger.info('PayPal order captured', { orderId, userId, planSlug, customUserId });
+    logger.info('PayPal order captured', { orderId, userId, planSlug, viaFinance: storedMeta.via === 'finance_aggregator' });
   }
 
   // ========================
@@ -397,6 +455,27 @@ export class PaymentsService {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
     const reference = `ATINA-${userId.slice(0, 8).toUpperCase()}-${Date.now()}`;
+
+    const finance = getFinanceClient();
+    if (finance.isConfigured()) {
+      const remote = await finance.createWiseTransfer({
+        userId,
+        planSlug,
+        billingCycle,
+        amount,
+        reference,
+        currency: 'USD',
+      });
+      if (remote && typeof remote.paymentId === 'string') {
+        return remote as {
+          paymentId: string;
+          reference: string;
+          amount: number;
+          currency: string;
+          instructions: Record<string, unknown>;
+        };
+      }
+    }
 
     const { rows } = await query(
       `INSERT INTO payments

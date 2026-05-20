@@ -10,6 +10,15 @@ const mockRepo = {
   updateAfterRun: jest.fn(),
 };
 
+const mockAi = {
+  isConfigured: jest.fn().mockReturnValue(false),
+  fetchRecommendations: jest.fn().mockResolvedValue({ recommendations: [] }),
+};
+
+jest.mock('../../integrations', () => ({
+  getAiClient: () => mockAi,
+}));
+
 jest.mock('../../modules/validator/repository/validator.repository', () => ({
   ValidatorRepository: jest.fn().mockImplementation(() => mockRepo),
 }));
@@ -39,6 +48,7 @@ describe('ValidatorService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAi.isConfigured.mockReturnValue(false);
     service = new ValidatorService();
     mockRepo.listByUser.mockResolvedValue({ rows: [{ id: 'w1' }] });
     mockRepo.create.mockResolvedValue({ rows: [{ id: 'new' }] });
@@ -69,6 +79,19 @@ describe('ValidatorService', () => {
     expect(status.modes).toEqual(['validate', 'sanitize', 'enrich']);
     expect(status.pipelineCapacity.maxItemsPerRun).toBe(750);
     expect(status.pipelineCapacity.cooldownSeconds).toBe(20);
+  });
+
+  it('run calls AI aggregator on enrich when configured', async () => {
+    mockAi.isConfigured.mockReturnValue(true);
+    await service.run('sys-1', 'u1', { mode: 'enrich', intensity: 30, valueEstimate: 45 });
+    expect(mockAi.fetchRecommendations).toHaveBeenCalledWith(
+      expect.objectContaining({ module: 'validator', mode: 'enrich' })
+    );
+    expect(mockRepo.createRun).toHaveBeenCalledWith(
+      'sys-1',
+      'validator_enrich',
+      expect.objectContaining({ ai_enriched: true })
+    );
   });
 
   it.each([

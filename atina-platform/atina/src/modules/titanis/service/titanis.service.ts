@@ -1,3 +1,4 @@
+import { getAiClient, getCommsClient } from '../../../integrations';
 import { AppError, NotFoundError } from '../../../utils/errors';
 import { TitanisRepository } from '../repository/titanis.repository';
 import { CreateTitanisWorkspaceDtoType, RunTitanisDtoType } from '../dto/titanis.dto';
@@ -29,13 +30,31 @@ export class TitanisService {
     const { rows: found } = await this.repo.getOwned(systemId, userId);
     if (!found[0]) throw new NotFoundError('Titanis workspace');
 
-    const targetCount = Math.floor(dto.targetCount);
-    const leads = dto.mode === 'lead-hunt' ? targetCount : Math.ceil(targetCount * 0.5);
-    const conversions = dto.mode === 'close' ? Math.ceil(leads * 0.18) : Math.ceil(leads * 0.08);
-    const revenue = conversions * (dto.mode === 'close' ? 120 : 55);
     const cfg = ((found[0] as Record<string, unknown>).config ?? {}) as Record<string, unknown>;
     const outreachChannel =
       typeof cfg.outreach_channel === 'string' ? cfg.outreach_channel : TitanisService.DEFAULT_CHANNEL;
+
+    const targetCount = Math.floor(dto.targetCount);
+    let leads = dto.mode === 'lead-hunt' ? targetCount : Math.ceil(targetCount * 0.5);
+    const ai = getAiClient();
+    if (ai.isConfigured() && dto.mode === 'lead-hunt') {
+      const rec = await ai.fetchRecommendations({ mode: dto.mode, channel: outreachChannel, targetCount });
+      if (rec?.recommendations?.length) {
+        leads = Math.min(targetCount * 2, leads + rec.recommendations.length);
+      }
+    }
+    const comms = getCommsClient();
+    let commsDispatched = false;
+    if (comms.isConfigured() && dto.mode === 'follow-up') {
+      await comms.request('POST', '/v1/outreach/dispatch', {
+        systemId,
+        channel: outreachChannel,
+        leads,
+      });
+      commsDispatched = true;
+    }
+    const conversions = dto.mode === 'close' ? Math.ceil(leads * 0.18) : Math.ceil(leads * 0.08);
+    const revenue = conversions * (dto.mode === 'close' ? 120 : 55);
 
     const outputPayload = {
       mode: dto.mode,
@@ -44,6 +63,7 @@ export class TitanisService {
       conversions,
       estimated_revenue: revenue,
       channel: outreachChannel,
+      comms_dispatched: commsDispatched,
       state: {
         previous: 'ready',
         current: 'completed',

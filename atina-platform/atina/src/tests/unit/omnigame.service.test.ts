@@ -10,6 +10,18 @@ var omnigameRepo: {
   updateAfterRun: jest.Mock;
 };
 
+jest.mock('../../queue/queue', () => ({
+  addJob: jest.fn().mockResolvedValue({ id: 'job-1' }),
+}));
+
+jest.mock('../../modules/tasks/task-executors', () => ({
+  executeOmnigameValidate: jest.fn().mockResolvedValue({
+    validation_score: 84,
+    steam_trends_scraped: false,
+    build_ready: false,
+  }),
+}));
+
 jest.mock('../../modules/omnigame/repository/omnigame.repository', () => {
   omnigameRepo = {
     listByUser: jest.fn(),
@@ -61,7 +73,7 @@ describe('OmniGameService', () => {
     expect(payload.estimated_revenue).toBe(110);
     expect(payload.run_score).toBe(84);
     expect(payload.units_produced).toBe(1);
-    expect(payload.details).toEqual({ validation_score: 84 });
+    expect(payload.details).toMatchObject({ validation_score: 84 });
     expect(omnigameRepo.updateAfterRun).toHaveBeenCalledWith('game-1', 110, 'validate', 1, 84);
   });
 

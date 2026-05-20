@@ -10,6 +10,7 @@ import {
   LeadScoringStatusDtoType,
   RunLeadScoringDtoType,
 } from '../dto/lead-scoring.dto';
+import { getAiClient } from '../../../integrations';
 import { LeadScoringRepository } from '../repository/lead-scoring.repository';
 
 export class LeadScoringService {
@@ -37,7 +38,16 @@ export class LeadScoringService {
     const execute = async () => {
       const estRevenue = Number(dto.revenueEstimate ?? 50);
       const base = 40 + Math.round(dto.intensity / 2);
-      const score = Math.min(100, dto.mode === 'rank' ? base + 5 : dto.mode === 'refresh' ? base - 3 : base);
+      let score = Math.min(100, dto.mode === 'rank' ? base + 5 : dto.mode === 'refresh' ? base - 3 : base);
+      const ai = getAiClient();
+      let aiBands: string[] | null = null;
+      if (dto.mode === 'rank' && ai.isConfigured()) {
+        const rec = await ai.fetchRecommendations({ preset: 'lead-scoring', intensity: dto.intensity });
+        aiBands = rec?.recommendations ?? null;
+        if (aiBands?.length) {
+          score = Math.min(100, score + Math.min(15, aiBands.length * 3));
+        }
+      }
       const band = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : 'D';
 
       const outputPayload = {
@@ -46,6 +56,7 @@ export class LeadScoringService {
         estimatedRevenue: estRevenue,
         mode: dto.mode,
         intensity: dto.intensity,
+        ai_recommendations: aiBands,
         idempotency_key: idempotencyKey || null,
       };
 

@@ -73,12 +73,15 @@ describe('Dominus360Module HTTP routes', () => {
   });
 
   it('POST /dominus360 creates with default stage', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [{ id: 'new' }], rowCount: 1 } as never);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'new' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
     const res = await request(server).post('/dominus360').send({ name: 'WSP' });
     expect(res.status).toBe(201);
     const args = mockQuery.mock.calls[0][1] as unknown[];
-    expect(args[2]).toBe('v1');
-    expect(JSON.parse(args[4] as string)).toEqual({ risk_score: 50, forecasts: 0 });
+    expect(args[2]).toBe('WSP');
+    expect(args[3]).toBe('v1');
+    expect(JSON.parse(args[5] as string)).toEqual({ risk_score: 50, forecasts: 0 });
   });
 
   it('POST /dominus360 rejects name shorter than 3 characters', async () => {

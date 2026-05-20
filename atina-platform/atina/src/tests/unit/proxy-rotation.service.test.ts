@@ -1,5 +1,6 @@
+import { ConflictError, NotFoundError } from '../../utils/errors';
 import { ProxyRotationService } from '../../modules/proxy-rotation/service/proxy-rotation.service';
-import { NotFoundError } from '../../utils/errors';
+import * as ecosystemIdempotency from '../../utils/ecosystem-idempotency';
 
 // eslint-disable-next-line no-var
 var proxyRotationRepo: {
@@ -19,6 +20,23 @@ jest.mock('../../integrations', () => ({
   getScraperClient: jest.fn(() => mockScraperClient),
 }));
 
+jest.mock('../../utils/ecosystem-idempotency', () => {
+  const actual = jest.requireActual<typeof import('../../utils/ecosystem-idempotency')>(
+    '../../utils/ecosystem-idempotency'
+  );
+  return {
+    ...actual,
+    withEcosystemIdempotencyLock: jest.fn(
+      async (_systemId: string, _idempotencyKey: string, work: () => Promise<unknown>) => work()
+    ),
+    findRecentEcosystemRunByIdempotencyKey: jest.fn(),
+  };
+});
+
+const mockFindRecent = ecosystemIdempotency.findRecentEcosystemRunByIdempotencyKey as jest.MockedFunction<
+  typeof ecosystemIdempotency.findRecentEcosystemRunByIdempotencyKey
+>;
+
 jest.mock('../../modules/proxy-rotation/repository/proxy-rotation.repository', () => {
   proxyRotationRepo = {
     listByUser: jest.fn().mockResolvedValue({ rows: [] }),
@@ -37,6 +55,7 @@ jest.mock('../../modules/proxy-rotation/repository/proxy-rotation.repository', (
 describe('ProxyRotationService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockFindRecent.mockResolvedValue({ rows: [], rowCount: 0 });
     mockScraperClient.isConfigured.mockReturnValue(false);
     proxyRotationRepo.getOwned.mockResolvedValue({
       rows: [{ id: 'sid', config: { pool_size: 4, rotation_index: 1 } }],
@@ -60,8 +79,33 @@ describe('ProxyRotationService', () => {
         poolSize: 4,
         rotationIndex: 2,
         nextProxyId: 'px_002',
+        scraper_used: false,
+        idempotency_key: null,
       })
     );
+  });
+
+  it('returns existing run when idempotency key matches', async () => {
+    const existing = {
+      id: 'prior',
+      output_payload: { mode: 'health', intensity: 10, idempotency_key: 'idem-px' },
+    };
+    mockFindRecent.mockResolvedValueOnce({ rows: [existing], rowCount: 1 });
+    const service = new ProxyRotationService();
+    const result = await service.run('sid', 'u1', { mode: 'health', intensity: 10 }, 'idem-px');
+    expect(result).toBe(existing);
+    expect(proxyRotationRepo.createRun).not.toHaveBeenCalled();
+  });
+
+  it('throws ConflictError when idempotency payload differs', async () => {
+    mockFindRecent.mockResolvedValueOnce({
+      rows: [{ id: 'prior', output_payload: { mode: 'rotate', intensity: 10 } }],
+      rowCount: 1,
+    });
+    const service = new ProxyRotationService();
+    await expect(
+      service.run('sid', 'u1', { mode: 'health', intensity: 10 }, 'idem-px')
+    ).rejects.toBeInstanceOf(ConflictError);
   });
 
   it('run tolerates missing config object on row', async () => {

@@ -12,9 +12,12 @@ export interface IModule {
   shutdown?(): Promise<void>;
 }
 
+export type ModuleHealthProbe = () => Promise<Record<string, unknown>>;
+
 export class ModuleRegistry {
   private static instance: ModuleRegistry;
   private modules: Map<string, IModule> = new Map();
+  private healthProbes: Map<string, ModuleHealthProbe> = new Map();
   private initialized = false;
 
   private constructor() {}
@@ -32,6 +35,23 @@ export class ModuleRegistry {
     }
     this.modules.set(module.slug, module);
     logger.debug(`Module registered: ${module.name} (${module.slug}) v${module.version}`);
+  }
+
+  registerHealthProbe(slug: string, probe: ModuleHealthProbe): void {
+    this.healthProbes.set(slug, probe);
+  }
+
+  async runHealthProbe(slug: string): Promise<Record<string, unknown> | null> {
+    const probe = this.healthProbes.get(slug);
+    if (!probe) return null;
+    try {
+      return await probe();
+    } catch (error) {
+      logger.warn(`Health probe failed: ${slug}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
   }
 
   get(slug: string): IModule | undefined {
@@ -93,6 +113,7 @@ export class ModuleRegistry {
   /** Clears registrations and init flag (used from tests only). */
   resetForTests(): void {
     this.modules.clear();
+    this.healthProbes.clear();
     this.initialized = false;
   }
 }

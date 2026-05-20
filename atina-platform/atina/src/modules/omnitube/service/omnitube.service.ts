@@ -1,4 +1,8 @@
+import { getAiClient } from '../../../integrations';
+import { addJob } from '../../../queue/queue';
+import { config } from '../../../config';
 import { NotFoundError } from '../../../utils/errors';
+import { executeOmnitubePipeline } from '../../tasks/task-executors';
 import { CreateOmniTubeDtoType, RunOmniTubeDtoType } from '../dto/omnitube.dto';
 import { OmniTubeRepository } from '../repository/omnitube.repository';
 
@@ -23,6 +27,18 @@ export class OmniTubeService {
     const unitsProduced = dto.mode === 'publish' ? 3200 : dto.mode === 'optimize' ? 5100 : 700;
     const runScore = dto.mode === 'optimize' ? 91 : dto.mode === 'publish' ? 84 : 68;
 
+    const pipeline = await executeOmnitubePipeline({
+      systemId,
+      mode: dto.mode,
+      topic: (dto as { input?: { topic?: string } }).input?.topic,
+    });
+
+    const ai = getAiClient();
+    const scriptFromAi =
+      ai.isConfigured() && (dto.mode === 'production' || dto.mode === 'idea')
+        ? (await ai.fetchRecommendations({ channel: systems[0].name, mode: dto.mode }))?.recommendations ?? null
+        : null;
+
     const normalizedOutput = {
       module: 'omnitube',
       mode: dto.mode,
@@ -32,8 +48,23 @@ export class OmniTubeService {
       unit_label: 'views',
       details: {
         views_generated: unitsProduced,
+        pipeline,
+        script_from_ai: scriptFromAi,
+        elevenlabs_ready: Boolean(config.pipelines.elevenLabsKey.trim()),
       },
     };
+
+    if (dto.mode === 'publish' || dto.mode === 'production') {
+      try {
+        await addJob('tasks', {
+          taskId: systemId,
+          type: 'omnitube_pipeline',
+          payload: { systemId, mode: dto.mode },
+        });
+      } catch {
+        /* Redis optional */
+      }
+    }
 
     const { rows: runRows } = await this.repo.createRun(systemId, `omnitube_${dto.mode}`, normalizedOutput);
     await this.repo.updateAfterRun(systemId, revenue, dto.mode, unitsProduced, runScore);

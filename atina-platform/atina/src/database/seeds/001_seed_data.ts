@@ -151,7 +151,7 @@ async function seedModules(): Promise<void> {
     { name: 'Self-Healing Supervisor', slug: 'self-healing', description: 'Automated issue detection and remediation tracking', is_core: true, required_plan: null },
     { name: 'Workflow Chain', slug: 'workflow-chain', description: 'Cross-module orchestration and chained execution layer', is_core: true, required_plan: null },
     { name: 'Dominus360', slug: 'dominus360', description: 'Risk prediction and resource intelligence workspace', is_core: false, required_plan: 'enterprise' },
-    { name: 'Craftor', slug: 'craftor', description: 'Lead hunting and outreach growth engine', is_core: false, required_plan: 'pro' },
+    { name: 'Craftor', slug: 'craftor', description: 'V7 universal AI OS for freelance platforms (hunting, proposals, anti-detection)', is_core: false, required_plan: 'pro' },
     { name: 'Package Pricing', slug: 'package-pricing', description: 'Tier listing, price adjustments, and bundle modeling for offers', is_core: false, required_plan: 'pro' },
     { name: 'Digital Signature', slug: 'digital-signature', description: 'E-signature request, reminder, and verification flows', is_core: false, required_plan: 'pro' },
     { name: 'OmniTube', slug: 'omnitube', description: 'Content pipeline for automated video channels', is_core: false, required_plan: 'pro' },

@@ -10,6 +10,13 @@ import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
 import { getQueue } from '../../queue/queue';
 import logger from '../../utils/logger';
+import { registerAuxiliaryQueueWorkers } from '../../queue/register-workers';
+import {
+  executeOmnigameValidate,
+  executeOmnitubePipeline,
+  executeScrapeUrl,
+  executeTitanixPipeline,
+} from './task-executors';
 
 const CreateTaskDto = z
   .object({
@@ -55,6 +62,7 @@ export class TasksModule implements IModule {
   async initialize(): Promise<void> {
     this.setupRoutes();
     this.setupWorker();
+    registerAuxiliaryQueueWorkers();
   }
 
   private setupWorker(): void {
@@ -93,7 +101,13 @@ export class TasksModule implements IModule {
       case 'send_email':
         return { sent: true, to: payload.to, subject: payload.subject };
       case 'scrape_url':
-        return { url: payload.url, status: 'scraped', data: {} };
+        return executeScrapeUrl(payload);
+      case 'titanix_pipeline':
+        return executeTitanixPipeline(payload);
+      case 'omnitube_pipeline':
+        return executeOmnitubePipeline(payload);
+      case 'omnigame_validate':
+        return executeOmnigameValidate(payload);
       case 'export_data':
         return { format: payload.format, rows: 0 };
       case 'generate_report':

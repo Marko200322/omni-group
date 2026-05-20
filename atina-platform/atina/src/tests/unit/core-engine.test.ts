@@ -62,6 +62,10 @@ describe('CoreEngine', () => {
       lastForgeEventAgeMs: 1234,
       lastForgeEventFresh: true,
     });
+    moduleRegistry.registerHealthProbe('forge', async () => {
+      const details = await getForgeHealthDetailsMock();
+      return details as Record<string, unknown>;
+    });
   });
 
   afterAll(() => {

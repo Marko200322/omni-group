@@ -65,6 +65,15 @@ describe('CraftorModule HTTP routes', () => {
     mockQuery.mockReset();
   });
 
+  it('GET /craftor/catalog returns V7 blueprint metadata', async () => {
+    const res = await request(server).get('/craftor/catalog');
+    expect(res.status).toBe(200);
+    expect(res.body.data.version).toBe('7.0.0');
+    expect(res.body.data.platforms).toEqual(expect.arrayContaining(['upwork', 'fiverr']));
+    expect(res.body.data.modes).toEqual(expect.arrayContaining(['hunting', 'proposal', 'negotiation']));
+    expect(res.body.data.workflow.length).toBeGreaterThan(5);
+  });
+
   it('GET /craftor lists campaigns', async () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ id: 'c1' }], rowCount: 1 } as never);
     const res = await request(server).get('/craftor');
@@ -72,16 +81,38 @@ describe('CraftorModule HTTP routes', () => {
     expect(res.body.data).toEqual([{ id: 'c1' }]);
   });
 
-  it('POST /craftor creates with defaults', async () => {
-    mockQuery.mockResolvedValueOnce({
-      rows: [{ id: 'new', name: 'Camp' }],
-      rowCount: 1,
-    } as never);
+  it('POST /craftor creates with V7 defaults', async () => {
+    mockQuery
+      .mockResolvedValueOnce({
+        rows: [{ id: 'new', name: 'Camp' }],
+        rowCount: 1,
+      } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
     const res = await request(server).post('/craftor').send({ name: 'Camp' });
     expect(res.status).toBe(201);
     const args = mockQuery.mock.calls[0][1] as unknown[];
-    expect(JSON.parse(args[3] as string)).toMatchObject({ lead_target: 100, leads_collected: 0 });
+    expect(JSON.parse(args[3] as string)).toMatchObject({
+      lead_target: 100,
+      leads_collected: 0,
+      niche: 'developer',
+      platforms: ['upwork'],
+      craftor_version: '7.0.0',
+    });
+  });
+
+  it('POST /craftor creates with niche and platforms', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'n1' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+
+    const res = await request(server)
+      .post('/craftor')
+      .send({ name: 'Design Camp', niche: 'designer', platforms: ['fiverr', 'linkedin'] });
+    expect(res.status).toBe(201);
+    const metrics = JSON.parse((mockQuery.mock.calls[0][1] as unknown[])[3] as string);
+    expect(metrics.niche).toBe('designer');
+    expect(metrics.platforms).toEqual(['fiverr', 'linkedin']);
   });
 
   it('POST /craftor rejects name shorter than 3 characters', async () => {
@@ -105,37 +136,54 @@ describe('CraftorModule HTTP routes', () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('POST /craftor/:id/run lead-hunt mode', async () => {
+  it('POST /craftor/:id/run hunting mode (V7)', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [{ id: 'cid', metrics: { leads_collected: 0, niche: 'developer' } }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [{ id: 'run1' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+
+    const res = await request(server).post('/craftor/cid/run').send({ mode: 'hunting' });
+    expect(res.status).toBe(200);
+    expect(mockQuery.mock.calls[1][1] as unknown[]).toContain('craftor_hunting');
+    const out = JSON.parse((mockQuery.mock.calls[1][1] as unknown[])[3] as string);
+    expect(out.result.v7_mode).toBe('hunting');
+  });
+
+  it('POST /craftor/:id/run legacy lead-hunt mode', async () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'cid', metrics: { leads_collected: 0 } }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [{ id: 'run1' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
     const res = await request(server).post('/craftor/cid/run').send({ mode: 'lead-hunt' });
     expect(res.status).toBe(200);
     expect(mockQuery.mock.calls[1][1] as unknown[]).toContain('craftor_lead-hunt');
     const input = JSON.parse((mockQuery.mock.calls[1][1] as unknown[])[2] as string);
-    expect(input).toEqual({ mode: 'lead-hunt', input: {} });
+    expect(input).toMatchObject({ mode: 'lead-hunt', v7_mode: 'hunting', input: {} });
   });
 
-  it('POST /craftor/:id/run N3-D4 persists cumulative leads_collected on UPDATE', async () => {
+  it('POST /craftor/:id/run persists cumulative leads_collected on UPDATE', async () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'cid', metrics: { leads_collected: 5 } }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [{ id: 'run1' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
-    const res = await request(server).post('/craftor/cid/run').send({ mode: 'lead-hunt' });
+    const res = await request(server).post('/craftor/cid/run').send({ mode: 'hunting' });
     expect(res.status).toBe(200);
     const updateArgs = mockQuery.mock.calls[2][1] as unknown[];
     expect(updateArgs[4]).toBe(28);
   });
 
-  it('POST /craftor/:id/run follow-up and deal-close branches', async () => {
-    for (const mode of ['follow-up', 'deal-close'] as const) {
+  it('POST /craftor/:id/run outreach, negotiation, and legacy modes', async () => {
+    for (const mode of ['outreach', 'negotiation', 'follow-up', 'deal-close'] as const) {
       jest.clearAllMocks();
       mockQuery
-        .mockResolvedValueOnce({ rows: [{ id: 'x', metrics: { leads_collected: 20 } }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: 'x', metrics: { leads_collected: 20, proposals_sent: 5, jobs_scored: 10 } }], rowCount: 1 } as never)
         .mockResolvedValueOnce({ rows: [{ id: 'r' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
         .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
       const res = await request(server).post('/craftor/x/run').send({ mode });
@@ -146,24 +194,38 @@ describe('CraftorModule HTTP routes', () => {
     }
   });
 
-  it('POST /craftor/:id/run 404 when campaign missing', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
-    const res = await request(server).post('/craftor/missing/run').send({ mode: 'lead-hunt' });
-    expect(res.status).toBe(404);
-    expect(res.body.error?.code).toBe('NOT_FOUND');
-  });
-
-  it('POST /craftor/:id/run blocks deal-close without minimum readiness', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [{ id: 'cid', metrics: { leads_collected: 2 } }], rowCount: 1 } as never);
-    const res = await request(server).post('/craftor/cid/run').send({ mode: 'deal-close' });
+  it('POST /craftor/:id/run blocks analytics without enough proposals', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{ id: 'cid', metrics: { leads_collected: 10, proposals_sent: 1 } }],
+      rowCount: 1,
+    } as never);
+    const res = await request(server).post('/craftor/cid/run').send({ mode: 'analytics' });
     expect(res.status).toBe(400);
     expect(res.body.error?.code).toBe('VALIDATION_ERROR');
   });
 
-  it('POST /craftor/:id/run allows deal-close at exactly 10 leads and coerces string counts', async () => {
+  it('POST /craftor/:id/run 404 when campaign missing', async () => {
+    mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+    const res = await request(server).post('/craftor/missing/run').send({ mode: 'hunting' });
+    expect(res.status).toBe(404);
+    expect(res.body.error?.code).toBe('NOT_FOUND');
+  });
+
+  it('POST /craftor/:id/run blocks negotiation/deal-close without minimum readiness', async () => {
+    for (const mode of ['deal-close', 'negotiation'] as const) {
+      jest.clearAllMocks();
+      mockQuery.mockResolvedValueOnce({ rows: [{ id: 'cid', metrics: { leads_collected: 2 } }], rowCount: 1 } as never);
+      const res = await request(server).post('/craftor/cid/run').send({ mode });
+      expect(res.status).toBe(400);
+      expect(res.body.error?.code).toBe('VALIDATION_ERROR');
+    }
+  });
+
+  it('POST /craftor/:id/run allows deal-close/negotiation at 10 leads and coerces string counts', async () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'b1', metrics: { leads_collected: 10 } }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [{ id: 'r10' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
     const atBoundary = await request(server).post('/craftor/b1/run').send({ mode: 'deal-close' });
     expect(atBoundary.status).toBe(200);
@@ -172,8 +234,9 @@ describe('CraftorModule HTTP routes', () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'b2', metrics: { leads_collected: '15' } }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [{ id: 'r15' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
-    const stringCount = await request(server).post('/craftor/b2/run').send({ mode: 'deal-close' });
+    const stringCount = await request(server).post('/craftor/b2/run').send({ mode: 'negotiation' });
     expect(stringCount.status).toBe(200);
 
     jest.clearAllMocks();
@@ -201,17 +264,18 @@ describe('CraftorModule HTTP routes', () => {
     expect(mockQuery).not.toHaveBeenCalled();
   });
 
-  it('POST /craftor/:id/run treats empty body as lead-hunt with empty input', async () => {
+  it('POST /craftor/:id/run treats empty body as hunting (V7 default)', async () => {
     mockQuery
       .mockResolvedValueOnce({ rows: [{ id: 'def', metrics: { leads_collected: 0 } }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [{ id: 'run-def' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
     const res = await request(server).post('/craftor/def/run').send({});
     expect(res.status).toBe(200);
-    expect((mockQuery.mock.calls[1][1] as unknown[])[1]).toBe('craftor_lead-hunt');
+    expect((mockQuery.mock.calls[1][1] as unknown[])[1]).toBe('craftor_hunting');
     const input = JSON.parse((mockQuery.mock.calls[1][1] as unknown[])[2] as string);
-    expect(input).toEqual({ mode: 'lead-hunt', input: {} });
+    expect(input).toMatchObject({ mode: 'hunting', v7_mode: 'hunting', input: {} });
   });
 
   it('GET /craftor returns 400 when query params are present', async () => {

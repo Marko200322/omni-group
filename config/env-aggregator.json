@@ -46,7 +46,8 @@
     "ENABLE_SCRAPER": "true",
     "ENABLE_AUTOMATION": "true",
     "ENABLE_CRM": "true",
-    "ENABLE_ANALYTICS": "true"
+    "ENABLE_ANALYTICS": "true",
+    "PHASE": "v1"
   },
   "nest": {
     "NODE_ENV": "development",

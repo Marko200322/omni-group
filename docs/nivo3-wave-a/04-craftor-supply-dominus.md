@@ -2,6 +2,8 @@
 
 **Agent:** N3-A4 · **Samo ovaj fajl.**
 
+**Poslednje usklađivanje:** 2026-05-21 (integracije Master Blueprint 2026-05-20 + Nest `supply-core*.spec.ts` + `npm run verify:n1` **140/140**).
+
 **Evidencija / šabloni (indeks + dry-run):** [`../EVIDENCE-INDEX.md`](../EVIDENCE-INDEX.md) · [`../NIVO-1-DRYRUN-LOG.md`](../NIVO-1-DRYRUN-LOG.md).
 
 **Kad podižeš novi Val širom dokova:** [`../../scripts/README.md`](../../scripts/README.md) — **Kad podigneš novi broj**.
@@ -27,9 +29,9 @@ Inventar PDF redova u `sve/`: [`NIVO-3-SVE-INVENTORY.md`](../NIVO-3-SVE-INVENTOR
 
 | PDF | Mapiranje | Status | Napomena |
 |-----|-----------|--------|------------|
-| Craftor Guide | `atina-platform/atina/src/modules/craftor/craftor.module.ts` (Express `IModule`: kampanje `ecosystem_systems` sa `system_slug = 'craftor'`, run `ecosystem_runs`, audit) | partial | **CEO sekcija D** trag: pun PDF audit = N2+ / tim; u repou su tri moda (`lead-hunt`, `follow-up`, `deal-close`), guard za deal-close, metrike — vidi tematsku tabelu ispod. |
-| Supply Core PRO | `atina-system/src/modules/supply-core/**` (`SupplyCoreController` `@Controller('supply')`, `SupplyAgentService`, entiteti `VaultResource`, `SupplyAgentHeartbeat`); uvezano u `atina-system/src/app.module.ts` | partial | Vault status / dodavanje resursa + cron heartbeat tick; nema `supply-core*.spec.ts` u `atina-system/src/**` (dokaz = izvorni fajlovi + eventualni ručni/API test van Jest-a). |
-| dominus360 blueprint | `atina-platform/atina/src/modules/dominus360/dominus360.module.ts` (workspace `system_slug = 'dominus360'`, run tipovi `dominus_*`, stage readiness) | partial | Isti nivo zatvaranja kao Craftor; tri moda (`risk-scan`, `resource-allocation`, `forecast`) + blokada naprednih modova na `v1`. |
+| Craftor Guide | `atina-platform/atina/src/modules/craftor/**` (C-S-R: `controller/`, `service/`, `repository/`, `dto/`; `getAiClient()` za humanizaciju / preporuke u run toku) | **partial** → jači inženjerski trag | Rute + AI agregator (mock u `craftor-ai.service.test.ts`); pun PDF = N2+. |
+| Supply Core PRO | `atina-system/src/modules/supply-core/**` | **aligned** (inženjerski) | REST vault + `@Cron` `tick()` + Jest specovi ispod; PDF PRO širina van Jest-a = partial na nivou CEO PDF-a. |
+| dominus360 blueprint | `atina-platform/atina/src/modules/dominus360/**` (C-S-R + `getAiClient()` u servisu) | **partial** → jači trag | Tri moda + stage guard; AI put mock-ovan kroz servis, ne kroz ceo blueprint PDF. |
 
 ## Ključni test pathovi (dokaz)
 
@@ -37,9 +39,12 @@ Inventar PDF redova u `sve/`: [`NIVO-3-SVE-INVENTORY.md`](../NIVO-3-SVE-INVENTOR
 |-------|-----------------------------------------------|-------------|
 | Craftor | `src/tests/unit/craftor.module.test.ts` | Inicijalizacija rutera |
 | Craftor | `src/tests/unit/craftor.module.routes.test.ts` | GET lista, POST kreiranje, run modovi, 404, validacija `deal-close` / boundary metrike, Zod za `input`, default body |
+| Craftor AI | `src/tests/unit/craftor-ai.service.test.ts` | `CraftorService` + mock `getAiClient()` (humanizacija / preporuke bez pravog ključa) |
 | Dominus360 | `src/tests/unit/dominus360.module.test.ts` | Inicijalizacija rutera |
 | Dominus360 | `src/tests/unit/dominus360.module.routes.test.ts` | GET lista, POST kreiranje (default `stage`), forecast / risk-scan / resource-allocation, blokada `forecast` na `v1`, `resource-allocation` na `v1` vs `risk-scan` OK, validacija `input`, 404, default body |
-| Supply Core (atina-system) | N/A u Jest suite za ovaj modul | Nema odgovarajućeg `*.spec.ts` uz `supply-core` u `atina-system/src/` (pored postojećih `auth.*.spec`, `app.controller.spec.ts`). |
+| Supply Core (atina-system) | `atina-system/src/modules/supply-core/supply-core.controller.spec.ts` | REST `GET supply/vault/status`, `POST supply/vault/resource` |
+| Supply Core (atina-system) | `atina-system/src/modules/supply-core/supply-agent.service.spec.ts` | `status()`, `addResource()`, **`tick()` heartbeat** (phase + vault count) |
+| Supply Core (atina-system) | `atina-system/src/modules/supply-core/dto/add-vault-resource.dto.spec.ts` | DTO validacija |
 
 ## `Craftor_Full_Implementation_Guide.pdf` → craftor
 
@@ -50,18 +55,19 @@ Inventar PDF redova u `sve/`: [`NIVO-3-SVE-INVENTORY.md`](../NIVO-3-SVE-INVENTOR
 | Operativni ciklusi / modovi rada | POST `/:id/run` — `lead-hunt`, `follow-up`, `deal-close` | aligned | `craftor.module.routes.test.ts` |
 | Readiness / pravila prelaska (npr. deal-close) | `nonNegativeLeadCount`, validacija ≥10 leadova | aligned | `craftor.module.routes.test.ts` (blokada, granica 10, string koercija) |
 | Audit trag događaja | `audit_events` inserti | partial | Pokriveno indirektno kroz `mockQuery` redosled u route testovima, bez assert-a na audit SQL |
+| AI agregator (`AI_URL` / `AI_KEY`) u run toku | `craftor.service.ts` → `getAiClient()` | **aligned** (mock) | `craftor-ai.service.test.ts` |
 | Pun produkcioni obim vodiča (integracije van ecosystem tabele, celokupan PDF) | van ovog fajla | N/A | Van N3-A4 opsega; **N2+** PDF trag (**CEO sekcija D** / **F** po opsegu; vidi [`NIVO-2-CEO-PDF-RULES-CLOSURE.md`](../NIVO-2-CEO-PDF-RULES-CLOSURE.md)) |
 
 ## `Titan_Supply_Core_PRO (1).pdf` → atina-system supply-core
 
 | Tema (Supply / TSC) | Kod | Status | Test / dokaz |
 |---------------------|-----|--------|----------------|
-| Nest modul i DI | `supply-core.module.ts`, import u `app.module.ts` | aligned | Struktura repoa; nema dedicated spec |
-| REST: stanje vault-a | `GET supply/vault/status` → `SupplyAgentService.status()` | partial | N/A (Jest) |
-| REST: unos resursa | `POST supply/vault/resource` → `addResource` | partial | N/A (Jest) |
-| Agent tick / heartbeat | `@Cron` `tick()`, `SupplyAgentHeartbeat` | partial | N/A (Jest); logika u `supply-agent.service.ts` |
-| Vault entitet / perzistencija | `vault-resource.entity.ts`, TypeORM u modulu | partial | N/A (Jest) |
-| Faza sistema (vezivanje na Phase) | `PhaseService` u `SupplyAgentService` | partial | N/A (Jest) |
+| Nest modul i DI | `supply-core.module.ts`, import u `app.module.ts` | **aligned** | `supply-core.controller.spec.ts` |
+| REST: stanje vault-a | `GET supply/vault/status` → `SupplyAgentService.status()` | **aligned** | `supply-core.controller.spec.ts`, `supply-agent.service.spec.ts` (`status`) |
+| REST: unos resursa | `POST supply/vault/resource` → `addResource` | **aligned** | controller + service spec + `add-vault-resource.dto.spec.ts` |
+| Agent tick / heartbeat | `@Cron` `tick()`, `SupplyAgentHeartbeat` | **aligned** | `supply-agent.service.spec.ts` (`tick` + phase) |
+| Vault entitet / perzistencija | `vault-resource.entity.ts`, TypeORM u modulu | partial | Indirektno kroz mock repoa u spec-ovima |
+| Faza sistema (vezivanje na Phase) | `PhaseService` u `SupplyAgentService` | **aligned** | `tick` test sa `getPhase()` |
 
 ## `dominus360_system_blueprint.pdf` → dominus360
 
@@ -71,7 +77,20 @@ Inventar PDF redova u `sve/`: [`NIVO-3-SVE-INVENTORY.md`](../NIVO-3-SVE-INVENTOR
 | Run tipovi i payload | POST `/:id/run` — `risk-scan`, `resource-allocation`, `forecast` | aligned | `dominus360.module.routes.test.ts` |
 | Stage / readiness (v1 vs v2) | validacija modova u odnosu na `system.stage` | aligned | `dominus360.module.routes.test.ts` (forecast blokiran na v1; resource-allocation vs risk-scan na v1) |
 | Metrike / prognoze (JSON polja) | `metrics` updates u run handleru | partial | Delimično kroz očekivane `output_payload` u testu |
+| AI agregator u analitičkom run-u | `dominus360.service.ts` → `getAiClient()` | partial | Servis koristi AI; nema posebnog `dominus360-ai.service.test.ts` (za razliku od Craftor) |
 | Celokupan blueprint van ecosystem slice-a | — | N/A | **N2+** PDF audit (**CEO sekcija D**; vidi [`NIVO-2-CEO-PDF-RULES-CLOSURE.md`](../NIVO-2-CEO-PDF-RULES-CLOSURE.md)) |
+
+## OmniTube / OmniGame / Apex (checklista §8.2)
+
+Detaljna matrica PDF ↔ repo: [`05-omnitube-apex.md`](./05-omnitube-apex.md). Sažetak posle integracija **2026-05-20**:
+
+| Modul | Repo put | Status (2026-05-21) | Test / integracija |
+|-------|----------|----------------------|-------------------|
+| **OmniTube** | `src/modules/omnitube/**` | **partial** (PDF i dalje N2+) | Rute + `omnitube-ai` put: `omnitube.service.ts` → `getAiClient()`; `omnitube-ai.service.test.ts`, `omnitube.*.test.ts` |
+| **OmniGame** | `src/modules/omnigame/**` | **partial** | `omnigame.*.test.ts`; `validate` mod → `executeOmnigameValidate` / scraper task (bez direktnog `getAiClient` u servisu) |
+| **Apex Predator** | `src/modules/apex-predator/**` | **partial** + **N/A** (narativ PDF) | `modules/apex-predator/*.test.ts`; `apex-predator.service.ts` → `getAiClient()` za run obogaćivanje |
+
+**Pravilo:** **aligned** samo za tokove pokrivene imenovanim testovima; ceo PDF ostaje **partial** dok tim ne uradi stranični audit.
 
 ## Reference
 

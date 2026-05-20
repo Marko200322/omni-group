@@ -70,7 +70,6 @@ import { ForgeModule } from '../modules/forge/forge.module';
 import { DealOfferModule } from '../modules/deal-offer/deal-offer.module';
 import { FollowUpModule } from '../modules/follow-up/follow-up.module';
 import { FollowUpAutomationModule } from '../modules/follow-up-automation/follow-up-automation.module';
-import { getForgeHealthDetails } from '../modules/forge/service/forge-health.service';
 import { createPhaseActivationGuard } from '../modules/phase-launch/middleware/phase-activation.middleware';
 
 export class CoreEngine {
@@ -224,7 +223,15 @@ export class CoreEngine {
         lastForgeEventFresh: null as boolean | null,
       };
       try {
-        forge = await getForgeHealthDetails();
+        const probed = await moduleRegistry.runHealthProbe('forge');
+        if (probed) {
+          forge = {
+            vaultPath: (probed.vaultPath as string | null) ?? null,
+            vaultSignal: (probed.vaultSignal as 'available' | 'unavailable') ?? 'unavailable',
+            lastForgeEventAgeMs: (probed.lastForgeEventAgeMs as number | null) ?? null,
+            lastForgeEventFresh: (probed.lastForgeEventFresh as boolean | null) ?? null,
+          };
+        }
       } catch {
         // Keep /health resilient even if forge diagnostics fail unexpectedly.
       }

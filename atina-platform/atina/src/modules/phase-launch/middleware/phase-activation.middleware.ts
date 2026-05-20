@@ -2,9 +2,17 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { query } from '../../../database/connection';
 import logger from '../../../utils/logger';
 import { sendError } from '../../../utils/response';
+import {
+  comparePhase,
+  maxPhase,
+  parsePhase,
+  PHASE_ORDER,
+  resolvePhaseFromEnv,
+  type Phase,
+} from '../../../core/phase-env';
 
-const PHASE_ORDER = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6'] as const;
-export type Phase = (typeof PHASE_ORDER)[number];
+export type { Phase };
+export { PHASE_ORDER, getPhaseOrder };
 
 const FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES: Record<'atina-system' | 'sistem-naplate' | 'forge', Phase> = {
   'atina-system': 'v3',
@@ -14,6 +22,11 @@ const FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES: Record<'atina-system' | 'sistem-nap
 
 // Initial gating map for ecosystem modules. This can expand as modules mature.
 const MODULE_MIN_PHASE: Record<string, Phase> = {
+  billing: 'v2',
+  payments: 'v2',
+  subscriptions: 'v1',
+  crm: 'v1',
+  analytics: 'v2',
   craftor: 'v1',
   'digital-signature': 'v2',
   titanis: 'v1',
@@ -48,33 +61,42 @@ export function resetPhaseActivationCache(): void {
   cachedAt = 0;
 }
 
-function comparePhase(current: Phase, required: Phase): number {
-  return PHASE_ORDER.indexOf(current) - PHASE_ORDER.indexOf(required);
+function getPhaseOrder(): readonly Phase[] {
+  return PHASE_ORDER;
 }
 
 async function readCurrentPhase(): Promise<Phase> {
   const now = Date.now();
   if (now - cachedAt <= CACHE_TTL_MS) return cachedPhase;
 
-  const { rows } = await query<{ config: Record<string, unknown> }>(
-    `SELECT config FROM modules WHERE slug = 'phase-launch-control' LIMIT 1`
-  );
+  const envPhase = parsePhase(process.env.PHASE);
+  let dbPhase: Phase = 'v1';
 
-  const config = rows[0]?.config ?? {};
-  const raw = String(config.current_phase ?? 'v1') as Phase;
-  const resolved = (PHASE_ORDER as readonly string[]).includes(raw) ? raw : 'v1';
+  try {
+    const { rows } = await query<{ config: Record<string, unknown> }>(
+      `SELECT config FROM modules WHERE slug = 'phase-launch-control' LIMIT 1`
+    );
+    const config = rows[0]?.config ?? {};
+    const raw = String(config.current_phase ?? 'v1');
+    dbPhase = parsePhase(raw) ?? 'v1';
+  } catch (error) {
+    logger.warn('Phase read from DB failed; using env/default', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
+  const resolved = envPhase ? maxPhase(envPhase, dbPhase) : dbPhase;
   cachedPhase = resolved;
   cachedAt = now;
   return cachedPhase;
 }
 
-export async function getCurrentPhase(): Promise<Phase> {
-  return readCurrentPhase();
+export function getEffectivePhaseForBoot(): Phase {
+  return resolvePhaseFromEnv();
 }
 
-export function getPhaseOrder(): readonly Phase[] {
-  return PHASE_ORDER;
+export async function getCurrentPhase(): Promise<Phase> {
+  return readCurrentPhase();
 }
 
 export function getModulePhaseRequirements(): Record<string, Phase> {

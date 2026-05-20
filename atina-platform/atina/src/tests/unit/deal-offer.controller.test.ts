@@ -78,9 +78,10 @@ describe('DealOfferController', () => {
       ...authed('u9'),
       params: { id: 'sys-do-1' },
       body,
+      header: jest.fn().mockReturnValue(undefined),
     } as unknown as Request;
     await controller.run(req, r);
-    expect(mockService.run).toHaveBeenCalledWith('sys-do-1', 'u9', body);
+    expect(mockService.run).toHaveBeenCalledWith('sys-do-1', 'u9', body, undefined);
     expect(r.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, data: runRow, message: 'Deal Offer run completed' })
     );

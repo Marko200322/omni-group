@@ -7147,4 +7147,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 # Izlaz: 26 / 26 svuda · 0 / 26 grešaka
 ```
 
-**Pass / Fa
+---
+
+## Zapis (izvršen) — pun `verify-monorepo.ps1` **Val 357** (2026-05-21)
+
+**Datum:** 2026-05-21  
+**Vlasnik:** lokalni prolaz (omni group workspace) — Cursor agent  
+**Okruženje:** Windows; `atina-verify-pg` na host **`:5434`**
+
+**Šta je testirano:** `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-monorepo.ps1` *(bez switch-eva)* posle Master Blueprint nastavka (deal-offer/validator/proxy agregatori, doc gate fix u `AGENT-CHECKLIST-KOMPLET.md`).
+
+| Korak | Rezultat |
+|--------|----------|
+| `audit-doc-gate-references.ps1` | PASS |
+| pytest (koren) | 11 passed |
+| Atina `npm run test:ci` | **3170/3170** |
+| `apps/omnigroup-web` build | PASS |
+| Nest `verify:ci` | **140/140** unit, **10/10** e2e |
+| `docker compose config` ×3 | PASS |
+
+**Pass / Fail:** **Pass** — exit **`0`**, ~734 s. Evidencija: [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) § Val 357.
+
+**Link na CI run:** N/A — lokalni mirror; GitHub job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md).

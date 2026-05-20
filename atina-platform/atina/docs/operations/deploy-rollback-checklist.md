@@ -30,6 +30,7 @@ Use this block as the **short operational gate** aligned with workspace [`CHECKL
 
 - [ ] **Snapshot:** staging DB backup/snapshot taken; **snapshot ID** recorded (see [`db-backup-restore-runbook.md`](./db-backup-restore-runbook.md)).
 - [ ] **Diff:** list new/changed files under `src/database/migrations/` vs last promoted release; PR or ticket link attached.
+- [ ] **2026-05-20:** apply `010_leads_compat_view.sql` (`npm run migrate` from `atina-platform/atina`) — creates view `leads` ← `crm_contacts` for legacy CRM queries.
 - [ ] **Risk:** note locking, long migrations, nullable/backfill, and **forward-only** vs **reversible** (down migration or restore-only path — align with [`db-rollback-drill-runbook.md`](./db-rollback-drill-runbook.md) if applicable).
 - [ ] **Apply once:** run migration job **once** per staging deploy (odjeljak 1.B); verify app logs and `GET /health` after apply.
 - [ ] **Evidence:** migration log reference + staging dry-run decision (odjeljci 3–4).

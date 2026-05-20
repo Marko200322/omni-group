@@ -17,6 +17,25 @@ export class FinanceClient extends AggregatorHttpClient {
   billingStatus(userId: string): Promise<Record<string, unknown> | null> {
     return this.request<Record<string, unknown>>('GET', `/v1/billing/status?userId=${encodeURIComponent(userId)}`);
   }
+
+  createPayPalOrder(payload: Record<string, unknown>): Promise<{
+    orderId?: string;
+    approveUrl?: string;
+  } | null> {
+    return this.request('POST', '/v1/paypal/orders', payload);
+  }
+
+  capturePayPalOrder(orderId: string, payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    return this.request('POST', `/v1/paypal/orders/${encodeURIComponent(orderId)}/capture`, payload);
+  }
+
+  createWiseTransfer(payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    return this.request('POST', '/v1/wise/transfers', payload);
+  }
+
+  confirmWiseTransfer(paymentId: string, payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    return this.request('POST', `/v1/wise/transfers/${encodeURIComponent(paymentId)}/confirm`, payload);
+  }
 }
 
 let defaultFinanceClient: FinanceClient | undefined;

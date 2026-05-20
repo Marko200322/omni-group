@@ -4,6 +4,11 @@ const mockGetOwned = jest.fn();
 const mockCreateRun = jest.fn();
 const mockUpdateAfterRun = jest.fn();
 
+jest.mock('../../../../integrations', () => ({
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+  getAiClient: () => ({ isConfigured: () => false, fetchRecommendations: jest.fn() }),
+}));
+
 jest.mock('../../../../modules/deal-offer/repository/deal-offer.repository', () => ({
   DealOfferRepository: jest.fn().mockImplementation(() => ({
     getOwned: mockGetOwned,

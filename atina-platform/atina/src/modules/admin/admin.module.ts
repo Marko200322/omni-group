@@ -13,7 +13,6 @@ import { parseOnboardingDateRange, parseCreatedAtSort } from '../../utils/onboar
 import { moduleRegistry } from '../../core/ModuleRegistry';
 import logger from '../../utils/logger';
 import { WorkflowChainService } from '../workflow-chain/service/workflow-chain.service';
-import { getForgeHealthDetails } from '../forge/service/forge-health.service';
 import { config } from '../../config';
 import {
   getCurrentPhase,
@@ -1116,7 +1115,15 @@ export class AdminModule implements IModule {
         lastForgeEventFresh: null as boolean | null,
       };
       try {
-        forge = await getForgeHealthDetails();
+        const probed = await moduleRegistry.runHealthProbe('forge');
+        if (probed) {
+          forge = {
+            vaultPath: (probed.vaultPath as string | null) ?? null,
+            vaultSignal: (probed.vaultSignal as 'available' | 'unavailable') ?? 'unavailable',
+            lastForgeEventAgeMs: (probed.lastForgeEventAgeMs as number | null) ?? null,
+            lastForgeEventFresh: (probed.lastForgeEventFresh as boolean | null) ?? null,
+          };
+        }
       } catch {
         // Keep admin health resilient even if forge diagnostics fail unexpectedly.
       }

@@ -10,6 +10,7 @@ import {
   CreateOutreachDtoType,
   RunOutreachDtoType,
 } from '../dto/outreach.dto';
+import { getCommsClient } from '../../../integrations';
 import { OutreachRepository } from '../repository/outreach.repository';
 
 export class OutreachService {
@@ -39,6 +40,17 @@ export class OutreachService {
       const volumeMultiplier = dto.mode === 'send' ? 1.2 : dto.mode === 'sequence' ? 1.0 : 0.85;
       const messagesSent = Math.max(1, Math.round((dto.intensity / 10) * volumeMultiplier));
       const engagementScore = Math.min(100, 55 + Math.round(dto.intensity / 3));
+      const comms = getCommsClient();
+      let commsDispatched = false;
+      if (comms.isConfigured() && (dto.mode === 'send' || dto.mode === 'sequence')) {
+        await comms.request('POST', '/v1/outreach/dispatch', {
+          systemId,
+          mode: dto.mode,
+          messagesSent,
+          intensity: dto.intensity,
+        });
+        commsDispatched = true;
+      }
 
       const outputPayload = {
         messagesSent,
@@ -46,6 +58,7 @@ export class OutreachService {
         estimatedRevenue: estRevenue,
         mode: dto.mode,
         intensity: dto.intensity,
+        comms_dispatched: commsDispatched,
         idempotency_key: idempotencyKey || null,
       };
 

@@ -2,6 +2,8 @@
 
 **Agent:** N3-A5 · **Samo ovaj fajl.**
 
+**Poslednje usklađivanje:** 2026-05-21 (AI agregator u OmniTube/Apex servisima; Atina `test:ci` **3162/3162**, coverage ≥90%).
+
 **Evidencija / šabloni (indeks + dry-run):** [`../EVIDENCE-INDEX.md`](../EVIDENCE-INDEX.md) · [`../NIVO-1-DRYRUN-LOG.md`](../NIVO-1-DRYRUN-LOG.md).
 
 **Kad podižeš novi Val širom dokova:** [`../../scripts/README.md`](../../scripts/README.md) — **Kad podigneš novi broj**.
@@ -21,8 +23,14 @@
 
 | PDF | Mapiranje | Status | Napomena |
 |-----|-----------|--------|----------|
-| `OmniTube_Project_Overview.pdf` | `atina-platform/atina/src/modules/omnitube/**` (modul `slug = omnitube`: list/create kanal, `POST /:id/run` sa režimima publish / optimize / analyze) | **partial** | U [`NIVO-2-CEO-D-TRACE.md`](../NIVO-2-CEO-D-TRACE.md) **nema** posebnog reda za OmniTube (50 modula = Titan **CEO sekcija D**). U repou postoji odgovarajući folder + unit/routes testovi (`src/tests/unit/omnitube.*.test.ts`). **Nije** tvrdnja „aligned“ sa PDF-om: sadržaj `OmniTube_Project_Overview.pdf` nije stranično mapiran ovde; puno poklapanje zahteva N2+ PDF audit ([pravilo zatvaranja, red 61](../NIVO-2-CEO-D-TRACE.md)). |
-| `apex_predator_text.pdf` | **Samo softverski rez:** `atina-platform/atina/src/modules/apex-predator/**` (modul `slug = apex-predator`, plan enterprise; list/create profil, `POST /:id/run`, admin `GET /admin/risk-grid`). Ostatak obima tipičnog „text“ PDF-a (narativa, strategija, proces van koda) | **partial** + **N/A** (van koda) | Ime fajla sugeriše **veliki tekstualni obim**; celokupan PDF **nije** u repou niti čitan u ovom talasu — **ne** označavati kao **aligned**. Repo pokriva jedan Titan-modul sa determinističkim `run` izlazom (npr. domain state / revenue heuristike u servisu), ne celokupan književni/strateški dokument. Testovi: `src/tests/unit/modules/apex-predator/*.test.ts`. **CEO sekcija D** u matrici [`CHECKLIST-CEO-SISTEM.md`](../../CHECKLIST-CEO-SISTEM.md) takođe **ne** numeriše Apex posebno. |
+| `OmniTube_Project_Overview.pdf` | `atina-platform/atina/src/modules/omnitube/**` (list/create, `POST /:id/run`; `omnitube.service.ts` → `getAiClient()` u production/optimize putevima) | **partial** | Rute + servis testovi (`omnitube.*.test.ts`, `omnitube-ai.service.test.ts`). PDF stranično = N2+. |
+| `apex_predator_text.pdf` | **Samo softverski rez:** `atina-platform/atina/src/modules/apex-predator/**` (`apex-predator.service.ts` → `getAiClient()` za run payload) | **partial** + **N/A** (van koda) | `src/tests/unit/modules/apex-predator/*.test.ts`. Narativ PDF = **N/A** u kodu. |
+
+### OmniGame (povezano sa checklistom §8.2, nije PDF u ovom talasu)
+
+| Modul | Mapiranje | Status | Napomena |
+|-------|-----------|--------|----------|
+| OmniGame | `src/modules/omnigame/**` | **partial** | `omnigame.*.test.ts`; `validate` → `executeOmnigameValidate` (scraper/storage task, ne AI client u servisu). Nema `OmniGame_*.pdf` u A5 listi — vidi [`04-craftor-supply-dominus.md`](./04-craftor-supply-dominus.md) § OmniTube/OmniGame/Apex. |
 
 ### `apex_predator_text.pdf` — iskreno razdvajanje obima (bez lažnog aligned)
 

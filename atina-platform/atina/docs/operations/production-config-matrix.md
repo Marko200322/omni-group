@@ -99,7 +99,25 @@ Safe defaults policy:
 | `ADMIN_PASSWORD` | Yes | Yes | `Admin@123456` | Replace default and rotate by policy. |
 | `ADMIN_NAME` | No | No | `System Admin` | Display name only. |
 
-## 7) Rate Limits, Logging, and Feature Flags
+## 7) Aggregators, Phase, and Pipelines (2026-05-20)
+
+| Variable | Required (prod) | Secret | Safe default (dev) | Production guidance |
+|---|---|---|---|---|
+| `PHASE` | No | No | `v1` | Boot sync to DB; gates `billing`/`crm`/`analytics` by phase. |
+| `AI_URL` / `AI_KEY` | Conditional | Yes | empty | AI aggregator (Craftor, lead-scoring, titan-master, ai-memory). |
+| `FINANCE_URL` / `FINANCE_KEY` | Conditional | Yes | empty | PayPal/Wise via finance service when set; else direct provider env. |
+| `COMMS_URL` / `COMMS_KEY` | Conditional | Yes | empty | Outreach/follow-up dispatch when set. |
+| `SCRAPER_URL` / `SCRAPER_KEY` | Conditional | Yes | empty | Client-hunter / titanis scrape. |
+| `CAPTCHA_URL` / `CAPTCHA_KEY` | Conditional | Yes | empty | Captcha aggregator. |
+| `DOMAIN_URL` / `DOMAIN_KEY` | Conditional | Yes | empty | Domain registrar aggregator. |
+| `WEB3_STORAGE_URL` / `WEB3_STORAGE_KEY` | Conditional | Yes | empty | Web3 storage aggregator. |
+| `YOUTUBE_PIPELINE_URL` | Conditional | No | empty | HTTP `POST /run` on `tools/youtube-pipeline` (`PIPELINE_HTTP_PORT`, default 8090). |
+| `ELEVENLABS_API_KEY` | Conditional | Yes | empty | OmniTube voice when pipeline uses ElevenLabs. |
+| `APEX_SUICIDE_SWITCH_ARMED` | No | No | `false` | Apex-predator soft kill switch; keep `false` unless ops approves. |
+
+Infra secrets (DB, JWT, Redis) remain in `config/env-aggregator.json` for local dev — not committed.
+
+## 8) Rate Limits, Logging, and Feature Flags
 
 | Variable | Required (prod) | Secret | Safe default (dev) | Production guidance |
 |---|---|---|---|---|
@@ -122,7 +140,7 @@ Safe defaults policy:
 | `ENABLE_CRM` | No | No | `true` | Disable only with approved change window. |
 | `ENABLE_ANALYTICS` | No | No | `true` | Disable only with approved change window. |
 
-## 8) .env.example Alignment (Atina + Forge)
+## 9) .env.example Alignment (Atina + Forge)
 
 Validated variable coverage against `.env.example`:
 - Core app + auth keys
@@ -136,7 +154,7 @@ Validated variable coverage against `.env.example`:
 
 Result: all production matrix variables are represented in `.env.example` and all `.env.example` platform keys are represented in this matrix.
 
-## 9) Production boot validation (gate / stavke)
+## 10) Production boot validation (gate / stavke)
 
 Run this before every production rollout:
 

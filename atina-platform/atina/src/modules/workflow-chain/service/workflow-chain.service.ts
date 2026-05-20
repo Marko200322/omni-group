@@ -207,7 +207,7 @@ export class WorkflowChainService {
       description: 'Runs lead hunt -> sales close -> retention shield across Craftor, Titanis, and Apex Predator.',
       minPhase: 'v3',
       steps: [
-        { step: 'Craftor lead hunt', moduleSlug: 'craftor', action: 'lead-hunt', config: { revenueEstimate: 80 } },
+        { step: 'Craftor hunting cycle', moduleSlug: 'craftor', action: 'hunting', config: { revenueEstimate: 80 } },
         { step: 'Titanis close cycle', moduleSlug: 'titanis', action: 'close', config: { revenueEstimate: 180 } },
         { step: 'Apex retention shield', moduleSlug: 'apex-predator', action: 'risk-shield', config: { revenueEstimate: 140 } },
         { step: 'Track ecosystem conversion event', moduleSlug: 'analytics', action: 'track', config: { eventName: 'workflow_template_ecosystem_hunt_to_conversion_completed' } },
@@ -219,7 +219,7 @@ export class WorkflowChainService {
       minPhase: 'v3',
       steps: [
         { step: 'OmniTube publish cycle', moduleSlug: 'omnitube', action: 'publish', config: { revenueEstimate: 110 } },
-        { step: 'Craftor follow-up cycle', moduleSlug: 'craftor', action: 'follow-up', config: { revenueEstimate: 90 } },
+        { step: 'Craftor outreach cycle', moduleSlug: 'craftor', action: 'outreach', config: { revenueEstimate: 90 } },
         { step: 'Titanis close cycle', moduleSlug: 'titanis', action: 'close', config: { revenueEstimate: 170 } },
         { step: 'Track flywheel event', moduleSlug: 'analytics', action: 'track', config: { eventName: 'workflow_template_content_to_conversion_flywheel_completed' } },
       ],

@@ -49,6 +49,20 @@ Same **file** requirement for a shared ledger: both stacks must open **one** SQL
 
 Brzi runtime dokaz: vidi **[`VAULT-B-INTEGRATED-RUNBOOK.md`](./VAULT-B-INTEGRATED-RUNBOOK.md)** odjeljak 3 i šablon **[`VAULT-B-EVIDENCE.template.md`](./VAULT-B-EVIDENCE.template.md)**. Ne lepi `.env`, tokene niti osetljive putanje u javne logove.
 
+## Staging model (jedan preporučeni obrazac)
+
+Za **staging** gde Python worker (Forge/Atina/Astra) i **Node Forge** dele isti SQLite ledger, koristi **jedan fajl na hostu** — bez menjanja imena env varijabli u kodu:
+
+| Korak | Python (koren compose) | Node (`atina-platform/atina`) | Nest `atina-system` |
+|-------|------------------------|-------------------------------|---------------------|
+| 1 | Bind mount npr. `./staging-vault:/data` (override compose) | — | N/A (ne koristi vault) |
+| 2 | `VAULT_PATH=/data/vault.db` | `FORGE_VAULT_PATH=<apsolutna putanja>/staging-vault/vault.db` u lokalnom `.env` (**ne commitovati**) | — |
+| 3 | `docker compose up` Python servisi | `npm run dev` iz `atina-platform/atina/` | `verify:n1` nezavisno |
+
+**Verifikacija:** `python -m pytest -q` (vault testovi) + `npx jest src/tests/unit/forge.config.test.ts` u Atini. Operativni smoke: runbook iznad + evidencija šablona.
+
+**Prod:** isti obrazac sa named volume **external** između dva compose projekta (vidi § „Named Docker volume shared by two compose projects“) ili managed disk na hostu; ponovi runbook pre go-live.
+
 ## CEO sekcija B — [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md)
 
 Stavka *„Deljeni `vault_data` … usklađeni sa Node Forge”* u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md): **`[x]`** uz lokalnu evidenciju **2026-05-05** — [`VAULT-B-EVIDENCE-LATEST.md`](./VAULT-B-EVIDENCE-LATEST.md). Za sledeće okruženje (staging/prod) ponovi runbook i novi zapis.

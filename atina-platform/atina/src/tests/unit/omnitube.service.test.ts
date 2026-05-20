@@ -10,6 +10,14 @@ var omnitubeRepo: {
   updateAfterRun: jest.Mock;
 };
 
+jest.mock('../../queue/queue', () => ({
+  addJob: jest.fn().mockResolvedValue({ id: 'job-1' }),
+}));
+
+jest.mock('../../modules/tasks/task-executors', () => ({
+  executeOmnitubePipeline: jest.fn().mockResolvedValue({ source: 'test', mode: 'optimize' }),
+}));
+
 jest.mock('../../modules/omnitube/repository/omnitube.repository', () => {
   omnitubeRepo = {
     listByUser: jest.fn(),
@@ -61,7 +69,7 @@ describe('OmniTubeService', () => {
     expect(payload.estimated_revenue).toBe(120);
     expect(payload.run_score).toBe(91);
     expect(payload.units_produced).toBe(5100);
-    expect(payload.details).toEqual({ views_generated: 5100 });
+    expect(payload.details).toMatchObject({ views_generated: 5100 });
     expect(omnitubeRepo.updateAfterRun).toHaveBeenCalledWith('tube-1', 120, 'optimize', 5100, 91);
   });
 

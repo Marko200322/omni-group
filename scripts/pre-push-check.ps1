@@ -23,7 +23,7 @@ Write-Host "Disk C: free ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 1) { '
 if ($freeGb -lt 1) {
   Write-Host '  KRITICNO: disk ispod 1 GB — zaustavi dev servere i pokreni free-disk-space.ps1' -ForegroundColor Red
 } elseif ($freeGb -lt 5) {
-  Write-Host '  Upozorenje: pre npm ci / verify-monorepo oslobodi >=5 GB' -ForegroundColor Yellow
+  Write-Host '  Upozorenje: pre npm ci / verify-monorepo (job python / Python (Doslednost dok + pytest); docs/GIT-BRANCH-PROTECTION.md; apps/omnigroup-web; npm run smoke:all) oslobodi >=5 GB' -ForegroundColor Yellow
 }
 
 $envLocal = Join-Path $repoRoot 'apps\omnigroup-web\.env.local'

@@ -47,13 +47,21 @@ function Check-Prefix {
 $env = Read-DotEnv -Path $envPath
 
 $checks = @(
-  @{ Key = 'FINANCE_URL'; Required = $false; Note = 'Stripe API base (opciono uz FINANCE_KEY)' },
-  @{ Key = 'FINANCE_KEY'; Required = $true; Prefix = 'sk_'; Note = 'Stripe secret (sk_test_ ili sk_live_)' },
+  @{ Key = 'FINANCE_URL'; Required = $false; Note = 'Finance agregator base (Stripe/PayPal/Wise proxy)' },
+  @{ Key = 'FINANCE_KEY'; Required = $true; Prefix = 'sk_'; Note = 'Stripe secret (sk_test_ ili sk_live_) — config.stripe.secretKey' },
   @{ Key = 'STRIPE_WEBHOOK_SECRET'; Required = $true; Prefix = 'whsec_'; Note = 'Webhook signing secret' },
   @{ Key = 'STRIPE_PUBLISHABLE_KEY'; Required = $true; Prefix = 'pk_'; Note = 'Publishable key za frontend' },
   @{ Key = 'STARTER_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Starter plan' },
   @{ Key = 'PRO_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Pro plan' },
   @{ Key = 'ENTERPRISE_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Enterprise plan' }
+)
+
+$optionalChecks = @(
+  @{ Key = 'PAYPAL_CLIENT_ID'; Note = 'PayPal (direktno ili preko FINANCE agregatora)' },
+  @{ Key = 'PAYPAL_CLIENT_SECRET'; Note = 'PayPal secret' },
+  @{ Key = 'PAYPAL_MODE'; Note = 'sandbox ili live' },
+  @{ Key = 'WISE_API_KEY'; Note = 'Wise transfers' },
+  @{ Key = 'WISE_PROFILE_ID'; Note = 'Wise profile (opciono)' }
 )
 
 Write-Host '== Stripe env (atina/.env) ==' -ForegroundColor Cyan
@@ -84,6 +92,14 @@ foreach ($c in $checks) {
 
 Write-Host ''
 Write-Host "Stripe live readiness: $ready/$required obaveznih polja OK" -ForegroundColor $(if ($ready -eq $required) { 'Green' } else { 'Yellow' })
+Write-Host ''
+Write-Host '== PayPal / Wise (opciono) ==' -ForegroundColor Cyan
+foreach ($c in $optionalChecks) {
+  $val = if ($env.ContainsKey($c.Key)) { $env[$c.Key] } else { '' }
+  $status = if ([string]::IsNullOrWhiteSpace($val)) { 'missing' } else { 'ok' }
+  $color = if ($status -eq 'ok') { 'Green' } else { 'DarkGray' }
+  Write-Host ("  {0,-26} {1,-12} {2}" -f $c.Key, $status, $(Mask-Value $val)) -ForegroundColor $color
+}
 Write-Host ''
 Write-Host 'Gde naci vrednosti:' -ForegroundColor Cyan
 Write-Host '  Stripe Dashboard -> Developers -> API keys (sk_, pk_)' -ForegroundColor DarkGray

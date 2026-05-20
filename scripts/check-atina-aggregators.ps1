@@ -39,7 +39,17 @@ $groups = @(
   @{ Label = '4. Finance / Stripe'; Keys = @('FINANCE_URL', 'FINANCE_KEY') },
   @{ Label = '5. Comms (email/SMS)'; Keys = @('COMMS_URL', 'COMMS_KEY') },
   @{ Label = '6. Infra'; Keys = @('INFRASTRUCTURE_URL', 'INFRASTRUCTURE_KEY') },
-  @{ Label = '7. Storage'; Keys = @('STORAGE_URL', 'STORAGE_KEY') }
+  @{ Label = '7. Storage'; Keys = @('STORAGE_URL', 'STORAGE_KEY') },
+  @{ Label = '8. Captcha'; Keys = @('CAPTCHA_URL', 'CAPTCHA_KEY') },
+  @{ Label = '9. Domain'; Keys = @('DOMAIN_URL', 'DOMAIN_KEY') },
+  @{ Label = '10. Web3 storage'; Keys = @('WEB3_STORAGE_URL', 'WEB3_STORAGE_KEY') }
+)
+
+$platformExtras = @(
+  @{ Key = 'PHASE'; Hint = 'v1-v6 (boot sync + gating)' },
+  @{ Key = 'YOUTUBE_PIPELINE_URL'; Hint = 'tools/youtube-pipeline HTTP /run' },
+  @{ Key = 'ELEVENLABS_API_KEY'; Hint = 'voice (optional)' },
+  @{ Key = 'APEX_SUICIDE_SWITCH_ARMED'; Hint = 'apex-predator soft kill' }
 )
 
 $stripeExtras = @(
@@ -58,6 +68,13 @@ foreach ($g in $groups) {
   $status = if ($filled -eq $total) { 'OK' } elseif ($filled -eq 0) { 'prazno' } else { 'delimicno' }
   $color = switch ($status) { 'OK' { 'Green' } 'delimicno' { 'Yellow' } default { 'DarkGray' } }
   Write-Host ("  {0,-22} {1} ({2}/{3})" -f $g.Label, $status, $filled, $total) -ForegroundColor $color
+}
+
+Write-Host ''
+Write-Host 'Platform (ne agregatori):' -ForegroundColor Cyan
+foreach ($item in $platformExtras) {
+  $ok = $env.ContainsKey($item.Key) -and -not [string]::IsNullOrWhiteSpace($env[$item.Key])
+  Write-Host ("  {0,-28} {1}  {2}" -f $item.Key, $(if ($ok) { 'set' } else { '-' }), $item.Hint) -ForegroundColor $(if ($ok) { 'Green' } else { 'DarkGray' })
 }
 
 Write-Host ''

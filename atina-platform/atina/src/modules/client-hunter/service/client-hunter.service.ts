@@ -10,7 +10,14 @@ import {
   CreateClientHunterDtoType,
   RunClientHunterDtoType,
 } from '../dto/client-hunter.dto';
+import { getScraperClient } from '../../../integrations';
 import { ClientHunterRepository } from '../repository/client-hunter.repository';
+
+const PLATFORM_SEED_URLS: Record<string, string> = {
+  upwork: 'https://www.upwork.com/nx/search/jobs/',
+  fiverr: 'https://www.fiverr.com/search/gigs',
+  linkedin: 'https://www.linkedin.com/jobs/search/',
+};
 
 export class ClientHunterService {
   private static readonly IDEMPOTENCY_PAYLOAD_MISMATCH_MESSAGE =
@@ -37,8 +44,24 @@ export class ClientHunterService {
     const execute = async () => {
       const estRevenue = Number(dto.revenueEstimate ?? 50);
       const leadMultiplier = dto.mode === 'hunt' ? 1.2 : dto.mode === 'discover' ? 1.0 : 0.85;
-      const leadsDiscovered = Math.max(1, Math.round((dto.intensity / 10) * leadMultiplier));
-      const qualityScore = Math.min(100, 55 + Math.round(dto.intensity / 3));
+      let leadsDiscovered = Math.max(1, Math.round((dto.intensity / 10) * leadMultiplier));
+      let qualityScore = Math.min(100, 55 + Math.round(dto.intensity / 3));
+      const scrapeHits: string[] = [];
+
+      if (dto.mode === 'hunt') {
+        const scraper = getScraperClient();
+        if (scraper.isConfigured()) {
+          for (const [platform, url] of Object.entries(PLATFORM_SEED_URLS)) {
+            const data = await scraper.scrape({ url, extractLinks: true, javascript: true });
+            if (data) {
+              scrapeHits.push(platform);
+              const links = Array.isArray(data.links) ? data.links.length : 0;
+              leadsDiscovered += Math.min(40, Math.floor(links / 5));
+            }
+          }
+          qualityScore = Math.min(100, qualityScore + scrapeHits.length * 8);
+        }
+      }
 
       const outputPayload = {
         leadsDiscovered,
@@ -46,6 +69,8 @@ export class ClientHunterService {
         estimatedRevenue: estRevenue,
         mode: dto.mode,
         intensity: dto.intensity,
+        platforms_scraped: scrapeHits,
+        scraper_configured: getScraperClient().isConfigured(),
         idempotency_key: idempotencyKey || null,
       };
 

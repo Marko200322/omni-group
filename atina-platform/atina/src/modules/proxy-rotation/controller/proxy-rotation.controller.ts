@@ -21,7 +21,8 @@ export class ProxyRotationController {
   };
 
   run = async (req: Request, res: Response): Promise<void> => {
-    const data = await this.service.run(req.params.id, req.user!.userId, req.body);
+    const idempotencyKey = req.header('Idempotency-Key');
+    const data = await this.service.run(req.params.id, req.user!.userId, req.body, idempotencyKey);
     sendSuccess(res, data, 'Proxy Rotation run completed');
   };
 }

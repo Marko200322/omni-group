@@ -6,6 +6,8 @@ import {
   CreateApexPredatorDtoType,
   RunApexPredatorDtoType,
 } from '../dto/apex-predator.dto';
+import { config } from '../../../config';
+import { getAiClient } from '../../../integrations';
 import { ApexPredatorRepository } from '../repository/apex-predator.repository';
 
 type ApexSystemRow = {
@@ -53,7 +55,7 @@ export class ApexPredatorService {
     const system = foundRows[0] as ApexSystemRow | undefined;
     if (!system) throw new NotFoundError('Apex Predator profile');
 
-    const output = this.buildRunOutput(system, dto.mode, dto.intensity);
+    const output = await this.buildRunOutput(system, dto.mode, dto.intensity);
     const { rows } = await this.repo.createRun(systemId, `apex_${dto.mode}`, output);
     await this.repo.updateAfterRun(
       systemId,
@@ -71,7 +73,7 @@ export class ApexPredatorService {
     return rows;
   }
 
-  private buildRunOutput(system: ApexSystemRow, mode: ApexRunModeType, intensity: number) {
+  private async buildRunOutput(system: ApexSystemRow, mode: ApexRunModeType, intensity: number) {
     const riskProfile = (system.config?.risk_profile ?? 'medium') as ApexRiskProfileType;
     const budget = Number(system.budget_allocated ?? 0);
     const efficiency = Number(system.efficiency_score ?? 0);
@@ -92,6 +94,38 @@ export class ApexPredatorService {
     const alertCount = Math.max(0, Math.round((riskProfile === 'high' ? 2 : 1) + (mode === 'risk-shield' ? -1 : 1)));
     const efficiencyDelta = Number((Math.max(1.8, Math.min(4.4, 1.2 + intensity / 40)) * transitionFactor * efficiencyFactor).toFixed(2));
 
+    const batchCap = config.apex.maxSimBatchProfiles;
+    const simulatedProfiles = Math.min(batchCap, Math.round(intensity * batchCap / 100));
+
+    const chargebackDefender =
+      mode === 'risk-shield'
+        ? { armed: true, blocked_attempts: Math.max(1, Math.round(alertCount * 1.5)), flux_trigger: false }
+        : { armed: false, blocked_attempts: 0, flux_trigger: false };
+
+    const suicideSwitch = {
+      armed: config.apex.suicideSwitchArmed,
+      destructive_action_allowed: false,
+      message: config.apex.suicideSwitchArmed
+        ? 'APEX_SUICIDE_SWITCH_ARMED=true — soft lock only; no destructive API without admin runbook'
+        : 'Suicide switch disarmed (default)',
+    };
+
+    let narrativeMemory: Record<string, unknown> | null = null;
+    const ai = getAiClient();
+    if (ai.isConfigured()) {
+      await ai.remember({
+        namespace: 'apex_fan_dna',
+        key: `profile_${mode}`,
+        value: { intensity, riskProfile, nextState },
+      });
+      narrativeMemory = {
+        vector_store: 'ai_aggregator',
+        fan_dna_synced: true,
+        live_portrait_hook: 'not_configured',
+        flux_ip_adapter: 'not_configured',
+      };
+    }
+
     return {
       mode,
       intensity,
@@ -110,6 +144,11 @@ export class ApexPredatorService {
       alerts: alertCount,
       previous_domain_state: previousState,
       next_domain_state: nextState,
+      simulated_profiles_batch: simulatedProfiles,
+      max_profiles_architecture: 125000,
+      chargeback_defender: chargebackDefender,
+      suicide_switch: suicideSwitch,
+      narrative_memory: narrativeMemory,
     };
   }
 }

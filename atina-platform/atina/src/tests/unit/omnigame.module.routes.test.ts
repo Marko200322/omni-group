@@ -8,6 +8,13 @@ import { sendError } from '../../utils/response';
 import { AppError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
+jest.mock('../../modules/tasks/task-executors', () => ({
+  executeOmnigameValidate: jest.fn().mockResolvedValue({
+    validation_score: 84,
+    steam_trends_scraped: false,
+    build_ready: false,
+  }),
+}));
 
 let omnigameAuthOn = true;
 jest.mock('../../api/middleware/auth.middleware', () => {

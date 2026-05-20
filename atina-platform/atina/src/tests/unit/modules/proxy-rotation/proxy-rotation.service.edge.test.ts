@@ -9,6 +9,23 @@ var proxyRotationRepo: {
   updateAfterRun: jest.Mock;
 };
 
+jest.mock('../../../../integrations', () => ({
+  getScraperClient: () => ({ isConfigured: () => false, fetchProxy: jest.fn() }),
+}));
+
+jest.mock('../../../../utils/ecosystem-idempotency', () => {
+  const actual = jest.requireActual<typeof import('../../../../utils/ecosystem-idempotency')>(
+    '../../../../utils/ecosystem-idempotency'
+  );
+  return {
+    ...actual,
+    withEcosystemIdempotencyLock: jest.fn(
+      async (_s: string, _k: string, work: () => Promise<unknown>) => work()
+    ),
+    findRecentEcosystemRunByIdempotencyKey: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  };
+});
+
 jest.mock('../../../../modules/proxy-rotation/repository/proxy-rotation.repository', () => {
   proxyRotationRepo = {
     listByUser: jest.fn().mockResolvedValue({ rows: [] }),

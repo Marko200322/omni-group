@@ -1,3 +1,4 @@
+import { moduleRegistry } from '../../../../core/ModuleRegistry';
 import { AdminModule } from '../../../../modules/admin/admin.module';
 import express from 'express';
 import request from 'supertest';
@@ -85,6 +86,10 @@ describe('AdminModule', () => {
       vaultSignal: 'available',
       lastForgeEventAgeMs: 1200,
       lastForgeEventFresh: true,
+    });
+    moduleRegistry.registerHealthProbe('forge', async () => {
+      const details = await getForgeHealthDetailsMock();
+      return details as Record<string, unknown>;
     });
   });
 

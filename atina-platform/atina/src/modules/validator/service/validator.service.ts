@@ -10,6 +10,7 @@ import {
   ValidatorStatusDto,
   ValidatorStatusDtoType,
 } from '../dto/validator.dto';
+import { getAiClient } from '../../../integrations';
 import { ValidatorRepository } from '../repository/validator.repository';
 
 export class ValidatorService {
@@ -40,12 +41,25 @@ export class ValidatorService {
       const itemsProcessed = Math.max(1, Math.round((dto.intensity / 10) * modeMultiplier));
       const qualityScore = Math.min(100, 52 + Math.round(dto.intensity / 3));
 
+      const ai = getAiClient();
+      let aiEnriched = false;
+      if (ai.isConfigured() && dto.mode === 'enrich') {
+        await ai.fetchRecommendations({
+          module: 'validator',
+          mode: dto.mode,
+          itemsProcessed,
+          intensity: dto.intensity,
+        });
+        aiEnriched = true;
+      }
+
       const outputPayload = {
         itemsProcessed,
         qualityScore,
         estimatedValue: estValue,
         mode: dto.mode,
         intensity: dto.intensity,
+        ai_enriched: aiEnriched,
         idempotency_key: idempotencyKey || null,
       };
 
