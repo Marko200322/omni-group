@@ -70,7 +70,7 @@ Detaljan redosled koraka u [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODU
 
 1. **`npm run build`** u prod CI / na serveru — PASS.
 2. **Migracije na stagingu** — primenjene, log čist.
-3. **Prod `.env`** — `NODE_ENV=production`, `JWT_SECRET` ≥32 znaka (random), `ADMIN_PASSWORD` ≠ `Admin@123456`, `DB_SSL=true`, payments / SMTP / vault / CORS popunjeni.
+3. **Prod `.env`** — `NODE_ENV=production`, `JWT_SECRET` ≥32 znaka (random), `ADMIN_PASSWORD` ≠ `Admin@123456`, `DB_SSL=true`, payments / SMTP / vault / CORS popunjeni. Lokalni redosled agregatora: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md).
 4. **Stripe live** — `sk_live_…`, webhook endpoint dodat, **Send test webhook** = HTTP 200. _(PayPal / Wise — analogno, opciono.)_
 5. **SMTP** — `SMTP_*` postavljeni, jedan testni email PASS. _(N/A ako ne šalješ email.)_
 6. **Smoke:** `npm run smoke:all -- -BaseUrl "https://app.<domen>"` u `atina-platform/atina/` — exit 0, svih 6 koraka PASS.
