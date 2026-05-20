@@ -11,7 +11,7 @@
 
 **Agent checklista sekcije 1–8:** zatvorene (osim **§7.2** restore pravog UI = **vlasnik**).  
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
-**Git:** `origin` postoji; **~117** lokalnih izmena **nisu** commitovane — vlasnik: `git add` + commit + push ([`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md)).  
+**Git:** commit **`a370c25`** (121 fajl, Master Blueprint) na `main`; **push** = vlasnik: `git push origin main` ([`GITHUB-PUSH-READY.md`](./GITHUB-PUSH-READY.md)).  
 **`.env`:** agregatori i Stripe polja još **prazni** (lokalni dev radi); provera: `.\scripts\check-atina-aggregators.ps1` i `.\scripts\check-stripe-env.ps1`.
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom

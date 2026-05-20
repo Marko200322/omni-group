@@ -1,6 +1,6 @@
 # GitHub push — spremno lokalno
 
-**Stanje (2026-05-21):** HEAD **`8b29654`** na `main`; **`origin`** = `https://github.com/Marko200322/omni-group.git`. Working tree: **~117** izmenjenih/netrack fajlova (Master Blueprint + Val 357 gate) — **nije** commitovano. Brzi pregled: `.\scripts\owner-status.ps1`. Handoff gate: `.\scripts\verify-agent-handoff.ps1` — **PASS** (2026-05-21).
+**Stanje (2026-05-21):** **`a370c25`** (+ `fix` stage skripta) na `main`, **1–2 commit-a ispred** `origin/main`. **`origin`** = `https://github.com/Marko200322/omni-group.git`. `.env` **nije** u commit-u. Push: `git push origin main`. Handoff: `.\scripts\verify-agent-handoff.ps1` — **PASS**.
 
 **Pre push-a:**
 ```powershell
