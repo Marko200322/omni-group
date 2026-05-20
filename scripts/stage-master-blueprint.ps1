@@ -58,6 +58,19 @@ feat(atina): Master Blueprint integracije, agregatori, Val 357 gate
 - migrate 010_leads_compat_view; ops docs + agent checklist
 '@
 
-git commit -m $msg.Trim()
+$authorLine = git log -1 --format='%an|%ae' 2>$null
+$commitArgs = @('commit', '-m', $msg.Trim())
+if ($authorLine -match '^(.+)\|(.+)$') {
+  $commitArgs = @(
+    '-c', "user.name=$($Matches[1])",
+    '-c', "user.email=$($Matches[2])",
+    'commit', '-m', $msg.Trim()
+  )
+} else {
+  Write-Host 'Git identitet nije setovan. Jednokratno:' -ForegroundColor Yellow
+  Write-Host '  git -c user.name="Ime" -c user.email="email@example.com" commit -m "..."' -ForegroundColor DarkGray
+}
+
+git @commitArgs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host 'Commit OK. Push: git push origin main' -ForegroundColor Green
