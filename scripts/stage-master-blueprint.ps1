@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
   Staging za commit Master Blueprint izmena — iskljucuje .env tajne.
+  Pre push-a: pun mirror [`verify-monorepo.ps1`](./verify-monorepo.ps1) (job python / **Python (Doslednost dok + pytest)** — docs/GIT-BRANCH-PROTECTION.md; **apps/omnigroup-web**; **npm run smoke:all**).
 
 .EXAMPLE
   .\scripts\stage-master-blueprint.ps1
@@ -54,7 +55,7 @@ feat(atina): Master Blueprint integracije, agregatori, Val 357 gate
 
 - 7 agregatora + CAPTCHA/DOMAIN/WEB3; C-S-R moduli; queue workers
 - deal-offer/validator/proxy idempotency + COMMS/AI/SCRAPER
-- test:ci 3170/3170; verify-monorepo Val 357; Nest supply-core specs
+- test:ci 3170/3170; verify-monorepo.ps1 Val 357 (Python Doslednost dok + pytest, omnigroup-web, smoke:all); Nest supply-core specs
 - migrate 010_leads_compat_view; ops docs + agent checklist
 '@
 
