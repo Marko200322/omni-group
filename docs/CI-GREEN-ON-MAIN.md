@@ -63,7 +63,7 @@ Ako vlasnik repoa uključi **Require status checks**, imena u UI-u često izgled
 
 ## 5. Kad novi push na `main` ostaje **Pending** (queue)
 
-Workflow [`ci-monorepo.yml`](../.github/workflows/ci-monorepo.yml) na **`main`** **ne otkazuje** stariji run (`cancel-in-progress: false`) — novi run čeka dok prethodni ne završi.
+Workflow [`ci-monorepo.yml`](../.github/workflows/ci-monorepo.yml) koristi **`cancel-in-progress: true`** na svim granama (2026-05-21) — novi push na `main` otkazuje zaglavljeni run. Job **`atina-saas`** ima **`timeout-minutes: 45`** da `test:ci` ne drži queue beskonačno.
 
 **Tipičan uzrok (2026-05-21):** run [26195848715](https://github.com/Marko200322/omni-group/actions/runs/26195848715) (`a628906`) — job **Atina SaaS (test:ci)** ostao **`in_progress`** satima; run [26196348887](https://github.com/Marko200322/omni-group/actions/runs/26196348887) (`5f6461b`) stoji **pending**.
 

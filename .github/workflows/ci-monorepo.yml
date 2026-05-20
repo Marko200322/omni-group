@@ -16,8 +16,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  # PR branches: cancel superseded pushes. Default branch: let each run finish (audit / release hygiene).
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+  # Cancel superseded runs (uključujući main) — sprečava queue kad job (npr. test:ci) ostane in_progress.
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -27,6 +27,7 @@ jobs:
     # Status-check label in branch protection: CI (monorepo) / Python (Doslednost dok + pytest). Legacy runs may still list "Python (doc audit + pytest)" until a fresh workflow run. See docs/GIT-BRANCH-PROTECTION.md when updating required checks.
     name: Python (Doslednost dok + pytest)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Doslednost dok — doc gate (audit-doc-gate-references.ps1; md/txt + yaml/ps1/ini; uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG; scripts/README.md)
@@ -42,6 +43,7 @@ jobs:
   atina-saas:
     name: Atina SaaS (test:ci)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: atina-platform/atina
@@ -58,6 +60,7 @@ jobs:
   omnigroup-web:
     name: Omnigroup web (Next.js build)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: apps/omnigroup-web
@@ -74,6 +77,7 @@ jobs:
   atina-system:
     name: Atina System (verify:ci)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:15-alpine
@@ -113,6 +117,7 @@ jobs:
   compose:
     name: Compose (docker compose config)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Validate Nest stack compose (atina + port 3001 override)
