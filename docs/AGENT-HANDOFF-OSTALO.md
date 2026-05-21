@@ -13,7 +13,7 @@
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
 **Git:** `origin/main` sinhronizovan (2026-05-21); Master Blueprint **`a370c25`**; doc/ops **`342b2c0`**, **`5f6461b`**.  
 **`.env`:** agregatori **0/10** + Stripe **0/6** (2026-05-21 provera skripti; `PHASE=v1` setovan); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md). Prioritet za staging: **FINANCE** + **AI** + **COMMS**.  
-**CI:** #39 FAIL (~5m) — `npx eslint` OK; Jest+coverage OOM na runneru (~7 GB) sa globalnim `NODE_OPTIONS=6144` + lcov/html. Fix u toku: Jest korak `4096`, CI samo `text` coverage reporter. Lokalno `test:ci` **3170/3170**. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
+**CI:** #39–#40 FAIL (~5m) — build/lint OK; **Jest+coverage** na GHA (~7 GB) exit 1 posle ~5 min (3170 testova). Fix: CI samo unit Jest; pun gate **`npm run test:ci`** lokalno **3170/3170**. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom
 

@@ -2,7 +2,7 @@
 
 **Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Poslednji push na `main` (agent, 2026-05-21):** [run #39 / 26199190884](https://github.com/Marko200322/omni-group/actions/runs/26199190884) (`798cea9`) — **FAIL** (~5m, Atina SaaS). Sledeći fix: Jest heap 4096 + CI `text`-only coverage. Sačekaj zelen run pre sign-off-a.
+**Poslednji push na `main` (agent, 2026-05-21):** čeka run posle fix-a bez GHA coverage (`8de0c88`+). #40 FAIL ~5m (Jest+coverage). Lokalno: `npm run test:ci` **3170/3170**.
 
 **Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 
