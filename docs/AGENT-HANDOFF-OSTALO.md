@@ -13,7 +13,7 @@
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
 **Git:** `origin/main` sinhronizovan (2026-05-21); Master Blueprint **`a370c25`**; doc/ops **`342b2c0`**, **`5f6461b`**.  
 **`.env`:** agregatori **0/10** + Stripe **0/6** (2026-05-21 provera skripti; `PHASE=v1` setovan); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md). Prioritet za staging: **FINANCE** + **AI** + **COMMS**.  
-**CI:** [run #36 / 26198321421](https://github.com/Marko200322/omni-group/actions/runs/26198321421) (`374a546`) — u toku. #34 FAIL lint (5m). [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
+**CI:** #37 FAIL (~4m, verovatno OOM sa `maxWorkers=2`) — fix: `runInBand` + heap 7168 (push sledeći). #34 lint fix u `374a546`. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom
 
