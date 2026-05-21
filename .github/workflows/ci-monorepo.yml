@@ -46,7 +46,6 @@ jobs:
     timeout-minutes: 90
     env:
       CI: true
-      NODE_OPTIONS: --max-old-space-size=6144
     defaults:
       run:
         working-directory: atina-platform/atina
@@ -63,6 +62,9 @@ jobs:
       - name: Lint
         run: npx eslint src --ext .ts
       - name: Unit tests + coverage
+        env:
+          # Runner ~7 GB RAM: ne rezervisati 6 GB na build/lint; Jest+coverage peak ispod 4 GB heap.
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npx jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration
 
   omnigroup-web:

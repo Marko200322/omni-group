@@ -44,7 +44,8 @@ module.exports = {
     '!src/modules/titan-monitor/**',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  // CI: samo text (lcov/html na velikom collectCoverageFrom troše RAM na ~7 GB runneru).
+  coverageReporters: process.env.CI ? ['text'] : ['text', 'lcov', 'html'],
   // Global thresholds track measured aggregate (collectCoverageFrom). Wave 1 (2026-04): aligned
   // with current suite (~97% stmts / ~91% branches) so test:ci is actionable; raise toward 100%
   // per module in later waves.
