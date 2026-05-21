@@ -2,7 +2,7 @@
 
 **Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Poslednji push na `main` (agent, 2026-05-21):** `5f6461b` — [Actions run 26196348887](https://github.com/Marko200322/omni-group/actions/runs/26196348887) (proveri 5/5 jobova pre sign-off-a). Raniji pad #25 (`a628906`): doc gate — fix `e6a80ec` / `342b2c0`.
+**Poslednji push na `main` (agent, 2026-05-21):** `295b3d5` — [Actions run 26196798750](https://github.com/Marko200322/omni-group/actions/runs/26196798750). **4/5 zeleno** (Python, omnigroup-web, atina-system, compose); **Atina SaaS (test:ci)** u toku. Workflow: `cancel-in-progress` + `timeout-minutes` (commit `295b3d5`).
 
 **Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 

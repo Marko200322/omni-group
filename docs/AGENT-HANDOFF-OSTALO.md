@@ -13,7 +13,7 @@
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
 **Git:** `origin/main` sinhronizovan (2026-05-21); Master Blueprint **`a370c25`**; doc/ops **`342b2c0`**, **`5f6461b`**.  
 **`.env`:** agregatori i Stripe polja još **prazni** (lokalni dev radi); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md); provera: `.\scripts\check-atina-aggregators.ps1` i `.\scripts\check-stripe-env.ps1`.  
-**CI:** push **`5f6461b`** — [run 26196348887](https://github.com/Marko200322/omni-group/actions/runs/26196348887) **pending** jer [run 26195848715](https://github.com/Marko200322/omni-group/actions/runs/26195848715) (`a628906`) drži **Atina SaaS (test:ci)** u `in_progress` → vlasnik: **Cancel workflow** na zaglavljenom run-u, zatim Re-run / sačekaj novi run. Doc gate fix: `e6a80ec`. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) §5 (queue).
+**CI:** push **`295b3d5`** — [run 26196798750](https://github.com/Marko200322/omni-group/actions/runs/26196798750) (`cancel-in-progress` + job timeouts u workflow-u). Doc gate fix: `e6a80ec`. Kad 5/5 zeleno → [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md). [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom
 
