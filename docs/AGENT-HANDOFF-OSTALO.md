@@ -12,8 +12,8 @@
 **Agent checklista sekcije 1–8:** zatvorene (osim **§7.2** restore pravog UI = **vlasnik**).  
 **Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
 **Git:** `origin/main` sinhronizovan (2026-05-21); Master Blueprint **`a370c25`**; doc/ops **`342b2c0`**, **`5f6461b`**.  
-**`.env`:** agregatori i Stripe polja još **prazni** (lokalni dev radi); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md); provera: `.\scripts\check-atina-aggregators.ps1` i `.\scripts\check-stripe-env.ps1`.  
-**CI:** push **`295b3d5`** — [run 26196798750](https://github.com/Marko200322/omni-group/actions/runs/26196798750) (`cancel-in-progress` + job timeouts u workflow-u). Doc gate fix: `e6a80ec`. Kad 5/5 zeleno → [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md). [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
+**`.env`:** agregatori **0/10** + Stripe **0/6** (2026-05-21 provera skripti; `PHASE=v1` setovan); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md). Prioritet za staging: **FINANCE** + **AI** + **COMMS**.  
+**CI:** run [#32](https://github.com/Marko200322/omni-group/actions/runs/26197261891) zaglavljen na `test:ci` — fix `jest forceExit` kad `CI=true` (push sledeći). Workflow: `295b3d5`. Doc gate: `e6a80ec`. [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
 
 ### Audit 2026-05-20 (Master Blueprint) — izveštaj na srpskom
 
@@ -53,6 +53,7 @@
 
 - [`AGENT-CHECKLIST-KOMPLET.md`](./AGENT-CHECKLIST-KOMPLET.md) §7.2 omnigroup-web restore (opciono)
 - Novi Val u `NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md` posle sledećeg punog `verify-monorepo.ps1`
+- ~~`jest --forceExit`~~ → `jest.config.js` `forceExit` kad `CI=true` (2026-05-21)
 
 **2026-05-21:** `deal-offer` (idempotency + COMMS/AI), `validator` (AI na `enrich`), `proxy-rotation` (idempotency + postojeći SCRAPER) — checklista §2 red deal-offer/validator/proxy.
 

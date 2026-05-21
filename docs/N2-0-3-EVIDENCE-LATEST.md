@@ -2,7 +2,7 @@
 
 **Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Poslednji push na `main` (agent, 2026-05-21):** `295b3d5` — [Actions run 26196798750](https://github.com/Marko200322/omni-group/actions/runs/26196798750). **4/5 zeleno** (Python, omnigroup-web, atina-system, compose); **Atina SaaS (test:ci)** u toku. Workflow: `cancel-in-progress` + `timeout-minutes` (commit `295b3d5`).
+**Poslednji push na `main` (agent, 2026-05-21):** `2afed3a` — [Actions run 26197261891](https://github.com/Marko200322/omni-group/actions/runs/26197261891) (sačekaj **5/5 zeleno** pre sign-off-a). Workflow fix: `295b3d5` (`cancel-in-progress` + job timeouts). Run `26196798750` otkazan pre završetka `test:ci` (doc push tokom CI).
 
 **Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 
@@ -49,7 +49,7 @@ U **Actions → CI (monorepo)** workflow-u (`name:` u `.github/workflows/ci-mono
 | `atina-system` | **`Atina System (verify:ci)`** |
 | `compose` | **`Compose (docker compose config)`** |
 
-Trajanje: ~7–12 min (paralelno u GitHub runneru). Ako padne crveno, vidi [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) odeljak **5. Kad je crveno**.
+Trajanje: ~2 min (Python, web, Nest, compose) + **~15–45 min** za **Atina SaaS (test:ci)** (3170 testova). Ukupno često **20–50 min**. Ako padne crveno, vidi [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) odeljak **6. Kad je crveno**.
 
 ### Korak 3 — Merge na `main`
 
