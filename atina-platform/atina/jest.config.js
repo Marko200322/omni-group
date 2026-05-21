@@ -62,6 +62,6 @@ module.exports = {
   },
   testTimeout: 30000,
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup-env.ts'],
-  // GitHub Actions sets CI=true; sprečava zaglavljen job kad Jest ostavi open handles.
-  forceExit: !!process.env.CI,
+  // forceExit samo lokalno u npm run test:ci (--forceExit u CLI). Na GHA izbegni exit 1 posle prolaza testova.
+  forceExit: false,
 };

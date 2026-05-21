@@ -60,12 +60,26 @@ jobs:
       - name: Build
         run: npm run build
       - name: Lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=3072
         run: npx eslint src --ext .ts
       - name: Unit tests
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-        # Coverage + pragovi: lokalno `npm run test:ci` (3170 testova + istanbul na ~7 GB GHA = exit 1 ~5 min).
-        run: npx jest --runInBand --forceExit --testPathIgnorePatterns=integration
+        # Coverage + pragovi: lokalno `npm run test:ci`. Bez --forceExit na GHA (Linux exit 1 posle prolaza).
+        run: |
+          set -o pipefail
+          npx jest --runInBand --testPathIgnorePatterns=integration 2>&1 | tee "${RUNNER_TEMP}/jest.log"
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then tail -n 80 "${RUNNER_TEMP}/jest.log"; fi
+          exit "$code"
+      - name: Upload jest log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atina-jest-log
+          path: ${{ runner.temp }}/jest.log
+          if-no-files-found: ignore
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
