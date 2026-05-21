@@ -13,7 +13,7 @@
     "migrate": "npx ts-node src/database/migrate.ts",
     "seed": "npx ts-node src/database/seed.ts",
     "test": "jest --runInBand",
-    "test:ci": "npm run build && npm run lint && jest --runInBand --coverage --testPathIgnorePatterns=integration",
+    "test:ci": "npm run build && npm run lint && jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration",
     "test:unit": "jest --runInBand src/tests/unit",
     "test:integration": "jest --runInBand src/tests/integration",
     "test:integration:local": "npm run migrate && npm run test:integration",

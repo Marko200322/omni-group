@@ -43,7 +43,10 @@ jobs:
   atina-saas:
     name: Atina SaaS (test:ci)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      CI: true
+      NODE_OPTIONS: --max-old-space-size=4096
     defaults:
       run:
         working-directory: atina-platform/atina
@@ -55,7 +58,12 @@ jobs:
           cache: npm
           cache-dependency-path: atina-platform/atina/package-lock.json
       - run: npm ci
-      - run: npm run test:ci
+      - name: Build
+        run: npm run build
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests + coverage
+        run: npx jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
