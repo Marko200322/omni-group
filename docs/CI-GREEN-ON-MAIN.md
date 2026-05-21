@@ -26,7 +26,7 @@ U Actions-u se job-ovi prikazuju po polju **`name:`** u workflow fajlu. U YAML-u
 | Job id (YAML) | Ime u Actions / check | Šta radi (kratko) |
 |---------------|------------------------|-------------------|
 | `python` | **Python (Doslednost dok + pytest)** | Prvo **Doslednost dok** (`scripts/audit-doc-gate-references.ps1` — doc gate md/txt + yaml/ps1/ini, uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`** u [`scripts/README.md`](../scripts/README.md)), zatim **`python -m pytest`** u korenu repoa. |
-| `atina-saas` | **Atina SaaS (test:ci)** | U `atina-platform/atina`: **`npm ci`**, **`npm run test:ci`** (build + lint + ~3170 Jest testova, **`--runInBand`**). Tipično **15–45 min** na GitHub runneru; timeout u workflow-u **45 min**. Ne guraj nove commit-e na `main` dok traje (`cancel-in-progress`). |
+| `atina-saas` | **Atina SaaS (test:ci)** | U `atina-platform/atina`: **`npm ci`**, zatim **Build** → **Lint** → **Jest** (`--maxWorkers=2`, `--forceExit`, ~3170 testova). Tipično **20–60 min** na GitHub runneru (lokalno `--runInBand` može biti duže). Timeout **90 min**. Ne guraj commit na `main` dok traje (`cancel-in-progress`). |
 | `omnigroup-web` | **Omnigroup web (Next.js build)** | U `apps/omnigroup-web`: **`npm ci`**, **`npm run build`**. |
 | `atina-system` | **Atina System (verify:ci)** | U `atina-system`: **`npm ci`**, **`npm run verify:ci`** (Postgres servis na runneru; migracije + e2e u skladu sa workflow-om). |
 | `compose` | **Compose (docker compose config)** | Tri **`docker compose … config --quiet`**: Nest merge (`docker-compose.atina.yml` + `docker-compose.nest-port-3001.yml`), korenski `docker-compose.yml`, `atina-platform/atina/docker-compose.yml`. |

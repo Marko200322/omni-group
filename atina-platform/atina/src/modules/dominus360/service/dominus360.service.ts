@@ -40,7 +40,7 @@ export class Dominus360Service {
 
     const delta = dto.mode === 'resource-allocation' ? 130 : dto.mode === 'risk-scan' ? 60 : 95;
     let riskScore = dto.mode === 'risk-scan' ? 35 : 45;
-    let forecastGrowth = dto.mode === 'forecast' ? 14.2 : 8.8;
+    const forecastGrowth = dto.mode === 'forecast' ? 14.2 : 8.8;
 
     if (this.ai.isConfigured() && dto.mode === 'risk-scan') {
       const rec = await this.ai.fetchRecommendations({

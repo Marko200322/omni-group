@@ -43,7 +43,7 @@ jobs:
   atina-saas:
     name: Atina SaaS (test:ci)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       CI: true
       NODE_OPTIONS: --max-old-space-size=4096
@@ -63,7 +63,7 @@ jobs:
       - name: Lint
         run: npm run lint
       - name: Unit tests + coverage
-        run: npx jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration
+        run: npx jest --maxWorkers=2 --coverage --forceExit --testPathIgnorePatterns=integration
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
