@@ -26,7 +26,7 @@ U Actions-u se job-ovi prikazuju po polju **`name:`** u workflow fajlu. U YAML-u
 | Job id (YAML) | Ime u Actions / check | Šta radi (kratko) |
 |---------------|------------------------|-------------------|
 | `python` | **Python (Doslednost dok + pytest)** | Prvo **Doslednost dok** (`scripts/audit-doc-gate-references.ps1` — doc gate md/txt + yaml/ps1/ini, uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`** u [`scripts/README.md`](../scripts/README.md)), zatim **`python -m pytest`** u korenu repoa. |
-| `atina-saas` | **Atina SaaS (test:ci)** | **`npm ci`**, **Build** → **`npx eslint`** (ne `npm run lint` — 8GB heap) → **Jest** unit (`--runInBand`, `--forceExit`, bez `--coverage` na GHA). Coverage + pragovi: lokalno **`npm run test:ci`**. Jest: `NODE_OPTIONS=4096`. Timeout **90 min**. |
+| `atina-saas` | **Atina SaaS (test:ci)** | Matrix **2 shard-a**: `npm ci`, build, `npx eslint`, Jest `--shard=1/2` i `--shard=2/2` (`--runInBand`, `--forceExit`, bez coverage na GHA). Coverage lokalno: **`npm run test:ci`**. Timeout **45 min** po shard jobu. |
 | `omnigroup-web` | **Omnigroup web (Next.js build)** | U `apps/omnigroup-web`: **`npm ci`**, **`npm run build`**. |
 | `atina-system` | **Atina System (verify:ci)** | U `atina-system`: **`npm ci`**, **`npm run verify:ci`** (Postgres servis na runneru; migracije + e2e u skladu sa workflow-om). |
 | `compose` | **Compose (docker compose config)** | Tri **`docker compose … config --quiet`**: Nest merge (`docker-compose.atina.yml` + `docker-compose.nest-port-3001.yml`), korenski `docker-compose.yml`, `atina-platform/atina/docker-compose.yml`. |

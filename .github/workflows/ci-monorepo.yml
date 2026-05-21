@@ -43,7 +43,11 @@ jobs:
   atina-saas:
     name: Atina SaaS (test:ci)
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [1, 2]
     env:
       CI: true
     defaults:
@@ -63,23 +67,11 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=3072
         run: npx eslint src --ext .ts
-      - name: Unit tests
+      - name: Unit tests (shard ${{ matrix.shard }}/2)
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-        # Coverage + pragovi: lokalno `npm run test:ci`. Bez --forceExit na GHA (Linux exit 1 posle prolaza).
-        run: |
-          set -o pipefail
-          npx jest --runInBand --testPathIgnorePatterns=integration 2>&1 | tee "${RUNNER_TEMP}/jest.log"
-          code=${PIPESTATUS[0]}
-          if [ "$code" -ne 0 ]; then tail -n 80 "${RUNNER_TEMP}/jest.log"; fi
-          exit "$code"
-      - name: Upload jest log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: atina-jest-log
-          path: ${{ runner.temp }}/jest.log
-          if-no-files-found: ignore
+        # Coverage + pragovi: lokalno `npm run test:ci`. Shard smanjuje RAM/trajanje po jobu (~7 GB runner).
+        run: npx jest --runInBand --forceExit --testPathIgnorePatterns=integration --shard=${{ matrix.shard }}/2
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
