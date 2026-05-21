@@ -46,7 +46,7 @@ jobs:
     timeout-minutes: 90
     env:
       CI: true
-      NODE_OPTIONS: --max-old-space-size=7168
+      NODE_OPTIONS: --max-old-space-size=6144
     defaults:
       run:
         working-directory: atina-platform/atina
@@ -61,7 +61,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Lint
-        run: npm run lint
+        run: npx eslint src --ext .ts
       - name: Unit tests + coverage
         run: npx jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration
 
