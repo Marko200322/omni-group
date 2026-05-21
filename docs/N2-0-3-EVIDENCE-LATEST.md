@@ -2,7 +2,7 @@
 
 **Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Poslednji push na `main` (agent, 2026-05-21):** `3990259` — [Actions run 26198075330](https://github.com/Marko200322/omni-group/actions/runs/26198075330) (#34, split build/lint/jest + `forceExit`). Prethodni #33 otkazan. Workflow: `295b3d5`+.
+**Poslednji push na `main` (agent, 2026-05-21):** `374a546` — [Actions run 26198321421](https://github.com/Marko200322/omni-group/actions/runs/26198321421) (#36; eslint fix + jest `maxWorkers=2`). #34 FAIL lint (5m); #33–32 otkazani.
 
 **Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 
