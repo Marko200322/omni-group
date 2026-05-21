@@ -2,7 +2,7 @@
 
 **Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
 
-**Poslednji push na `main` (agent, 2026-05-21):** `2afed3a` — [Actions run 26197261891](https://github.com/Marko200322/omni-group/actions/runs/26197261891) (sačekaj **5/5 zeleno** pre sign-off-a). Workflow fix: `295b3d5` (`cancel-in-progress` + job timeouts). Run `26196798750` otkazan pre završetka `test:ci` (doc push tokom CI).
+**Poslednji push na `main` (agent, 2026-05-21):** `9f33e87` — [Actions run 26197901692](https://github.com/Marko200322/omni-group/actions/runs/26197901692) (#33, `jest forceExit` na CI). Prethodni #32 zaglavljen na `test:ci`. Workflow: `295b3d5`.
 
 **Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
 

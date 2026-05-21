@@ -9,6 +9,19 @@ Infrastruktura (Postgres, Redis, JWT, admin lozinka): [`config/env-aggregator.js
 
 U `atina-platform/atina/.env` popuni **URL + KEY** za svaki agregator koji koristiš. Lokalni dev radi i **bez** njih.
 
+**Mapa u `.env.example` (redni broj u editoru ≈):**
+
+| Linija (≈) | Blok |
+|------------|------|
+| 12–13 | `AI_URL` / `AI_KEY` |
+| 14–15 | `BUSINESS_AND_DEV_*` |
+| 16–17 | `SCRAPER_*` |
+| 18–28 | `FINANCE_*` + Stripe + PayPal/Wise |
+| 30–35 | PayPal / Wise (opciono) |
+| **37–39** | **`COMMS_URL` / `COMMS_KEY`** ← outreach, follow-up, deal-offer |
+| 41–43 | `INFRASTRUCTURE_*` |
+| 45–47 | `STORAGE_*` |
+
 | # | Blok | Kada popuniti |
 |---|------|----------------|
 | 1 | `AI_URL` / `AI_KEY` | Craftor, lead-scoring, OmniTube AI, validator enrich |
