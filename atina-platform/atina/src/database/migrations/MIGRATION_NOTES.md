@@ -20,4 +20,25 @@ These are intentionally additive and idempotent, so they are safe on fresh and e
 
 ## 009 `users.name` for legacy schemas
 
+Migration `011_system_alerts.sql` adds `system_alerts` table (Alert System module #23) with indexes on `user_id`, `status`, `severity`, `created_at`.
+
+## 012 AI RAG chunks (Faza 6)
+
+Migration `012_ai_rag_chunks.sql` adds `ai_rag_chunks` for module `ai-rag` (`POST /ingest`, `GET /search`). Keyword search via `ILIKE`; vector extension = backlog.
+
+## 013 Kriptoman payment provider
+
+Migration `013_payments_kriptoman_provider.sql` extends `payments.provider` CHECK to include `kriptoman`.
+
+## 015 Autonomy Loop
+
+Migration `015_autonomy_loop.sql` adds:
+
+- `industry_verticals` — registry of 500+ verticals (seed via API)
+- `autonomy_cycles` — closed-loop run audit
+- `generated_artifacts` — module/page/workflow outputs
+- `autonomy_deploy_jobs` — Git + CI deploy pipeline jobs
+
+Module: `autonomy-loop` at `/api/v1/autonomy-loop/*`. Checklist: [`docs/AUTONOMY-LOOP-v1-CHECKLIST.md`](../../../docs/AUTONOMY-LOOP-v1-CHECKLIST.md).
+
 Migration `009_users_name_legacy_column.sql` adds `users.name` if missing (older DBs where `CREATE TABLE IF NOT EXISTS` skipped the full 001 shape), backfills from `email`, then sets `NOT NULL` + default — matches current app + integration seeds.

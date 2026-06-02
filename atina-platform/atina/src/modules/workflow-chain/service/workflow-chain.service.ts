@@ -1,6 +1,6 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
-import { query } from '../../../database/connection';
 import { WorkflowChainRepository } from '../repository/workflow-chain.repository';
+import { WorkflowChainPersistence } from '../repository/workflow-chain.persistence';
 import { SelfHealingService } from '../../self-healing/service/self-healing.service';
 import { IntegrationHubService } from '../../integration-hub/service/integration-hub.service';
 import { BackupRecoveryService } from '../../backup-recovery/service/backup-recovery.service';
@@ -13,9 +13,11 @@ import { TitanMonitorService } from '../../titan-monitor/service/titan-monitor.s
 import { ApiGatewayService } from '../../api-gateway/service/api-gateway.service';
 import { assertValidQueueScrapeUrl } from '../../scraper/queue-scrape-url';
 import { config } from '../../../config';
+import { getEcosystemRunExecutor } from '../../shared/ecosystem-run.executor';
 
 export class WorkflowChainService {
   private readonly repo = new WorkflowChainRepository();
+  private readonly db = new WorkflowChainPersistence();
   private readonly selfHealingService = new SelfHealingService();
   private readonly integrationHubService = new IntegrationHubService();
   private readonly backupRecoveryService = new BackupRecoveryService();
@@ -702,7 +704,7 @@ export class WorkflowChainService {
     const warnings: Array<Record<string, unknown>> = [];
     let currentPhase = 'v1';
     try {
-      const { rows } = await query<{ config: Record<string, unknown> }>(
+      const { rows } = await this.db.execute<{ config: Record<string, unknown> }>(
         `SELECT config FROM modules WHERE slug = 'phase-launch-control' LIMIT 1`
       );
       if (rows[0]?.config?.current_phase) {
@@ -1021,7 +1023,7 @@ export class WorkflowChainService {
     const warnings: Array<Record<string, unknown>> = [];
     let currentPhase = 'v1';
     try {
-      const { rows } = await query<{ config: Record<string, unknown> }>(
+      const { rows } = await this.db.execute<{ config: Record<string, unknown> }>(
         `SELECT config FROM modules WHERE slug = 'phase-launch-control' LIMIT 1`
       );
       if (rows[0]?.config?.current_phase) {
@@ -1195,7 +1197,7 @@ export class WorkflowChainService {
       });
     }
     if (force && !preflight.valid) {
-      await query(
+      await this.db.execute(
         `INSERT INTO audit_events
          (actor_user_id, event_type, entity_type, entity_id, severity, payload)
          VALUES ($1, 'workflow_force_run', 'workflow_chain', $2, 'warning', $3)`,
@@ -1223,7 +1225,7 @@ export class WorkflowChainService {
       : [];
     const stepResults: Array<Record<string, unknown>> = [];
     const startedAt = new Date();
-    const { rows: executionRows } = await query<{ id: string }>(
+    const { rows: executionRows } = await this.db.execute<{ id: string }>(
       `INSERT INTO tasks (user_id, type, name, status, payload, started_at)
        VALUES ($1, 'workflow_chain_execution', $2, 'running', $3, NOW())
        RETURNING id`,
@@ -1268,7 +1270,7 @@ export class WorkflowChainService {
         if (!this.isModuleFeatureEnabled(moduleSlug)) {
           output = { skipped: true, reason: `Module '${moduleSlug}' is disabled by server configuration` };
         } else if (moduleSlug === 'tasks' || moduleSlug === 'titanix') {
-          const { rows: taskRows } = await query<{ id: string }>(
+          const { rows: taskRows } = await this.db.execute<{ id: string }>(
             `INSERT INTO tasks (user_id, type, name, status, payload)
              VALUES ($1, $2, $3, 'queued', $4)
              RETURNING id`,
@@ -1304,7 +1306,7 @@ export class WorkflowChainService {
           moduleSlug === 'template-engine' ||
           moduleSlug === 'validator'
         ) {
-          const { rows: ecoRows } = await query<{ id: string }>(
+          const { rows: ecoRows } = await this.db.execute<{ id: string }>(
             `SELECT id FROM ecosystem_systems
              WHERE user_id = $1 AND system_slug = $2
              ORDER BY created_at DESC
@@ -1315,30 +1317,52 @@ export class WorkflowChainService {
             output = { skipped: true, reason: `No ecosystem system found for ${moduleSlug}` };
           } else {
             const estRevenue = Number(cfg.revenueEstimate ?? 50);
-            await query(
-              `INSERT INTO ecosystem_runs
-               (ecosystem_system_id, run_type, status, input_payload, output_payload, started_at, finished_at)
-               VALUES ($1, $2, 'completed', $3, $4, NOW(), NOW())`,
-              [
-                ecoRows[0].id,
-                `${moduleSlug}_${action}`,
-                JSON.stringify({ fromChain: id, input, config: cfg }),
-                JSON.stringify({ executed: true, estimatedRevenue: estRevenue }),
-              ]
-            );
-            await query(
-              `UPDATE ecosystem_systems
-               SET revenue_generated = revenue_generated + $2,
-                   efficiency_score = LEAST(100, efficiency_score + 1.1),
-                   last_run_at = NOW(),
-                   updated_at = NOW()
-               WHERE id = $1`,
-              [ecoRows[0].id, estRevenue]
-            );
-            output = { ecosystemSystemId: ecoRows[0].id, executed: true, estimatedRevenue: estRevenue };
+            const ecosystemId = ecoRows[0].id;
+            const executor = getEcosystemRunExecutor();
+            if (executor.isRealExecutionEnabled() && executor.supports(moduleSlug)) {
+              try {
+                const real = await executor.execute({
+                  userId,
+                  moduleSlug,
+                  systemId: ecosystemId,
+                  action,
+                  cfg: cfg as Record<string, unknown>,
+                  chainId: id,
+                });
+                output = real;
+              } catch (err) {
+                output = {
+                  executed: false,
+                  delivery: 'real_failed',
+                  error: err instanceof Error ? err.message : String(err),
+                };
+              }
+            } else {
+              await this.db.execute(
+                `INSERT INTO ecosystem_runs
+                 (ecosystem_system_id, run_type, status, input_payload, output_payload, started_at, finished_at)
+                 VALUES ($1, $2, 'completed', $3, $4, NOW(), NOW())`,
+                [
+                  ecosystemId,
+                  `${moduleSlug}_${action}`,
+                  JSON.stringify({ fromChain: id, input, config: cfg }),
+                  JSON.stringify({ executed: true, estimatedRevenue: estRevenue, simulated: true }),
+                ]
+              );
+              await this.db.execute(
+                `UPDATE ecosystem_systems
+                 SET revenue_generated = revenue_generated + $2,
+                     efficiency_score = LEAST(100, efficiency_score + 1.1),
+                     last_run_at = NOW(),
+                     updated_at = NOW()
+                 WHERE id = $1`,
+                [ecosystemId, estRevenue]
+              );
+              output = { ecosystemSystemId: ecosystemId, executed: true, estimatedRevenue: estRevenue, simulated: true };
+            }
           }
         } else if (moduleSlug === 'notifications') {
-          await query(
+          await this.db.execute(
             `INSERT INTO notifications (user_id, type, title, message, channel, metadata)
              VALUES ($1, 'workflow', $2, $3, 'in_app', $4)`,
             [
@@ -1350,7 +1374,7 @@ export class WorkflowChainService {
           );
           output = { notified: true };
         } else if (moduleSlug === 'audit-log') {
-          await query(
+          await this.db.execute(
             `INSERT INTO audit_events
              (actor_user_id, event_type, entity_type, entity_id, severity, payload)
              VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -1406,7 +1430,7 @@ export class WorkflowChainService {
           } else if (action === 'sync') {
             let integrationId = typeof cfg.integrationId === 'string' ? cfg.integrationId : null;
             if (!integrationId) {
-              const latest = await query<{ id: string }>(
+              const latest = await this.db.execute<{ id: string }>(
                 `SELECT id FROM integration_connections
                  WHERE user_id = $1
                  ORDER BY created_at DESC
@@ -1438,7 +1462,7 @@ export class WorkflowChainService {
           } else if (action === 'restore') {
             let snapshotId = typeof cfg.snapshotId === 'string' ? cfg.snapshotId : null;
             if (!snapshotId) {
-              const latest = await query<{ id: string }>(
+              const latest = await this.db.execute<{ id: string }>(
                 `SELECT id FROM backup_snapshots
                  WHERE created_by = $1
                  ORDER BY created_at DESC
@@ -1469,7 +1493,7 @@ export class WorkflowChainService {
           } else if (action === 'finish') {
             let jobId = typeof cfg.jobId === 'string' ? cfg.jobId : null;
             if (!jobId) {
-              const latest = await query<{ id: string }>(
+              const latest = await this.db.execute<{ id: string }>(
                 `SELECT id FROM updater_jobs
                  WHERE requested_by = $1 AND status = 'queued'
                  ORDER BY created_at DESC
@@ -1521,8 +1545,8 @@ export class WorkflowChainService {
         } else if (moduleSlug === 'resource-management') {
           if (action === 'overview') {
             const [alloc, usage] = await Promise.all([
-              query<{ total: string }>('SELECT COALESCE(SUM(budget_allocated),0) AS total FROM ecosystem_systems'),
-              query<{ total: string }>("SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE status = 'completed'"),
+              this.db.execute<{ total: string }>('SELECT COALESCE(SUM(budget_allocated),0) AS total FROM ecosystem_systems'),
+              this.db.execute<{ total: string }>("SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE status = 'completed'"),
             ]);
             const budgetAllocated = parseFloat(alloc.rows[0].total);
             const realizedRevenue = parseFloat(usage.rows[0].total);
@@ -1535,7 +1559,7 @@ export class WorkflowChainService {
             const systemSlug = String(cfg.systemSlug ?? 'titan-master');
             const amount = Number(cfg.amount ?? 100);
             const reason = String(cfg.reason ?? 'Workflow allocation');
-            let { rows: updated } = await query(
+            let { rows: updated } = await this.db.execute(
               `UPDATE ecosystem_systems
                SET budget_allocated = budget_allocated + $2,
                    updated_at = NOW()
@@ -1545,13 +1569,13 @@ export class WorkflowChainService {
               [systemSlug, amount, userId]
             );
             if (!updated[0]) {
-              await query(
+              await this.db.execute(
                 `INSERT INTO ecosystem_systems
                  (user_id, system_slug, name, status, stage, budget_allocated, config, metrics)
                  VALUES ($1, $2, $3, 'active', 'v1', 0, '{}', '{}')`,
                 [userId, systemSlug, String(cfg.systemName ?? systemSlug)]
               );
-              const retry = await query(
+              const retry = await this.db.execute(
                 `UPDATE ecosystem_systems
                  SET budget_allocated = budget_allocated + $2,
                      updated_at = NOW()
@@ -1562,7 +1586,7 @@ export class WorkflowChainService {
               );
               updated = retry.rows;
             }
-            await query(
+            await this.db.execute(
               `INSERT INTO logs (user_id, level, category, action, message, context)
                VALUES ($1, 'info', 'resource', 'allocate_budget', $2, $3)`,
               [userId, `Allocated ${amount} to ${systemSlug}`, JSON.stringify({ reason, chainId: id, step: stepName })]
@@ -1599,7 +1623,7 @@ export class WorkflowChainService {
           } else if (action === 'process') {
             let requestId = typeof cfg.requestId === 'string' ? cfg.requestId : null;
             if (!requestId) {
-              const latest = await query<{ id: string }>(
+              const latest = await this.db.execute<{ id: string }>(
                 `SELECT id FROM gdpr_requests
                  WHERE user_id = $1 AND status = 'pending'
                  ORDER BY requested_at DESC
@@ -1625,7 +1649,7 @@ export class WorkflowChainService {
             const namespace = String(cfg.namespace ?? 'global');
             const key = String(cfg.key ?? `wf:${id}:${stepName}`);
             const value = (cfg.value ?? input) as Record<string, unknown>;
-            const { rows: created } = await query(
+            const { rows: created } = await this.db.execute(
               `INSERT INTO logs (user_id, level, category, action, message, context)
                VALUES ($1, 'info', 'ai-memory', 'remember', $2, $3)
                RETURNING id, created_at`,
@@ -1635,7 +1659,7 @@ export class WorkflowChainService {
           } else if (action === 'recall') {
             const namespace = String(cfg.namespace ?? 'global');
             const key = typeof cfg.key === 'string' ? cfg.key : '%';
-            const { rows: items } = await query(
+            const { rows: items } = await this.db.execute(
               `SELECT id, action, context, created_at
                FROM logs
                WHERE user_id = $1
@@ -1652,9 +1676,9 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'recommendation') {
           const [subs, failedTasks, failedPayments] = await Promise.all([
-            query<{ count: string }>("SELECT COUNT(*) AS count FROM subscriptions WHERE user_id = $1 AND status = 'active'", [userId]),
-            query<{ count: string }>("SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1 AND status IN ('failed','retrying')", [userId]),
-            query<{ count: string }>("SELECT COUNT(*) AS count FROM payments WHERE user_id = $1 AND status = 'failed'", [userId]),
+            this.db.execute<{ count: string }>("SELECT COUNT(*) AS count FROM subscriptions WHERE user_id = $1 AND status = 'active'", [userId]),
+            this.db.execute<{ count: string }>("SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1 AND status IN ('failed','retrying')", [userId]),
+            this.db.execute<{ count: string }>("SELECT COUNT(*) AS count FROM payments WHERE user_id = $1 AND status = 'failed'", [userId]),
           ]);
           const recommendations: string[] = [];
           if (parseInt(subs.rows[0].count, 10) === 0) recommendations.push('Activate a paid subscription to unlock full automation throughput.');
@@ -1675,11 +1699,11 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'kpi') {
           const [users, subs, rev, tasks, eco] = await Promise.all([
-            query<{ c: string }>('SELECT COUNT(*) AS c FROM users WHERE is_active = true'),
-            query<{ c: string }>("SELECT COUNT(*) AS c FROM subscriptions WHERE status = 'active'"),
-            query<{ s: string }>("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status = 'completed'"),
-            query<{ c: string }>("SELECT COUNT(*) AS c FROM tasks WHERE status IN ('queued','running')"),
-            query<{ c: string }>("SELECT COUNT(*) AS c FROM ecosystem_systems WHERE status = 'active'"),
+            this.db.execute<{ c: string }>('SELECT COUNT(*) AS c FROM users WHERE is_active = true'),
+            this.db.execute<{ c: string }>("SELECT COUNT(*) AS c FROM subscriptions WHERE status = 'active'"),
+            this.db.execute<{ s: string }>("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status = 'completed'"),
+            this.db.execute<{ c: string }>("SELECT COUNT(*) AS c FROM tasks WHERE status IN ('queued','running')"),
+            this.db.execute<{ c: string }>("SELECT COUNT(*) AS c FROM ecosystem_systems WHERE status = 'active'"),
           ]);
           output = {
             activeUsers: parseInt(users.rows[0].c, 10),
@@ -1692,7 +1716,7 @@ export class WorkflowChainService {
           output = (await this.titanMonitorService.getSnapshot()) as Record<string, unknown>;
         } else if (moduleSlug === 'subscriptions') {
           const [current, usage] = await Promise.all([
-            query(
+            this.db.execute(
               `SELECT s.*, p.name AS plan_name, p.slug AS plan_slug
                FROM subscriptions s
                JOIN plans p ON s.plan_id = p.id
@@ -1702,12 +1726,12 @@ export class WorkflowChainService {
               [userId]
             ),
             Promise.all([
-              query<{ count: string }>(
+              this.db.execute<{ count: string }>(
                 `SELECT COUNT(*) FROM tasks
                  WHERE user_id = $1 AND created_at >= date_trunc('month', NOW())`,
                 [userId]
               ),
-              query<{ count: string }>(
+              this.db.execute<{ count: string }>(
                 `SELECT COUNT(*) FROM analytics_events
                  WHERE user_id = $1 AND created_at >= CURRENT_DATE`,
                 [userId]
@@ -1727,7 +1751,7 @@ export class WorkflowChainService {
             if (amount <= 0) throw new Error('payments record-manual requires positive config.amount');
             const provider = String(cfg.provider ?? 'manual');
             const statusVal = String(cfg.status ?? 'completed');
-            const { rows: inserted } = await query(
+            const { rows: inserted } = await this.db.execute(
               `INSERT INTO payments
                  (user_id, amount, currency, status, provider, description, metadata)
                VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -1747,8 +1771,8 @@ export class WorkflowChainService {
             const limit = Number(cfg.limit ?? 20);
             const page = Number(cfg.page ?? 1);
             const offset = (page - 1) * limit;
-            const { rows: countRows } = await query<{ count: string }>('SELECT COUNT(*) FROM payments WHERE user_id = $1', [userId]);
-            const { rows: items } = await query(
+            const { rows: countRows } = await this.db.execute<{ count: string }>('SELECT COUNT(*) FROM payments WHERE user_id = $1', [userId]);
+            const { rows: items } = await this.db.execute(
               `SELECT * FROM payments WHERE user_id = $1
                ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
               [userId, limit, offset]
@@ -1779,7 +1803,7 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'crm') {
           if (action === 'create-contact') {
-            const { rows: created } = await query(
+            const { rows: created } = await this.db.execute(
               `INSERT INTO crm_contacts
                  (user_id, first_name, last_name, email, phone, company, position, status, source, tags, notes, custom_fields)
                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
@@ -1802,8 +1826,8 @@ export class WorkflowChainService {
             output = created[0] as Record<string, unknown>;
           } else if (action === 'stats') {
             const [total, byStatus] = await Promise.all([
-              query<{ count: string }>('SELECT COUNT(*) FROM crm_contacts WHERE user_id = $1', [userId]),
-              query<{ status: string; count: string }>(
+              this.db.execute<{ count: string }>('SELECT COUNT(*) FROM crm_contacts WHERE user_id = $1', [userId]),
+              this.db.execute<{ status: string; count: string }>(
                 'SELECT status, COUNT(*) FROM crm_contacts WHERE user_id = $1 GROUP BY status',
                 [userId]
               ),
@@ -1817,7 +1841,7 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'contracts') {
           if (action === 'create') {
-            const { rows: created } = await query(
+            const { rows: created } = await this.db.execute(
               `INSERT INTO contracts
                  (user_id, contact_id, title, content, status, value, currency, start_date, end_date, metadata)
                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
@@ -1839,7 +1863,7 @@ export class WorkflowChainService {
           } else if (action === 'send') {
             const contractId = String(cfg.contractId ?? '');
             if (!contractId) throw new Error('contracts send requires config.contractId');
-            const { rows: updated } = await query(
+            const { rows: updated } = await this.db.execute(
               `UPDATE contracts SET status = 'sent', updated_at = NOW()
                WHERE id = $1 AND user_id = $2 AND status = 'draft'
                RETURNING *`,
@@ -1850,7 +1874,7 @@ export class WorkflowChainService {
           } else if (action === 'sign') {
             const contractId = String(cfg.contractId ?? '');
             if (!contractId) throw new Error('contracts sign requires config.contractId');
-            const { rows: signed } = await query(
+            const { rows: signed } = await this.db.execute(
               `UPDATE contracts
                SET status = 'signed', signed_at = NOW(), signed_by = $3, updated_at = NOW()
                WHERE id = $1 AND user_id = $2
@@ -1861,11 +1885,11 @@ export class WorkflowChainService {
             output = signed[0] as Record<string, unknown>;
           } else if (action === 'stats') {
             const [byStatus, totalValue] = await Promise.all([
-              query<{ status: string; count: string }>(
+              this.db.execute<{ status: string; count: string }>(
                 'SELECT status, COUNT(*) FROM contracts WHERE user_id = $1 GROUP BY status',
                 [userId]
               ),
-              query<{ total: string }>(
+              this.db.execute<{ total: string }>(
                 `SELECT COALESCE(SUM(value), 0) AS total FROM contracts
                  WHERE user_id = $1 AND status = 'signed'`,
                 [userId]
@@ -1880,7 +1904,7 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'analytics') {
           if (action === 'track') {
-            await query(
+            await this.db.execute(
               `INSERT INTO analytics_events (user_id, event_name, properties, session_id, ip_address, user_agent)
                VALUES ($1, $2, $3, $4, $5, $6)`,
               [
@@ -1896,13 +1920,13 @@ export class WorkflowChainService {
           } else if (action === 'dashboard') {
             const days = Math.min(Number(cfg.rangeDays ?? 30), 365);
             const [taskStats, eventCounts, topEvents] = await Promise.all([
-              query<{ status: string; count: string }>(
+              this.db.execute<{ status: string; count: string }>(
                 `SELECT status, COUNT(*) FROM tasks
                  WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '${days} days'
                  GROUP BY status`,
                 [userId]
               ),
-              query<{ date: string; count: string }>(
+              this.db.execute<{ date: string; count: string }>(
                 `SELECT DATE(created_at) AS date, COUNT(*) AS count
                  FROM analytics_events
                  WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '${days} days'
@@ -1910,7 +1934,7 @@ export class WorkflowChainService {
                  ORDER BY date`,
                 [userId]
               ),
-              query<{ event_name: string; count: string }>(
+              this.db.execute<{ event_name: string; count: string }>(
                 `SELECT event_name, COUNT(*) FROM analytics_events
                  WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '${days} days'
                  GROUP BY event_name ORDER BY count DESC LIMIT 10`,
@@ -1930,7 +1954,7 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'automation') {
           if (action === 'create-workflow') {
-            const { rows: created } = await query(
+            const { rows: created } = await this.db.execute(
               `INSERT INTO tasks (user_id, type, name, description, status, payload)
                VALUES ($1, 'workflow_template', $2, $3, 'pending', $4)
                RETURNING *`,
@@ -1950,14 +1974,14 @@ export class WorkflowChainService {
           } else if (action === 'run-workflow') {
             const templateId = String(cfg.workflowId ?? '');
             if (!templateId) throw new Error('automation run-workflow requires config.workflowId');
-            const { rows: wfRows } = await query(
+            const { rows: wfRows } = await this.db.execute(
               `SELECT id, name, payload FROM tasks
                WHERE id = $1 AND user_id = $2 AND type = 'workflow_template'`,
               [templateId, userId]
             );
             if (!wfRows[0]) throw new Error('Workflow template not found');
             const context = (cfg.context ?? input) as Record<string, unknown>;
-            const { rows: exec } = await query(
+            const { rows: exec } = await this.db.execute(
               `INSERT INTO tasks (user_id, type, name, status, payload, parent_task_id)
                VALUES ($1, 'workflow_execution', $2, 'completed', $3, $4)
                RETURNING id, status, created_at`,
@@ -1975,7 +1999,7 @@ export class WorkflowChainService {
         } else if (moduleSlug === 'scraper') {
           if (action === 'queue-scrape') {
             const url = assertValidQueueScrapeUrl(cfg.url);
-            const { rows: created } = await query(
+            const { rows: created } = await this.db.execute(
               `INSERT INTO tasks (user_id, type, name, status, payload)
                VALUES ($1, 'scrape_url', $2, 'queued', $3)
                RETURNING id, status, created_at`,
@@ -1983,7 +2007,7 @@ export class WorkflowChainService {
             );
             output = { job: created[0] };
           } else if (action === 'jobs') {
-            const { rows: jobs } = await query(
+            const { rows: jobs } = await this.db.execute(
               `SELECT id, name, status, created_at, completed_at, (payload->>'url') AS url
                FROM tasks
                WHERE user_id = $1 AND type IN ('scrape_url', 'bulk_scrape')
@@ -1997,7 +2021,7 @@ export class WorkflowChainService {
           }
         } else if (moduleSlug === 'users') {
           if (action === 'profile') {
-            const { rows } = await query(
+            const { rows } = await this.db.execute(
               `SELECT id, email, name, role, is_active, is_email_verified, last_login_at, created_at
                FROM users WHERE id = $1`,
               [userId]
@@ -2005,9 +2029,9 @@ export class WorkflowChainService {
             output = rows[0] as Record<string, unknown>;
           } else if (action === 'stats') {
             const [tasksCount, paymentsCount, apiKeysCount] = await Promise.all([
-              query<{ count: string }>('SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1', [userId]),
-              query<{ count: string }>('SELECT COUNT(*) AS count FROM payments WHERE user_id = $1', [userId]),
-              query<{ count: string }>('SELECT COUNT(*) AS count FROM api_keys WHERE user_id = $1 AND is_active = true', [userId]),
+              this.db.execute<{ count: string }>('SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1', [userId]),
+              this.db.execute<{ count: string }>('SELECT COUNT(*) AS count FROM payments WHERE user_id = $1', [userId]),
+              this.db.execute<{ count: string }>('SELECT COUNT(*) AS count FROM api_keys WHERE user_id = $1 AND is_active = true', [userId]),
             ]);
             output = {
               tasks: parseInt(tasksCount.rows[0].count, 10),
@@ -2020,17 +2044,17 @@ export class WorkflowChainService {
         } else if (moduleSlug === 'admin') {
           if (action === 'overview') {
             const [users, subscriptions, payments, tasks] = await Promise.all([
-              query<{ count: string; active: string }>(
+              this.db.execute<{ count: string; active: string }>(
                 `SELECT COUNT(*) AS count, SUM(CASE WHEN is_active THEN 1 ELSE 0 END) AS active FROM users`
               ),
-              query<{ count: string; active: string }>(
+              this.db.execute<{ count: string; active: string }>(
                 `SELECT COUNT(*) AS count, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active FROM subscriptions`
               ),
-              query<{ count: string; total_revenue: string }>(
+              this.db.execute<{ count: string; total_revenue: string }>(
                 `SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total_revenue
                  FROM payments WHERE status = 'completed'`
               ),
-              query<{ count: string; failed: string }>(
+              this.db.execute<{ count: string; failed: string }>(
                 `SELECT COUNT(*) AS count, SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed FROM tasks`
               ),
             ]);
@@ -2044,7 +2068,7 @@ export class WorkflowChainService {
             const dbStart = Date.now();
             let dbOk = false;
             try {
-              await query('SELECT 1');
+              await this.db.execute('SELECT 1');
               dbOk = true;
             } catch {
               dbOk = false;
@@ -2093,7 +2117,7 @@ export class WorkflowChainService {
         }
       }
 
-      await query(
+      await this.db.execute(
         `INSERT INTO audit_events
          (actor_user_id, event_type, entity_type, entity_id, severity, payload)
          VALUES ($1, 'workflow_step_executed', 'workflow_chain', $2, $3, $4)`,
@@ -2138,7 +2162,7 @@ export class WorkflowChainService {
         steps: stepResults,
       },
     };
-    await query(
+    await this.db.execute(
       `UPDATE tasks
        SET status = $2,
            result = $3,

@@ -13,7 +13,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
+import { AdminPendingPaymentsPanel } from '@/components/platform/AdminPendingPaymentsPanel';
+import type { AtinaAdminOverview, AtinaAdminPayment } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
+import { isAdminRole } from '@/lib/auth-roles';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
 import { buildAdminMetrics } from '@/lib/platform-metrics';
 import { PlatformShell } from '@/components/platform/PlatformShell';
@@ -26,6 +29,8 @@ type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionUser: SessionUser | null;
   isDemo: boolean;
+  overview?: AtinaAdminOverview | null;
+  pendingPayments?: AtinaAdminPayment[];
 };
 
 const severityColor = {
@@ -34,10 +39,10 @@ const severityColor = {
   error: 'border-l-rose-500/60',
 };
 
-export default function AdminClient({ snapshot, sessionUser, isDemo }: Props) {
+export default function AdminClient({ snapshot, sessionUser, isDemo, overview, pendingPayments = [] }: Props) {
   const router = useRouter();
-  const metrics = buildAdminMetrics(snapshot);
-  const status = snapshot.source === 'live' ? 'live' : snapshot.source;
+  const metrics = buildAdminMetrics(snapshot, overview);
+  const status = overview ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
 
   return (
     <PlatformShell
@@ -45,8 +50,10 @@ export default function AdminClient({ snapshot, sessionUser, isDemo }: Props) {
       title="Operator pregled"
       subtitle={
         isDemo
-          ? 'Demo operator sesija · monitoring kad je Atina API dostupan.'
-          : `Omni Group operator konzola — ${sessionUser?.email ?? 'ulogovan korisnik'}.`
+          ? 'Demo sesija · prijavi se pravim nalogom za operator podatke.'
+          : overview
+            ? `Live operator podaci · ${sessionUser?.email ?? 'ulogovan korisnik'}.`
+            : `Omni Group operator konzola — ${sessionUser?.email ?? 'ulogovan korisnik'}.`
       }
       badge={<StatusPill status={status} />}
       sessionUser={sessionUser}
@@ -203,6 +210,13 @@ export default function AdminClient({ snapshot, sessionUser, isDemo }: Props) {
             </p>
           )}
         </GlassCard>
+
+        <div className="mt-4">
+          <AdminPendingPaymentsPanel
+            initialPayments={pendingPayments}
+            disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
+          />
+        </div>
       </section>
 
       <section id="settings" className="mt-6">
@@ -226,13 +240,18 @@ export default function AdminClient({ snapshot, sessionUser, isDemo }: Props) {
       </section>
 
       <section id="workflows" className="mt-6 grid gap-4 md:grid-cols-3">
-        {['Onboarding chain', 'Forge health', 'Proxy rotation'].map((name, i) => (
-          <GlassCard key={name} delay={0.45 + i * 0.05}>
+        {(overview?.modules?.slice(0, 3) ?? [
+          { name: 'Onboarding chain', slug: 'onboarding' },
+          { name: 'Forge health', slug: 'forge' },
+          { name: 'Proxy rotation', slug: 'proxy' },
+        ]).map((mod, i) => (
+          <GlassCard key={mod.slug ?? mod.name} delay={0.45 + i * 0.05}>
             <p className="text-xs uppercase tracking-wider text-slate-500">Modul</p>
-            <p className="mt-1 font-display text-lg font-semibold text-white">{name}</p>
+            <p className="mt-1 font-display text-lg font-semibold text-white">{mod.name}</p>
             <p className="mt-2 text-sm text-slate-400">
-              Poveži admin token za pun{' '}
-              <code className="text-xs text-cyan-400">/api/v1/admin/overview</code>.
+              {overview
+                ? `Registrovan u Atina Core${'version' in mod && mod.version ? ` · v${mod.version}` : ''}.`
+                : 'Prijavi se admin nalogom da učitaš live pregled modula.'}
             </p>
             <a
               href={`${snapshot.apiBase}/health`}

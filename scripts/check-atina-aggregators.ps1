@@ -48,8 +48,16 @@ $groups = @(
 $platformExtras = @(
   @{ Key = 'PHASE'; Hint = 'v1-v6 (boot sync + gating)' },
   @{ Key = 'YOUTUBE_PIPELINE_URL'; Hint = 'tools/youtube-pipeline HTTP /run' },
+  @{ Key = 'PIPELINE_HTTP_PORT'; Hint = 'youtube-pipeline port (default 8090)' },
   @{ Key = 'ELEVENLABS_API_KEY'; Hint = 'voice (optional)' },
-  @{ Key = 'APEX_SUICIDE_SWITCH_ARMED'; Hint = 'apex-predator soft kill' }
+  @{ Key = 'APEX_SUICIDE_SWITCH_ARMED'; Hint = 'apex-predator soft kill' },
+  @{ Key = 'SMTP_ENABLED'; Hint = 'email (ili COMMS agregator)' },
+  @{ Key = 'JWT_SECRET'; Hint = 'auth (obavezno u prod)' },
+  @{ Key = 'DB_PASSWORD'; Hint = 'Postgres' }
+)
+
+$optionalAggregatorAliases = @(
+  @{ Key = 'STRIPE_SECRET_KEY'; Hint = 'alias — koristi FINANCE_KEY' }
 )
 
 $stripeExtras = @(
@@ -73,6 +81,13 @@ foreach ($g in $groups) {
 Write-Host ''
 Write-Host 'Platform (ne agregatori):' -ForegroundColor Cyan
 foreach ($item in $platformExtras) {
+  $ok = $env.ContainsKey($item.Key) -and -not [string]::IsNullOrWhiteSpace($env[$item.Key])
+  Write-Host ("  {0,-28} {1}  {2}" -f $item.Key, $(if ($ok) { 'set' } else { '-' }), $item.Hint) -ForegroundColor $(if ($ok) { 'Green' } else { 'DarkGray' })
+}
+
+Write-Host ''
+Write-Host 'Stripe / finance alias:' -ForegroundColor Cyan
+foreach ($item in $optionalAggregatorAliases) {
   $ok = $env.ContainsKey($item.Key) -and -not [string]::IsNullOrWhiteSpace($env[$item.Key])
   Write-Host ("  {0,-28} {1}  {2}" -f $item.Key, $(if ($ok) { 'set' } else { '-' }), $item.Hint) -ForegroundColor $(if ($ok) { 'Green' } else { 'DarkGray' })
 }

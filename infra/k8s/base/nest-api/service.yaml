@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nest-api
+  labels:
+    app: nest-api
+spec:
+  type: ClusterIP
+  selector:
+    app: nest-api
+  ports:
+    - port: 80
+      targetPort: http
+      name: http

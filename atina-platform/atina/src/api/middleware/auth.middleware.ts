@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
@@ -54,8 +55,7 @@ async function authenticateApiKey(
   next: NextFunction
 ): Promise<void> {
   try {
-    const crypto = await import('crypto');
-    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+    const keyHash = createHash('sha256').update(rawKey).digest('hex');
 
     const { rows } = await query<{
       user_id: string;

@@ -10,6 +10,7 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 
 const links = [
   { href: '/', label: 'Početna' },
+  { href: '/products', label: 'Proizvodi' },
   { href: '/services', label: 'Usluge' },
   { href: '/pricing', label: 'Cene' },
   { href: '/contact', label: 'Kontakt' },

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { config } from '../../config';
 import { AggregatorHttpClient } from '../../integrations/aggregator-http-client';
 import { AiClient, getAiClient, resetAiClientForTests } from '../../integrations/ai-client';
 import { BusinessDevClient, getBusinessDevClient, resetBusinessDevClientForTests } from '../../integrations/business-dev-client';
@@ -15,6 +16,8 @@ import { Web3StorageClient, getWeb3StorageClient, resetWeb3StorageClientForTests
 
 jest.mock('axios');
 const axiosRequest = axios.request as jest.MockedFunction<typeof axios.request>;
+const axiosPost = axios.post as jest.MockedFunction<typeof axios.post>;
+const axiosGet = axios.get as jest.MockedFunction<typeof axios.get>;
 
 const configured = { url: 'https://agg.local', key: 'token' };
 
@@ -131,6 +134,22 @@ describe('aggregator integrations', () => {
       });
     });
 
+    it('fetchRecommendations uses OpenRouter chat/completions when configured', async () => {
+      config.aggregators.aiModel = 'openrouter/auto';
+      axiosRequest.mockResolvedValueOnce({
+        data: {
+          choices: [{ message: { content: '{"recommendations":["Vertical CRM","AI scheduling"]}' } }],
+        },
+      });
+      const client = new AiClient({ url: 'https://openrouter.ai/api/v1', key: 'sk-test' });
+      await expect(client.fetchRecommendations({ mode: 'market-research' })).resolves.toEqual({
+        recommendations: ['Vertical CRM', 'AI scheduling'],
+      });
+      expect(axiosRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: 'https://openrouter.ai/api/v1/chat/completions' })
+      );
+    });
+
     it('getAiClient singleton and reset', () => {
       const first = getAiClient();
       expect(getAiClient()).toBe(first);
@@ -156,6 +175,42 @@ describe('aggregator integrations', () => {
       await expect(client.fetchProxy()).resolves.toEqual({ proxyId: 'px_001' });
       expect(getScraperClient()).toBe(getScraperClient());
       resetScraperClientForTests();
+    });
+
+    it('scrape uses Apify actor when SCRAPER_URL is Apify', async () => {
+      axiosPost.mockResolvedValueOnce({
+        data: [{ url: 'https://example.com', title: 'Example', links: ['https://a.com'] }],
+      });
+      const client = new ScraperClient({ url: 'https://api.apify.com', key: 'apify-token' });
+      const result = await client.scrape({ url: 'https://example.com', extractLinks: true });
+      expect(result).toEqual(
+        expect.objectContaining({
+          title: 'Example',
+          delivery: 'apify',
+          links: ['https://a.com'],
+        })
+      );
+      expect(axiosPost).toHaveBeenCalledWith(
+        expect.stringContaining('apify~cheerio-scraper'),
+        expect.any(Object),
+        expect.any(Object)
+      );
+      expect(axiosRequest).not.toHaveBeenCalled();
+    });
+
+    it('scrape falls back to axios GET when gateway is unavailable', async () => {
+      axiosGet.mockResolvedValueOnce({
+        status: 200,
+        data: '<html><title>Direct</title><a href="https://link.test">x</a></html>',
+      });
+      const client = new ScraperClient({ url: 'https://example-scraper.io', key: 'k' });
+      const result = await client.scrape({ url: 'https://example.com', extractLinks: true });
+      expect(result).toEqual(
+        expect.objectContaining({
+          title: 'Direct',
+          delivery: 'axios',
+        })
+      );
     });
   });
 

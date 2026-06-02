@@ -25,4 +25,13 @@ export class PhaseLaunchRepository {
       [phase, notes]
     );
   }
+
+  insertPhaseLaunchAudit(actorUserId: string, payloadJson: string) {
+    return query(
+      `INSERT INTO audit_events
+       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
+       VALUES ($1, 'phase_launch_updated', 'system', 'phase-launch-control', 'info', $2)`,
+      [actorUserId, payloadJson]
+    );
+  }
 }

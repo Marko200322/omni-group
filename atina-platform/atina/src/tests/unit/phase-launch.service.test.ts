@@ -1,11 +1,11 @@
 import { PhaseLaunchService } from '../../modules/phase-launch/service/phase-launch.service';
-import * as db from '../../database/connection';
 
 // eslint-disable-next-line no-var
 var phaseRepo: {
   ensureFlag: jest.Mock;
   getFlag: jest.Mock;
   setFlag: jest.Mock;
+  insertPhaseLaunchAudit: jest.Mock;
 };
 
 jest.mock('../../modules/phase-launch/repository/phase-launch.repository', () => {
@@ -13,19 +13,17 @@ jest.mock('../../modules/phase-launch/repository/phase-launch.repository', () =>
     ensureFlag: jest.fn().mockResolvedValue({ rows: [], rowCount: 1 }),
     getFlag: jest.fn(),
     setFlag: jest.fn().mockResolvedValue({ rows: [], rowCount: 1 }),
+    insertPhaseLaunchAudit: jest.fn().mockResolvedValue({ rows: [], rowCount: 1 }),
   };
   return {
     PhaseLaunchRepository: jest.fn().mockImplementation(() => phaseRepo),
   };
 });
-
-jest.mock('../../database/connection');
 jest.mock('../../modules/phase-launch/middleware/phase-activation.middleware', () => ({
   getPhaseOrder: jest.fn(() => ({ v1: 1, v2: 2 })),
   getModulePhaseGatingStatus: jest.fn(() => ({ 'workflow-chain': true })),
+  resetPhaseActivationCache: jest.fn(),
 }));
-
-const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
 
 describe('PhaseLaunchService', () => {
   let service: PhaseLaunchService;
@@ -33,7 +31,6 @@ describe('PhaseLaunchService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     service = new PhaseLaunchService();
-    mockQuery.mockResolvedValue({ rows: [], rowCount: 1 } as never);
   });
 
   it('getCurrentPhase returns defaults when config is empty', async () => {
@@ -46,6 +43,20 @@ describe('PhaseLaunchService', () => {
 
     expect(phaseRepo.ensureFlag).toHaveBeenCalled();
     expect(result).toEqual({ currentPhase: 'v1', notes: '', updatedAt: null });
+  });
+
+  it('setCurrentPhase clears phase activation cache', async () => {
+    const { resetPhaseActivationCache } = jest.requireMock(
+      '../../modules/phase-launch/middleware/phase-activation.middleware'
+    ) as { resetPhaseActivationCache: jest.Mock };
+    phaseRepo.getFlag.mockResolvedValueOnce({
+      rows: [{ config: { current_phase: 'v2', notes: '', updated_at: null } }],
+      rowCount: 1,
+    });
+
+    await service.setCurrentPhase({ phase: 'v3', notes: 'go' });
+
+    expect(resetPhaseActivationCache).toHaveBeenCalled();
   });
 
   it('writes normalized phase update audit payload fields', async () => {
@@ -61,10 +72,9 @@ describe('PhaseLaunchService', () => {
 
     await service.setCurrentPhaseWithAudit('admin-1', { phase: 'v2', notes: 'after-note' });
 
-    const insertCall = mockQuery.mock.calls.find((c) => (c[0] as string).includes("'phase_launch_updated'"));
-    expect(insertCall).toBeDefined();
-
-    const payload = JSON.parse((((insertCall?.[1] as unknown[]) ?? [])[1] as string) ?? '{}') as Record<string, unknown>;
+    expect(phaseRepo.insertPhaseLaunchAudit).toHaveBeenCalled();
+    const auditArgs = phaseRepo.insertPhaseLaunchAudit.mock.calls[0] as [string, string];
+    const payload = JSON.parse(auditArgs[1] ?? '{}') as Record<string, unknown>;
 
     expect(payload).toEqual(
       expect.objectContaining({

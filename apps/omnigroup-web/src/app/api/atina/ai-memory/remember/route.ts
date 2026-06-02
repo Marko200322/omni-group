@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession } from '@/lib/auth-session';
-import { fetchAtinaAuthenticated } from '@/lib/atina-auth';
 
 export async function POST(req: Request) {
   const session = await getServerSession();
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'value_required' }, { status: 400 });
   }
 
-  const r = await fetchAtinaAuthenticated<{ id?: string; created_at?: string }>(
+  const r = await fetchAtinaForBff<{ id?: string; created_at?: string }>(
     '/api/v1/ai-memory/remember',
     session,
     {

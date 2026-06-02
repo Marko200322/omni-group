@@ -1,7 +1,8 @@
 # Vlasnik — popuna `atina-platform/atina/.env`
 
-**Ne commituj** `.env`. Šablon: [`atina-platform/atina/.env.example`](../atina-platform/atina/.env.example).  
-Infrastruktura (Postgres, Redis, JWT, admin lozinka): [`config/env-aggregator.json`](../config/env-aggregator.json).
+**Ne commituj** `.env`. Kompletan šablon (sve ključeve): [`atina-platform/atina/.env.example`](../atina-platform/atina/.env.example) — **ti popunjavaš samo agregatore (URL + KEY)** i Stripe polja; ostalo je već podešeno za lokalni dev.  
+Infrastruktura je u istom `.env` (DB, Redis, JWT) — ne moraš duplirati u `env-aggregator.json`.  
+Ostali delovi monorepa: `apps/omnigroup-web/.env.local.example`, `atina-system/.env.example`, `tools/youtube-pipeline/.env.example` (YouTube pipeline automatski učitava Atina `.env`).
 
 ## Redosled (15–30 min)
 

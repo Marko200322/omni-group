@@ -32,7 +32,7 @@ function LoginForm() {
         setErrMsg(data.error ?? `HTTP ${res.status}`);
         return;
       }
-      router.push(data.redirectTo ?? (variant === 'admin' ? '/admin' : '/dashboard'));
+      router.push(data.redirectTo ?? '/dashboard');
       router.refresh();
     } catch {
       setStatus('err');
@@ -127,7 +127,9 @@ function LoginForm() {
       >
         {status === 'loading' ? 'Prijava…' : 'Prijavi se'}
       </motion.button>
-      <p className="text-center text-xs text-slate-500">ili demo bez Atina API-ja</p>
+      <p className="text-center text-xs text-slate-500">
+        Demo = samo pregled UI-ja · za billing i avatare koristi <strong className="text-slate-400">Prijavi se</strong>
+      </p>
       <div className="grid grid-cols-2 gap-3 pt-1">
         <motion.button
           type="button"
@@ -190,7 +192,7 @@ export default function LoginPage() {
               Prijava u <span className="text-gradient animate-gradient-text">workspace</span>
             </h1>
             <p className="mt-4 max-w-md text-slate-400">
-              Prava prijava ide preko Atina auth modula (BFF sesija). Demo režim radi bez backend-a.
+              Prava prijava koristi Atina auth (email + lozinka). Posle prijave imaš billing, avatare i AI memoriju.
             </p>
           </motion.div>
 

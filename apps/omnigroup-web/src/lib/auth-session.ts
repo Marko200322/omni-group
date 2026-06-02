@@ -169,6 +169,4 @@ export async function getServerSession(): Promise<AuthSession | null> {
   return openSession(token);
 }
 
-export function isAdminRole(role: string): boolean {
-  return role === 'admin' || role === 'superadmin' || role === 'operator';
-}
+export { isAdminRole } from './auth-roles';

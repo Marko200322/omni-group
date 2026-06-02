@@ -66,6 +66,18 @@ jest.mock('../../modules/billing/service/billing.service', () => {
   };
 });
 
+const paymentNotifyApi = {
+  sendManualCheckoutInstructions: jest.fn().mockResolvedValue(undefined),
+  notifyAdminPaymentPending: jest.fn().mockResolvedValue(undefined),
+  sendInvoiceConfirmationToClient: jest.fn().mockResolvedValue(undefined),
+  createInAppPaymentNotification: jest.fn().mockResolvedValue(undefined),
+  buildPurchaseConfirmedMessage: jest.fn().mockReturnValue('Kupljeno: Pro (Mesečna pretplata).'),
+};
+
+jest.mock('../../modules/payments/service/payment-notifications.service', () => ({
+  PaymentNotificationsService: jest.fn().mockImplementation(() => paymentNotifyApi),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PaymentsService } = require('../../modules/payments/service/payments.service');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -97,6 +109,8 @@ describe('PaymentsService', () => {
     jest.clearAllMocks();
     mockLogger.info.mockClear();
     mockLogger.debug.mockClear();
+    (config as { stripe: { secretKey: string } }).stripe.secretKey = 'sk_test_unit';
+    (config as { payments: { mode: string } }).payments.mode = 'sandbox';
     testStripeApi.customers.create.mockResolvedValue({ id: 'cus_new' });
     testStripeApi.checkout.sessions.create.mockResolvedValue({ id: 'cs_1', url: 'https://checkout.test' });
     testStripeApi.subscriptions.retrieve.mockResolvedValue({
@@ -107,7 +121,15 @@ describe('PaymentsService', () => {
     testStripeApi.subscriptions.update.mockResolvedValue({});
     testStripeApi.billingPortal.sessions.create.mockResolvedValue({ url: 'https://portal.test' });
     billingApi.getPlanBySlug.mockResolvedValue(planFull as never);
-    billingApi.createInvoice.mockResolvedValue(undefined);
+    billingApi.createInvoice.mockResolvedValue({
+      invoice_number: 'INV-202605-0001',
+      amount: 29,
+      total_amount: 29,
+      currency: 'EUR',
+    });
+    mockTransaction.mockImplementation(async (fn) =>
+      fn({ query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) } as never)
+    );
     service = new PaymentsService();
   });
 
@@ -199,7 +221,7 @@ describe('PaymentsService', () => {
 
       const clientQuery = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
@@ -228,7 +250,7 @@ describe('PaymentsService', () => {
 
       const clientQuery = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
@@ -251,7 +273,7 @@ describe('PaymentsService', () => {
 
       const clientQuery = jest.fn().mockResolvedValue({ rows: [], rowCount: 0 });
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
@@ -693,7 +715,7 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
 
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       billingApi.getPlanBySlug.mockResolvedValueOnce(planFull as never);
@@ -728,7 +750,7 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
 
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       billingApi.getPlanBySlug.mockResolvedValueOnce(planFull as never);
@@ -762,7 +784,7 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
 
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       billingApi.getPlanBySlug.mockResolvedValueOnce(planFull as never);
@@ -796,7 +818,7 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [{ id: 's' }], rowCount: 1 } as never)
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
       billingApi.getPlanBySlug.mockResolvedValueOnce(planFull as never);
 
@@ -818,7 +840,7 @@ describe('PaymentsService', () => {
 
       expect(out.paymentId).toBe('wise-pay-1');
       expect(out.reference).toContain('ATINA-');
-      expect(out.instructions.bankName).toBe('TransferWise');
+      expect(out.instructions.reference).toBe(out.reference);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO payments'),
         expect.arrayContaining([290])
@@ -846,26 +868,31 @@ describe('PaymentsService', () => {
 
     it('confirmWisePayment throws when metadata missing planSlug', async () => {
       mockQuery.mockResolvedValueOnce({
-        rows: [{ user_id: 'u1', amount: 10, currency: 'USD', metadata: { billingCycle: 'monthly' } }],
+        rows: [{ user_id: 'u1', amount: 10, currency: 'USD', status: 'pending', metadata: { billingCycle: 'monthly' } }],
         rowCount: 1,
       } as never);
-      billingApi.getPlanBySlug.mockRejectedValueOnce(new NotFoundError('Plan'));
 
       await expect(service.confirmWisePayment('pay-bad-meta', 'admin-1')).rejects.toBeInstanceOf(NotFoundError);
     });
 
     it('confirmWisePayment runs transaction', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [
-          {
-            user_id: 'u1',
-            amount: 50,
-            currency: 'USD',
-            metadata: { planSlug: 'pro', billingCycle: 'monthly' },
-          },
-        ],
-        rowCount: 1,
-      } as never);
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              user_id: 'u1',
+              amount: 50,
+              currency: 'USD',
+              status: 'pending',
+              metadata: { planSlug: 'pro', billingCycle: 'monthly' },
+            },
+          ],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
 
       const clientQuery = jest
         .fn()
@@ -874,7 +901,7 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
 
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       await service.confirmWisePayment('pay-w', 'admin-1');
@@ -883,17 +910,23 @@ describe('PaymentsService', () => {
     });
 
     it('confirmWisePayment extends period by 12 months when billingCycle is yearly', async () => {
-      mockQuery.mockResolvedValueOnce({
-        rows: [
-          {
-            user_id: 'u1',
-            amount: 100,
-            currency: 'USD',
-            metadata: { planSlug: 'pro', billingCycle: 'yearly' },
-          },
-        ],
-        rowCount: 1,
-      } as never);
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              user_id: 'u1',
+              amount: 100,
+              currency: 'USD',
+              status: 'processing',
+              metadata: { planSlug: 'pro', billingCycle: 'yearly' },
+            },
+          ],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
 
       const clientQuery = jest
         .fn()
@@ -902,12 +935,145 @@ describe('PaymentsService', () => {
         .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
 
       mockTransaction.mockImplementation(async (fn) => {
-        await fn({ query: clientQuery } as never);
+        return fn({ query: clientQuery } as never);
       });
 
       await service.confirmWisePayment('pay-y', 'admin-1');
 
       expect(billingApi.createInvoice).toHaveBeenCalled();
+    });
+  });
+
+  describe('Manual payments (bez firme)', () => {
+    beforeEach(() => {
+      (config as { payments: { mode: string } }).payments.mode = 'manual';
+    });
+
+    it('getPaymentMethods includes manual in manual mode', () => {
+      const out = service.getPaymentMethods();
+      expect(out.mode).toBe('manual');
+      expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(true);
+    });
+
+    it('createManualCheckout returns bank instructions', async () => {
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [{ id: 'manual-pay-1' }],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
+
+      const out = await service.createManualCheckout('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'pro', 'monthly');
+
+      expect(out.paymentId).toBe('manual-pay-1');
+      expect(out.reference).toContain('ATINA-');
+      expect(out.instructions.accountName).toBeTruthy();
+      expect(paymentNotifyApi.sendManualCheckoutInstructions).toHaveBeenCalled();
+    });
+
+    it('markManualPaymentSent updates status to processing', async () => {
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [{ user_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', status: 'pending' }],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never)
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 'manual-pay-1',
+            user_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            amount: 29,
+            currency: 'EUR',
+            metadata: { planSlug: 'pro', billingCycle: 'monthly', reference: 'ATINA-REF' },
+          }],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
+
+      await service.markManualPaymentSent('manual-pay-1', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining("status = 'processing'"),
+        ['manual-pay-1']
+      );
+      expect(paymentNotifyApi.notifyAdminPaymentPending).toHaveBeenCalled();
+    });
+
+    it('confirmPendingPayment activates subscription for manual provider', async () => {
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              user_id: 'u1',
+              amount: 29,
+              currency: 'EUR',
+              status: 'processing',
+              metadata: { planSlug: 'pro', billingCycle: 'monthly' },
+            },
+          ],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
+
+      const clientQuery = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: 'sub_manual' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+
+      mockTransaction.mockImplementation(async (fn) => {
+        return fn({ query: clientQuery } as never);
+      });
+
+      await service.confirmPendingPayment('pay-manual', 'admin-1', 'manual');
+
+      expect(billingApi.createInvoice).toHaveBeenCalled();
+      expect(paymentNotifyApi.sendInvoiceConfirmationToClient).toHaveBeenCalled();
+    });
+
+    it('confirmPendingPayment coerces decimal string amounts from Postgres', async () => {
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              user_id: 'u1',
+              amount: '39.00',
+              currency: 'EUR',
+              status: 'processing',
+              metadata: { planSlug: 'starter', billingCycle: 'monthly' },
+            },
+          ],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'client@test.com', name: 'Client' }],
+          rowCount: 1,
+        } as never);
+
+      const clientQuery = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never)
+        .mockResolvedValueOnce({ rows: [{ id: 'sub_manual' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+
+      mockTransaction.mockImplementation(async (fn) => {
+        return fn({ query: clientQuery } as never);
+      });
+
+      await service.confirmPendingPayment('pay-manual-str', 'admin-1', 'manual');
+
+      expect(billingApi.createInvoice).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 39, currency: 'EUR' })
+      );
     });
   });
 

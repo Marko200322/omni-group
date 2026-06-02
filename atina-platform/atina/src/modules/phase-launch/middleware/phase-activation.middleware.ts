@@ -10,6 +10,7 @@ import {
   resolvePhaseFromEnv,
   type Phase,
 } from '../../../core/phase-env';
+import { MODULE_PHASE_REGISTRY } from '../../../core/module-phase-registry';
 
 export type { Phase };
 export { PHASE_ORDER, getPhaseOrder };
@@ -20,32 +21,8 @@ const FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES: Record<'atina-system' | 'sistem-nap
   forge: 'v3',
 };
 
-// Initial gating map for ecosystem modules. This can expand as modules mature.
 const MODULE_MIN_PHASE: Record<string, Phase> = {
-  billing: 'v2',
-  payments: 'v2',
-  subscriptions: 'v1',
-  crm: 'v1',
-  analytics: 'v2',
-  craftor: 'v1',
-  'digital-signature': 'v2',
-  titanis: 'v1',
-  dominus360: 'v2',
-  omnitube: 'v2',
-  titanix: 'v2',
-  omnigame: 'v3',
-  'apex-predator': 'v3',
-  'titan-score': 'v3',
-  'client-hunter': 'v2',
-  'lead-scoring': 'v2',
-  'proxy-rotation': 'v2',
-  outreach: 'v2',
-  'follow-up': 'v2',
-  'follow-up-automation': 'v2',
-  'package-pricing': 'v2',
-  'deal-offer': 'v2',
-  'template-engine': 'v2',
-  validator: 'v2',
+  ...MODULE_PHASE_REGISTRY,
   ...FINALIZED_ATINA_ECOSYSTEM_PHASE_RULES,
 };
 

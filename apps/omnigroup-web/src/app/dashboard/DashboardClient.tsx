@@ -13,18 +13,25 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
+import type { AtinaDashboardLive } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
+import { isAdminRole } from '@/lib/auth-roles';
 import { buildClientMetrics } from '@/lib/platform-metrics';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
+import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel';
+import { AutonomyLoopPanel } from '@/components/platform/AutonomyLoopPanel';
+import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
+import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { SparkChart } from '@/components/ui/SparkChart';
 
 type Props = {
   snapshot: AtinaPublicSnapshot;
+  live: AtinaDashboardLive | null;
   sessionUser: SessionUser | null;
   isDemo: boolean;
   unreadCount: number | null;
@@ -39,13 +46,15 @@ const taskStatus = {
 
 export default function DashboardClient({
   snapshot,
+  live,
   sessionUser,
   isDemo,
   unreadCount,
   unreadError,
 }: Props) {
-  const metrics = buildClientMetrics(snapshot);
-  const status = snapshot.source === 'live' ? 'live' : snapshot.source;
+  const metrics = buildClientMetrics(snapshot, live, { authenticated: !isDemo && Boolean(sessionUser) });
+  const status =
+    live?.me || live?.tasks.length ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
   const greeting = sessionUser?.name ? `Zdravo, ${sessionUser.name.split(' ')[0]}` : 'Dobrodošli nazad';
 
   return (
@@ -61,6 +70,18 @@ export default function DashboardClient({
       sessionUser={sessionUser}
       isDemo={isDemo}
     >
+      {isDemo && (
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <p className="font-medium text-amber-200">Demo režim</p>
+          <p className="mt-1">
+            Za plan, uplatu, avatare i AI memoriju{' '}
+            <Link href="/login" className="font-medium text-white underline-offset-2 hover:underline">
+              prijavi se pravim nalogom
+            </Link>{' '}
+            (admin@atina.io).
+          </p>
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Aktivni projekti"
@@ -113,9 +134,10 @@ export default function DashboardClient({
             )}
           </div>
           {!isDemo && unreadCount === null && unreadError && (
-            <p className="mb-3 text-xs text-slate-500">
-              Live broj sa Atina API: {unreadError === 'no_access_token' ? 'nema tokena' : unreadError}
-            </p>
+            <p className="mb-3 text-xs text-slate-500">{unreadError}</p>
+          )}
+          {!isDemo && metrics.notifications.length === 0 && unreadCount === null && !unreadError && (
+            <p className="mb-3 text-xs text-slate-500">Nema novih obaveštenja.</p>
           )}
           <ul className="mt-4 space-y-3">
             {metrics.notifications.map((n) => (
@@ -138,6 +160,20 @@ export default function DashboardClient({
           </ul>
         </GlassCard>
       </div>
+
+      <section id="autonomy" className="mt-6">
+        <GlassCard delay={0.28}>
+          <h2 className="font-display text-lg font-semibold text-white">Autonomy Loop</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Zatvorena petlja — istraži tržište, generiši module, deploy, feedback. Tick pokreće do 2 vertikale po
+            ciklusu.
+          </p>
+          <AutonomyLoopPanel
+            isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+            disabled={isDemo || !sessionUser}
+          />
+        </GlassCard>
+      </section>
 
       <section id="projects" className="mt-6">
         <GlassCard delay={0.3}>
@@ -188,6 +224,14 @@ export default function DashboardClient({
         <GlassCard delay={0.35}>
           <h2 className="font-display text-lg font-semibold text-white">Atina modul — status</h2>
           <p className="mt-2 text-sm text-slate-400">{describeSource(snapshot)}</p>
+          {live?.me && (
+            <p className="mt-2 text-sm text-emerald-300/90">
+              Prijavljen: {live.me.email} · uloga {live.me.role}
+            </p>
+          )}
+          {live && live.errors.length > 0 && (
+            <p className="mt-2 text-xs text-amber-400/90">API: {live.errors.join('; ')}</p>
+          )}
           <p className="mt-4 font-mono text-xs text-cyan-300/80">{snapshot.apiBase}</p>
         </GlassCard>
         <GlassCard delay={0.4}>
@@ -207,6 +251,13 @@ export default function DashboardClient({
           ) : (
             <p className="mt-4 text-sm text-slate-500">Katalog planova će se učitati sa Atina API-ja.</p>
           )}
+          {sessionUser && !isDemo ? (
+            <BillingCheckoutPanel plans={snapshot.plans} />
+          ) : (
+            <p className="mt-4 text-xs text-slate-500">
+              Prijavi se na Atina nalog da generišeš uputstvo za uplatu (režim bez firme).
+            </p>
+          )}
           <Link href="/pricing" className="btn-primary mt-6 inline-block text-sm">
             Nadogradi plan
           </Link>
@@ -217,16 +268,38 @@ export default function DashboardClient({
         <GlassCard delay={0.45}>
           <h2 className="font-display text-lg font-semibold text-white">Podrška</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Treba pomoć sa planom, integracijom ili deploy-om? Javi se Omni Group timu.
+            Pričaj sa AI avatarom — izaberi člana support tima (Mila, Stefan, Jelena). Ispod možeš zakazati i live poziv.
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/contact" className="btn-primary text-sm">
-              Kontaktiraj tim
-            </Link>
-            <Link href="/services" className="btn-glass text-sm">
-              Pogledaj usluge
-            </Link>
-          </div>
+          {sessionUser && !isDemo ? (
+            <SupportMeetingPanel />
+          ) : (
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/contact" className="btn-primary text-sm">
+                Kontaktiraj tim
+              </Link>
+              <Link href="/login" className="btn-glass text-sm">
+                Prijavi se za video podršku
+              </Link>
+            </div>
+          )}
+        </GlassCard>
+      </section>
+
+      <section id="sales" className="mt-6">
+        <GlassCard delay={0.48}>
+          <h2 className="font-display text-lg font-semibold text-white">Prodaja</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            AI prodajni avatar — izaberi jednog od 4 članova tima (Nikola, Ana, Marko, Ivana). Prijavi se da započneš razgovor.
+          </p>
+          {sessionUser && !isDemo ? (
+            <SalesMeetingPanel />
+          ) : (
+            <div className="mt-4">
+              <Link href="/login" className="btn-glass text-sm">
+                Prijavi se za prodajni avatar
+              </Link>
+            </div>
+          )}
         </GlassCard>
       </section>
 

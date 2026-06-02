@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: omnigroup-web
+  labels:
+    app: omnigroup-web
+spec:
+  type: ClusterIP
+  selector:
+    app: omnigroup-web
+  ports:
+    - port: 80
+      targetPort: http
+      name: http

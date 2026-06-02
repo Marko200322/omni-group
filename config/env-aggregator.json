@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "description": "Infra i dev defaulti. 6 agregatora (AI, biznis, scraper, finance, comms, infra) — atina-platform/atina/.env",
+    "description": "Infra i dev defaulti. 10 agregatora (AI … WEB3_STORAGE) — atina-platform/atina/.env; kompletan šablon: .env.example",
     "aggregatorsEnvFile": "atina-platform/atina/.env"
   },
   "atina": {
@@ -47,7 +47,7 @@
     "ENABLE_AUTOMATION": "true",
     "ENABLE_CRM": "true",
     "ENABLE_ANALYTICS": "true",
-    "PHASE": "v1"
+    "PHASE": "v3"
   },
   "nest": {
     "NODE_ENV": "development",

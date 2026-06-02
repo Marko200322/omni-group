@@ -18,6 +18,8 @@ import {
   FolderKanban,
   Zap,
   LifeBuoy,
+  Bot,
+  MessageCircle,
   UserCircle,
   Activity,
   Shield,
@@ -34,6 +36,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 
 const adminNav: NavItem[] = [
   { href: '/admin', label: 'Pregled', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Workspace', icon: FolderKanban },
   { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin#users', label: 'Korisnici', icon: Users },
   { href: '/admin#billing', label: 'Billing', icon: CreditCard },
@@ -45,8 +48,10 @@ const clientNav: NavItem[] = [
   { href: '/dashboard', label: 'Pregled', icon: LayoutDashboard },
   { href: '/dashboard#projects', label: 'Projekti', icon: FolderKanban },
   { href: '/dashboard#automations', label: 'Automacije', icon: Zap },
+  { href: '/dashboard#autonomy', label: 'Autonomy', icon: Bot },
   { href: '/dashboard#billing', label: 'Plan & naplata', icon: CreditCard },
   { href: '/dashboard#support', label: 'Podrška', icon: LifeBuoy },
+  { href: '/dashboard#sales', label: 'Prodaja', icon: MessageCircle },
   { href: '/dashboard#account', label: 'Nalog', icon: UserCircle },
 ];
 
@@ -180,9 +185,15 @@ export function PlatformShell({
             <LogOut className="h-4 w-4" /> Odjava
           </button>
           {isDemo && (
-            <p className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-              Demo sesija — podaci nisu iz Atina auth-a.
-            </p>
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+              <p className="font-medium text-amber-200">Demo pregled</p>
+              <p className="mt-1 text-amber-100/90">
+                Billing, avatar i AI memorija rade samo sa pravom prijavom.
+              </p>
+              <Link href="/login" className="mt-2 inline-block font-medium text-white underline-offset-2 hover:underline">
+                Prijavi se →
+              </Link>
+            </div>
           )}
           {variant === 'admin' && !isDemo && (
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">

@@ -9,6 +9,7 @@ import {
 import { config } from '../../../config';
 import { getAiClient } from '../../../integrations';
 import { ApexPredatorRepository } from '../repository/apex-predator.repository';
+import { apexMediaProviderStatuses, resolveApexMediaProviders } from '../providers';
 
 type ApexSystemRow = {
   budget_allocated?: number;
@@ -29,6 +30,22 @@ const RISK_MULTIPLIER: Record<ApexRiskProfileType, number> = {
   medium: 1,
   high: 1.15,
 };
+
+/** Content Tier System — EUR 10–1000 (Master spec). */
+export const APEX_CONTENT_TIERS_EUR = [
+  { tier: 'starter', minEur: 10, maxEur: 49 },
+  { tier: 'growth', minEur: 50, maxEur: 199 },
+  { tier: 'pro', minEur: 200, maxEur: 499 },
+  { tier: 'elite', minEur: 500, maxEur: 1000 },
+] as const;
+
+function resolveContentTier(estimatedRevenue: number): (typeof APEX_CONTENT_TIERS_EUR)[number] {
+  const eur = Math.max(10, Math.min(1000, estimatedRevenue));
+  const found =
+    APEX_CONTENT_TIERS_EUR.find((t) => eur >= t.minEur && eur <= t.maxEur) ??
+    APEX_CONTENT_TIERS_EUR[0];
+  return found;
+}
 
 const TRANSITION_MULTIPLIER: Record<ApexDomainStateType, Record<ApexDomainStateType, number>> = {
   prospecting: { prospecting: 1, monetizing: 1.14, stabilizing: 0.96, shielding: 0.88 },
@@ -96,6 +113,7 @@ export class ApexPredatorService {
 
     const batchCap = config.apex.maxSimBatchProfiles;
     const simulatedProfiles = Math.min(batchCap, Math.round(intensity * batchCap / 100));
+    const contentTier = resolveContentTier(estimatedRevenue);
 
     const chargebackDefender =
       mode === 'risk-shield'
@@ -110,7 +128,13 @@ export class ApexPredatorService {
         : 'Suicide switch disarmed (default)',
     };
 
+    const mediaProviders = apexMediaProviderStatuses();
+    const fluxConfigured = mediaProviders.find((p) => p.id === 'flux')?.configured ?? false;
+    const livePortraitConfigured =
+      mediaProviders.find((p) => p.id === 'live_portrait')?.configured ?? false;
+
     let narrativeMemory: Record<string, unknown> | null = null;
+    let mediaGeneration: Record<string, unknown> | null = null;
     const ai = getAiClient();
     if (ai.isConfigured()) {
       await ai.remember({
@@ -121,9 +145,24 @@ export class ApexPredatorService {
       narrativeMemory = {
         vector_store: 'ai_aggregator',
         fan_dna_synced: true,
-        live_portrait_hook: 'not_configured',
-        flux_ip_adapter: 'not_configured',
+        live_portrait_hook: livePortraitConfigured ? 'configured' : 'not_configured',
+        flux_ip_adapter: fluxConfigured ? 'configured' : 'not_configured',
       };
+
+      const providers = resolveApexMediaProviders().filter((p) => p.isConfigured() && p.generate);
+      if (providers.length) {
+        const results: Record<string, unknown> = {};
+        for (const provider of providers) {
+          const out = await provider.generate!({
+            mode,
+            intensity,
+            riskProfile,
+            contentTier: resolveContentTier(estimatedRevenue).tier,
+          });
+          if (out) results[provider.id] = out;
+        }
+        if (Object.keys(results).length) mediaGeneration = results;
+      }
     }
 
     return {
@@ -146,9 +185,16 @@ export class ApexPredatorService {
       next_domain_state: nextState,
       simulated_profiles_batch: simulatedProfiles,
       max_profiles_architecture: 125000,
+      content_tier: {
+        id: contentTier.tier,
+        price_band_eur: { min: contentTier.minEur, max: contentTier.maxEur },
+        deliverable_value_eur: estimatedRevenue,
+      },
       chargeback_defender: chargebackDefender,
       suicide_switch: suicideSwitch,
       narrative_memory: narrativeMemory,
+      media_providers: mediaProviders,
+      media_generation: mediaGeneration,
     };
   }
 }

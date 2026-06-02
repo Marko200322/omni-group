@@ -15,6 +15,8 @@ const mockAi = {
 
 jest.mock('../../integrations', () => ({
   getAiClient: () => mockAi,
+  getScraperClient: () => ({ isConfigured: () => false, scrape: jest.fn() }),
+  getStorageClient: () => ({ isConfigured: () => false, uploadArtifact: jest.fn() }),
 }));
 
 jest.mock('../../modules/craftor/repository/craftor.repository', () => {

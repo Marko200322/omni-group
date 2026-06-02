@@ -63,7 +63,11 @@ describe('BillingService', () => {
     it('returns plan', async () => {
       const plan = { id: 'p1', slug: 's', name: 'n', price_monthly: 1 } as any;
       mockQuery.mockResolvedValue({ rows: [plan], rowCount: 1 } as any);
-      await expect(service.getPlanById('p1')).resolves.toBe(plan);
+      await expect(service.getPlanById('p1')).resolves.toEqual({
+        ...plan,
+        price_monthly: 1,
+        price_yearly: 0,
+      });
     });
     it('throws when missing', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 0 } as any);

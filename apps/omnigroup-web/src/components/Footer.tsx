@@ -39,6 +39,7 @@ export function Footer() {
             <span className="font-medium text-white">Proizvod</span>
             {[
               { href: '/', label: 'Početna' },
+              { href: '/products', label: 'Proizvodi' },
               { href: '/services', label: 'Usluge' },
               { href: '/pricing', label: 'Cene' },
               { href: '/contact', label: 'Kontakt' },

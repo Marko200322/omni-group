@@ -1,14 +1,16 @@
 import * as db from '../../database/connection';
-import * as queue from '../../queue/queue';
 import logger from '../../utils/logger';
 import { TasksService } from '../../modules/tasks/service/tasks.service';
 import { NotFoundError, PlanLimitError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
-jest.mock('../../queue/queue');
+jest.mock('../../queue/queue', () => ({
+  addJob: jest.fn(),
+  getQueue: jest.fn(),
+}));
 
 const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
-const mockAddJob = queue.addJob as jest.MockedFunction<typeof queue.addJob>;
+const mockAddJob = jest.requireMock('../../queue/queue').addJob as jest.Mock;
 
 const taskRow = (over: Partial<Record<string, unknown>> = {}) =>
   ({

@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Godina iskustva', value: '10+' },
-  { label: 'Sistema', value: '250+' },
-  { label: 'Uptime', value: '99.99%' },
-  { label: 'Eksperata', value: '50+' },
+  { label: 'Modula u platformi', value: '40+' },
+  { label: 'Smoke test', value: 'PASS' },
+  { label: 'Stack', value: 'Docker' },
+  { label: 'Valuta', value: 'EUR' },
 ];
 
 const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
@@ -51,15 +51,18 @@ export default function HomePage() {
                 <span className="text-gradient">rade u produkciji</span>, ne u prezentaciji
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                Omni Group isporučuje premium web, operator konzolu i klijentski workspace — moduli
-                Atina, Astra i Titan pokrivaju API, automatizaciju i operacije.
+                Jedan panel za klijente, prodaju i operacije — CRM, automatizacije, AI podrška i uplate na račun,
+                prilagođeno malim i srednjim firmama u Srbiji i regionu.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
                   Otvori platformu <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/services" className="btn-glass">
-                  Pogledaj usluge
+                  Usluge
+                </Link>
+                <Link href="/products" className="btn-glass">
+                  Proizvodi
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   await setSessionCookie(session);
   return NextResponse.json({
     ok: true,
-    redirectTo: variant === 'admin' ? '/admin' : '/dashboard',
+    redirectTo: '/dashboard',
     demo: true,
     user: session.user,
   });

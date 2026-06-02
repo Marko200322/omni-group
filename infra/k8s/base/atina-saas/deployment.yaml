@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atina-saas
+  labels:
+    app: atina-saas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atina-saas
+  template:
+    metadata:
+      labels:
+        app: atina-saas
+    spec:
+      containers:
+        - name: atina-saas
+          image: ghcr.io/omni-group/atina-saas:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - secretRef:
+                name: atina-saas-env
+                optional: true
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi

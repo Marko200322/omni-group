@@ -15,6 +15,8 @@ import type { CreateCraftorDtoType, CraftorRunModeType, RunCraftorDtoType } from
 import { getAiClient } from '../../../integrations';
 import { calculateSofraTax } from '../../../utils/sofra-tax';
 import { CraftorRepository, type CraftorMetrics } from '../repository/craftor.repository';
+import { NICHE_REVENUE_MULTIPLIER } from './craftor-mode-yields';
+import { resolveCraftorYield } from './craftor-run.executor';
 
 function nonNegativeInt(value: unknown): number {
   const n = Number(value);
@@ -27,41 +29,6 @@ function resolveV7Mode(mode: CraftorRunModeType): CraftorV7Mode {
   }
   return mode as CraftorV7Mode;
 }
-
-type ModeYield = {
-  leads: number;
-  revenue: number;
-  proposals?: number;
-  jobsScored?: number;
-  deals?: number;
-  memoryEntries?: number;
-  workflowStage: string;
-  humanizationDelayMs?: number;
-};
-
-const MODE_YIELDS: Record<CraftorV7Mode, ModeYield> = {
-  hunting: { leads: 23, revenue: 60, workflowStage: 'job-detection' },
-  'job-scoring': { leads: 0, revenue: 45, jobsScored: 18, workflowStage: 'lead-analysis' },
-  proposal: { leads: 0, revenue: 80, proposals: 6, workflowStage: 'proposal-generation' },
-  humanization: { leads: 0, revenue: 20, humanizationDelayMs: 2400, workflowStage: 'humanization' },
-  outreach: { leads: 9, revenue: 140, proposals: 2, workflowStage: 'platform-sending' },
-  negotiation: { leads: 4, revenue: 320, deals: 2, workflowStage: 'reply-analysis' },
-  'reply-analysis': { leads: 3, revenue: 95, workflowStage: 'reply-analysis' },
-  analytics: { leads: 0, revenue: 110, workflowStage: 'revenue-analytics' },
-  ranking: { leads: 0, revenue: 55, workflowStage: 'crm-memory' },
-  'memory-sync': { leads: 0, revenue: 35, memoryEntries: 5, workflowStage: 'crm-memory' },
-};
-
-const NICHE_REVENUE_MULTIPLIER: Record<CraftorNiche, number> = {
-  developer: 1.05,
-  designer: 1,
-  marketer: 1.12,
-  copywriter: 1.08,
-  editor: 0.98,
-  consultant: 1.15,
-  'ai-specialist': 1.2,
-  'virtual-assistant': 0.95,
-};
 
 export class CraftorService {
   private readonly repo = new CraftorRepository();
@@ -109,7 +76,15 @@ export class CraftorService {
     this.assertReadiness(v7Mode, dto.mode, metrics);
 
     const niche = (metrics.niche ?? 'developer') as CraftorNiche;
-    const yield_ = MODE_YIELDS[v7Mode];
+    const platform = dto.platform ?? metrics.platforms?.[0] ?? 'upwork';
+    const yield_ = await resolveCraftorYield({
+      systemId,
+      v7Mode,
+      niche,
+      platform,
+      input: dto.input,
+    });
+
     const leadsCollected = nonNegativeInt(metrics.leads_collected);
     const newLeads = leadsCollected + (yield_.leads ?? 0);
     const revenue = Math.round(yield_.revenue * (NICHE_REVENUE_MULTIPLIER[niche] ?? 1));
@@ -122,7 +97,7 @@ export class CraftorService {
       const rec = await ai.fetchRecommendations({
         mode: v7Mode,
         niche,
-        platform: dto.platform ?? metrics.platforms?.[0] ?? 'upwork',
+        platform,
         input: dto.input,
       });
       aiProposal = rec?.recommendations ?? null;
@@ -139,7 +114,7 @@ export class CraftorService {
       mode: dto.mode,
       v7_mode: v7Mode,
       agent: dto.agent ?? this.defaultAgentForMode(v7Mode),
-      platform: dto.platform ?? metrics.platforms?.[0] ?? 'upwork',
+      platform,
       niche,
       communication_style: NICHE_COMMUNICATION_STYLE[niche],
       new_leads: yield_.leads ?? 0,
@@ -151,6 +126,9 @@ export class CraftorService {
       humanization_delay_ms: yield_.humanizationDelayMs,
       job_score: jobScore,
       conversion_probability: conversionProbability,
+      delivery_source: yield_.delivery_source,
+      scrape_preview: yield_.scrape_preview ?? null,
+      artifact_uri: yield_.artifact_uri ?? null,
       anti_detection: {
         level: metrics.anti_detection_level ?? 'medium',
         score: metrics.anti_detection_score ?? 85,

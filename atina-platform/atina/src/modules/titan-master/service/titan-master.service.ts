@@ -4,6 +4,8 @@ import {
   RunTitanMasterDtoType,
 } from '../dto/titan-master.dto';
 import { getAiClient } from '../../../integrations';
+import { config } from '../../../config';
+import { AutonomyOrchestratorService } from '../../autonomy-loop/service/autonomy-orchestrator.service';
 import { TitanMasterRepository } from '../repository/titan-master.repository';
 
 export class TitanMasterService {
@@ -49,6 +51,14 @@ export class TitanMasterService {
         mode: dto.mode,
         ai_enriched: ai.isConfigured(),
       },
+      ...(dto.mode === 'expand' && config.autonomy.enabled
+        ? {
+            autonomy_expansion: await new AutonomyOrchestratorService().expandFromTitanMaster(
+              userId,
+              dto.input
+            ),
+          }
+        : {}),
     };
 
     const { rows } = await this.repo.createRun(

@@ -23,8 +23,16 @@ type AtinaEnvelope<T> = {
   success?: boolean;
   data?: T;
   message?: string;
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
   error?: { code?: string; message?: string };
 };
+
+export type AtinaFetchMeta = NonNullable<AtinaEnvelope<unknown>['meta']>;
 
 function resolveApiBase(): string {
   const raw = process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE;
@@ -34,7 +42,7 @@ function resolveApiBase(): string {
 async function fetchAtina<T>(
   path: string,
   init: RequestInit & { timeoutMs?: number } = {},
-): Promise<{ ok: boolean; status: number; data: T | null; message?: string }> {
+): Promise<{ ok: boolean; status: number; data: T | null; meta?: AtinaFetchMeta; message?: string }> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, ...rest } = init;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -57,7 +65,13 @@ async function fetchAtina<T>(
     }
     const data = body?.data ?? null;
     const message = body?.error?.message ?? body?.message;
-    return { ok: res.ok && body?.success !== false, status: res.status, data, message };
+    return {
+      ok: res.ok && body?.success !== false,
+      status: res.status,
+      data,
+      meta: body?.meta,
+      message,
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -90,11 +104,25 @@ export async function atinaLogout(refreshToken: string | undefined): Promise<voi
   });
 }
 
+export async function atinaRefreshTokens(
+  refreshToken: string,
+): Promise<{ accessToken: string; refreshToken: string } | null> {
+  const r = await fetchAtina<{ accessToken: string; refreshToken: string; expiresIn?: string }>(
+    '/api/v1/auth/refresh',
+    {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    },
+  );
+  if (!r.ok || !r.data?.accessToken || !r.data.refreshToken) return null;
+  return { accessToken: r.data.accessToken, refreshToken: r.data.refreshToken };
+}
+
 export async function fetchAtinaAuthenticated<T>(
   path: string,
   session: AuthSession,
-  init: RequestInit = {},
-): Promise<{ ok: boolean; status: number; data: T | null; message?: string }> {
+  init: RequestInit & { timeoutMs?: number } = {},
+): Promise<{ ok: boolean; status: number; data: T | null; meta?: AtinaFetchMeta; message?: string }> {
   if (!session.accessToken) {
     return { ok: false, status: 401, data: null, message: 'no_access_token' };
   }
@@ -105,19 +133,4 @@ export async function fetchAtinaAuthenticated<T>(
       Authorization: `Bearer ${session.accessToken}`,
     },
   });
-}
-
-export async function fetchUnreadNotificationCount(
-  session: AuthSession,
-): Promise<{ count: number | null; error?: string }> {
-  const r = await fetchAtinaAuthenticated<{ count?: number; unread?: number }>(
-    '/api/v1/notifications/unread-count',
-    session,
-    { method: 'GET' },
-  );
-  if (!r.ok || !r.data) {
-    return { count: null, error: r.message ?? `http_${r.status}` };
-  }
-  const raw = r.data.count ?? r.data.unread;
-  return { count: typeof raw === 'number' ? raw : null };
 }

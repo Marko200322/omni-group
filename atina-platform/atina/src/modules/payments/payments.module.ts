@@ -16,6 +16,10 @@ const CheckoutDto = z
   })
   .strict();
 
+const KriptomanCheckoutDto = CheckoutDto.extend({
+  cryptoCurrency: z.string().min(2).max(12).optional(),
+}).strict();
+
 const OrderIdParamsDto = z
   .object({
     orderId: z.string().trim().min(2).max(120).regex(/^[a-zA-Z0-9_-]+$/, 'Invalid order id format'),
@@ -117,6 +121,82 @@ export class PaymentsModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.confirmWisePayment
+    );
+
+    // Manual bank transfer (bez firme)
+    this.router.get(
+      '/methods',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getPaymentMethods
+    );
+    this.router.post(
+      '/manual/checkout',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(CheckoutDto),
+      this.controller.createManualCheckout
+    );
+    this.router.post(
+      '/manual/mark-sent/:paymentId',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateParams(PaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.markManualPaymentSent
+    );
+    this.router.post(
+      '/manual/confirm/:paymentId',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      requireAdmin,
+      validateParams(PaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.confirmManualPayment
+    );
+
+    // Kriptoman (crypto)
+    this.router.post(
+      '/kriptoman/checkout',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(KriptomanCheckoutDto),
+      this.controller.createKriptomanCheckout
+    );
+    this.router.post(
+      '/kriptoman/webhook',
+      webhookLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      this.controller.kriptomanWebhook
+    );
+    this.router.post(
+      '/kriptoman/sync/:paymentId',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateParams(PaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.syncKriptomanPayment
+    );
+    this.router.post(
+      '/kriptoman/confirm/:paymentId',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      requireAdmin,
+      validateParams(PaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.confirmKriptomanPayment
     );
 
     // History

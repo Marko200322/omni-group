@@ -106,7 +106,8 @@ describe('AutomationModule', () => {
       } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
 
-    await (intervalTick as () => Promise<void>)();
+    (intervalTick as () => void)();
+    await new Promise<void>((r) => setImmediate(r));
 
     expect(mockAddJob).toHaveBeenCalledWith(
       'automation',
@@ -122,7 +123,8 @@ describe('AutomationModule', () => {
 
     mockQuery.mockRejectedValueOnce(new Error('scheduler db'));
 
-    await (intervalTick as () => Promise<void>)();
+    (intervalTick as () => void)();
+    await new Promise<void>((r) => setImmediate(r));
 
     expect(logger.error).toHaveBeenCalledWith(
       'Automation scheduler error',

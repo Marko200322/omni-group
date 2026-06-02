@@ -45,6 +45,14 @@ jest.mock('../../modules/payments/controller/payments.controller', () => ({
     createWiseTransfer: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
     confirmWisePayment: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     getPaymentHistory: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    getPaymentMethods: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    createManualCheckout: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
+    markManualPaymentSent: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    confirmManualPayment: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    createKriptomanCheckout: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
+    kriptomanWebhook: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    syncKriptomanPayment: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    confirmKriptomanPayment: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
   })),
 }));
 
@@ -121,6 +129,13 @@ describe('Payments module route security', () => {
     authEnabled = false;
     const app = await buildApp();
     const res = await request(app).post('/payments/stripe/webhook').send({ type: 'ping' });
+    expect(res.status).toBe(200);
+  });
+
+  it('allows unauthenticated POST /payments/kriptoman/webhook', async () => {
+    authEnabled = false;
+    const app = await buildApp();
+    const res = await request(app).post('/payments/kriptoman/webhook').send({ status: 'paid' });
     expect(res.status).toBe(200);
   });
 

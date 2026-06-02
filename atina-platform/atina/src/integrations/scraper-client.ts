@@ -1,15 +1,11 @@
 import { config } from '../config';
 import { AggregatorHttpClient } from './aggregator-http-client';
+import { scrapeWithApify } from './apify-direct';
+import { isAggregatorGatewayProvider, isApifyProvider } from './provider-detect';
+import type { ScraperJobPayload } from './scrape-types';
+import { scrapeWithAxiosDirect } from './scrape-direct';
 
-export type ScraperJobPayload = {
-  url: string;
-  selectors?: Record<string, string>;
-  waitForSelector?: string;
-  javascript?: boolean;
-  extractLinks?: boolean;
-  extractImages?: boolean;
-  maxDepth?: number;
-};
+export type { ScraperJobPayload } from './scrape-types';
 
 function scraperCreds(): { url: string; key: string } {
   return config?.aggregators?.scraper ?? { url: '', key: '' };
@@ -20,8 +16,26 @@ export class ScraperClient extends AggregatorHttpClient {
     super(creds ?? scraperCreds(), 'scraper');
   }
 
-  scrape(payload: ScraperJobPayload): Promise<Record<string, unknown> | null> {
-    return this.request<Record<string, unknown>>('POST', '/v1/scrape', payload);
+  async scrape(payload: ScraperJobPayload): Promise<Record<string, unknown> | null> {
+    if (!this.isConfigured()) return null;
+
+    const creds = this.getCredentials();
+
+    if (isApifyProvider(creds)) {
+      const apify = await scrapeWithApify(creds.key.trim(), payload);
+      if (apify) return apify;
+    }
+
+    if (isAggregatorGatewayProvider(creds)) {
+      const gateway = await this.request<Record<string, unknown>>('POST', '/v1/scrape', payload);
+      if (gateway) return { ...gateway, delivery: gateway.delivery ?? 'gateway' };
+    }
+
+    try {
+      return await scrapeWithAxiosDirect(payload);
+    } catch {
+      return null;
+    }
   }
 
   fetchProxy(endpoint = '/v1/proxies/next'): Promise<Record<string, unknown> | null> {

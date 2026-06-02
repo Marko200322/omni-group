@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnigroup-web
+  labels:
+    app: omnigroup-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omnigroup-web
+  template:
+    metadata:
+      labels:
+        app: omnigroup-web
+    spec:
+      containers:
+        - name: omnigroup-web
+          image: ghcr.io/omni-group/omnigroup-web:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - secretRef:
+                name: omnigroup-web-env
+                optional: true
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15

@@ -7,10 +7,11 @@
 
 **Politika:** Ne pokretati Cursor Task talase D–I automatski. Raditi direktno u repou + lokalni gate-ovi.
 
-### Status agenta (2026-05-21)
+### Status agenta (2026-05-21, ažurirano)
 
 **Agent checklista sekcije 1–8:** zatvorene (osim **§7.2** restore pravog UI = **vlasnik**).  
-**Gate:** `test:ci` **3170/3170**, `verify-monorepo` **Val 357** exit 0, `verify-agent-handoff` PASS.  
+**C-S-R nastavak (platform moduli):** `billing`, `payments`, `resource-management`, `phase-launch` — repository sloj; servisi bez direktnog `database/connection` importa.  
+**Gate (lokalno posle izmena):** `billing|payments` **181/181**, `resource-management|phase-launch` **60/60**, `npm run build` PASS. Pun `test:ci` = pokrenuti pre PR-a.  
 **Git:** `origin/main` sinhronizovan (2026-05-21); Master Blueprint **`a370c25`**; doc/ops **`342b2c0`**, **`5f6461b`**.  
 **`.env`:** agregatori **0/10** + Stripe **0/6** (2026-05-21 provera skripti; `PHASE=v1` setovan); vodič: [`VLASNIK-ENV-POPUNI.md`](./VLASNIK-ENV-POPUNI.md). Prioritet za staging: **FINANCE** + **AI** + **COMMS**.  
 **CI:** #39–#41 FAIL (~5m) ili zaglavljen (#42 bez forceExit). Fix: Jest **2 shard-a** + `--forceExit`, bez coverage na GHA; lokalno **`npm run test:ci`** **3170/3170**. Run: [Actions #42+](https://github.com/Marko200322/omni-group/actions). [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md).
@@ -24,7 +25,7 @@
 | Oblast | Šta |
 |--------|-----|
 | Konfiguracija | `PHASE`, 7 agregatora (`AI_*`, `FINANCE_*`, `COMMS_*`, …), health probe retry, production guard testovi |
-| Moduli / refaktor | C-S-R: `recommendation`, `ai-memory`, `digital-signature`, `package-pricing`, `dominus360`, `craftor` |
+| Moduli / refaktor | C-S-R: Faza 2 (scraper, contracts, …), Faza 4 (`tasks`, `workflow-chain`), **`billing`**, **`payments`**, **`resource-management`**, **`phase-launch`**; ecosystem: `recommendation`, `ai-memory`, `digital-signature`, `package-pricing`, `dominus360`, `craftor` |
 | Integracije | Craftor/ClientHunter/OmniTube/OmniGame/Apex → `getAiClient()` / scraper / COMMS gde je definisano; `lead-scoring`, `titanis`, outreach/follow-up, PayPal/Wise preko FINANCE |
 | Podaci | SQL view `leads` (migracija `010_leads_compat_view`) |
 | Queue | Bull `register-workers` (emails/scraper) |
@@ -51,9 +52,11 @@
 
 #### Ostaje agentu (niski prioritet)
 
-- [`AGENT-CHECKLIST-KOMPLET.md`](./AGENT-CHECKLIST-KOMPLET.md) §7.2 omnigroup-web restore (opciono)
+- [`AGENT-CHECKLIST-KOMPLET.md`](./AGENT-CHECKLIST-KOMPLET.md) §7.2 omnigroup-web restore (opciono) — **vlasnik**
 - Novi Val u `NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md` posle sledećeg punog `verify-monorepo.ps1`
 - ~~`jest --forceExit`~~ → `jest.config.js` `forceExit` kad `CI=true` (2026-05-21)
+- C-S-R: **`self-healing`**, **`ai-memory`** (još `query()` u service), **`auth.service`** (jedan audit insert), **`admin.service`** (~1300 linija — opcioni split)
+- `payments`: imenovane repo metode umesto `PaymentsRepository.execute()` (funkcionalno OK)
 
 **2026-05-21:** `deal-offer` (idempotency + COMMS/AI), `validator` (AI na `enrich`), `proxy-rotation` (idempotency + postojeći SCRAPER) — checklista §2 red deal-offer/validator/proxy.
 

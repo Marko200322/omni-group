@@ -1,14 +1,76 @@
 import Stripe from 'stripe';
 import axios from 'axios';
+import type { PoolClient } from 'pg';
 import { config } from '../../../config';
-import { query, transaction } from '../../../database/connection';
+import { PaymentsRepository } from '../repository/payments.repository';
 import { PaymentError, NotFoundError } from '../../../utils/errors';
-import { getFinanceClient } from '../../../integrations';
+import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
+import { PaymentNotificationsService } from './payment-notifications.service';
 import logger from '../../../utils/logger';
 
-const stripe = new Stripe(config.stripe.secretKey, { apiVersion: '2023-10-16' });
+let stripeClient: Stripe | null = null;
+
+function requireStripe(): Stripe {
+  if (!config.stripe.secretKey) {
+    throw new PaymentError('Stripe is not configured. Set FINANCE_KEY or use manual payment.');
+  }
+  if (!stripeClient) {
+    stripeClient = new Stripe(config.stripe.secretKey, { apiVersion: '2023-10-16' });
+  }
+  return stripeClient;
+}
+
+function buildTransferReference(userId: string): string {
+  const prefix = config.payments.manual.referencePrefix || 'ATINA';
+  return `${prefix}-${userId.slice(0, 8).toUpperCase()}-${Date.now()}`;
+}
+
+function toMoneyNumber(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) {
+    throw new PaymentError('Invalid plan price');
+  }
+  return n;
+}
+
+function buildTransferInstructions(
+  reference: string,
+  amount: number,
+  currency: string,
+  planName: string
+): Record<string, string> {
+  const manual = config.payments.manual;
+  const displayCurrency = currency.toUpperCase();
+  const money = toMoneyNumber(amount);
+  return {
+    accountName: manual.accountName || '(popuni MANUAL_PAYMENT_ACCOUNT_NAME u .env)',
+    iban: manual.iban || '(popuni MANUAL_PAYMENT_IBAN u .env)',
+    bankName: manual.bankName || '(popuni MANUAL_PAYMENT_BANK u .env)',
+    swift: manual.swift || '',
+    reference,
+    amount: `${money.toFixed(2)} ${displayCurrency}`,
+    plan: planName,
+    note: manual.note,
+  };
+}
 const billingService = new BillingService();
+const paymentNotifications = new PaymentNotificationsService();
+
+function parsePaymentMetadata(raw: Record<string, unknown> | string): Record<string, unknown> {
+  if (typeof raw === 'string') {
+    return JSON.parse(raw || '{}') as Record<string, unknown>;
+  }
+  return raw ?? {};
+}
+
+function dispatchPaymentSideEffect(task: Promise<void>, label: string): void {
+  void task.catch((err: unknown) => {
+    logger.warn(`Payment side-effect failed: ${label}`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+}
 
 /** N3-E1: Stripe may send `subscription` as an id string or an expanded object; DB queries need the id. */
 function stripeSubscriptionId(ref: string | Stripe.Subscription | null | undefined): string | null {
@@ -17,6 +79,8 @@ function stripeSubscriptionId(ref: string | Stripe.Subscription | null | undefin
 }
 
 export class PaymentsService {
+  private readonly db = new PaymentsRepository();
+
   // ========================
   // STRIPE
   // ========================
@@ -33,7 +97,7 @@ export class PaymentsService {
     }
 
     // Get or create Stripe customer
-    const { rows: userRows } = await query<{ email: string; name: string; stripe_customer_id?: string }>(
+    const { rows: userRows } = await this.db.execute<{ email: string; name: string; stripe_customer_id?: string }>(
       `SELECT u.email, u.name, s.stripe_customer_id
        FROM users u
        LEFT JOIN subscriptions s ON s.user_id = u.id
@@ -45,7 +109,7 @@ export class PaymentsService {
     let customerId = userRows[0]?.stripe_customer_id;
 
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await requireStripe().customers.create({
         email: userRows[0]?.email,
         name: userRows[0]?.name,
         metadata: { userId },
@@ -53,7 +117,7 @@ export class PaymentsService {
       customerId = customer.id;
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await requireStripe().checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
@@ -74,7 +138,7 @@ export class PaymentsService {
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(payload, signature, config.stripe.webhookSecret);
+      event = requireStripe().webhooks.constructEvent(payload, signature, config.stripe.webhookSecret);
     } catch {
       throw new PaymentError('Invalid Stripe webhook signature');
     }
@@ -109,9 +173,9 @@ export class PaymentsService {
     const plan = await billingService.getPlanBySlug(planSlug);
     const subscriptionRef = stripeSubscriptionId(session.subscription as string | Stripe.Subscription | null);
     if (!subscriptionRef) return;
-    const subscription = await stripe.subscriptions.retrieve(subscriptionRef);
+    const subscription = await requireStripe().subscriptions.retrieve(subscriptionRef);
 
-    await transaction(async (client) => {
+    await this.db.runInTransaction(async (client) => {
       // Create/update subscription
       await client.query(
         `INSERT INTO subscriptions
@@ -139,7 +203,7 @@ export class PaymentsService {
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
-    await query(
+    await this.db.execute(
       `UPDATE subscriptions
        SET status = $2, current_period_start = $3, current_period_end = $4,
            cancel_at_period_end = $5, updated_at = NOW()
@@ -155,7 +219,7 @@ export class PaymentsService {
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
-    await query(
+    await this.db.execute(
       `UPDATE subscriptions
        SET status = 'canceled', canceled_at = NOW(), updated_at = NOW()
        WHERE stripe_subscription_id = $1`,
@@ -163,14 +227,14 @@ export class PaymentsService {
     );
 
     // Downgrade user to starter
-    const { rows } = await query<{ user_id: string }>(
+    const { rows } = await this.db.execute<{ user_id: string }>(
       'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1',
       [subscription.id]
     );
     if (rows[0]) {
-      const { rows: starter } = await query<{ id: string }>('SELECT id FROM plans WHERE slug = $1', ['starter']);
+      const { rows: starter } = await this.db.execute<{ id: string }>('SELECT id FROM plans WHERE slug = $1', ['starter']);
       if (starter[0]) {
-        await query('UPDATE users SET plan_id = $2 WHERE id = $1', [rows[0].user_id, starter[0].id]);
+        await this.db.execute('UPDATE users SET plan_id = $2 WHERE id = $1', [rows[0].user_id, starter[0].id]);
       }
     }
   }
@@ -179,7 +243,7 @@ export class PaymentsService {
     const subscriptionId = stripeSubscriptionId(invoice.subscription as string | Stripe.Subscription | null);
     if (!subscriptionId) return;
 
-    const { rows: subRows } = await query<{ user_id: string; plan_id: string; id: string }>(
+    const { rows: subRows } = await this.db.execute<{ user_id: string; plan_id: string; id: string }>(
       'SELECT * FROM subscriptions WHERE stripe_subscription_id = $1',
       [subscriptionId]
     );
@@ -187,7 +251,7 @@ export class PaymentsService {
     if (!subRows[0]) return;
 
     // Record payment
-    const { rows: paymentRows } = await query<{ id: string }>(
+    const { rows: paymentRows } = await this.db.execute<{ id: string }>(
       `INSERT INTO payments
          (user_id, subscription_id, amount, currency, status, provider, provider_payment_id, description)
        VALUES ($1, $2, $3, $4, 'completed', 'stripe', $5, 'Subscription payment')
@@ -217,13 +281,13 @@ export class PaymentsService {
     const subscriptionId = stripeSubscriptionId(invoice.subscription as string | Stripe.Subscription | null);
     if (!subscriptionId) return;
 
-    await query(
+    await this.db.execute(
       `UPDATE subscriptions SET status = 'past_due', updated_at = NOW()
        WHERE stripe_subscription_id = $1`,
       [subscriptionId]
     );
 
-    await query(
+    await this.db.execute(
       `INSERT INTO payments
          (user_id, subscription_id, amount, currency, status, provider, provider_payment_id, description)
        SELECT s.user_id, s.id, $3, $4, 'failed', 'stripe', $2, 'Failed payment'
@@ -233,7 +297,7 @@ export class PaymentsService {
   }
 
   async cancelSubscription(userId: string): Promise<void> {
-    const { rows } = await query<{ stripe_subscription_id: string }>(
+    const { rows } = await this.db.execute<{ stripe_subscription_id: string }>(
       `SELECT stripe_subscription_id FROM subscriptions
        WHERE user_id = $1 AND status = 'active'
        ORDER BY created_at DESC LIMIT 1`,
@@ -242,11 +306,11 @@ export class PaymentsService {
 
     if (!rows[0]?.stripe_subscription_id) throw new NotFoundError('Active subscription');
 
-    await stripe.subscriptions.update(rows[0].stripe_subscription_id, {
+    await requireStripe().subscriptions.update(rows[0].stripe_subscription_id, {
       cancel_at_period_end: true,
     });
 
-    await query(
+    await this.db.execute(
       `UPDATE subscriptions SET cancel_at_period_end = true, updated_at = NOW()
        WHERE stripe_subscription_id = $1`,
       [rows[0].stripe_subscription_id]
@@ -254,7 +318,7 @@ export class PaymentsService {
   }
 
   async createBillingPortalSession(userId: string): Promise<string> {
-    const { rows } = await query<{ stripe_customer_id: string }>(
+    const { rows } = await this.db.execute<{ stripe_customer_id: string }>(
       `SELECT stripe_customer_id FROM subscriptions
        WHERE user_id = $1 AND stripe_customer_id IS NOT NULL
        ORDER BY created_at DESC LIMIT 1`,
@@ -263,7 +327,7 @@ export class PaymentsService {
 
     if (!rows[0]) throw new PaymentError('No Stripe customer found');
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await requireStripe().billingPortal.sessions.create({
       customer: rows[0].stripe_customer_id,
       return_url: `${config.app.url}/billing`,
     });
@@ -304,7 +368,7 @@ export class PaymentsService {
         cancelUrl: `${config.app.url}/billing/cancel`,
       });
       if (remote?.orderId) {
-        await query(
+        await this.db.execute(
           `INSERT INTO payments
              (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
            VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
@@ -346,7 +410,7 @@ export class PaymentsService {
     const approveLink = order.links.find((l: any) => l.rel === 'approve')?.href;
 
     // Store pending payment
-    await query(
+    await this.db.execute(
       `INSERT INTO payments
          (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
        VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
@@ -361,7 +425,7 @@ export class PaymentsService {
   }
 
   async capturePayPalOrder(orderId: string, userId: string): Promise<void> {
-    const { rows: ownerRows } = await query<{ user_id: string; metadata: string | Record<string, unknown> }>(
+    const { rows: ownerRows } = await this.db.execute<{ user_id: string; metadata: string | Record<string, unknown> }>(
       `SELECT user_id, metadata FROM payments
        WHERE provider_payment_id = $1 AND provider = 'paypal' AND status = 'pending'`,
       [orderId]
@@ -420,7 +484,7 @@ export class PaymentsService {
 
     const plan = await billingService.getPlanBySlug(planSlug);
 
-    await transaction(async (client) => {
+    await this.db.runInTransaction(async (client) => {
       // Update payment status
       await client.query(
         `UPDATE payments SET status = 'completed', provider_charge_id = $2, updated_at = NOW()
@@ -454,7 +518,8 @@ export class PaymentsService {
   async createWiseTransfer(userId: string, planSlug: string, billingCycle: 'monthly' | 'yearly') {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
-    const reference = `ATINA-${userId.slice(0, 8).toUpperCase()}-${Date.now()}`;
+    const currency = config.payments.manual.currency || 'USD';
+    const reference = buildTransferReference(userId);
 
     const finance = getFinanceClient();
     if (finance.isConfigured()) {
@@ -477,13 +542,13 @@ export class PaymentsService {
       }
     }
 
-    const { rows } = await query(
+    const { rows } = await this.db.execute<{ id: string }>(
       `INSERT INTO payments
          (user_id, amount, currency, status, provider, description, metadata)
-       VALUES ($1, $2, 'USD', 'pending', 'wise', $3, $4)
+       VALUES ($1, $2, $3, 'pending', 'wise', $4, $5)
        RETURNING id`,
       [
-        userId, amount,
+        userId, amount, currency.toUpperCase(),
         `Wise transfer for ${plan.name} plan`,
         JSON.stringify({ planSlug, billingCycle, reference, instructions: 'pending_manual_verification' }),
       ]
@@ -493,72 +558,532 @@ export class PaymentsService {
       paymentId: rows[0].id,
       reference,
       amount,
-      currency: 'USD',
-      instructions: {
-        accountName: 'ATINA Platform Ltd',
-        bankName: 'TransferWise',
-        reference,
-        amount: `$${amount.toFixed(2)} USD`,
-        note: 'Include reference code in transfer description. Subscription activates within 24 hours of confirmed payment.',
-      },
+      currency,
+      instructions: buildTransferInstructions(reference, amount, currency, plan.name),
     };
   }
 
   async confirmWisePayment(paymentId: string, adminId: string): Promise<void> {
-    const { rows } = await query<{
+    await this.confirmPendingPayment(paymentId, adminId, 'wise');
+  }
+
+  async confirmPendingPayment(
+    paymentId: string,
+    adminId: string,
+    provider: 'wise' | 'manual' | 'kriptoman' = 'manual'
+  ): Promise<void> {
+    const { rows } = await this.db.execute<{
       user_id: string;
-      metadata: Record<string, unknown>;
+      metadata: Record<string, unknown> | string;
       amount: number;
       currency: string;
+      status: string;
     }>(
-      'SELECT * FROM payments WHERE id = $1 AND provider = $2',
-      [paymentId, 'wise']
+      'SELECT user_id, metadata, amount, currency, status FROM payments WHERE id = $1 AND provider = $2',
+      [paymentId, provider]
     );
 
     if (!rows[0]) throw new NotFoundError('Payment');
+    if (rows[0].status === 'completed') {
+      throw new PaymentError('Payment is already confirmed');
+    }
+    if (rows[0].status !== 'pending' && rows[0].status !== 'processing') {
+      throw new PaymentError(`Payment cannot be confirmed from status '${rows[0].status}'`);
+    }
 
-    const { planSlug, billingCycle } = rows[0].metadata as any;
-    const plan = await billingService.getPlanBySlug(planSlug as string);
+    const metadata =
+      typeof rows[0].metadata === 'string'
+        ? (JSON.parse(rows[0].metadata || '{}') as Record<string, unknown>)
+        : (rows[0].metadata ?? {});
 
-    await transaction(async (client) => {
+    const planSlug = String(metadata.planSlug ?? '');
+    const billingCycle = String(metadata.billingCycle ?? 'monthly');
+    if (!planSlug) throw new NotFoundError('Payment plan metadata');
+
+    const plan = await billingService.getPlanBySlug(planSlug);
+    const paymentAmount = toMoneyNumber(rows[0].amount);
+
+    const activation = await this.db.runInTransaction(async (client) => {
       await client.query(
         `UPDATE payments SET status = 'completed', updated_at = NOW() WHERE id = $1`,
         [paymentId]
       );
 
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + ((billingCycle as string) === 'yearly' ? 12 : 1));
-
-      const { rows: subRows } = await client.query(
-        `INSERT INTO subscriptions
-           (user_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
-         VALUES ($1, $2, 'active', $3, $4, $5)
-         RETURNING id`,
-        [rows[0].user_id, plan.id, billingCycle, now, periodEnd]
+      const subscription = await this.activateLocalSubscription(
+        client,
+        rows[0].user_id,
+        plan.id,
+        billingCycle as 'monthly' | 'yearly'
       );
 
-      await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [rows[0].user_id, plan.id]);
-
-      await billingService.createInvoice({
-        userId: rows[0].user_id,
-        subscriptionId: subRows[0].id,
-        paymentId,
-        amount: rows[0].amount,
-        currency: rows[0].currency,
-        lineItems: [{ description: `${plan.name} Plan (${billingCycle})`, amount: rows[0].amount, quantity: 1 }],
-      });
+      return subscription;
     });
 
-    logger.info('Wise payment confirmed', { paymentId, adminId });
+    const invoiceLineItems = [{
+      description: `${plan.name} Plan (${billingCycle})`,
+      amount: paymentAmount,
+      quantity: 1,
+    }];
+
+    const created = await billingService.createInvoice({
+      userId: rows[0].user_id,
+      subscriptionId: activation.subscriptionId,
+      paymentId,
+      amount: paymentAmount,
+      currency: rows[0].currency,
+      lineItems: invoiceLineItems,
+      billingDetails: {
+        receiptType: 'purchase_confirmation',
+        planName: plan.name,
+        planSlug: plan.slug,
+        planDescription: plan.description,
+        billingCycle,
+        periodStart: activation.periodStart.toISOString(),
+        periodEnd: activation.periodEnd.toISOString(),
+      },
+    });
+
+    const invoiceRecord = {
+      invoice: created as {
+        invoice_number: string;
+        total_amount: number;
+        amount: number;
+        currency: string;
+        created_at?: string;
+      },
+      subscription: activation,
+      lineItems: invoiceLineItems,
+    };
+
+    logger.info('Pending payment confirmed', { paymentId, adminId, provider });
+
+    if (!invoiceRecord?.invoice?.invoice_number) return;
+
+    const { invoice, subscription, lineItems } = invoiceRecord;
+    const purchasedAt = invoice.created_at ?? new Date().toISOString();
+
+    const { rows: userRows } = await this.db.getUserById(rows[0].user_id);
+    const client = userRows[0];
+    if (client?.email) {
+      dispatchPaymentSideEffect(
+        paymentNotifications.sendInvoiceConfirmationToClient({
+          toEmail: client.email,
+          toName: client.name,
+          invoiceNumber: invoice.invoice_number,
+          planName: plan.name,
+          planSlug: plan.slug,
+          planDescription: plan.description,
+          billingCycle,
+          amount: Number(invoice.amount),
+          total: Number(invoice.total_amount),
+          currency: invoice.currency,
+          paymentId,
+          lineItems,
+          periodStart: subscription.periodStart.toISOString(),
+          periodEnd: subscription.periodEnd.toISOString(),
+          purchasedAt,
+        }),
+        'invoice_email'
+      );
+    }
+    dispatchPaymentSideEffect(
+      paymentNotifications.createInAppPaymentNotification(
+        rows[0].user_id,
+        'payment_confirmed',
+        'Kupovina potvrđena',
+        paymentNotifications.buildPurchaseConfirmedMessage({
+          planName: plan.name,
+          billingCycle,
+          total: Number(invoice.total_amount),
+          currency: invoice.currency,
+          invoiceNumber: invoice.invoice_number,
+          periodEnd: subscription.periodEnd.toISOString(),
+        }),
+        {
+          paymentId,
+          invoiceNumber: invoice.invoice_number,
+          planSlug: plan.slug,
+          planName: plan.name,
+          billingCycle,
+          periodEnd: subscription.periodEnd.toISOString(),
+        }
+      ),
+      'payment_confirmed_notification'
+    );
+  }
+
+  // ========================
+  // MANUAL (bez firme / pre Stripe-a)
+  // ========================
+
+  getPaymentMethods() {
+    const mode = config.payments.mode;
+    const methods: Array<{ id: string; label: string; description: string; available: boolean }> = [];
+
+    if (mode === 'manual' || config.payments.manual.accountName || config.payments.manual.iban) {
+      methods.push({
+        id: 'manual',
+        label: 'Bankovni transfer',
+        description: 'Uplata na lični/poslovni račun — aktivacija nakon admin potvrde (bez Stripe/PayPal naloga).',
+        available: true,
+      });
+    }
+
+    if (mode !== 'manual' && config.stripe.secretKey) {
+      methods.push({
+        id: 'stripe',
+        label: 'Kartica (Stripe)',
+        description: 'Checkout preko Stripe test/live naloga.',
+        available: true,
+      });
+    }
+
+    if (mode !== 'manual' && config.paypal.clientId && config.paypal.clientSecret) {
+      methods.push({
+        id: 'paypal',
+        label: 'PayPal',
+        description: 'Sandbox ili live PayPal nalog.',
+        available: true,
+      });
+    }
+
+    if (mode !== 'manual') {
+      methods.push({
+        id: 'wise',
+        label: 'Wise / devizna uplata',
+        description: 'Uputstvo za transfer + ručna potvrda.',
+        available: true,
+      });
+    }
+
+    const kriptoman = getKriptomanClient();
+    if (config.kriptoman.enabled && kriptoman.isConfigured()) {
+      methods.push({
+        id: 'kriptoman',
+        label: 'Kriptovalute (Kriptoman)',
+        description: 'Plaćanje USDT/BTC preko Kriptoman checkout linka.',
+        available: true,
+      });
+    }
+
+    return {
+      mode,
+      methods,
+      manualConfigured: Boolean(config.payments.manual.accountName && config.payments.manual.iban),
+      note:
+        mode === 'manual'
+          ? 'Režim bez firme: koristi bankovni transfer dok ne otvoriš firmu i uključiš Stripe live.'
+          : undefined,
+    };
+  }
+
+  async createManualCheckout(userId: string, planSlug: string, billingCycle: 'monthly' | 'yearly') {
+    const methods = this.getPaymentMethods();
+    if (!methods.methods.some((m) => m.id === 'manual' && m.available)) {
+      throw new PaymentError('Manual bank transfer is not enabled. Set PAYMENTS_MODE=manual or bank details in .env.');
+    }
+
+    const plan = await billingService.getPlanBySlug(planSlug);
+    const amount = toMoneyNumber(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
+    const currency = config.payments.manual.currency || 'USD';
+    const reference = buildTransferReference(userId);
+
+    const { rows } = await this.db.execute<{ id: string }>(
+      `INSERT INTO payments
+         (user_id, amount, currency, status, provider, description, metadata)
+       VALUES ($1, $2, $3, 'pending', 'manual', $4, $5)
+       RETURNING id`,
+      [
+        userId,
+        amount,
+        currency.toUpperCase(),
+        `Manual bank transfer — ${plan.name} (${billingCycle})`,
+        JSON.stringify({ planSlug, billingCycle, reference }),
+      ]
+    );
+
+    const instructions = buildTransferInstructions(reference, amount, currency, plan.name);
+    const paymentId = rows[0].id;
+
+    const { rows: userRows } = await this.db.getUserById(userId);
+    if (userRows[0]?.email) {
+      dispatchPaymentSideEffect(
+        paymentNotifications.sendManualCheckoutInstructions({
+          toEmail: userRows[0].email,
+          toName: userRows[0].name,
+          planName: plan.name,
+          planSlug: plan.slug,
+          planDescription: plan.description,
+          billingCycle,
+          amount,
+          currency: currency.toUpperCase(),
+          reference,
+          instructions,
+          paymentId,
+        }),
+        'manual_checkout_email'
+      );
+    }
+
+    dispatchPaymentSideEffect(
+      paymentNotifications.createInAppPaymentNotification(
+        userId,
+        'payment_pending',
+        'Uputstvo za uplatu poslato',
+        `Proveri email ili dashboard za IBAN i referencu ${reference}.`,
+        { paymentId, reference }
+      ),
+      'checkout_in_app_notification'
+    );
+
+    return {
+      paymentId,
+      reference,
+      amount,
+      currency: currency.toUpperCase(),
+      instructions,
+    };
+  }
+
+  async markManualPaymentSent(paymentId: string, userId: string): Promise<void> {
+    const { rows } = await this.db.execute<{ user_id: string; status: string }>(
+      `SELECT user_id, status FROM payments WHERE id = $1 AND provider = 'manual'`,
+      [paymentId]
+    );
+
+    if (!rows[0] || rows[0].user_id !== userId) throw new NotFoundError('Payment');
+    if (rows[0].status !== 'pending') {
+      throw new PaymentError(`Payment is already '${rows[0].status}'`);
+    }
+
+    await this.db.execute(
+      `UPDATE payments SET status = 'processing', updated_at = NOW() WHERE id = $1`,
+      [paymentId]
+    );
+
+    logger.info('Manual payment marked as sent', { paymentId, userId });
+
+    const { rows: paymentRows } = await this.db.getPaymentByIdForUser(paymentId, userId, 'manual');
+    const payment = paymentRows[0];
+    if (!payment) return;
+
+    const metadata = parsePaymentMetadata(payment.metadata);
+    const planSlug = String(metadata.planSlug ?? '');
+    const billingCycle = String(metadata.billingCycle ?? 'monthly');
+    const reference = String(metadata.reference ?? '');
+    if (!planSlug) return;
+
+    const plan = await billingService.getPlanBySlug(planSlug);
+    const { rows: userRows } = await this.db.getUserById(userId);
+    const user = userRows[0];
+    if (!user) return;
+
+    dispatchPaymentSideEffect(
+      paymentNotifications.notifyAdminPaymentPending({
+        userEmail: user.email,
+        userName: user.name,
+        planName: plan.name,
+        billingCycle,
+        amount: Number(payment.amount),
+        currency: payment.currency,
+        reference,
+        paymentId,
+      }),
+      'admin_pending_email'
+    );
+  }
+
+  private async activateLocalSubscription(
+    client: PoolClient,
+    userId: string,
+    planId: string,
+    billingCycle: 'monthly' | 'yearly'
+  ): Promise<{ subscriptionId: string; periodStart: Date; periodEnd: Date }> {
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + (billingCycle === 'yearly' ? 12 : 1));
+
+    const { rows: subRows } = await client.query<{ id: string }>(
+      `INSERT INTO subscriptions
+         (user_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
+       VALUES ($1, $2, 'active', $3, $4, $5)
+       RETURNING id`,
+      [userId, planId, billingCycle, now, periodEnd]
+    );
+
+    await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [userId, planId]);
+    return { subscriptionId: subRows[0].id, periodStart: now, periodEnd };
+  }
+
+  // ========================
+  // KRIPTOMAN (crypto checkout)
+  // ========================
+
+  async createKriptomanCheckout(
+    userId: string,
+    planSlug: string,
+    billingCycle: 'monthly' | 'yearly',
+    cryptoCurrency?: string
+  ) {
+    const client = getKriptomanClient();
+    if (!config.kriptoman.enabled || !client.isConfigured()) {
+      throw new PaymentError(
+        'Kriptoman is not enabled. Set KRIPTOMAN_ENABLED=true and KRIPTOMAN_URL + KRIPTOMAN_API_KEY (or FINANCE aggregator).'
+      );
+    }
+
+    const plan = await billingService.getPlanBySlug(planSlug);
+    const amount = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+    const currency = config.payments.manual.currency || 'EUR';
+    const asset = (cryptoCurrency ?? config.kriptoman.defaultCrypto).toUpperCase();
+
+    const { rows } = await this.db.execute<{ id: string }>(
+      `INSERT INTO payments
+         (user_id, amount, currency, status, provider, description, metadata)
+       VALUES ($1, $2, $3, 'pending', 'kriptoman', $4, $5)
+       RETURNING id`,
+      [
+        userId,
+        amount,
+        currency.toUpperCase(),
+        `Kriptoman — ${plan.name} (${billingCycle})`,
+        JSON.stringify({ planSlug, billingCycle, cryptoCurrency: asset }),
+      ]
+    );
+
+    const paymentId = rows[0].id;
+    const callbackUrl = `${config.app.url}/api/v1/payments/kriptoman/webhook`;
+    const invoice = await client.createInvoice({
+      externalId: paymentId,
+      amount,
+      currency: currency.toUpperCase(),
+      cryptoCurrency: asset,
+      description: `${plan.name} ${billingCycle}`,
+      callbackUrl,
+      successUrl: `${config.app.url}/billing/success?provider=kriptoman&payment_id=${paymentId}`,
+      cancelUrl: `${config.app.url}/billing/cancel?provider=kriptoman`,
+      metadata: { userId, planSlug, billingCycle, paymentId },
+    });
+
+    if (!invoice) {
+      throw new PaymentError('Kriptoman invoice creation failed');
+    }
+
+    await this.db.execute(
+      `UPDATE payments
+       SET provider_payment_id = $2,
+           metadata = metadata || $3::jsonb,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [
+        paymentId,
+        invoice.invoiceId,
+        JSON.stringify({
+          planSlug,
+          billingCycle,
+          cryptoCurrency: asset,
+          kriptoman: {
+            paymentUrl: invoice.paymentUrl,
+            payAddress: invoice.payAddress,
+            cryptoAmount: invoice.cryptoAmount,
+            expiresAt: invoice.expiresAt,
+          },
+        }),
+      ]
+    );
+
+    return {
+      paymentId,
+      invoiceId: invoice.invoiceId,
+      paymentUrl: invoice.paymentUrl,
+      payAddress: invoice.payAddress,
+      cryptoAmount: invoice.cryptoAmount,
+      cryptoCurrency: invoice.cryptoCurrency ?? asset,
+      amount,
+      currency: currency.toUpperCase(),
+      expiresAt: invoice.expiresAt,
+    };
+  }
+
+  async handleKriptomanWebhook(rawBody: Buffer | string, signatureHeader: string): Promise<void> {
+    const client = getKriptomanClient();
+    if (!client.verifyWebhookSignature(rawBody, signatureHeader)) {
+      throw new PaymentError('Invalid Kriptoman webhook signature');
+    }
+
+    const parsed =
+      typeof rawBody === 'string' ? JSON.parse(rawBody || '{}') : JSON.parse(rawBody.toString('utf8') || '{}');
+    const event = client.parseWebhookPayload(parsed);
+    if (!client.isPaidStatus(event.status)) {
+      logger.info('Kriptoman webhook ignored (non-paid status)', { status: event.status });
+      return;
+    }
+
+    await this.completeKriptomanPayment(event.invoiceId, event.externalId);
+  }
+
+  async syncKriptomanPayment(paymentId: string, userId: string): Promise<{ status: string; activated: boolean }> {
+    const { rows } = await this.db.execute<{
+      status: string;
+      provider_payment_id: string | null;
+    }>(
+      `SELECT status, provider_payment_id FROM payments
+       WHERE id = $1 AND user_id = $2 AND provider = 'kriptoman'`,
+      [paymentId, userId]
+    );
+    if (!rows[0]) throw new NotFoundError('Payment');
+    if (rows[0].status === 'completed') {
+      return { status: 'completed', activated: true };
+    }
+
+    const invoiceId = rows[0].provider_payment_id;
+    if (!invoiceId) throw new PaymentError('Kriptoman invoice id missing');
+
+    const remoteStatus = await getKriptomanClient().getInvoiceStatus(invoiceId);
+    if (!remoteStatus || !getKriptomanClient().isPaidStatus(remoteStatus)) {
+      return { status: rows[0].status, activated: false };
+    }
+
+    await this.completeKriptomanPayment(invoiceId, paymentId);
+    return { status: 'completed', activated: true };
+  }
+
+  private async completeKriptomanPayment(
+    invoiceId: string | undefined,
+    externalId: string | undefined
+  ): Promise<void> {
+    let paymentId = externalId;
+    if (!paymentId && invoiceId) {
+      const { rows } = await this.db.execute<{ id: string }>(
+        `SELECT id FROM payments
+         WHERE provider = 'kriptoman' AND provider_payment_id = $1
+         LIMIT 1`,
+        [invoiceId]
+      );
+      paymentId = rows[0]?.id;
+    }
+
+    if (!paymentId) {
+      logger.warn('Kriptoman webhook: payment not found', { invoiceId, externalId });
+      return;
+    }
+
+    const { rows: statusRows } = await this.db.execute<{ status: string }>(
+      `SELECT status FROM payments WHERE id = $1 AND provider = 'kriptoman'`,
+      [paymentId]
+    );
+    if (!statusRows[0]) return;
+    if (statusRows[0].status === 'completed') return;
+
+    await this.confirmPendingPayment(paymentId, 'kriptoman-webhook', 'kriptoman');
   }
 
   async getPaymentHistory(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    const { rows: countRows } = await query<{ count: string }>(
+    const { rows: countRows } = await this.db.execute<{ count: string }>(
       'SELECT COUNT(*) FROM payments WHERE user_id = $1', [userId]
     );
-    const { rows } = await query(
+    const { rows } = await this.db.execute(
       `SELECT * FROM payments WHERE user_id = $1
        ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       [userId, limit, offset]

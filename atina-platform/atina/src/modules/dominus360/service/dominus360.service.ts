@@ -1,6 +1,7 @@
 import { getAiClient } from '../../../integrations';
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import type { CreateDominusDtoType, RunDominusDtoType } from '../dto/dominus360.dto';
+import { DOMINUS_SUBMODULES } from '../dominus360-submodules';
 import { Dominus360Repository } from '../repository/dominus360.repository';
 
 function nonNegativeForecastCount(value: unknown): number {
@@ -11,6 +12,10 @@ function nonNegativeForecastCount(value: unknown): number {
 export class Dominus360Service {
   private readonly repo = new Dominus360Repository();
   private readonly ai = getAiClient();
+
+  getSubmodules() {
+    return DOMINUS_SUBMODULES;
+  }
 
   async list(userId: string) {
     const { rows } = await this.repo.listByUser(userId);

@@ -9,3 +9,6 @@ ffmpeg-python==0.2.0
 Pillow==10.2.0
 numpy==1.26.4
 tqdm==4.66.2
+# Optional — YouTube Data API upload (manager_task)
+# google-api-python-client>=2.120.0
+# google-auth-oauthlib>=1.2.0

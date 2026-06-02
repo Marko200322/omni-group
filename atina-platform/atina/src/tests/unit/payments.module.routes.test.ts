@@ -41,6 +41,10 @@ describe('PaymentsModule HTTP routes', () => {
   let capturePayPalOrderSpy: jest.SpyInstance;
   let createWiseTransferSpy: jest.SpyInstance;
   let confirmWisePaymentSpy: jest.SpyInstance;
+  let getPaymentMethodsSpy: jest.SpyInstance;
+  let createManualCheckoutSpy: jest.SpyInstance;
+  let markManualPaymentSentSpy: jest.SpyInstance;
+  let confirmManualPaymentSpy: jest.SpyInstance;
 
   const WISE_PAYMENT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -88,6 +92,16 @@ describe('PaymentsModule HTTP routes', () => {
     confirmWisePaymentSpy = jest
       .spyOn(PaymentsService.prototype, 'confirmWisePayment')
       .mockResolvedValue(undefined);
+    getPaymentMethodsSpy = jest
+      .spyOn(PaymentsService.prototype, 'getPaymentMethods')
+      .mockReturnValue({ mode: 'manual', methods: [], manualConfigured: false, note: undefined });
+    createManualCheckoutSpy = jest
+      .spyOn(PaymentsService.prototype, 'createManualCheckout')
+      .mockResolvedValue({ paymentId: 'p-manual', reference: 'ATINA-X', amount: 29, currency: 'EUR', instructions: {} });
+    markManualPaymentSentSpy = jest
+      .spyOn(PaymentsService.prototype, 'markManualPaymentSent')
+      .mockResolvedValue(undefined);
+    confirmManualPaymentSpy = jest.spyOn(PaymentsService.prototype, 'confirmPendingPayment').mockResolvedValue(undefined);
   });
 
   afterAll(async () => {
@@ -356,5 +370,28 @@ describe('PaymentsModule HTTP routes', () => {
       .send({ note: 'x' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('GET /payments/methods is public', async () => {
+    const res = await request(server).get('/payments/methods');
+    expect(res.status).toBe(200);
+    expect(getPaymentMethodsSpy).toHaveBeenCalled();
+  });
+
+  it('POST /payments/manual/checkout requires auth', async () => {
+    paymentsAuthOn = false;
+    const res = await request(server)
+      .post('/payments/manual/checkout')
+      .send({ planSlug: 'pro', billingCycle: 'monthly' });
+    expect(res.status).toBe(401);
+    expect(createManualCheckoutSpy).not.toHaveBeenCalled();
+  });
+
+  it('POST /payments/manual/checkout creates checkout when authed', async () => {
+    const res = await request(server)
+      .post('/payments/manual/checkout')
+      .send({ planSlug: 'pro', billingCycle: 'monthly' });
+    expect(res.status).toBe(201);
+    expect(createManualCheckoutSpy).toHaveBeenCalledWith('u1', 'pro', 'monthly');
   });
 });

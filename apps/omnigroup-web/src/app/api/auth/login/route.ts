@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { atinaLogin } from '@/lib/atina-auth';
-import { buildAuthSession, setSessionCookie, isAdminRole } from '@/lib/auth-session';
+import { buildAuthSession, setSessionCookie } from '@/lib/auth-session';
 
 export async function POST(req: Request) {
   let body: { email?: string; password?: string; rememberMe?: boolean } = {};
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     });
     await setSessionCookie(session);
 
-    const redirectTo = isAdminRole(result.user.role) ? '/admin' : '/dashboard';
+    const redirectTo = '/dashboard';
     return NextResponse.json({
       ok: true,
       redirectTo,

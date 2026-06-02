@@ -9,6 +9,13 @@ import { sendError } from '../../utils/response';
 import { AppError, AuthenticationError } from '../../utils/errors';
 
 jest.mock('axios');
+jest.mock('../../integrations', () => ({
+  ...jest.requireActual('../../integrations'),
+  getScraperClient: () => ({
+    isConfigured: () => false,
+    scrape: jest.fn().mockResolvedValue(null),
+  }),
+}));
 jest.mock('../../queue/queue', () => ({
   addJob: jest.fn(),
 }));
@@ -344,6 +351,7 @@ describe('ScraperModule HTTP routes', () => {
 
   it('POST /scraper/scrape/bulk queues and completes background work', async () => {
     mockQuery
+      .mockResolvedValueOnce(planWithScraper())
       .mockResolvedValueOnce({ rows: [{ id: 'bulk1' }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
@@ -367,6 +375,7 @@ describe('ScraperModule HTTP routes', () => {
 
   it('POST /scraper/scrape/bulk records per-url errors in results', async () => {
     mockQuery
+      .mockResolvedValueOnce(planWithScraper())
       .mockResolvedValueOnce({ rows: [{ id: 'bulk-mix' }], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
       .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
@@ -394,6 +403,7 @@ describe('ScraperModule HTTP routes', () => {
 
   it('POST /scraper/scrape/bulk background failure updates task', async () => {
     mockQuery
+      .mockResolvedValueOnce(planWithScraper())
       .mockResolvedValueOnce({ rows: [{ id: 'bulk2' }], rowCount: 1 } as never)
       .mockRejectedValueOnce(new Error('db running'))
       .mockResolvedValue({ rows: [], rowCount: 1 } as never);

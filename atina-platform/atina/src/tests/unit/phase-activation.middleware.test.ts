@@ -17,11 +17,21 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
+const originalPhase = process.env.PHASE;
 
 describe('phase activation middleware', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetPhaseActivationCache();
+    delete process.env.PHASE;
+  });
+
+  afterAll(() => {
+    if (originalPhase !== undefined) {
+      process.env.PHASE = originalPhase;
+    } else {
+      delete process.env.PHASE;
+    }
   });
 
   it('returns lock/unlock status for atina modules at v2', () => {

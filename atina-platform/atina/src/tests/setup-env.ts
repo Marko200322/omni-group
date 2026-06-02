@@ -1,40 +1,10 @@
-/**
- * Avoid Winston file transports during tests (open FDs keep Jest alive).
- */
-jest.mock('../utils/logger', () => ({
-  __esModule: true,
-  default: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    log: jest.fn(),
-    close: jest.fn(),
-  },
-}));
-
+const runnerEnvSnapshot = { ...process.env };
+const runnerPreserveKeys = ['CI','GITHUB_ACTIONS','RUNNER_OS','PATH','HOME','USER','TEMP','TMP','NODE_OPTIONS'] as const;
+afterEach(() => { for (const key of runnerPreserveKeys) { const v = runnerEnvSnapshot[key]; if (v !== undefined) process.env[key] = v; } });
+jest.mock('../utils/logger', () => ({ __esModule: true, default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), log: jest.fn(), close: jest.fn() } }));
 afterAll(async () => {
-  // Ensure no global resources keep Jest alive across files.
-  // Import each teardown target separately: connection.ts instantiates Pool at load time
-  // and fails if `config.database` is unset (e.g. single-file Jest runs).
-  type QueueTeardown = { closeAllQueues?: () => Promise<void> };
-  type DbTeardown = { closePool?: () => Promise<void> };
-  type RegistryTeardown = { moduleRegistry?: { shutdownAll?: () => Promise<void>; resetForTests?: () => void } };
-
-  const queueModule: QueueTeardown = await import('../queue/queue').catch(() => ({}));
-  const dbModule: DbTeardown = await import('../database/connection').catch(() => ({}));
-  const registryModule: RegistryTeardown = await import('../core/ModuleRegistry').catch(() => ({}));
-
-  const closeAllQueues = typeof queueModule.closeAllQueues === 'function'
-    ? queueModule.closeAllQueues()
-    : Promise.resolve();
-  const closePool = typeof dbModule.closePool === 'function'
-    ? dbModule.closePool()
-    : Promise.resolve();
-  const shutdownModules = typeof registryModule.moduleRegistry?.shutdownAll === 'function'
-    ? registryModule.moduleRegistry.shutdownAll()
-    : Promise.resolve();
-
-  await Promise.allSettled([closeAllQueues, closePool, shutdownModules]);
-  registryModule.moduleRegistry?.resetForTests?.();
+  type Q = { closeAllQueues?: () => Promise<void> }; type D = { closePool?: () => Promise<void> }; type R = { moduleRegistry?: { shutdownAll?: () => Promise<void>; resetForTests?: () => void } };
+  const q: Q = await import('../queue/queue').catch(() => ({})); const d: D = await import('../database/connection').catch(() => ({})); const r: R = await import('../core/ModuleRegistry').catch(() => ({}));
+  await Promise.allSettled([(typeof q.closeAllQueues === 'function' ? q.closeAllQueues() : Promise.resolve()), (typeof d.closePool === 'function' ? d.closePool() : Promise.resolve()), (typeof r.moduleRegistry?.shutdownAll === 'function' ? r.moduleRegistry.shutdownAll() : Promise.resolve())]);
+  r.moduleRegistry?.resetForTests?.();
 });

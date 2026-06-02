@@ -7,6 +7,17 @@ import { TitanMasterModule } from '../../modules/titan-master/titan-master.modul
 import { sendError } from '../../utils/response';
 import { AppError } from '../../utils/errors';
 
+jest.mock('../../integrations', () => ({
+  getAiClient: () => ({ isConfigured: () => false, fetchRecommendations: jest.fn() }),
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
+jest.mock('../../modules/autonomy-loop/service/autonomy-orchestrator.service', () => ({
+  AutonomyOrchestratorService: jest.fn().mockImplementation(() => ({
+    expandFromTitanMaster: jest.fn().mockResolvedValue({ status: 'skipped' }),
+  })),
+}));
+
 jest.mock('../../database/connection');
 
 let titanMasterAuthOn = true;

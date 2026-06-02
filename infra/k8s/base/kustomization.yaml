@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: omni-group
+
+resources:
+  - namespace.yaml
+  - postgres/statefulset.yaml
+  - postgres/service.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  - atina-saas/deployment.yaml
+  - atina-saas/service.yaml
+  - nest-api/deployment.yaml
+  - nest-api/service.yaml
+  - omnigroup-web/deployment.yaml
+  - omnigroup-web/service.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: omni-group
+  app.kubernetes.io/managed-by: kustomize

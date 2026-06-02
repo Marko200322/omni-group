@@ -34,7 +34,7 @@
 | 1.8 | Migracija `010_leads_compat_view.sql` (view `leads`) | [x] — lokalno `npm run migrate` 2026-05-21; staging/prod = vlasnik |
 | 1.9 | PayPal/Wise kroz `FINANCE` agregator (ne samo direktni env) | [x] 2026-05-20 |
 | 1.10 | `emails` / `scraper` Bull workeri — registrovati procesore (ne samo `tasks`) | [x] 2026-05-20 |
-| 1.11 | Dok: ažurirati [`AGENT-HANDOFF-OSTALO.md`](./AGENT-HANDOFF-OSTALO.md) posle Val test:ci | [x] 2026-05-21 § Audit |
+| 1.11 | Dok: ažurirati [`AGENT-HANDOFF-OSTALO.md`](./AGENT-HANDOFF-OSTALO.md) posle Val test:ci | [x] 2026-05-21 § Audit + C-S-R platform moduli |
 
 ---
 
@@ -63,6 +63,18 @@
 | **digital-signature** | Stub fajl | [x] C-S-R + BUSINESS_AND_DEV opcija 2026-05-20 |
 | **package-pricing** | Stub fajl | [x] C-S-R (logika u service + stub compute) 2026-05-20 |
 | **recommendation / ai-memory** | AI poziv u `.module.ts` | [x] C-S-R + AI u service 2026-05-20 |
+
+### 2.2b Platform moduli — C-S-R (SaaS jezgro)
+
+| Modul | Šta | Status |
+|-------|-----|--------|
+| **billing** | `billing.repository.ts` — planovi, fakture, limiti | [x] 2026-05-21 |
+| **payments** | `payments.repository.ts` — DB preko `execute`/`runInTransaction` | [x] 2026-05-21 |
+| **resource-management** | `resource-management.repository.ts` — budget/ROI/logs | [x] 2026-05-21 |
+| **phase-launch** | `phase-launch.repository.ts` — flag + audit | [x] 2026-05-21 |
+| **tasks / workflow-chain** | Faza 4 | [x] 2026-05-21 |
+
+**Preostalo (niski prioritet):** `self-healing`, `ai-memory` (SQL još u service), `admin.service` split.
 
 ### 2.3 Prioritet 3 — ostali ecosystem (partial → bolje)
 

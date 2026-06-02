@@ -1,5 +1,6 @@
 import { addJob } from '../../../queue/queue';
 import { NotFoundError } from '../../../utils/errors';
+import { getSteamworksStatus } from '../providers/steamworks.provider';
 import { executeOmnigameValidate } from '../../tasks/task-executors';
 import { CreateOmniGameDtoType, RunOmniGameDtoType } from '../dto/omnigame.dto';
 import { OmniGameRepository } from '../repository/omnigame.repository';
@@ -42,6 +43,7 @@ export class OmniGameService {
       details: {
         validation_score: validation?.validation_score ?? runScore,
         steam_trends: validation?.steam_trends_scraped ?? false,
+        steamworks: validation?.steamworks ?? getSteamworksStatus(),
         build_ready: validation?.build_ready ?? false,
       },
     };

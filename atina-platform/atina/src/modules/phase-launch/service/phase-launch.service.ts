@@ -1,8 +1,12 @@
 import { PhaseLaunchRepository } from '../repository/phase-launch.repository';
 import { SetPhaseDtoType } from '../dto/phase-launch.dto';
-import { query } from '../../../database/connection';
 import { getInfrastructureClient } from '../../../integrations';
-import { getModulePhaseGatingStatus, getPhaseOrder, type Phase } from '../middleware/phase-activation.middleware';
+import {
+  getModulePhaseGatingStatus,
+  getPhaseOrder,
+  resetPhaseActivationCache,
+  type Phase,
+} from '../middleware/phase-activation.middleware';
 
 export class PhaseLaunchService {
   private readonly repo = new PhaseLaunchRepository();
@@ -22,6 +26,7 @@ export class PhaseLaunchService {
   async setCurrentPhase(dto: SetPhaseDtoType) {
     await this.repo.ensureFlag();
     await this.repo.setFlag(dto.phase, dto.notes ?? '');
+    resetPhaseActivationCache();
     return this.getCurrentPhase();
   }
 
@@ -30,21 +35,16 @@ export class PhaseLaunchService {
     const after = await this.setCurrentPhase(dto);
     const auditTimestamp = new Date().toISOString();
 
-    await query(
-      `INSERT INTO audit_events
-       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
-       VALUES ($1, 'phase_launch_updated', 'system', 'phase-launch-control', 'info', $2)`,
-      [
-        actorUserId,
-        JSON.stringify({
-          timestamp: auditTimestamp,
-          fromPhase: before.currentPhase,
-          toPhase: after.currentPhase,
-          notes: after.notes,
-          phaseOrder: getPhaseOrder(),
-          gatingSnapshot: getModulePhaseGatingStatus(after.currentPhase as Phase),
-        }),
-      ]
+    await this.repo.insertPhaseLaunchAudit(
+      actorUserId,
+      JSON.stringify({
+        timestamp: auditTimestamp,
+        fromPhase: before.currentPhase,
+        toPhase: after.currentPhase,
+        notes: after.notes,
+        phaseOrder: getPhaseOrder(),
+        gatingSnapshot: getModulePhaseGatingStatus(after.currentPhase as Phase),
+      })
     );
 
     let deploy: Record<string, unknown> | null = null;

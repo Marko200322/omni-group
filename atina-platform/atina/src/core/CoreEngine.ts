@@ -23,6 +23,7 @@ import { UsersModule } from '../modules/users/users.module';
 import { BillingModule } from '../modules/billing/billing.module';
 import { SubscriptionsModule } from '../modules/subscriptions/subscriptions.module';
 import { PaymentsModule } from '../modules/payments/payments.module';
+import { VideoMeetingsModule } from '../modules/video-meetings/video-meetings.module';
 import { TasksModule } from '../modules/tasks/tasks.module';
 import { AutomationModule } from '../modules/automation/automation.module';
 import { CrmModule } from '../modules/crm/crm.module';
@@ -67,6 +68,10 @@ import { AuditLogModule } from '../modules/audit-log/audit-log.module';
 import { SelfHealingModule } from '../modules/self-healing/self-healing.module';
 import { WorkflowChainModule } from '../modules/workflow-chain/workflow-chain.module';
 import { ForgeModule } from '../modules/forge/forge.module';
+import { AlertSystemModule } from '../modules/alert-system/alert-system.module';
+import { ScalingModule } from '../modules/scaling/scaling.module';
+import { AiRagModule } from '../modules/ai-rag/ai-rag.module';
+import { AutonomyLoopModule } from '../modules/autonomy-loop/autonomy-loop.module';
 import { DealOfferModule } from '../modules/deal-offer/deal-offer.module';
 import { FollowUpModule } from '../modules/follow-up/follow-up.module';
 import { FollowUpAutomationModule } from '../modules/follow-up-automation/follow-up-automation.module';
@@ -115,6 +120,7 @@ export class CoreEngine {
     moduleRegistry.register(new BillingModule());
     moduleRegistry.register(new SubscriptionsModule());
     moduleRegistry.register(new PaymentsModule());
+    moduleRegistry.register(new VideoMeetingsModule());
     moduleRegistry.register(new TasksModule());
     if (config.features.crm) moduleRegistry.register(new CrmModule());
     moduleRegistry.register(new TemplateEngineModule());
@@ -160,6 +166,10 @@ export class CoreEngine {
     moduleRegistry.register(new SelfHealingModule());
     moduleRegistry.register(new WorkflowChainModule());
     moduleRegistry.register(new ForgeModule());
+    moduleRegistry.register(new AlertSystemModule());
+    moduleRegistry.register(new ScalingModule());
+    moduleRegistry.register(new AiRagModule());
+    moduleRegistry.register(new AutonomyLoopModule());
 
     if (config.features.automation) moduleRegistry.register(new AutomationModule());
     if (config.features.scraper) moduleRegistry.register(new ScraperModule());
@@ -185,6 +195,7 @@ export class CoreEngine {
 
     // Body parsing — stripe webhooks need raw body
     this.app.use('/api/v1/payments/stripe/webhook', express.raw({ type: 'application/json' }));
+    this.app.use('/api/v1/payments/kriptoman/webhook', express.raw({ type: 'application/json' }));
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

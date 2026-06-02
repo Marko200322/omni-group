@@ -106,7 +106,10 @@ def beast_task(self, job: dict[str, Any]) -> dict[str, Any]:
 
 @celery_app.task(bind=True)
 def manager_task(self, job: dict[str, Any]) -> dict[str, Any]:
+    from app.youtube_upload import upload_video_if_configured
+
     logger.info("VIDEO READY: {}", job.get("output_path"))
+    job = upload_video_if_configured(job)
     job["status"] = "complete"
     return job
 

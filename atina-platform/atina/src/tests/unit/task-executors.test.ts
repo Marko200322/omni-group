@@ -94,11 +94,12 @@ describe('task-executors', () => {
       mockScraper.isConfigured.mockReturnValue(true);
       mockScraper.scrape.mockResolvedValue({ links: ['a'] });
       const out = await executeOmnigameValidate({ genre: 'rpg' });
-      expect(out).toEqual({
+      expect(out).toMatchObject({
         genre: 'rpg',
         steam_trends_scraped: true,
         validation_score: 78,
         build_ready: true,
+        steamworks: expect.objectContaining({ status: expect.any(String) }),
       });
     });
 
@@ -106,6 +107,17 @@ describe('task-executors', () => {
       const out = await executeOmnigameValidate({});
       expect(out.validation_score).toBe(62);
       expect(out.steam_trends_scraped).toBe(false);
+      expect(out.steamworks).toMatchObject({ status: 'n/a' });
+    });
+
+    it('treats STEAM_WEB_API_KEY as trend signal when scraper is off', async () => {
+      const steamBackup = config.steam.webApiKey;
+      config.steam.webApiKey = 'test-steam-key';
+      const out = await executeOmnigameValidate({ genre: 'strategy' });
+      config.steam.webApiKey = steamBackup;
+      expect((out.steamworks as { status: string }).status).toBe('configured');
+      expect(out.validation_score).toBe(78);
+      expect(out.build_ready).toBe(true);
     });
   });
 

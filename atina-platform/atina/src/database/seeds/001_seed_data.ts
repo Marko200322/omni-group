@@ -8,11 +8,11 @@ async function seedPlans(): Promise<void> {
 
   const plans = [
     {
-      name: 'Starter',
+      name: 'Poslovni',
       slug: 'starter',
-      description: 'Perfect for individuals and small projects',
-      price_monthly: 9.99,
-      price_yearly: 99.00,
+      description: 'Za preduzetnike i solo timove — dashboard, osnovni CRM, email podrška.',
+      price_monthly: 39.00,
+      price_yearly: 390.00,
       is_popular: false,
       sort_order: 1,
       features: {
@@ -34,11 +34,11 @@ async function seedPlans(): Promise<void> {
       },
     },
     {
-      name: 'Pro',
+      name: 'Rast',
       slug: 'pro',
-      description: 'For growing teams and businesses',
-      price_monthly: 49.99,
-      price_yearly: 499.00,
+      description: 'Za rastuće timove — automatizacije, CRM, scraper, AI avatar podrška.',
+      price_monthly: 99.00,
+      price_yearly: 990.00,
       is_popular: true,
       sort_order: 2,
       features: {
@@ -62,11 +62,11 @@ async function seedPlans(): Promise<void> {
       },
     },
     {
-      name: 'Enterprise',
+      name: 'Partner',
       slug: 'enterprise',
-      description: 'Full power for large organizations',
-      price_monthly: 199.99,
-      price_yearly: 1999.00,
+      description: 'Za partnere i veće organizacije — svi moduli, white-label, SLA.',
+      price_monthly: 249.00,
+      price_yearly: 2490.00,
       is_popular: false,
       sort_order: 3,
       features: {
@@ -96,11 +96,14 @@ async function seedPlans(): Promise<void> {
 
   for (const plan of plans) {
     await query(
-      `INSERT INTO plans (name, slug, description, price_monthly, price_yearly, is_popular, sort_order, features, limits)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO plans (name, slug, description, price_monthly, price_yearly, currency, is_popular, sort_order, features, limits)
+       VALUES ($1, $2, $3, $4, $5, 'EUR', $6, $7, $8, $9)
        ON CONFLICT (slug) DO UPDATE SET
+         name = EXCLUDED.name,
+         description = EXCLUDED.description,
          price_monthly = EXCLUDED.price_monthly,
          price_yearly = EXCLUDED.price_yearly,
+         currency = EXCLUDED.currency,
          features = EXCLUDED.features,
          limits = EXCLUDED.limits,
          updated_at = NOW()`,
@@ -160,6 +163,7 @@ async function seedModules(): Promise<void> {
     { name: 'Admin Panel', slug: 'admin', description: 'Platform administration tools', is_core: true, required_plan: null },
     { name: 'Subscriptions', slug: 'subscriptions', description: 'Subscription lifecycle management', is_core: true, required_plan: null },
     { name: 'Payments', slug: 'payments', description: 'Multi-provider payment processing', is_core: true, required_plan: null },
+    { name: 'Video Meetings', slug: 'video-meetings', description: 'Support and sales video calls via Zoom, Google Meet, or manual scheduling', is_core: true, required_plan: null },
   ];
 
   for (const mod of modules) {

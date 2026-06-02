@@ -1,4 +1,5 @@
 import { TasksModule } from '../../modules/tasks/tasks.module';
+import * as taskExecution from '../../modules/tasks/execute-task-by-type';
 import * as db from '../../database/connection';
 import * as queue from '../../queue/queue';
 import logger from '../../utils/logger';
@@ -112,8 +113,7 @@ describe('TasksModule', () => {
     it('on failure retries when not last attempt', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 1 } as never);
       const err = new Error('transient');
-      const proto = TasksModule.prototype as unknown as { executeTask: () => Promise<unknown> };
-      const execSpy = jest.spyOn(proto, 'executeTask').mockRejectedValueOnce(err);
+      const execSpy = jest.spyOn(taskExecution, 'executeTaskByType').mockRejectedValueOnce(err);
 
       await expect(worker(job('send_email', {}, 0, 3))).rejects.toBe(err);
       const args = mockQuery.mock.calls.map((c) => c[1] as unknown[]);
@@ -124,8 +124,7 @@ describe('TasksModule', () => {
 
     it('on failure marks failed on last attempt', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 1 } as never);
-      const proto = TasksModule.prototype as unknown as { executeTask: () => Promise<unknown> };
-      jest.spyOn(proto, 'executeTask').mockRejectedValueOnce(new Error('fatal'));
+      jest.spyOn(taskExecution, 'executeTaskByType').mockRejectedValueOnce(new Error('fatal'));
 
       await worker(job('send_email', {}, 2, 3));
 
@@ -135,8 +134,7 @@ describe('TasksModule', () => {
 
     it('uses default attempts (3) when job.opts.attempts is omitted', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 1 } as never);
-      const proto = TasksModule.prototype as unknown as { executeTask: () => Promise<unknown> };
-      const spy = jest.spyOn(proto, 'executeTask').mockRejectedValue(new Error('e'));
+      const spy = jest.spyOn(taskExecution, 'executeTaskByType').mockRejectedValue(new Error('e'));
 
       await expect(worker(job('send_email', {}, 1))).rejects.toThrow('e');
       expect(
@@ -155,8 +153,7 @@ describe('TasksModule', () => {
 
     it('respects custom job.opts.attempts for last-attempt boundary', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 1 } as never);
-      const proto = TasksModule.prototype as unknown as { executeTask: () => Promise<unknown> };
-      const spy = jest.spyOn(proto, 'executeTask').mockRejectedValue(new Error('e'));
+      const spy = jest.spyOn(taskExecution, 'executeTaskByType').mockRejectedValue(new Error('e'));
 
       await expect(worker(job('send_email', {}, 3, 5))).rejects.toThrow('e');
       expect(

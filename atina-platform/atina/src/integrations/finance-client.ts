@@ -36,6 +36,14 @@ export class FinanceClient extends AggregatorHttpClient {
   confirmWiseTransfer(paymentId: string, payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
     return this.request('POST', `/v1/wise/transfers/${encodeURIComponent(paymentId)}/confirm`, payload);
   }
+
+  createKriptomanInvoice(payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    return this.request('POST', '/v1/kriptoman/invoices', payload);
+  }
+
+  getKriptomanInvoice(invoiceId: string): Promise<Record<string, unknown> | null> {
+    return this.request('GET', `/v1/kriptoman/invoices/${encodeURIComponent(invoiceId)}`);
+  }
 }
 
 let defaultFinanceClient: FinanceClient | undefined;

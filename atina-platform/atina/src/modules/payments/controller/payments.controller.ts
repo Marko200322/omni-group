@@ -12,6 +12,10 @@ const CheckoutDto = z
   })
   .strict();
 
+const KriptomanCheckoutDto = CheckoutDto.extend({
+  cryptoCurrency: z.string().min(2).max(12).optional(),
+}).strict();
+
 export class PaymentsController {
   private service: PaymentsService;
 
@@ -76,5 +80,66 @@ export class PaymentsController {
     const { page, limit } = req.query as unknown as z.infer<typeof PaymentHistoryQueryDto>;
     const { payments, total } = await this.service.getPaymentHistory(req.user!.userId, page, limit);
     paginate(res, payments, total, page, limit);
+  };
+
+  getPaymentMethods = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, this.service.getPaymentMethods());
+  };
+
+  createManualCheckout = async (req: Request, res: Response): Promise<void> => {
+    const { planSlug, billingCycle } = CheckoutDto.parse(req.body);
+    const result = await this.service.createManualCheckout(req.user!.userId, planSlug, billingCycle);
+    sendCreated(res, result, 'Bank transfer instructions generated');
+  };
+
+  markManualPaymentSent = async (req: Request, res: Response): Promise<void> => {
+    await this.service.markManualPaymentSent(req.params.paymentId, req.user!.userId);
+    sendSuccess(res, null, 'Payment marked as sent — awaiting admin confirmation');
+  };
+
+  confirmManualPayment = async (req: Request, res: Response): Promise<void> => {
+    await this.service.confirmPendingPayment(req.params.paymentId, req.user!.userId, 'manual');
+    sendSuccess(res, null, 'Payment confirmed and subscription activated');
+  };
+
+  createKriptomanCheckout = async (req: Request, res: Response): Promise<void> => {
+    const { planSlug, billingCycle, cryptoCurrency } = KriptomanCheckoutDto.parse(req.body);
+    const result = await this.service.createKriptomanCheckout(
+      req.user!.userId,
+      planSlug,
+      billingCycle,
+      cryptoCurrency
+    );
+    sendCreated(res, result, 'Kriptoman checkout created');
+  };
+
+  kriptomanWebhook = async (req: Request, res: Response): Promise<void> => {
+    const sig =
+      headerFirst(req.headers['x-kriptoman-signature']) ??
+      headerFirst(req.headers['x-signature']) ??
+      '';
+    const raw = Buffer.isBuffer(req.body)
+      ? req.body
+      : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {}));
+    await this.service.handleKriptomanWebhook(raw, sig);
+    res.status(200).json({
+      success: true,
+      message: 'Webhook received',
+      data: { received: true },
+      received: true,
+    });
+  };
+
+  syncKriptomanPayment = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.service.syncKriptomanPayment(
+      req.params.paymentId,
+      req.user!.userId
+    );
+    sendSuccess(res, result);
+  };
+
+  confirmKriptomanPayment = async (req: Request, res: Response): Promise<void> => {
+    await this.service.confirmPendingPayment(req.params.paymentId, req.user!.userId, 'kriptoman');
+    sendSuccess(res, null, 'Kriptoman payment confirmed and subscription activated');
   };
 }

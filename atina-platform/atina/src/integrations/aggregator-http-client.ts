@@ -21,6 +21,10 @@ export class AggregatorHttpClient {
     return isAggregatorConfigured(this.creds);
   }
 
+  protected getCredentials(): AggregatorCredentials {
+    return this.creds;
+  }
+
   private resolveUrl(path: string): string {
     const base = this.creds.url.trim().replace(/\/$/, '');
     return path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;

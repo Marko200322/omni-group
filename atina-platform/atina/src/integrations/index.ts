@@ -10,3 +10,4 @@ export * from './infrastructure-client';
 export * from './captcha-client';
 export * from './domain-client';
 export * from './web3-storage-client';
+export * from './kriptoman-client';

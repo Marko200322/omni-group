@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { config } from '../../config';
 import { getAiClient, getScraperClient, getStorageClient } from '../../integrations';
+import { getSteamworksStatus } from '../omnigame/providers/steamworks.provider';
 import logger from '../../utils/logger';
 
 export async function executeOmnitubePipeline(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
@@ -54,6 +55,7 @@ export async function executeOmnitubePipeline(payload: Record<string, unknown>):
 export async function executeOmnigameValidate(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
   const scraper = getScraperClient();
   const genre = String(payload.genre ?? 'indie');
+  const steamworks = getSteamworksStatus();
   let steamTrends: Record<string, unknown> | null = null;
 
   if (scraper.isConfigured()) {
@@ -64,11 +66,14 @@ export async function executeOmnigameValidate(payload: Record<string, unknown>):
     });
   }
 
+  const hasTrendSignal = Boolean(steamTrends) || steamworks.status === 'configured';
+
   return {
     genre,
     steam_trends_scraped: Boolean(steamTrends),
-    validation_score: steamTrends ? 78 : 62,
-    build_ready: Boolean(steamTrends),
+    steamworks,
+    validation_score: hasTrendSignal ? 78 : 62,
+    build_ready: hasTrendSignal,
   };
 }
 

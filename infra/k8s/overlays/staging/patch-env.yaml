@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atina-saas
+spec:
+  template:
+    spec:
+      containers:
+        - name: atina-saas
+          env:
+            - name: DB_HOST
+              value: staging-postgres
+            - name: REDIS_HOST
+              value: staging-redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nest-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: nest-api
+          env:
+            - name: POSTGRES_HOST
+              value: staging-postgres
+            - name: REDIS_HOST
+              value: staging-redis

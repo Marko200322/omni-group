@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
+import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession } from '@/lib/auth-session';
-import { fetchAtinaAuthenticated } from '@/lib/atina-auth';
 
 type RecallRow = {
   id?: string;
@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const qs = new URLSearchParams({ namespace });
   if (key) qs.set('key', key);
 
-  const r = await fetchAtinaAuthenticated<RecallRow[]>(
+  const r = await fetchAtinaForBff<RecallRow[]>(
     `/api/v1/ai-memory/recall?${qs.toString()}`,
     session,
     { method: 'GET' },

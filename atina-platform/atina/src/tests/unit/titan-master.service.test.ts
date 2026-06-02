@@ -1,6 +1,17 @@
 import { TitanMasterService } from '../../modules/titan-master/service/titan-master.service';
 import { NotFoundError } from '../../utils/errors';
 
+jest.mock('../../integrations', () => ({
+  getAiClient: () => ({ isConfigured: () => false, fetchRecommendations: jest.fn() }),
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
+jest.mock('../../modules/autonomy-loop/service/autonomy-orchestrator.service', () => ({
+  AutonomyOrchestratorService: jest.fn().mockImplementation(() => ({
+    expandFromTitanMaster: jest.fn().mockResolvedValue({ status: 'skipped' }),
+  })),
+}));
+
 // eslint-disable-next-line no-var
 var titanMasterRepo: {
   listByUser: jest.Mock;

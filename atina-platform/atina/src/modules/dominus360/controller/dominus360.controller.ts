@@ -5,6 +5,10 @@ import { Dominus360Service } from '../service/dominus360.service';
 export class Dominus360Controller {
   private readonly service = new Dominus360Service();
 
+  submodules = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, this.service.getSubmodules(), 'Dominus360 submodule registry');
+  };
+
   list = async (req: Request, res: Response): Promise<void> => {
     sendSuccess(res, await this.service.list(req.user!.userId));
   };

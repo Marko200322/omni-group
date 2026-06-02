@@ -22,6 +22,13 @@ export class Dominus360Module implements IModule {
   }
 
   async initialize(): Promise<void> {
+    this.router.get(
+      '/submodules',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.submodules
+    );
     this.router.get('/', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.list);
     this.router.post('/', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(CreateDominusDto), this.controller.create);
     this.router.post(

@@ -25,6 +25,7 @@ describe('config index (assembled)', () => {
     process.env = {
       ...snapshot,
       NODE_ENV: 'production',
+      PAYMENTS_MODE: 'sandbox',
       JWT_SECRET: 'unit-test-production-jwt-secret-min-32-chars',
       JWT_REFRESH_SECRET: 'unit-test-production-refresh-secret-min-32',
       DB_PASSWORD: 'unit-test-production-db-password-not-default',

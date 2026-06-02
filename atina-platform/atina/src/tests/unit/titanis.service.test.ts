@@ -1,6 +1,11 @@
 import { TitanisService } from '../../modules/titanis/service/titanis.service';
 import { NotFoundError } from '../../utils/errors';
 
+jest.mock('../../integrations', () => ({
+  getAiClient: () => ({ isConfigured: () => false, fetchRecommendations: jest.fn() }),
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
 // eslint-disable-next-line no-var
 var titanisRepo: {
   listByUser: jest.Mock;
