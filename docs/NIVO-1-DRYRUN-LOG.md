@@ -7297,3 +7297,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Link na CI run:** [Run #77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) · commit `7eabd71`
 
 **Vlasnik — sledeće:** `gh auth login`, branch protection (5 required checks — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)), staging deploy + `staging-smoke-remote.ps1`.
+
+---
+
+## Zapis (izvršen) — `go-live-verify` + branch protection spremnost (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** Windows; disk C: **~0.57 GB** (kritično); Atina `:3000`, web `:3010` posle restarta
+
+**Šta je testirano:**
+
+| Skripta | Rezultat |
+|--------|----------|
+| `go-live-verify.ps1` `-SkipAtinaTestCi` `-SkipVerifyMonorepo` | **PASS** — web build **40/40**, smoke, upload, E2E billing |
+| `branch-protection-ready.ps1` | **PASS** — CI Run #78 zelen, 5/5 jobova |
+| `staging-preflight.ps1` | **SKIP** — disk ispod 1 GB gate-a (logički pokriven `go-live-verify`) |
+
+**Pass / Fail:** **Pass** — lokalni web/Atina stack spreman; vlasnik: branch protection + staging URL.
+
+**Link na CI run:** [Run #78](https://github.com/Marko200322/omni-group/actions/runs/26913008290) · `b7b31c4`

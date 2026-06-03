@@ -1,8 +1,8 @@
 # Evidencija — CEO sekcija A (Git: `main` zaštićen, PR obavezni)
 
-**Poslednji pregled repoa (2026-05-13):** nije zatvoreno — tabela ispod i dalje prazna / čeka vlasnika.
+**Poslednji pregled repoa (2026-06-03):** CI na `main` **zelen** (Run [#78](https://github.com/Marko200322/omni-group/actions/runs/26913008290), `b7b31c4`) — spremno za Korak 3 (required checks). Branch protection **još nije** podešen.
 
-**Status:** _čeka potvrdu vlasnika posle GitHub podešavanja_
+**Status:** _čeka vlasnika — GitHub Settings → Branches (5 required checks)_
 
 **Uputstvo (korak po korak):** [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)  
 **Šablon (kopija po release-u):** [`GIT-A-EVIDENCE.template.md`](./GIT-A-EVIDENCE.template.md)  
