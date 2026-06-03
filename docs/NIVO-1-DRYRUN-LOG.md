@@ -7515,3 +7515,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `owner-gates-quick.ps1` | **PASS** |
 
 **Link na CI run:** [Run #91](https://github.com/Marko200322/omni-group/actions/runs/26918066441) · `0e71631`
+
+---
+
+## Zapis (izvršen) — CI Run #92 (2026-06-04)
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #92 | **PASS** — 5/5 jobova |
+| `refresh-staging-handoff.ps1` | deploy SHA = poslednji zelen CI |
+
+**Link na CI run:** [Run #92](https://github.com/Marko200322/omni-group/actions/runs/26918365736) · `86eb54f`

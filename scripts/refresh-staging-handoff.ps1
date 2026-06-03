@@ -19,8 +19,8 @@ $repoRoot = Split-Path -Parent $scriptsDir
 $handoff = Join-Path $repoRoot 'docs\STAGING-LOCAL-PREFLIGHT-LATEST.md'
 Set-Location $repoRoot
 
-$sha = (git rev-parse HEAD).Trim()
-$short = $sha.Substring(0, 7)
+$headSha = (git rev-parse HEAD).Trim()
+$headShort = $headSha.Substring(0, 7)
 $today = Get-Date -Format 'yyyy-MM-dd'
 
 $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
@@ -28,21 +28,28 @@ $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
 
 $runLine = '_(CI run nije ucitan)_'
 $ciRange = '#77+'
+$deploySha = $headSha
+$deployShort = $headShort
+$deployNote = ''
 try {
   $url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=main"
   $run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
   if ($run) {
-    $runSha = $run.head_sha.Substring(0, 7)
+    $runSha = $run.head_sha
+    $runShort = $runSha.Substring(0, 7)
     $ciOk = $run.status -eq 'completed' -and $run.conclusion -eq 'success'
     $runLabel = if ($run.conclusion) { $run.conclusion } else { $run.status }
     if ($ciOk) {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **5/5 PASS**"
+      $deploySha = $runSha
+      $deployShort = $runShort
     } else {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **$runLabel**"
     }
     $ciRange = "#$($run.run_number)"
-    if ($runSha -ne $short) {
-      Write-Host ("NAPOMENA: HEAD {0} != CI run {1}" -f $short, $runSha) -ForegroundColor Yellow
+    if ($runShort -ne $headShort) {
+      $deployNote = " (HEAD $headShort; deploy preporucen $deployShort = poslednji zelen CI)"
+      Write-Host ("NAPOMENA: HEAD {0} != CI run {1} - deploy {1}" -f $headShort, $runShort) -ForegroundColor Yellow
     }
   }
 } catch {
@@ -78,7 +85,7 @@ $lines = @(
   '# Staging - lokalni preduslov (pre deploya na URL)'
   ''
   "**Datum:** $today  "
-  "**Commit za deploy:** [$short](https://github.com/$Repo/commit/$sha)  "
+  "**Commit za deploy:** [$deployShort](https://github.com/$Repo/commit/$deploySha)$deployNote  "
   "**CI:** $runLine"
   ''
   '**Status:** _lokalno spremno; remote staging deploy ceka vlasnika_'
@@ -104,7 +111,7 @@ $lines = @(
   ''
   '## Vlasnik - posle deploya na staging URL'
   ''
-  "1. Deploy **$short** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))"
+  "1. Deploy **$deployShort** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))"
   '2. **Backup DB** - npm run migrate na staging'
   '3. Remote smoke:'
   ''
@@ -117,7 +124,7 @@ $lines = @(
 )
 
 Set-Content -LiteralPath $handoff -Value ($lines -join "`n") -Encoding utf8
-Write-Host "refresh-staging-handoff: updated $handoff ($short)" -ForegroundColor Green
+Write-Host "refresh-staging-handoff: updated $handoff (deploy $deployShort)" -ForegroundColor Green
 
 if ($Commit) {
   $dirty = git status --short
@@ -130,6 +137,6 @@ if ($Commit) {
   $env:GIT_AUTHOR_EMAIL = 'markokosic020@gmail.com'
   $env:GIT_COMMITTER_NAME = 'Marko Kosic'
   $env:GIT_COMMITTER_EMAIL = 'markokosic020@gmail.com'
-  git commit -m "docs: refresh staging handoff ($short)"
+  git commit -m "docs: refresh staging handoff ($deployShort)"
   Write-Host 'Committed. Push: git push origin main' -ForegroundColor Cyan
 }
