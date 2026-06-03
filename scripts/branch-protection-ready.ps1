@@ -33,7 +33,7 @@ Write-Host $run.html_url -ForegroundColor DarkGray
 
 if ($run.status -ne 'completed' -or $run.conclusion -ne 'success') {
   Write-Host ''
-  Write-Host 'FAIL: poslednji run na main nije zelen — popravi CI pre branch protection.' -ForegroundColor Red
+  Write-Host 'FAIL: poslednji run na main nije zelen - popravi CI pre branch protection.' -ForegroundColor Red
   exit 1
 }
 

@@ -1,8 +1,8 @@
 # Evidencija — CEO sekcija G (Atina SaaS produkcioni gate)
 
-**Poslednji pregled repoa (2026-05-16):** nije zatvoreno — preduslov `tsc` / build lokalno (**2026-05-16**, agent); staging/prod red ispod i dalje prazan (8 stavki čeka vlasnika).
+**Poslednji pregled repoa (2026-06-03):** lokalni preduslov **PASS** (`280af25`) — `staging-preflight`, `owner-smoke-all`, `staging-smoke-remote` (lokalno). CI Run [#80](https://github.com/Marko200322/omni-group/actions/runs/26914161750) zelen. **Staging/prod red ispod i dalje prazan** (8 stavki ceka vlasnika na URL-u).
 
-**Status:** _čeka staging/prod sign-off vlasnika_
+**Status:** _lokalno spremno; ceka staging/prod sign-off vlasnika_
 
 **Glavni runbook (Atina release gate):** [`atina-platform/atina/docs/operations/release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md)  
 **Staging gate:** [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) · staging-prod paritet: [`STAGING-MIRROR-PROD.md`](./STAGING-MIRROR-PROD.md)  

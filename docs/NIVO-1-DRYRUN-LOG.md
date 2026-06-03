@@ -7337,3 +7337,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — lokalni preduslov za staging deploy zatvoren. Preostaje vlasnik: deploy na staging host + remote smoke sa `STAGING_ATINA_NODE_BASE`.
 
 **Link na CI run:** [Run #79](https://github.com/Marko200322/omni-group/actions/runs/26913676435) · `3f31b4f`
+
+---
+
+## Zapis (izvršen) — `owner-smoke-all` + CI Run #80 (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** commit `280af25`; Atina `:3000`, web `:3010`
+
+**Šta je testirano:**
+
+| Skripta | Rezultat |
+|--------|----------|
+| `owner-smoke-all.ps1` | **PASS** — integration, Resend D.2, upload, register E2E, `smoke:all` |
+| GitHub CI Run #80 | **PASS** — 5/5 jobova |
+
+**Pass / Fail:** **Pass** — pun lokalni owner smoke; sledece: branch protection + staging deploy na URL.
+
+**Link na CI run:** [Run #80](https://github.com/Marko200322/omni-group/actions/runs/26914161750) · `280af25`

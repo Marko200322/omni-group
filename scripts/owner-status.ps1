@@ -128,4 +128,4 @@ if ($freeGb -lt 5) {
 }
 Write-Host '  Pun gate: verify-agent-handoff.ps1 | run-local-gates.ps1 | owner-smoke-all.ps1' -ForegroundColor DarkGray
 Write-Host '  Pre staging deploya: staging-preflight.ps1 -SkipAtinaTestCi | posle: staging-smoke-remote.ps1' -ForegroundColor DarkGray
-Write-Host '  GitHub CI: github-ci-status.ps1 | branch-protection-ready.ps1 (bez gh auth)' -ForegroundColor DarkGray
+Write-Host '  GitHub CI: github-ci-status.ps1 | branch-protection-ready.ps1 | staging-owner-next.ps1 (bez gh auth)' -ForegroundColor DarkGray
