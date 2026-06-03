@@ -7253,3 +7253,43 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — spremno za staging URL posle deploya (`STAGING_ATINA_NODE_BASE`).
 
 **Link na CI run:** N/A — lokalno.
+
+---
+
+## Zapis (izvršen) — CI compose fix + `staging-preflight` (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** Windows; commit `ebd763f`; disk C: **4.6 GB** posle `free-disk-space.ps1`
+
+**Šta je testirano:**
+
+| Stavka | Rezultat |
+|--------|----------|
+| GitHub CI job **Compose** (`c681179`) | **PASS** — `.env.example` → `.env` pre `docker compose config` |
+| `check-web-env.ps1` | PASS (SESSION_SECRET + NEXT_PUBLIC_ATINA_API_BASE) |
+| `staging-preflight.ps1` `-SkipAtinaTestCi` | **PASS** — web build 40/40, smoke, upload, E2E billing |
+
+**Pass / Fail:** **Pass** — lokalni preduslov za staging deploy zatvoren na `ebd763f`.
+
+**Link na CI run:** [Run #68](https://github.com/Marko200322/omni-group/actions/runs/26895476179) (compose green; run kasnije cancelled zbog novog push-a `ebd763f`).
+
+---
+
+## Zapis (izvršen) — CI compose fix + `staging-preflight` (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** Windows; commit `ebd763f`; disk C: **4.6 GB** posle `free-disk-space.ps1`
+
+**Šta je testirano:**
+
+| Stavka | Rezultat |
+|--------|----------|
+| GitHub CI job **Compose** (`c681179`) | **PASS** — `.env.example` → `.env` pre `docker compose config` |
+| `check-web-env.ps1` | PASS (SESSION_SECRET + NEXT_PUBLIC_ATINA_API_BASE) |
+| `staging-preflight.ps1` `-SkipAtinaTestCi` | **PASS** — web build 40/40, smoke, upload, E2E billing |
+
+**Pass / Fail:** **Pass** — lokalni preduslov za staging deploy zatvoren na `ebd763f`.
+
+**Link na CI run:** [Run #68](https://github.com/Marko200322/omni-group/actions/runs/26895476179) (compose green; run kasnije cancelled zbog novog push-a `ebd763f`).
