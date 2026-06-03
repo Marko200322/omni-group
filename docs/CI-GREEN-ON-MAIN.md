@@ -6,7 +6,7 @@
 
 **Next — interni dok hub:** `apps/omnigroup-web` → `npm run dev` → **`/dev/docs`** — [`apps/omnigroup-web/README.md`](../apps/omnigroup-web/README.md).
 
-**Poslednji zeleni run (2026-06-03):** [#83](https://github.com/Marko200322/omni-group/actions/runs/26915159893) · `65d7633` · 5/5 jobova. Lokalna provera bez `gh auth`: [`github-ci-status.ps1`](../scripts/github-ci-status.ps1).
+**Poslednji zeleni run (2026-06-03):** [#84](https://github.com/Marko200322/omni-group/actions/runs/26915731231) · `ae4a84f` · 5/5 jobova. Lokalna provera bez `gh auth`: [`github-ci-status.ps1`](../scripts/github-ci-status.ps1). Probni PR posle branch protection: [`prepare-branch-protection-pr.ps1`](../scripts/prepare-branch-protection-pr.ps1).
 
 ---
 

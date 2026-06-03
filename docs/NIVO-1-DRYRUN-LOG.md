@@ -7416,3 +7416,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** (Atina smoke). Disk i dalje ispod 1 GB — staging-preflight samo sa `-MinDiskGb 1`.
 
 **Napomena:** CI Run #83 već zelen na `65d7633`.
+
+---
+
+## Zapis (izvršen) — CI Run #84 + branch-protection PR alat (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** Cursor agent  
+**Okruženje:** commit `ae4a84f`; disk C: **~0.5 GB**; Atina + web gore
+
+**Šta je testirano:**
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #84 | **PASS** — 5/5 jobova |
+| `branch-protection-ready.ps1` | **PASS** |
+| `prepare-branch-protection-pr.ps1` (novo) | spreman za vlasnika posle protection |
+
+**Pass / Fail:** **Pass** — CI i branch-protection gate spremni.
+
+**Link na CI run:** [Run #84](https://github.com/Marko200322/omni-group/actions/runs/26915731231) · `ae4a84f`

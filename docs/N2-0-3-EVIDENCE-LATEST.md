@@ -1,6 +1,6 @@
 # Evidencija — N2 red 0.3 (CI green na svakom merge-u na `main`)
 
-**Poslednji pregled repoa (2026-06-03):** **zelen** `CI (monorepo)` — Run [#83](https://github.com/Marko200322/omni-group/actions/runs/26915159893) na `main` (`65d7633`), **5/5** jobova PASS. Niz zelenih run-ova: #77–#83.
+**Poslednji pregled repoa (2026-06-03):** **zelen** `CI (monorepo)` — Run [#84](https://github.com/Marko200322/omni-group/actions/runs/26915731231) na `main` (`ae4a84f`), **5/5** jobova PASS. Niz zelenih run-ova: #77–#84.
 
 **Poslednji push na `main` (agent, 2026-06-03):** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) — fix mock `sqlite3`/`bull` u `setup-env.ts`, `jest-ci-gate.mjs`. Runovi #78–#83 (docs/evidence) takođe **PASS**.
 
@@ -27,13 +27,11 @@
 ### Korak 1 — Probni PR sa trivijalnom izmenom
 
 ```powershell
-# Iz korena repoa
-git checkout -b chore/n2-0-3-first-green-run
-"<!-- ci-trigger: $(Get-Date -Format yyyy-MM-dd) -->" | Out-File -Append README.md -Encoding utf8
-git add README.md
-git commit -m "chore: trigger first CI green run for N2 0.3"
-git push -u origin chore/n2-0-3-first-green-run
+# Iz korena repoa (posle branch protection na main)
+.\scripts\prepare-branch-protection-pr.ps1 -Push
 ```
+
+Ručna alternativa: grana `chore/n2-0-3-first-green-run`, HTML komentar u `README.md`, push + PR ka `main`.
 
 Otvori PR ka `main` na GitHub-u.
 

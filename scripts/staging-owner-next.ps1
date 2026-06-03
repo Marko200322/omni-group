@@ -68,6 +68,7 @@ Write-Host 'Korak 1 - Branch protection (~5 min)' -ForegroundColor Cyan
 Write-Host ("  https://github.com/{0}/settings/branches" -f $Repo) -ForegroundColor DarkGray
 Write-Host '  Require PR + 5 status checks (vidi docs/GIT-BRANCH-PROTECTION.md)' -ForegroundColor DarkGray
 Write-Host '  Provera: .\scripts\branch-protection-ready.ps1' -ForegroundColor DarkGray
+Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
 Write-Host ''
 Write-Host 'Korak 2 - Deploy na staging host' -ForegroundColor Cyan
 Write-Host ("  git checkout {0}  # ili deploy tag {0}" -f $sha) -ForegroundColor DarkGray
