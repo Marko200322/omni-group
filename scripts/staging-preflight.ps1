@@ -42,10 +42,12 @@ if ($dirty) {
   exit 1
 }
 
-$goLiveArgs = @('-SkipVerifyMonorepo')
-if ($SkipAtinaTestCi) { $goLiveArgs += '-SkipAtinaTestCi' }
-
-& (Join-Path $scriptsDir 'go-live-verify.ps1') @goLiveArgs
+$goLive = Join-Path $scriptsDir 'go-live-verify.ps1'
+if ($SkipAtinaTestCi) {
+  & $goLive -SkipVerifyMonorepo -SkipAtinaTestCi
+} else {
+  & $goLive -SkipVerifyMonorepo
+}
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ''
