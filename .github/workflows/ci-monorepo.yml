@@ -141,4 +141,6 @@ jobs:
       - name: Validate root Python stack compose
         run: docker compose -f docker-compose.yml config --quiet
       - name: Validate Atina Node SaaS compose (atina-platform/atina)
-        run: docker compose -f atina-platform/atina/docker-compose.yml config --quiet
+        run: |
+          cp atina-platform/atina/.env.example atina-platform/atina/.env
+          docker compose -f atina-platform/atina/docker-compose.yml config --quiet

@@ -138,8 +138,19 @@ if (-not $SkipCompose) {
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   docker compose -f docker-compose.yml config --quiet
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  $atinaDir = Join-Path $repoRoot 'atina-platform/atina'
+  $atinaEnv = Join-Path $atinaDir '.env'
+  $atinaEnvExample = Join-Path $atinaDir '.env.example'
+  $tempAtinaEnv = $false
+  if (-not (Test-Path $atinaEnv) -and (Test-Path $atinaEnvExample)) {
+    Copy-Item $atinaEnvExample $atinaEnv
+    $tempAtinaEnv = $true
+    Write-Host '  (copied .env.example -> .env for compose config only)' -ForegroundColor DarkGray
+  }
   docker compose -f atina-platform/atina/docker-compose.yml config --quiet
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  $composeExit = $LASTEXITCODE
+  if ($tempAtinaEnv) { Remove-Item $atinaEnv -Force }
+  if ($composeExit -ne 0) { exit $composeExit }
 } else {
   Write-Host '== docker compose config (skipped: -SkipCompose) ==' -ForegroundColor Yellow
 }
