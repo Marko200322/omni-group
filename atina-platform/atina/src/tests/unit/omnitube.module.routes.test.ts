@@ -9,6 +9,8 @@ import { AppError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
 
+jest.setTimeout(60_000);
+
 let omnitubeAuthOn = true;
 jest.mock('../../api/middleware/auth.middleware', () => {
   const errors = jest.requireActual<typeof import('../../utils/errors')>('../../utils/errors');

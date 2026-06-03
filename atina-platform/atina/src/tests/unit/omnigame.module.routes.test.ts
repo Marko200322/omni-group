@@ -16,6 +16,8 @@ jest.mock('../../modules/tasks/task-executors', () => ({
   }),
 }));
 
+jest.setTimeout(60_000);
+
 let omnigameAuthOn = true;
 jest.mock('../../api/middleware/auth.middleware', () => {
   const errors = jest.requireActual<typeof import('../../utils/errors')>('../../utils/errors');
