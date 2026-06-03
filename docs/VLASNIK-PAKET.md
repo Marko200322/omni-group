@@ -23,7 +23,7 @@
 
 **Pratece reference (čitaj uz Korak 3):** sve env varijable za prod u jednom mestu — [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md). **Lokalni preduslov pre staging deploya:** [`scripts/staging-preflight.ps1`](../scripts/staging-preflight.ps1) — **PASS lokalno** 2026-06-03 (`-SkipAtinaTestCi`; brzo: `-MinDiskGb 1`). **Posle deploya na staging:** [`scripts/staging-smoke-remote.ps1`](../scripts/staging-smoke-remote.ps1) (`STAGING_ATINA_NODE_BASE`). **CI + branch protection:** [`branch-protection-ready.ps1`](../scripts/branch-protection-ready.ps1) · probni PR: [`prepare-branch-protection-pr.ps1`](../scripts/prepare-branch-protection-pr.ps1). **Brzi lokalni gate:** [`owner-gates-quick.ps1`](../scripts/owner-gates-quick.ps1) · handoff: [`refresh-staging-handoff.ps1`](../scripts/refresh-staging-handoff.ps1). **Disk:** [`disk-report.ps1`](../scripts/disk-report.ps1).
 
-**Stanje repoa (2026-06-04):** CI Run [#95](https://github.com/Marko200322/omni-group/actions/runs/26919262267) zelen (`7a8d9f5`) - handoff: [STAGING-LOCAL-PREFLIGHT-LATEST.md](./STAGING-LOCAL-PREFLIGHT-LATEST.md) - **ceka vlasnika:** branch protection + staging deploy na URL.
+**Stanje repoa (2026-06-04):** CI Run [#96](https://github.com/Marko200322/omni-group/actions/runs/26919533469) zelen (`80040d5`) - handoff: [STAGING-LOCAL-PREFLIGHT-LATEST.md](./STAGING-LOCAL-PREFLIGHT-LATEST.md) - **ceka vlasnika:** branch protection + staging deploy na URL.
 
 **Total ako sve uradiš za jedan dan:** ~2–4 sata aktivnog rada (uz pauze za webhook test i staging cool-down).
 
