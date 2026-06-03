@@ -7215,3 +7215,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — exit **`0`**, ~1020 s. Evidencija: [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) § Val 360.
 
 **Link na CI run:** N/A — lokalni mirror; GitHub job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md).
+
+---
+
+## Zapis (izvršen) — `owner-smoke-all` + `go-live-verify` (2026-06-03, posle Val 360)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** Windows; Atina `:3000`, web `:3010`; `PAYMENTS_MODE=manual`; Resend live
+
+**Šta je testirano:**
+
+| Skripta | Rezultat |
+|--------|----------|
+| `owner-smoke-all.ps1` | PASS (integration, Resend, upload, register E2E, `smoke:all`) |
+| `go-live-verify.ps1` `-SkipAtinaTestCi -SkipVerifyMonorepo` | PASS (web build 40/40, smoke, upload, E2E billing) |
+| `free-disk-space.ps1` `-SkipDocker -CleanTemp` | C: **0.79 → 2.78 GB** |
+
+**Pass / Fail:** **Pass** — lokalni stack spreman za staging deploy korake iz [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md). Preostaje vlasnik: `gh auth login`, branch protection, staging URL + prod `.env`.
+
+**Link na CI run:** N/A — GitHub CLI nije autentifikovan lokalno.
