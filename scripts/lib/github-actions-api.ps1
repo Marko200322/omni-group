@@ -141,6 +141,26 @@ function Get-OmniGithubLatestMainRun {
   }
 }
 
+function Get-OmniDeployShaFromCommit {
+  param([Parameter(Mandatory)][string]$Sha)
+  $current = $Sha.Trim()
+  for ($i = 0; $i -lt 15; $i++) {
+    $subject = (git log -1 --format='%s' $current 2>$null)
+    if (-not $subject) { return $Sha }
+    if ($subject -notmatch '^docs(\(|:)') { return $current }
+    $parent = (git rev-parse "${current}^" 2>$null)
+    if (-not $parent) { return $current }
+    $current = $parent.Trim()
+  }
+  return $Sha
+}
+
+function Test-OmniEvidenceOnlyCommit {
+  param([string]$Sha = 'HEAD')
+  $subject = (git log -1 --format='%s' $Sha 2>$null)
+  return ($subject -match '^docs\(evidence\):')
+}
+
 function Get-OmniGithubRecentRuns {
   param(
     [string]$Repo = 'Marko200322/omni-group',

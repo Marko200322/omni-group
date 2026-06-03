@@ -10,7 +10,8 @@
 #Requires -Version 5.1
 param(
   [string]$Repo = 'Marko200322/omni-group',
-  [switch]$AppendDryRunLog
+  [switch]$AppendDryRunLog,
+  [switch]$SkipIfEvidenceOnlyHead
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,6 +35,14 @@ if (-not $ciOk) {
   $label = if ($run.conclusion) { $run.conclusion } else { $run.status }
   Write-Host ("FAIL: Run #{0} nije zelen ({1})" -f $num, $label) -ForegroundColor Red
   exit 1
+}
+
+if ($SkipIfEvidenceOnlyHead) {
+  $headFull = (git rev-parse HEAD).Trim()
+  if ($run.head_sha -eq $headFull -and (Test-OmniEvidenceOnlyCommit)) {
+    Write-Host ("sync-ci-evidence: skip (HEAD docs-only evidence, Run #{0} vec pokriven)" -f $num) -ForegroundColor DarkGray
+    exit 0
+  }
 }
 
 $today = Get-Date -Format 'yyyy-MM-dd'

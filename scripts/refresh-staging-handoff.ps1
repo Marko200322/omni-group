@@ -42,8 +42,11 @@ try {
     $runLabel = if ($run.conclusion) { $run.conclusion } else { $run.status }
     if ($ciOk) {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **5/5 PASS**"
-      $deploySha = $runSha
-      $deployShort = $runShort
+      $deploySha = Get-OmniDeployShaFromCommit -Sha $runSha
+      $deployShort = $deploySha.Substring(0, 7)
+      if ($deployShort -ne $runShort) {
+        $deployNote = " (CI run $runShort docs-only; deploy app kod $deployShort)"
+      }
     } else {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **$runLabel**"
     }

@@ -45,7 +45,7 @@ if ($RefreshHandoff) {
   & (Join-Path $scriptsDir 'refresh-staging-handoff.ps1')
   Write-Host ''
   Write-Host '-- sync-ci-evidence --' -ForegroundColor Cyan
-  & (Join-Path $scriptsDir 'sync-ci-evidence.ps1') -AppendDryRunLog
+  & (Join-Path $scriptsDir 'sync-ci-evidence.ps1') -AppendDryRunLog -SkipIfEvidenceOnlyHead
 }
 
 Write-Host ''

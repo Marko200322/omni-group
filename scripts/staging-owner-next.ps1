@@ -68,10 +68,14 @@ if ($run) {
   Write-Host ("CI Run #{0}  [{1}]" -f $run.run_number, $(if ($run.conclusion) { $run.conclusion } else { $run.status })) -ForegroundColor $ciColor
   Write-Host $run.html_url -ForegroundColor DarkGray
   if ($ciOk) {
-    $deploySha = $runSha
+    $deploySha = (Get-OmniDeployShaFromCommit -Sha $run.head_sha).Substring(0, 7)
   }
   if ($runSha -eq $sha) {
-    Write-Host '  HEAD = CI commit (deploy ovaj SHA)' -ForegroundColor Green
+    if ($deploySha -ne $runSha) {
+      Write-Host ("  HEAD = CI commit; deploy app kod: {0} (run {1} docs-only)" -f $deploySha, $runSha) -ForegroundColor Green
+    } else {
+      Write-Host '  HEAD = CI commit (deploy ovaj SHA)' -ForegroundColor Green
+    }
   } else {
     Write-Host ("  HEAD ({0}) != CI run ({1}) - deploy preporucen: {2}" -f $sha, $runSha, $deploySha) -ForegroundColor Yellow
   }
