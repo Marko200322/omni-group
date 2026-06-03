@@ -31,11 +31,13 @@ npm.cmd cache clean --force 2>$null
 $paths = @(
   (Join-Path $repoRoot 'atina-platform\atina\coverage'),
   (Join-Path $repoRoot 'atina-platform\atina\dist'),
+  (Join-Path $repoRoot 'atina-platform\atina\jest-results.json'),
   (Join-Path $repoRoot 'atina-system\dist'),
   (Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache'),
   (Join-Path $repoRoot 'atina-platform\atina\node_modules\.cache'),
   (Join-Path $repoRoot 'atina-system\node_modules\.cache'),
-  (Join-Path $repoRoot 'node_modules\.cache')
+  (Join-Path $repoRoot 'node_modules\.cache'),
+  (Join-Path $repoRoot '.pytest_cache')
 )
 if (-not $SkipNext) {
   $paths += (Join-Path $repoRoot 'apps\omnigroup-web\.next')

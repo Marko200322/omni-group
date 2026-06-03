@@ -7395,3 +7395,24 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — `main` na `923b5ca` sa zelenim CI.
 
 **Link na CI run:** [Run #82](https://github.com/Marko200322/omni-group/actions/runs/26914914873) · `923b5ca`
+
+---
+
+## Zapis (izvršen) — disk alati + lokalni smoke (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** Cursor agent  
+**Okruženje:** commit `65d7633`; disk C: **~0.54 GB** (kritično); Atina `:3000`, web `:3010` (restart)
+
+**Šta je testirano:**
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| `staging-smoke-remote.ps1` (127.0.0.1:3000) | **PASS** — `/health` + `smoke:all` |
+| `audit-doc-gate-references.ps1` | **PASS** |
+| `disk-report.ps1` (novo) | inventar velikih foldera |
+| `free-disk-space.ps1` (prošireno) | pytest cache, jest-results |
+
+**Pass / Fail:** **Pass** (Atina smoke). Disk i dalje ispod 1 GB — staging-preflight samo sa `-MinDiskGb 1`.
+
+**Napomena:** CI Run #83 već zelen na `65d7633`.

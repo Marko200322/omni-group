@@ -1,8 +1,8 @@
 # Evidencija — N2 red 0.3 (CI green na svakom merge-u na `main`)
 
-**Poslednji pregled repoa (2026-06-03):** **zelen** `CI (monorepo)` run #77 na `main` — [`7eabd71`](https://github.com/Marko200322/omni-group/commit/7eabd71).
+**Poslednji pregled repoa (2026-06-03):** **zelen** `CI (monorepo)` — Run [#83](https://github.com/Marko200322/omni-group/actions/runs/26915159893) na `main` (`65d7633`), **5/5** jobova PASS. Niz zelenih run-ova: #77–#83.
 
-**Poslednji push na `main` (agent, 2026-06-03):** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) — svih **5/5** jobova PASS (~8 min Atina SaaS). Fix: mock `sqlite3`/`bull` u `setup-env.ts`, `jest-ci-gate.mjs`.
+**Poslednji push na `main` (agent, 2026-06-03):** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) — fix mock `sqlite3`/`bull` u `setup-env.ts`, `jest-ci-gate.mjs`. Runovi #78–#83 (docs/evidence) takođe **PASS**.
 
 **Status:** **Pass** na `main` (push, ne PR ritual) — vlasnik sign-off ispod za branch protection + PR politiku.
 

@@ -1,63 +1,58 @@
 <#
 .SYNOPSIS
-  Pregled diska C: i najvećih foldera (repo + Temp/Downloads).
+  Pregled velikih foldera u repou i slobodnog prostora na C:.
 
 .EXAMPLE
   .\scripts\disk-report.ps1
 #>
 #Requires -Version 5.1
-$ErrorActionPreference = 'Continue'
-$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Split-Path -Parent $scriptsDir
-Set-Location $repoRoot
+param(
+  [int]$TopN = 12
+)
 
-function Folder-SizeMb {
-  param([string]$Path)
-  if (-not (Test-Path $Path)) { return 0 }
-  try {
-    return [math]::Round((Get-ChildItem -LiteralPath $Path -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB, 1)
-  } catch { return 0 }
-}
+$ErrorActionPreference = 'Stop'
+$repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
 $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
-$color = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 5) { 'Yellow' } else { 'Green' }
+$color = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 2) { 'Yellow' } else { 'Green' }
 
 Write-Host '=== disk-report ===' -ForegroundColor Cyan
-Write-Host "C: free ${freeGb} GB (cilj >=5 GB za npm ci)" -ForegroundColor $color
+Write-Host ("C: free {0} GB" -f $freeGb) -ForegroundColor $color
 Write-Host ''
 
-Write-Host 'Repo root (MB):' -ForegroundColor Cyan
-Get-ChildItem -Directory -ErrorAction SilentlyContinue | ForEach-Object {
-  [PSCustomObject]@{ Folder = $_.Name; MB = (Folder-SizeMb $_.FullName) }
-} | Sort-Object MB -Descending | Select-Object -First 10 | ForEach-Object {
-  Write-Host ("  {0,-22} {1,8} MB" -f $_.Folder, $_.MB) -ForegroundColor DarkGray
+$candidates = @(
+  'atina-platform\atina\node_modules',
+  'atina-platform\atina\coverage',
+  'atina-platform\atina\dist',
+  'atina-platform\atina\jest-results.json',
+  'apps\omnigroup-web\node_modules',
+  'apps\omnigroup-web\.next',
+  'apps\omnigroup-web\node_modules\.cache',
+  'atina-system\node_modules',
+  'atina-system\dist',
+  'node_modules',
+  '.pytest_cache'
+)
+
+$rows = @()
+foreach ($rel in $candidates) {
+  $p = Join-Path $repoRoot $rel
+  if (-not (Test-Path $p)) { continue }
+  $item = Get-Item -LiteralPath $p
+  if ($item.PSIsContainer) {
+    $bytes = (Get-ChildItem -LiteralPath $p -Recurse -File -ErrorAction SilentlyContinue |
+      Measure-Object -Property Length -Sum).Sum
+  } else {
+    $bytes = $item.Length
+  }
+  $rows += [pscustomobject]@{ Path = $rel; MB = [math]::Round($bytes / 1MB, 1) }
+}
+
+foreach ($row in ($rows | Sort-Object MB -Descending | Select-Object -First $TopN)) {
+  Write-Host ("  {0,-45} {1,8:N1} MB" -f $row.Path, $row.MB)
 }
 
 Write-Host ''
-Write-Host 'node_modules u monorepu:' -ForegroundColor Cyan
-Get-ChildItem -Path $repoRoot -Directory -Recurse -Filter 'node_modules' -ErrorAction SilentlyContinue |
-  Where-Object { $_.FullName -notmatch 'node_modules\\.*\\node_modules' } |
-  ForEach-Object {
-    [PSCustomObject]@{ Path = $_.FullName.Replace($repoRoot + '\', ''); MB = (Folder-SizeMb $_.FullName) }
-  } | Sort-Object MB -Descending | Select-Object -First 6 | ForEach-Object {
-    Write-Host ("  {0,-50} {1,8} MB" -f $_.Path, $_.MB) -ForegroundColor DarkGray
-  }
-
-Write-Host ''
-Write-Host 'Korisnicki folderi:' -ForegroundColor Cyan
-foreach ($p in @(
-  @{ Label = 'TEMP'; Path = $env:TEMP },
-  @{ Label = 'Downloads'; Path = (Join-Path $env:USERPROFILE 'Downloads') },
-  @{ Label = 'npm cache'; Path = (npm.cmd config get cache 2>$null | Out-String).Trim() }
-)) {
-  if ($p.Path -and (Test-Path $p.Path)) {
-    Write-Host ("  {0,-12} {1,8} MB  {2}" -f $p.Label, (Folder-SizeMb $p.Path), $p.Path) -ForegroundColor DarkGray
-  }
-}
-
-Write-Host ''
-Write-Host 'Akcije:' -ForegroundColor Cyan
-Write-Host '  .\scripts\free-disk-space.ps1 -CleanTemp -SkipNext   (dev serveri mogu ostati)' -ForegroundColor DarkGray
-Write-Host '  .\scripts\free-disk-space.ps1                       (puno, zaustavi web pre)' -ForegroundColor DarkGray
-Write-Host '  Isprazni Recycle Bin i Downloads rucno' -ForegroundColor DarkGray
+Write-Host 'Cleanup: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor DarkGray
+Write-Host 'Staging gate needs ~1 GB free (use staging-preflight -MinDiskGb 1).' -ForegroundColor DarkGray
