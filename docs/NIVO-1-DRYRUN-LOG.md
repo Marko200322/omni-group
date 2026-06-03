@@ -7479,3 +7479,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `refresh-staging-handoff.ps1` | novo — auto handoff doc |
 
 **Link na CI run:** [Run #88](https://github.com/Marko200322/omni-group/actions/runs/26917024714) · `9db6234`
+
+---
+
+## Zapis (izvršen) — CI Run #89 (2026-06-04)
+
+**Okruženje:** commit `9b99d56`
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #89 | **PASS** — 5/5 jobova |
+| `staging-smoke-remote.ps1` | **PASS** |
+| `branch-protection-ready.ps1` | **PASS** |
+
+**Link na CI run:** [Run #89](https://github.com/Marko200322/omni-group/actions/runs/26917439481) · `9b99d56`

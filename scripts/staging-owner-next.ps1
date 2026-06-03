@@ -4,10 +4,13 @@
 
 .EXAMPLE
   .\scripts\staging-owner-next.ps1
+.EXAMPLE
+  .\scripts\staging-owner-next.ps1 -RefreshHandoff
 #>
 #Requires -Version 5.1
 param(
-  [string]$Repo = 'Marko200322/omni-group'
+  [string]$Repo = 'Marko200322/omni-group',
+  [switch]$RefreshHandoff
 )
 
 $ErrorActionPreference = 'Stop'
@@ -88,3 +91,9 @@ Write-Host '  Popuni: docs/STAGING-EXECUTION-LOG.template.md' -ForegroundColor D
 Write-Host ''
 Write-Host 'Runbook: docs/VLASNIK-PAKET.md | docs/STAGING-RELEASE-CHECKLIST.md' -ForegroundColor DarkGray
 Write-Host 'Staging preduslov (lokalno): docs/STAGING-LOCAL-PREFLIGHT-LATEST.md' -ForegroundColor DarkGray
+Write-Host 'Azuriraj handoff: .\scripts\refresh-staging-handoff.ps1' -ForegroundColor DarkGray
+
+if ($RefreshHandoff) {
+  Write-Host ''
+  & (Join-Path $scriptsDir 'refresh-staging-handoff.ps1')
+}
