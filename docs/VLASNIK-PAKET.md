@@ -23,7 +23,7 @@
 
 **Pratece reference (čitaj uz Korak 3):** sve env varijable za prod u jednom mestu — [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md). **Lokalni preduslov pre staging deploya:** [`scripts/staging-preflight.ps1`](../scripts/staging-preflight.ps1) — **PASS lokalno** 2026-06-03 (`3f31b4f`; brzo: `-SkipAtinaTestCi`). **Posle deploya na staging:** [`scripts/staging-smoke-remote.ps1`](../scripts/staging-smoke-remote.ps1) (`STAGING_ATINA_NODE_BASE`). **CI + branch protection spremnost:** [`scripts/branch-protection-ready.ps1`](../scripts/branch-protection-ready.ps1).
 
-**Stanje repoa (2026-06-03):** CI Run [#81](https://github.com/Marko200322/omni-group/actions/runs/26914569031) zelen · N2 **0.3** zatvoren · lokalni staging gate PASS (`staging-preflight`, `owner-smoke-all`) · **čeka vlasnika:** Korak 1 (branch protection) + staging deploy na URL.
+**Stanje repoa (2026-06-03):** CI Run [#82](https://github.com/Marko200322/omni-group/actions/runs/26914914873) zelen (`923b5ca`) · N2 **0.3** zatvoren · lokalni staging gate PASS (`staging-preflight`, `owner-smoke-all`) · **čeka vlasnika:** Korak 1 (branch protection) + staging deploy na URL.
 
 **Total ako sve uradiš za jedan dan:** ~2–4 sata aktivnog rada (uz pauze za webhook test i staging cool-down).
 

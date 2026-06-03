@@ -7376,3 +7376,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — repo spreman za branch protection + staging deploy.
 
 **Link na CI run:** [Run #81](https://github.com/Marko200322/omni-group/actions/runs/26914569031) · `b344d3b`
+
+---
+
+## Zapis (izvršen) — CI Run #82 posle evidence commita (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** Cursor agent  
+**Okruženje:** commit `923b5ca`; push na `main`
+
+**Šta je testirano:**
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #82 | **PASS** — 5/5 jobova (docs-only commit) |
+| `branch-protection-ready.ps1` | **PASS** — CI spreman |
+
+**Pass / Fail:** **Pass** — `main` na `923b5ca` sa zelenim CI.
+
+**Link na CI run:** [Run #82](https://github.com/Marko200322/omni-group/actions/runs/26914914873) · `923b5ca`

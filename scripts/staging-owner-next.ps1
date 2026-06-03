@@ -27,6 +27,9 @@ $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
 $diskColor = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 2) { 'Yellow' } else { 'Green' }
 Write-Host ("Disk C: {0} GB" -f $freeGb) -ForegroundColor $diskColor
+if ($freeGb -lt 1) {
+  Write-Host '  UPOZORENJE: disk ispod 1 GB - staging-preflight moze pasti; oslobodi prostor.' -ForegroundColor Red
+}
 
 try {
   $health = Invoke-RestMethod -Uri 'http://127.0.0.1:3000/health' -TimeoutSec 3
