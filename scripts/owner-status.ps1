@@ -79,6 +79,16 @@ if ([string]::IsNullOrWhiteSpace($resend)) {
   Write-Host 'Resend D.2: kljuc set (pokreni test-contact-resend.ps1)' -ForegroundColor Green
 }
 
+$webEnvScript = Join-Path $scriptsDir 'check-web-env.ps1'
+if (Test-Path $webEnvScript) {
+  & $webEnvScript -Quiet | Out-Null
+  if ($LASTEXITCODE -eq 0) {
+    Write-Host 'Web env: prod-spreman (check-web-env.ps1)' -ForegroundColor Green
+  } else {
+    Write-Host 'Web env: vidi check-web-env.ps1 (SESSION_SECRET / NEXT_PUBLIC_ATINA_API_BASE)' -ForegroundColor Yellow
+  }
+}
+
 $atinaEnv = Join-Path $repoRoot 'atina-platform\atina\.env'
 if (Test-Path $atinaEnv) {
   if ($Quick) {
