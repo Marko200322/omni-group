@@ -1358,6 +1358,8 @@ Skripta **nije** deo **CI (monorepo)** pipeline-a (job **`python`** / **`Python 
 
 ## Staging URL (placeholder)
 
+**Lokalni preduslov pre deploya:** [`staging-preflight.ps1`](./staging-preflight.ps1) — `owner-status`, disk gate, `go-live-verify` (build + smoke + E2E billing). Brza varijanta bez punog Atina `test:ci`: `-SkipAtinaTestCi`.
+
 Zameni u internoj dokumentaciji ili CI varijablama (ne commituj tajne):
 
 - `STAGING_ATINA_NODE_BASE` — npr. `https://staging-api.example.com`
