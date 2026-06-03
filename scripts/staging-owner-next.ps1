@@ -70,7 +70,7 @@ Write-Host ("  git checkout {0}  # ili deploy tag {0}" -f $sha) -ForegroundColor
 Write-Host '  Atina: npm ci && npm run build && npm run migrate (backup DB pre migrate)' -ForegroundColor DarkGray
 Write-Host '  Web: npm ci && npm run build' -ForegroundColor DarkGray
 Write-Host ''
-Write-Host 'Korak 3 — Remote smoke posle deploya' -ForegroundColor Cyan
+Write-Host 'Korak 3 - Remote smoke posle deploya' -ForegroundColor Cyan
 Write-Host '  $env:STAGING_ATINA_NODE_BASE=''https://<STAGING_HOST>''' -ForegroundColor DarkGray
 Write-Host '  .\scripts\staging-smoke-remote.ps1' -ForegroundColor DarkGray
 Write-Host '  Popuni: docs/STAGING-EXECUTION-LOG.template.md' -ForegroundColor DarkGray

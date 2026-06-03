@@ -7356,3 +7356,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — pun lokalni owner smoke; sledece: branch protection + staging deploy na URL.
 
 **Link na CI run:** [Run #80](https://github.com/Marko200322/omni-group/actions/runs/26914161750) · `280af25`
+
+---
+
+## Zapis (izvršen) — formalni `staging-preflight` + CI Run #81 (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** commit `b344d3b`; disk C: **~1.1 GB**; Atina `:3000`, web `:3010`
+
+**Šta je testirano:**
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| `staging-preflight.ps1` `-SkipAtinaTestCi` `-MinDiskGb 1` | **PASS** (formalni gate, ne samo `go-live-verify`) |
+| `branch-protection-ready.ps1` | **PASS** — CI spreman |
+| GitHub CI Run #81 | **PASS** — 5/5 jobova |
+
+**Pass / Fail:** **Pass** — repo spreman za branch protection + staging deploy.
+
+**Link na CI run:** [Run #81](https://github.com/Marko200322/omni-group/actions/runs/26914569031) · `b344d3b`
