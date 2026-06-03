@@ -7436,3 +7436,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — CI i branch-protection gate spremni.
 
 **Link na CI run:** [Run #84](https://github.com/Marko200322/omni-group/actions/runs/26915731231) · `ae4a84f`
+
+---
+
+## Zapis (izvršen) — CI Run #85 (prepare-branch-protection-pr) (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Okruženje:** commit `53c1be0`
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #85 | **PASS** — 5/5 jobova |
+
+**Link na CI run:** [Run #85](https://github.com/Marko200322/omni-group/actions/runs/26916174717) · `53c1be0`
