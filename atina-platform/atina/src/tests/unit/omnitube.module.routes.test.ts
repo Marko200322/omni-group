@@ -8,6 +8,12 @@ import { sendError } from '../../utils/response';
 import { AppError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
+jest.mock('../../queue/queue', () => ({
+  addJob: jest.fn().mockResolvedValue({ id: 'job-1' }),
+}));
+jest.mock('../../modules/tasks/task-executors', () => ({
+  executeOmnitubePipeline: jest.fn().mockResolvedValue({ source: 'test', mode: 'idea' }),
+}));
 
 jest.setTimeout(60_000);
 

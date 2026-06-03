@@ -17,6 +17,11 @@ var titanisRepo: {
   auditRunCompleted: jest.Mock;
 };
 
+jest.mock('../../../../integrations', () => ({
+  getAiClient: () => ({ isConfigured: () => false, fetchRecommendations: jest.fn() }),
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
 jest.mock('../../../../modules/titanis/repository/titanis.repository', () => {
   titanisRepo = {
     listByUser: jest.fn().mockResolvedValue({ rows: [{ id: 'w1' }] }),
