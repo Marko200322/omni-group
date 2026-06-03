@@ -47,6 +47,10 @@ Write-Host '== Web smoke integration ==' -ForegroundColor Cyan
 & (Join-Path $root 'scripts\smoke-web-integration.ps1')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+Write-Host '== Upload spike ==' -ForegroundColor Cyan
+& (Join-Path $root 'scripts\test-upload-spike.ps1')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Write-Host '== E2E billing manual ==' -ForegroundColor Cyan
 Push-Location (Join-Path $root 'apps\omnigroup-web')
 npm run e2e:billing

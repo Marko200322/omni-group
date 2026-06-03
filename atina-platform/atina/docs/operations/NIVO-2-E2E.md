@@ -38,6 +38,15 @@ npx jest --runInBand src/tests/integration/workflow-chain.core-business-flow.int
 
 **Bez tajni u gitu:** `BASE_URL` ili slično za budući Playwright/Supertest protiv staginga — konfiguriši u CI secrets ili `.env` (ne commitovati).
 
+**Web BFF E2E (register → plan → manual payment):** iz korena repoa:
+
+```powershell
+.\scripts\e2e-register-plan-payment.ps1
+# ili: cd apps\omnigroup-web && npm run e2e:register
+```
+
+Pretpostavlja Atina `:3000` i web `:3010`. Admin potvrda koristi `admin@atina.io` (vidi parametre skripte).
+
 Webhook testovi (Stripe itd.) = poseban staging korak; nisu uslov za unit job **`npm run test:ci`**.
 
 ## 3. Pun CoreEngine + montirani moduli (E2E.3)

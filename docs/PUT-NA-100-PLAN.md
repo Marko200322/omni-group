@@ -73,7 +73,7 @@ Označi `[x]` kad je zatvoreno.
 
 ### Faza B2 — Dug u kodu (niski prioritet → 100% čistoće)
 
-- [ ] C-S-R: `self-healing`, `ai-memory`, `kpi`, `recommendation` (repository umesto `query()` u service)
+- [ ] C-S-R: `self-healing`, ~~`ai-memory`~~, `kpi`, `recommendation` (repository umesto `query()` u service) — **`ai-memory`** `[x]` 2026-06-03 (`AiMemoryRepository`)
 - [ ] `auth.service` — audit insert u repository
 - [ ] `payments.service` — imenovane repo metode umesto generičkog `execute()`
 - [ ] `admin.service` split (opciono ako fajl ostaje >800 linija)

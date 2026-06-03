@@ -1,22 +1,23 @@
 import { getAiClient } from '../../../integrations';
-import { query } from '../../../database/connection';
 import logger from '../../../utils/logger';
 import type { RecallQueryDtoType, RememberDtoType } from '../dto/ai-memory.dto';
+import { AiMemoryRepository } from '../repository/ai-memory.repository';
 
 function escapeLikeFragment(s: string): string {
   return s.replace(/!/g, '!!').replace(/%/g, '!%').replace(/_/g, '!_');
 }
 
 export class AiMemoryService {
+  private readonly repo: AiMemoryRepository;
   private readonly ai = getAiClient();
 
+  constructor(repo?: AiMemoryRepository) {
+    this.repo = repo ?? new AiMemoryRepository();
+  }
+
   async remember(userId: string, dto: RememberDtoType) {
-    const { rows } = await query(
-      `INSERT INTO logs (user_id, level, category, action, message, context)
-       VALUES ($1, 'info', 'ai-memory', 'remember', $2, $3)
-       RETURNING id, created_at`,
-      [userId, `memory:${dto.namespace}:${dto.key}`, JSON.stringify(dto.value)]
-    );
+    const message = `memory:${dto.namespace}:${dto.key}`;
+    const { rows } = await this.repo.insertRemember(userId, message, JSON.stringify(dto.value));
 
     if (this.ai.isConfigured()) {
       void this.ai
@@ -39,17 +40,7 @@ export class AiMemoryService {
         ? `memory:${escapeLikeFragment(namespace)}:${escapeLikeFragment(key)}%`
         : `memory:${escapeLikeFragment(namespace)}:%`;
 
-    const local = await query(
-      `SELECT id, action, context, created_at
-       FROM logs
-       WHERE user_id = $1
-         AND category = 'ai-memory'
-         AND action = 'remember'
-         AND message LIKE $2 ESCAPE '!'
-       ORDER BY created_at DESC
-       LIMIT 100`,
-      [userId, likePattern]
-    );
+    const local = await this.repo.recallByLike(userId, likePattern);
 
     if (this.ai.isConfigured()) {
       const remote = await this.ai.recall(namespace, key);
