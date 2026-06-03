@@ -50,7 +50,8 @@ try {
 }
 
 Write-Host ''
-Write-Host 'Lokalno zatvoreno (2026-06-03 na ovom commit-u):' -ForegroundColor Green
+$today = Get-Date -Format 'yyyy-MM-dd'
+Write-Host ("Lokalno zatvoreno ($today na ovom commit-u):") -ForegroundColor Green
 Write-Host '  - GitHub CI monorepo (5/5 jobova)' -ForegroundColor DarkGray
 Write-Host '  - staging-preflight.ps1 -SkipAtinaTestCi' -ForegroundColor DarkGray
 Write-Host '  - staging-smoke-remote.ps1 (127.0.0.1:3000)' -ForegroundColor DarkGray
@@ -92,6 +93,7 @@ Write-Host ''
 Write-Host 'Runbook: docs/VLASNIK-PAKET.md | docs/STAGING-RELEASE-CHECKLIST.md' -ForegroundColor DarkGray
 Write-Host 'Staging preduslov (lokalno): docs/STAGING-LOCAL-PREFLIGHT-LATEST.md' -ForegroundColor DarkGray
 Write-Host 'Azuriraj handoff: .\scripts\refresh-staging-handoff.ps1' -ForegroundColor DarkGray
+Write-Host 'Brzi gate-ovi: .\scripts\owner-gates-quick.ps1 -RefreshHandoff' -ForegroundColor DarkGray
 
 if ($RefreshHandoff) {
   Write-Host ''
