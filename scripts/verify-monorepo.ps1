@@ -61,7 +61,7 @@
     -SkipDocAudit      -> skips audit-doc-gate-references.ps1 locally; CI job python still runs it (GitHub: Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md).
     Combine both when you have neither Postgres nor Docker for those steps.
 
-  LATEST evidence (update when you log a new run): docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355);
+  LATEST evidence (update when you log a new run): docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 359);
   multi-stack smoke exemplar: docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351).
   When bumping Val numbers in comments/docs repo-wide: scripts/README.md — section Kad podigneš novi broj.
 #>
@@ -172,5 +172,5 @@ if (-not $SkipCompose) {
 Write-Host ''
 Write-Host 'Optional (stacks up): .\scripts\smoke-stack.ps1 (Atina Node = GET /health when probed)' -ForegroundColor DarkGray
 Write-Host 'Atina bundled smoke: atina-platform\atina npm run smoke:all — formalni Atina release gate: atina-platform\atina\docs\operations\release-gate-checklist.md (Local notes — Smoke tests)' -ForegroundColor DarkGray
-Write-Host 'LATEST verify: docs\NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 355); smoke: docs\NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351)' -ForegroundColor DarkGray
+Write-Host 'LATEST verify: docs\NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md (Val 359); smoke: docs\NIVO-1-SMOKE-EVIDENCE-LATEST.md (Val 351)' -ForegroundColor DarkGray
 Write-Host 'Help: Get-Help .\scripts\verify-monorepo.ps1 -Full | scripts\README.md | docs\NIVO-1-F4-TIM-CHECKLIST.md | docs\GIT-BRANCH-PROTECTION.md' -ForegroundColor DarkGray

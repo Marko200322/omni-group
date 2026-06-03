@@ -69,7 +69,7 @@ Označi `[x]` kad je zatvoreno.
 - [x] Commit + push celog Titan audita (~100+ fajlova), **bez** `.env` — `7df6ca2`, `9d30be7`, `7c319dd` na `main`
 - [x] `011_system_alerts.sql` primenjena na **dev** (tabela `system_alerts`; staging/prod još ne)
 - [x] `npm run test:ci` **PASS** lokalno posle `7c319dd` — **3257/3257** (2026-06-02)
-- [ ] Novi Val u [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md)
+- [x] Novi Val u [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) — **Val 359** / 2026-06-03, pun mirror exit 0
 
 ### Faza B2 — Dug u kodu (niski prioritet → 100% čistoće)
 
