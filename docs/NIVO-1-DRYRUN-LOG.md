@@ -7537,3 +7537,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `staging-owner-next.ps1` | deploy SHA = poslednji zelen CI |
 
 **Link na CI run:** [Run #93](https://github.com/Marko200322/omni-group/actions/runs/26918671739) · `106ebec`
+
+---
+
+## Zapis (izvršen) — CI Run #94 + sync-ci-evidence (2026-06-04)
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #94 | **PASS** — 5/5 jobova |
+| `sync-ci-evidence.ps1` | **PASS** — novi auto-sync evidence |
+| `owner-gates-quick.ps1` | **PASS** |
+
+**Link na CI run:** [Run #94](https://github.com/Marko200322/omni-group/actions/runs/26918947287) · `7484594`

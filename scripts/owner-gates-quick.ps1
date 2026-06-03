@@ -43,6 +43,9 @@ if ($RefreshHandoff) {
   Write-Host ''
   Write-Host '-- refresh-staging-handoff --' -ForegroundColor Cyan
   & (Join-Path $scriptsDir 'refresh-staging-handoff.ps1')
+  Write-Host ''
+  Write-Host '-- sync-ci-evidence --' -ForegroundColor Cyan
+  & (Join-Path $scriptsDir 'sync-ci-evidence.ps1')
 }
 
 Write-Host ''

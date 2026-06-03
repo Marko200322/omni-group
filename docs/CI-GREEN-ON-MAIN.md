@@ -1,4 +1,4 @@
-# CI zelen na `main` — repo checklist (ljudi)
+﻿# CI zelen na `main` — repo checklist (ljudi)
 
 **Cilj:** posle svakog merge-a na **`main`** monorepo **GitHub Actions** prolaz treba da bude **zelen** — svi relevantni job-ovi workflow-a **CI (monorepo)** su **uspešni**. Ovaj dokument je **runbook za ljude** (otvori Actions, proveri koji job, šta dalje ako je crveno). Ne zamenjuje branch protection; vidi [GIT-BRANCH-PROTECTION.md](./GIT-BRANCH-PROTECTION.md) ako želiš da merge bude blokiran dok check-ovi ne prođu.
 
@@ -6,7 +6,7 @@
 
 **Next — interni dok hub:** `apps/omnigroup-web` → `npm run dev` → **`/dev/docs`** — [`apps/omnigroup-web/README.md`](../apps/omnigroup-web/README.md).
 
-**Poslednji zeleni run (2026-06-04):** [#93](https://github.com/Marko200322/omni-group/actions/runs/26918671739) · `106ebec` · 5/5 jobova.
+**Poslednji zeleni run (2026-06-04):** [#94](https://github.com/Marko200322/omni-group/actions/runs/26918947287) - `7484594` - 5/5 jobova. Lokalna provera: [github-ci-status.ps1](../scripts/github-ci-status.ps1). Probni PR: [prepare-branch-protection-pr.ps1](../scripts/prepare-branch-protection-pr.ps1).
 
 ---
 
