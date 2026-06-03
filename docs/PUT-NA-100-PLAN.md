@@ -66,9 +66,9 @@ Označi `[x]` kad je zatvoreno.
 
 ### Faza B1 — Isporuka koda (1–2 dana)
 
-- [ ] Commit + push celog Titan audita (~100+ fajlova), **bez** `.env`
-- [ ] `011_system_alerts.sql` primenjena na dev/staging/prod
-- [ ] `npm run test:ci` **PASS** na `main` posle merge-a
+- [x] Commit + push celog Titan audita (~100+ fajlova), **bez** `.env` — `7df6ca2`, `9d30be7`, `7c319dd` na `main`
+- [x] `011_system_alerts.sql` primenjena na **dev** (tabela `system_alerts`; staging/prod još ne)
+- [x] `npm run test:ci` **PASS** lokalno posle `7c319dd` — **3257/3257** (2026-06-02)
 - [ ] Novi Val u [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md)
 
 ### Faza B2 — Dug u kodu (niski prioritet → 100% čistoće)
@@ -80,8 +80,8 @@ Označi `[x]` kad je zatvoreno.
 
 ### Faza B3 — Front + F4-6
 
-- [ ] Resend kontakt live (`apps/omnigroup-web/.env.local` + `test-contact-resend.ps1`)
-- [ ] Dashboard bez demo kada je prava sesija + Atina API
+- [x] Resend kontakt live (`apps/omnigroup-web/.env.local` + `test-contact-resend.ps1`) — 2026-06-02, `sent_via_resend`
+- [x] Dashboard bez demo kada je prava sesija + Atina API — `dashboard/page.tsx` koristi `fetchAtinaDashboardLive` kad `!session.demo`; E2E billing sa `admin@atina.io` prolazi
 - [ ] F4-6: upload spike dokumentovan + minimal ruta ([`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md))
 - [ ] _(opciono)_ Pun UI restore — [`OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md`](./OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md)
 
