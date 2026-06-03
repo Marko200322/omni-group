@@ -44,10 +44,6 @@ jobs:
     name: Atina SaaS (test:ci)
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: true
-      matrix:
-        shard: [1, 2]
     env:
       CI: true
     defaults:
@@ -67,11 +63,12 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=3072
         run: npx eslint src --ext .ts
-      - name: Unit tests (shard ${{ matrix.shard }}/2)
+      - name: Unit tests
         env:
-          NODE_OPTIONS: --max-old-space-size=4096
-        # Coverage + pragovi: lokalno `npm run test:ci`. Shard smanjuje RAM/trajanje po jobu (~7 GB runner).
-        run: npx jest --runInBand --forceExit --testPathIgnorePatterns=integration --shard=${{ matrix.shard }}/2
+          NODE_OPTIONS: --max-old-space-size=6144
+        # Jedan job (bez shard) — matrix shard 2/2 je povremeno padao na GHA (~7 GB runner).
+        # Coverage + pragovi: lokalno `npm run test:ci`.
+        run: npx jest --runInBand --forceExit --testPathIgnorePatterns=integration
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
