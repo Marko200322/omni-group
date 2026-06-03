@@ -10,7 +10,7 @@ Jedna lista za **ovaj projekat** (Atina + web + billing + deploy). Označi `[x]`
 - [ ] `cd apps/omnigroup-web && npm run build` PASS
 - [ ] `npm run smoke:integration` PASS
 - [ ] `npm run e2e:billing` PASS (iz `apps/omnigroup-web`)
-- [ ] `verify-monorepo.ps1` PASS (iz korena repoa)
+- [ ] [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) PASS (iz korena repoa; job **Python (Doslednost dok + pytest)** · [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); **apps/omnigroup-web** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**)
 - [ ] Git commit + push (bez `.env` fajlova)
 
 ## 2. Env — lokalno / staging

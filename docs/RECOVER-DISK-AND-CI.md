@@ -1,6 +1,6 @@
 # Recovery — disk prostor i CI / test:ci
 
-**Svrha:** kad `verify-monorepo.ps1` ili GitHub **Atina SaaS (test:ci)** padnu zbog diska, timeout-a ili Jest worker-a.
+**Svrha:** kad [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **Python (Doslednost dok + pytest)** · [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); uključuje **apps/omnigroup-web** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**) ili GitHub **Atina SaaS (test:ci)** padnu zbog diska, timeout-a ili Jest worker-a.
 
 ---
 

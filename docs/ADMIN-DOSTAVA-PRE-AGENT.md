@@ -26,7 +26,7 @@
 ## Faza 0 — Priprema (5 min)
 
 - [ ] 👤 Repo na disku: `c:\Users\Marko Kosic\OneDrive\Desktop\omni group`
-- [ ] 👤 Disk **≥ 5 GB** slobodno na `C:` (za pun `verify-monorepo.ps1`)
+- [ ] 👤 Disk **≥ 5 GB** slobodno na `C:` (za pun [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) — job **Python (Doslednost dok + pytest)** · [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); uključuje **apps/omnigroup-web** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**)
 - [ ] 👤 Docker Desktop uključen (ako koristiš compose lokalno)
 - [ ] 👤 Odluka zapisana: **Vision K8s** = **N/A** (100% = A+B, ne ceo PDF vision)
 

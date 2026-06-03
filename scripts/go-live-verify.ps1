@@ -1,6 +1,8 @@
 <#
 .SYNOPSIS
   Jedan prolaz — gate + smoke + E2E billing za Omni Group monorepo.
+  verify-monorepo.ps1 parity: job Python (Doslednost dok + pytest) — docs/GIT-BRANCH-PROTECTION.md;
+  apps/omnigroup-web build osim -SkipOmnigroupWeb; posle servisa npm run smoke:all u atina-platform/atina.
 
 .EXAMPLE
   .\scripts\go-live-verify.ps1

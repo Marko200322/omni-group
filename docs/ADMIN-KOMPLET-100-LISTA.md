@@ -192,7 +192,7 @@ cd "c:\Users\Marko Kosic\OneDrive\Desktop\omni group"
 
 - [ ] Posle agentovog push-a: **CI (monorepo)** zelen na `main` ([`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md))
 - [ ] Popunjen [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md) ako koristiš GitHub
-- [ ] _(opciono)_ Pun `.\scripts\verify-monorepo.ps1` + novi Val u [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md)
+- [ ] _(opciono)_ Pun [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **Python (Doslednost dok + pytest)** · [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); **apps/omnigroup-web** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**) + novi Val u [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md)
 
 ### 3.6 Reference materijal
 

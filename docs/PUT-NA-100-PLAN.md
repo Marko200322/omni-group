@@ -49,7 +49,7 @@ cd ..\..
 python -m pytest -q
 cd atina-system
 npm run verify:n1
-# 3) Pun mirror (disk ≥5 GB)
+# 3) Pun mirror (disk ≥5 GB) — [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **Python (Doslednost dok + pytest)** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); uključuje **apps/omnigroup-web** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`** u `atina-platform/atina`)
 cd ..
 .\scripts\verify-monorepo.ps1
 ```
