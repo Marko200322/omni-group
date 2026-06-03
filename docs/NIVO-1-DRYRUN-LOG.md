@@ -7526,3 +7526,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `refresh-staging-handoff.ps1` | deploy SHA = poslednji zelen CI |
 
 **Link na CI run:** [Run #92](https://github.com/Marko200322/omni-group/actions/runs/26918365736) · `86eb54f`
+
+---
+
+## Zapis (izvršen) — CI Run #93 (2026-06-04)
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #93 | **PASS** — 5/5 jobova |
+| `staging-owner-next.ps1` | deploy SHA = poslednji zelen CI |
+
+**Link na CI run:** [Run #93](https://github.com/Marko200322/omni-group/actions/runs/26918671739) · `106ebec`

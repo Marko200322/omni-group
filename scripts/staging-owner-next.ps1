@@ -60,16 +60,20 @@ Write-Host ''
 
 $url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=main"
 $run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
+$deploySha = $sha
 if ($run) {
   $runSha = $run.head_sha.Substring(0, 7)
   $ciOk = $run.status -eq 'completed' -and $run.conclusion -eq 'success'
   $ciColor = if ($ciOk) { 'Green' } else { 'Yellow' }
   Write-Host ("CI Run #{0}  [{1}]" -f $run.run_number, $(if ($run.conclusion) { $run.conclusion } else { $run.status })) -ForegroundColor $ciColor
   Write-Host $run.html_url -ForegroundColor DarkGray
+  if ($ciOk) {
+    $deploySha = $runSha
+  }
   if ($runSha -eq $sha) {
     Write-Host '  HEAD = CI commit (deploy ovaj SHA)' -ForegroundColor Green
   } else {
-    Write-Host ("  UPOZORENJE: HEAD ({0}) != CI run ({1})" -f $sha, $runSha) -ForegroundColor Yellow
+    Write-Host ("  HEAD ({0}) != CI run ({1}) - deploy preporucen: {2}" -f $sha, $runSha, $deploySha) -ForegroundColor Yellow
   }
 }
 
@@ -81,7 +85,7 @@ Write-Host '  Provera: .\scripts\branch-protection-ready.ps1' -ForegroundColor D
 Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
 Write-Host ''
 Write-Host 'Korak 2 - Deploy na staging host' -ForegroundColor Cyan
-Write-Host ("  git checkout {0}  # ili deploy tag {0}" -f $sha) -ForegroundColor DarkGray
+Write-Host ("  git checkout {0}  # deploy tag (poslednji zelen CI)" -f $deploySha) -ForegroundColor DarkGray
 Write-Host '  Atina: npm ci && npm run build && npm run migrate (backup DB pre migrate)' -ForegroundColor DarkGray
 Write-Host '  Web: npm ci && npm run build' -ForegroundColor DarkGray
 Write-Host ''
