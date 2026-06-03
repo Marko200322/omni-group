@@ -12,15 +12,17 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$url = "https://api.github.com/repos/$Repo/actions/runs?per_page=$Limit"
-$r = Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }
+$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
 
-if (-not $r.workflow_runs -or $r.workflow_runs.Count -eq 0) {
+$runs = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit $Limit -AllowCacheFallback)
+
+if ($runs.Count -eq 0) {
   Write-Host 'Nema workflow run-ova.' -ForegroundColor Yellow
   exit 1
 }
 
-foreach ($run in $r.workflow_runs) {
+foreach ($run in $runs) {
   $label = if ($run.conclusion) { $run.conclusion } else { $run.status }
   $color = switch ($label) {
     'success' { 'Green' }
@@ -35,7 +37,7 @@ foreach ($run in $r.workflow_runs) {
 
   if ($run.status -eq 'completed') {
     try {
-      $jobs = (Invoke-RestMethod -Uri $run.jobs_url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).jobs
+      $jobs = @(Get-OmniGithubRunJobs -Run $run -AllowCacheFallback)
       foreach ($j in $jobs | Sort-Object name) {
         $jlabel = if ($j.conclusion) { $j.conclusion } else { $j.status }
         $jc = switch ($jlabel) {
@@ -52,6 +54,6 @@ foreach ($run in $r.workflow_runs) {
   }
 }
 
-if ($r.workflow_runs[0].conclusion -eq 'success') { exit 0 }
-if ($r.workflow_runs[0].status -eq 'in_progress') { exit 2 }
+if ($runs[0].conclusion -eq 'success') { exit 0 }
+if ($runs[0].status -eq 'in_progress') { exit 2 }
 exit 1

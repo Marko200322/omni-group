@@ -14,11 +14,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Split-Path -Parent $scriptsDir
 Set-Location $repoRoot
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
 
-$url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=main"
-$run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
+$ci = Get-OmniGithubLatestMainRun -Repo $Repo -AllowCacheFallback
+$run = $ci.Run
 if (-not $run) {
   Write-Host 'FAIL: nema CI run-ova na main.' -ForegroundColor Red
   exit 1

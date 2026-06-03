@@ -14,12 +14,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
 
 Write-Host '=== branch-protection-ready ===' -ForegroundColor Cyan
 Write-Host ''
 
-$url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=$Branch"
-$run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
+$ci = Get-OmniGithubLatestMainRun -Repo $Repo -Branch $Branch -AllowCacheFallback -IncludeJobs
+$run = $ci.Run
+$jobs = @($ci.Jobs)
 
 if (-not $run) {
   Write-Host 'FAIL: nema workflow run-ova na main.' -ForegroundColor Red
@@ -30,6 +32,9 @@ $sha = $run.head_sha.Substring(0, 7)
 $label = if ($run.conclusion) { $run.conclusion } else { $run.status }
 Write-Host ("Poslednji CI run #{0}  {1}  [{2}]" -f $run.run_number, $sha, $label) -ForegroundColor $(if ($label -eq 'success') { 'Green' } else { 'Red' })
 Write-Host $run.html_url -ForegroundColor DarkGray
+if ($ci.UsedCache) {
+  Write-Host '  (podaci iz lokalnog cache-a)' -ForegroundColor Yellow
+}
 
 if ($run.status -ne 'completed' -or $run.conclusion -ne 'success') {
   Write-Host ''
@@ -37,7 +42,10 @@ if ($run.status -ne 'completed' -or $run.conclusion -ne 'success') {
   exit 1
 }
 
-$jobs = (Invoke-RestMethod -Uri $run.jobs_url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).jobs
+if ($jobs.Count -eq 0) {
+  $jobs = Get-OmniGithubRunJobs -Run $run -AllowCacheFallback
+}
+
 $failed = @($jobs | Where-Object { $_.conclusion -and $_.conclusion -ne 'success' })
 if ($failed.Count -gt 0) {
   Write-Host ''

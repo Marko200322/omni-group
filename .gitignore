@@ -25,3 +25,4 @@ sistem_naplate/pdfs/*.pdf
 # Lokalni snapshot izlazi iz read-only audit suite-a (audit-npm-monorepo.ps1, scan-todo-markers.ps1, ...)
 # Skripte i runbook-i upućuju na docs/* za commit-able nalaze; tmp/ ostaje lokalno (npr. JSON / CSV za dashboard).
 tmp/
+scripts/.cache/

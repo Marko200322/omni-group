@@ -17,6 +17,7 @@ $ErrorActionPreference = 'Stop'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 Set-Location $repoRoot
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
 
 $sha = (git rev-parse --short HEAD).Trim()
 $subject = (git log -1 --format='%s').Trim()
@@ -58,8 +59,7 @@ Write-Host '  - staging-smoke-remote.ps1 (127.0.0.1:3000)' -ForegroundColor Dark
 Write-Host '  - owner-smoke-all.ps1' -ForegroundColor DarkGray
 Write-Host ''
 
-$url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=main"
-$run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
+$run = (Get-OmniGithubLatestMainRun -Repo $Repo -AllowCacheFallback).Run
 $deploySha = $sha
 if ($run) {
   $runSha = $run.head_sha.Substring(0, 7)

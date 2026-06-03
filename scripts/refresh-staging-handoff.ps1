@@ -18,6 +18,7 @@ $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 $handoff = Join-Path $repoRoot 'docs\STAGING-LOCAL-PREFLIGHT-LATEST.md'
 Set-Location $repoRoot
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
 
 $headSha = (git rev-parse HEAD).Trim()
 $headShort = $headSha.Substring(0, 7)
@@ -32,8 +33,8 @@ $deploySha = $headSha
 $deployShort = $headShort
 $deployNote = ''
 try {
-  $url = "https://api.github.com/repos/$Repo/actions/runs?per_page=1&branch=main"
-  $run = (Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent' = 'omni-group-scripts' }).workflow_runs[0]
+  $ci = Get-OmniGithubLatestMainRun -Repo $Repo -AllowCacheFallback
+  $run = $ci.Run
   if ($run) {
     $runSha = $run.head_sha
     $runShort = $runSha.Substring(0, 7)
