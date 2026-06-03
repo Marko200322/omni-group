@@ -35,3 +35,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# F4-6 upload spike (local dev only)
+.uploads-dev/

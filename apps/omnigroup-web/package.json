@@ -12,6 +12,7 @@
     "test:atina": "node scripts/test-atina-normalize.mjs",
     "smoke:integration": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../scripts/smoke-web-integration.ps1",
     "e2e:billing": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../scripts/e2e-billing-manual.ps1",
+    "e2e:register": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../scripts/e2e-register-plan-payment.ps1",
     "test:contact": "powershell -NoProfile -ExecutionPolicy Bypass -File ../../scripts/test-contact-resend.ps1"
   },
   "dependencies": {

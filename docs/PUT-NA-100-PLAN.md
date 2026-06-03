@@ -82,12 +82,12 @@ Označi `[x]` kad je zatvoreno.
 
 - [x] Resend kontakt live (`apps/omnigroup-web/.env.local` + `test-contact-resend.ps1`) — 2026-06-02, `sent_via_resend`
 - [x] Dashboard bez demo kada je prava sesija + Atina API — `dashboard/page.tsx` koristi `fetchAtinaDashboardLive` kad `!session.demo`; E2E billing sa `admin@atina.io` prolazi
-- [ ] F4-6: upload spike dokumentovan + minimal ruta ([`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md))
+- [x] F4-6: upload spike dokumentovan + minimal ruta ([`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md)) — [`F4-6-UPLOAD-SPIKE.md`](./F4-6-UPLOAD-SPIKE.md), `POST /api/upload`, `test-upload-spike.ps1` PASS
 - [ ] _(opciono)_ Pun UI restore — [`OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md`](./OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md)
 
 ### Faza B4 — E2E (N2)
 
-- [ ] Jedan automatizovan tok (npr. register → plan → payment stub) — [`atina-platform/atina/docs/operations/NIVO-2-E2E.md`](../atina-platform/atina/docs/operations/NIVO-2-E2E.md)
+- [x] Jedan automatizovan tok (npr. register → plan → payment stub) — [`e2e-register-plan-payment.ps1`](../scripts/e2e-register-plan-payment.ps1) · `npm run e2e:register` u web (2026-06-03 PASS)
 
 ### Faza B5 — PDF folder
 
