@@ -7273,3 +7273,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — lokalni preduslov za staging deploy zatvoren na `ebd763f`.
 
 **Link na CI run:** [Run #68](https://github.com/Marko200322/omni-group/actions/runs/26895476179) (compose green; run kasnije cancelled zbog novog push-a `ebd763f`). Run #69 fail shard 2/2 — fix `61f33d1`. Run #70 i dalje fail shard 2 — legacy route testovi + `testTimeout` 60s na CI (`jest.config.js`).
+
+---
+
+## Zapis (izvršen) — GitHub CI **Run #77** — svih 5 jobova zeleno (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** GitHub Actions — Cursor agent (push `7eabd71`)  
+**Okruženje:** `main` @ `7eabd71` — `fix(atina): stabilize CI unit tests on Linux runners`
+
+**Šta je testirano:**
+
+| Job | Rezultat |
+|-----|----------|
+| **Python (Doslednost dok + pytest)** | PASS |
+| **Atina SaaS (test:ci)** | PASS — mock `sqlite3`/`bull` u `setup-env.ts`; `jest-ci-gate.mjs` |
+| **Omnigroup web (Next.js build)** | PASS |
+| **Atina System (verify:ci)** | PASS |
+| **Compose (docker compose config)** | PASS |
+
+**Pass / Fail:** **Pass** — N2 red 0.3 / [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) zatvoren na `main`. Prethodni fail: Run #76 (`582a404`) — Atina SaaS unit tests.
+
+**Link na CI run:** [Run #77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) · commit `7eabd71`
+
+**Vlasnik — sledeće:** `gh auth login`, branch protection (5 required checks — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)), staging deploy + `staging-smoke-remote.ps1`.

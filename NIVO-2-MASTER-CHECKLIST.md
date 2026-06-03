@@ -31,7 +31,7 @@
 
 | # | Zadatak | Gate |
 |---|---------|------|
-| 0.3 | CI monorepo (job **`python`**: **`Python (Doslednost dok + pytest)`** na GitHubu — [`docs/GIT-BRANCH-PROTECTION.md`](./docs/GIT-BRANCH-PROTECTION.md)) i dalje zelen na svakom merge-u na `main` · ljudi: [`docs/CI-GREEN-ON-MAIN.md`](./docs/CI-GREEN-ON-MAIN.md) | [ ] |
+| 0.3 | CI monorepo (job **`python`**: **`Python (Doslednost dok + pytest)`** na GitHubu — [`docs/GIT-BRANCH-PROTECTION.md`](./docs/GIT-BRANCH-PROTECTION.md)) i dalje zelen na svakom merge-u na `main` · ljudi: [`docs/CI-GREEN-ON-MAIN.md`](./docs/CI-GREEN-ON-MAIN.md) | [x] — **2026-06-03:** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) (`7eabd71`) 5/5 PASS; [`docs/N2-0-3-EVIDENCE-LATEST.md`](./docs/N2-0-3-EVIDENCE-LATEST.md) |
 
 *Discovery audit (bivši 0.1 / 0.2):* [`docs/NIVO-2-DISCOVERY-AUDIT.md`](./docs/NIVO-2-DISCOVERY-AUDIT.md) — zatvoreno **2026-05-02**.
 

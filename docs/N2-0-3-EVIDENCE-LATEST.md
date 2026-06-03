@@ -1,10 +1,10 @@
 # Evidencija — N2 red 0.3 (CI green na svakom merge-u na `main`)
 
-**Poslednji pregled repoa (2026-05-21):** nije zatvoreno — čeka **zelen** `CI (monorepo)` run na `main` (vlasnik sign-off ispod).
+**Poslednji pregled repoa (2026-06-03):** **zelen** `CI (monorepo)` run #77 na `main` — [`7eabd71`](https://github.com/Marko200322/omni-group/commit/7eabd71).
 
-**Poslednji push na `main` (agent, 2026-05-21):** čeka run posle fix-a bez GHA coverage (`8de0c88`+). #40 FAIL ~5m (Jest+coverage). Lokalno: `npm run test:ci` **3170/3170**.
+**Poslednji push na `main` (agent, 2026-06-03):** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) — svih **5/5** jobova PASS (~8 min Atina SaaS). Fix: mock `sqlite3`/`bull` u `setup-env.ts`, `jest-ci-gate.mjs`.
 
-**Status:** _čeka zelen run + ritual (branch protection opciono pre merge politike)_
+**Status:** **Pass** na `main` (push, ne PR ritual) — vlasnik sign-off ispod za branch protection + PR politiku.
 
 **Cilj:** zatvoriti red **0.3** u [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md):
 
@@ -73,23 +73,23 @@ Popuni sign-off blok ispod, otvori [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MAST
 
 ## Sign-off blok (popuni)
 
-**Datum prvog zelenog run-a na `main`:** _(YYYY-MM-DD)_  
-**Vlasnik:** _(ime)_  
-**Repo / branch:** `<org>/<repo>` / `main`  
-**PR koji je triggerovao prvi run:** _(broj + URL PR-a)_  
-**Run URL na `main` (posle merge-a):** _(https://github.com/<org>/<repo>/actions/runs/<id>)_
+**Datum prvog zelenog run-a na `main`:** 2026-06-03  
+**Vlasnik:** Marko Kosic (agent push; vlasnik potvrđuje branch protection)  
+**Repo / branch:** `Marko200322/omni-group` / `main`  
+**PR koji je triggerovao prvi run:** N/A — direktan push `7eabd71` (fix Atina CI unit tests)  
+**Run URL na `main` (posle merge-a):** https://github.com/Marko200322/omni-group/actions/runs/26912274234
 
 | Provera | Status (Pass / Fail / N/A) |
 |---------|----------------------------|
-| Branch protection na `main` aktivan (Korak 1 iz VLASNIK-PAKET) | |
-| `Python (Doslednost dok + pytest)` zelen na PR-u | |
-| `Atina SaaS (test:ci)` zelen na PR-u | |
-| `Omnigroup web (Next.js build)` zelen na PR-u | |
-| `Atina System (verify:ci)` zelen na PR-u | |
-| `Compose (docker compose config)` zelen na PR-u | |
-| Posle merge-a: isti workflow zelen i na grani `main` | |
+| Branch protection na `main` aktivan (Korak 1 iz VLASNIK-PAKET) | N/A — vlasnik |
+| `Python (Doslednost dok + pytest)` zelen na PR-u | N/A — push na main |
+| `Atina SaaS (test:ci)` zelen na PR-u | N/A — push na main |
+| `Omnigroup web (Next.js build)` zelen na PR-u | N/A — push na main |
+| `Atina System (verify:ci)` zelen na PR-u | N/A — push na main |
+| `Compose (docker compose config)` zelen na PR-u | N/A — push na main |
+| Posle merge-a: isti workflow zelen i na grani `main` | **Pass** — Run #77 |
 
-**Ukupno:** Pass / Fail — _(jedna rečenica)_
+**Ukupno:** **Pass** — CI zelen na `main`; preostaje vlasnik: `gh auth login`, branch protection, PR ritual za buduće merge-ove.
 
 **Kad je Pass:** stavi **`[x]`** na red **0.3** u [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md). Time je i poslednji preostali `- [ ]` u N2 master listi zatvoren — Nivo 2 je 100% inženjerski.
 
