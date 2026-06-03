@@ -7464,3 +7464,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `STAGING-LOCAL-PREFLIGHT-LATEST.md` | novi handoff doc |
 
 **Link na CI run:** [Run #86](https://github.com/Marko200322/omni-group/actions/runs/26916425006) · `464185a`
+
+---
+
+## Zapis (izvršen) — CI Run #88 + refresh-staging-handoff (2026-06-04)
+
+**Datum:** 2026-06-04  
+**Okruženje:** commit `9db6234`; disk C: **~0.81 GB**
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #88 | **PASS** — 5/5 jobova |
+| `staging-smoke-remote.ps1` | **PASS** |
+| `refresh-staging-handoff.ps1` | novo — auto handoff doc |
+
+**Link na CI run:** [Run #88](https://github.com/Marko200322/omni-group/actions/runs/26917024714) · `9db6234`
