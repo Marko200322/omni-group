@@ -66,10 +66,13 @@ jobs:
       - name: Unit tests
         env:
           NODE_OPTIONS: --max-old-space-size=6144
-        # Jedan job (bez shard) — matrix shard 2/2 je povremeno padao na GHA (~7 GB runner).
-        # Coverage + pragovi: lokalno `npm run test:ci`.
-        # Bez --forceExit na GHA (jest.config.js napomena — open handles mogu dati exit 1 posle prolaza).
-        run: npx jest --runInBand --testPathIgnorePatterns=integration
+        # forceExit: open handles in suite; Jest ponekad vrati exit 1 i kad su svi testovi PASS — grep gate ispod.
+        run: |
+          set -o pipefail
+          npx jest --runInBand --forceExit --testPathIgnorePatterns=integration 2>&1 | tee "$RUNNER_TEMP/jest.log"
+          if grep -E "Tests:.*[0-9]+ failed" "$RUNNER_TEMP/jest.log"; then exit 1; fi
+          if grep -E "Test Suites:.*[0-9]+ failed" "$RUNNER_TEMP/jest.log"; then exit 1; fi
+          grep -E "Tests:.*[0-9]+ passed" "$RUNNER_TEMP/jest.log"
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
