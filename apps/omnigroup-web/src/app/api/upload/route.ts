@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   const type = entry.type || 'application/octet-stream';
   if (!ALLOWED_TYPES.has(type)) {
     return NextResponse.json(
-      { ok: false, error: 'file_type_not_allowed', allowed: [...ALLOWED_TYPES] },
+      { ok: false, error: 'file_type_not_allowed', allowed: Array.from(ALLOWED_TYPES) },
       { status: 400 },
     );
   }

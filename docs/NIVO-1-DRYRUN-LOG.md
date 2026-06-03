@@ -7195,23 +7195,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 
 ---
 
-## Zapis (izvršen) — pun `verify-monorepo.ps1` **Val 359** (2026-06-03)
+## Zapis (izvršen) — pun `verify-monorepo.ps1` **Val 360** (2026-06-03)
 
 **Datum:** 2026-06-03  
 **Vlasnik:** lokalni prolaz (omni group workspace) — Cursor agent  
 **Okruženje:** Windows; `atina-verify-pg` na host **`:5434`**; web dev zaustavljen pre Omnigroup `npm ci`
 
-**Šta je testirano:** `$env:POSTGRES_PORT='5434'; powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-monorepo.ps1` *(bez switch-eva)* posle flaky test fix (`7c319dd`) i doc gate fix (`732ca14`).
+**Šta je testirano:** `$env:POSTGRES_PORT='5434'; powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-monorepo.ps1` *(bez switch-eva)* posle `38285be` (payments repo + admin onboarding split). Prvi pokušaj fail: `upload/route.ts` `[...ALLOWED_TYPES]` — fix `Array.from(ALLOWED_TYPES)`.
 
 | Korak | Rezultat |
 |--------|----------|
 | `audit-doc-gate-references.ps1` | PASS |
 | pytest (koren) | **11/11** |
 | Atina `npm run test:ci` | **3257/3257** |
-| `apps/omnigroup-web` `npm ci` + build | PASS |
+| `apps/omnigroup-web` `npm ci` + build | PASS (**40/40** ruta) |
 | Nest `verify:ci` | **140/140** unit, **10/10** e2e |
 | `docker compose config` ×3 | PASS |
 
-**Pass / Fail:** **Pass** — exit **`0`**, ~1089 s. Evidencija: [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) § Val 359.
+**Pass / Fail:** **Pass** — exit **`0`**, ~1020 s. Evidencija: [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) § Val 360.
 
 **Link na CI run:** N/A — lokalni mirror; GitHub job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md).
