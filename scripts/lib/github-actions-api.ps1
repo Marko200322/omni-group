@@ -4,7 +4,16 @@
 #Requires -Version 5.1
 
 function Get-OmniGithubApiHeaders {
-  @{ 'User-Agent' = 'omni-group-scripts'; 'Accept' = 'application/vnd.github+json' }
+  $headers = @{
+    'User-Agent' = 'omni-group-scripts'
+    'Accept'     = 'application/vnd.github+json'
+  }
+  $token = $env:GITHUB_TOKEN
+  if (-not $token) { $token = $env:GH_TOKEN }
+  if ($token) {
+    $headers['Authorization'] = "Bearer $token"
+  }
+  return $headers
 }
 
 function Test-OmniGithubRateLimitError {
