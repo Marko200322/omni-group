@@ -66,11 +66,23 @@ jobs:
       - name: Unit tests
         env:
           NODE_OPTIONS: --max-old-space-size=6144
-        # forceExit: open handles in suite; Jest ponekad vrati exit 1 i kad su svi testovi PASS — grep gate ispod.
+        # JSON gate: forceExit može dati exit 1 i kad su svi testovi PASS (open handles).
         run: |
-          npx jest --runInBand --forceExit --testPathIgnorePatterns=integration 2>&1 | tee "$RUNNER_TEMP/jest.log" || true
-          if grep -qE "[1-9][0-9]* failed" "$RUNNER_TEMP/jest.log"; then exit 1; fi
-          grep -qE "Tests:.*[0-9]+ passed" "$RUNNER_TEMP/jest.log"
+          npx jest --runInBand --forceExit --testPathIgnorePatterns=integration --json --outputFile=jest-results.json || true
+          node -e "
+            const fs = require('fs');
+            if (!fs.existsSync('jest-results.json')) { console.error('missing jest-results.json'); process.exit(1); }
+            const r = JSON.parse(fs.readFileSync('jest-results.json', 'utf8'));
+            if ((r.numFailedTests || 0) > 0 || (r.numFailedTestSuites || 0) > 0) {
+              console.error('Jest failed:', r.numFailedTests, 'tests,', r.numFailedTestSuites, 'suites');
+              process.exit(1);
+            }
+            if ((r.numPassedTests || 0) < 1) {
+              console.error('No passed tests in jest-results.json');
+              process.exit(1);
+            }
+            console.log('Jest OK:', r.numPassedTests, 'passed,', r.numPassedTestSuites, 'suites');
+          "
 
   omnigroup-web:
     name: Omnigroup web (Next.js build)
