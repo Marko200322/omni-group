@@ -102,5 +102,5 @@ Write-Host 'Brzi gate-ovi: .\scripts\owner-gates-quick.ps1 -RefreshHandoff' -For
 if ($RefreshHandoff) {
   Write-Host ''
   & (Join-Path $scriptsDir 'refresh-staging-handoff.ps1')
-  & (Join-Path $scriptsDir 'sync-ci-evidence.ps1')
+  & (Join-Path $scriptsDir 'sync-ci-evidence.ps1') -AppendDryRunLog
 }

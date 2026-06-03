@@ -4,10 +4,13 @@
 
 .EXAMPLE
   .\scripts\sync-ci-evidence.ps1
+.EXAMPLE
+  .\scripts\sync-ci-evidence.ps1 -AppendDryRunLog
 #>
 #Requires -Version 5.1
 param(
-  [string]$Repo = 'Marko200322/omni-group'
+  [string]$Repo = 'Marko200322/omni-group',
+  [switch]$AppendDryRunLog
 )
 
 $ErrorActionPreference = 'Stop'
@@ -79,3 +82,28 @@ Replace-FirstLinePrefix 'docs/CEO-G-PRODUCTION-EVIDENCE-LATEST.md' '**Poslednji 
 
 Write-Host ''
 Write-Host ("sync-ci-evidence: Run #{0} {1} OK" -f $num, $sha) -ForegroundColor Green
+
+if ($AppendDryRunLog) {
+  $dryRun = Join-Path $repoRoot 'docs\NIVO-1-DRYRUN-LOG.md'
+  $marker = "Run #$num]($urlRun) · ``$sha``"
+  $existing = Get-Content -LiteralPath $dryRun -Raw -Encoding UTF8
+  if ($existing -like "*Run #$num*") {
+    Write-Host "dry-run log: Run #$num vec postoji, skip" -ForegroundColor DarkGray
+  } else {
+    $block = @"
+
+---
+
+## Zapis (izvršen) — CI Run #$num ($today)
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #$num | **PASS** — 5/5 jobova |
+| ``owner-gates-quick.ps1`` | **PASS** |
+
+**Link na CI run:** [Run #$num]($urlRun) · ``$sha``
+"@
+    Add-Content -LiteralPath $dryRun -Value $block -Encoding utf8
+    Write-Host "dry-run log: appended Run #$num" -ForegroundColor DarkGray
+  }
+}
