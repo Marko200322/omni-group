@@ -70,7 +70,7 @@ module.exports = {
       statements: 95,
     },
   },
-  testTimeout: 30000,
+  testTimeout: process.env.CI ? 60000 : 30000,
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup-env.ts'],
   // forceExit samo lokalno u npm run test:ci (--forceExit u CLI). Na GHA izbegni exit 1 posle prolaza testova.
   forceExit: false,

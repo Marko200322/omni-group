@@ -28,6 +28,10 @@ jest.mock('../../modules/outreach/repository/outreach.repository', () => {
   };
 });
 
+jest.mock('../../integrations', () => ({
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
 let authEnabled = true;
 jest.mock('../../api/middleware/rate-limit.middleware', () => ({
   authSessionLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),

@@ -1360,6 +1360,8 @@ Skripta **nije** deo **CI (monorepo)** pipeline-a (job **`python`** / **`Python 
 
 **Lokalni preduslov pre deploya:** [`staging-preflight.ps1`](./staging-preflight.ps1) — `owner-status`, disk gate, `go-live-verify` (build + smoke + E2E billing). Brza varijanta bez punog Atina `test:ci`: `-SkipAtinaTestCi`.
 
+**GitHub CI bez `gh auth`:** [`github-ci-status.ps1`](./github-ci-status.ps1) — poslednji Actions run + job rezime.
+
 **Posle deploya na staging host:** [`staging-smoke-remote.ps1`](./staging-smoke-remote.ps1) — `GET /health` + `npm run smoke:all` protiv `STAGING_ATINA_NODE_BASE`. Pun stack (Astra + Nest + Atina): `-IncludeStack` + `STAGING_NEST_BASE` / `STAGING_ASTRA_BASE`.
 
 Zameni u internoj dokumentaciji ili CI varijablama (ne commituj tajne):

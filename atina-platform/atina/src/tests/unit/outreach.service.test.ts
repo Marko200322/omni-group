@@ -29,6 +29,10 @@ jest.mock('../../modules/outreach/repository/outreach.repository', () => {
   };
 });
 
+jest.mock('../../integrations', () => ({
+  getCommsClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
 jest.mock('../../utils/ecosystem-idempotency', () => {
   ecosystemIdem = {
     withEcosystemIdempotencyLock: jest.fn(async (_a: string, _b: string, work: () => Promise<unknown>) => work()),

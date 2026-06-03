@@ -9,6 +9,10 @@ import { AppError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
 
+jest.mock('../../integrations', () => ({
+  getBusinessDevClient: () => ({ isConfigured: () => false, request: jest.fn() }),
+}));
+
 jest.mock('../../api/middleware/rate-limit.middleware', () => ({
   authSessionLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
