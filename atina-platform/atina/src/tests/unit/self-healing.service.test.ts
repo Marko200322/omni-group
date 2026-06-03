@@ -12,6 +12,7 @@ var selfHealingRepo: {
   getById: jest.Mock;
   markHealed: jest.Mock;
   retryTask: jest.Mock;
+  insertAuditEvent: jest.Mock;
 };
 
 jest.mock('../../modules/self-healing/repository/self-healing.repository', () => {
@@ -20,6 +21,7 @@ jest.mock('../../modules/self-healing/repository/self-healing.repository', () =>
     getById: jest.fn(),
     markHealed: jest.fn(),
     retryTask: jest.fn(),
+    insertAuditEvent: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
   };
   return {
     SelfHealingRepository: jest.fn().mockImplementation(() => selfHealingRepo),
@@ -47,18 +49,16 @@ describe('SelfHealingService', () => {
 
     expect(result).toEqual({ attempted: 0, healed: 0, events: [] });
     expect(selfHealingRepo.getById).not.toHaveBeenCalled();
-    expect(mockQuery).toHaveBeenCalledWith(
-      expect.stringContaining('self_healing_auto_heal'),
-      expect.any(Array)
+    expect(selfHealingRepo.insertAuditEvent).toHaveBeenCalledWith(
+      'user-1',
+      'self_healing_auto_heal',
+      'self_heal_events',
+      'bulk',
+      'warning',
+      expect.any(String)
     );
-    const autoHealAudit = mockQuery.mock.calls.find(
-      (c) => typeof c[0] === 'string' && (c[0] as string).includes('self_healing_auto_heal')
-    );
-    expect(autoHealAudit).toBeDefined();
-    const params = autoHealAudit![1] as [string, string];
-    expect(JSON.parse(params[1])).toEqual(
-      expect.objectContaining({ requested: 0, cap: 0, healed: 0 })
-    );
+    const payload = JSON.parse(selfHealingRepo.insertAuditEvent.mock.calls[0][5] as string);
+    expect(payload).toEqual(expect.objectContaining({ requested: 0, cap: 0, healed: 0 }));
   });
 
   it('autoHeal treats NaN maxEvents as default cap (20)', async () => {

@@ -1,23 +1,19 @@
-import { query } from '../../../database/connection';
 import { getAiClient } from '../../../integrations';
+import { RecommendationRepository } from '../repository/recommendation.repository';
 
 export class RecommendationService {
+  private readonly repo: RecommendationRepository;
   private readonly ai = getAiClient();
+
+  constructor(repo?: RecommendationRepository) {
+    this.repo = repo ?? new RecommendationRepository();
+  }
 
   async getNextActions(userId: string): Promise<{ recommendations: string[] }> {
     const [subs, tasks, payments] = await Promise.all([
-      query<{ count: string }>(
-        "SELECT COUNT(*) AS count FROM subscriptions WHERE user_id = $1 AND status = 'active'",
-        [userId]
-      ),
-      query<{ count: string }>(
-        "SELECT COUNT(*) AS count FROM tasks WHERE user_id = $1 AND status IN ('failed','retrying')",
-        [userId]
-      ),
-      query<{ count: string }>(
-        "SELECT COUNT(*) AS count FROM payments WHERE user_id = $1 AND status = 'failed'",
-        [userId]
-      ),
+      this.repo.countActiveSubscriptions(userId),
+      this.repo.countFailedTasks(userId),
+      this.repo.countFailedPayments(userId),
     ]);
 
     const recommendations: string[] = [];

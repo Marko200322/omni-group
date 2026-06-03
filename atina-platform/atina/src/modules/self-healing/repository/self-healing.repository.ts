@@ -132,4 +132,20 @@ export class SelfHealingRepository {
       [integrationId]
     );
   }
+
+  insertAuditEvent(
+    actorUserId: string,
+    eventType: string,
+    entityType: string,
+    entityId: string,
+    severity: string,
+    payloadJson: string
+  ) {
+    return query(
+      `INSERT INTO audit_events
+       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [actorUserId, eventType, entityType, entityId, severity, payloadJson]
+    );
+  }
 }

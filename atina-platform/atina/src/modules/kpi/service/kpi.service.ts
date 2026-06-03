@@ -1,4 +1,4 @@
-import { query } from '../../../database/connection';
+import { KpiRepository } from '../repository/kpi.repository';
 
 export type KpiDashboard = {
   activeUsers: number;
@@ -9,13 +9,19 @@ export type KpiDashboard = {
 };
 
 export class KpiService {
+  private readonly repo: KpiRepository;
+
+  constructor(repo?: KpiRepository) {
+    this.repo = repo ?? new KpiRepository();
+  }
+
   async getDashboard(): Promise<KpiDashboard> {
     const [users, subs, rev, tasks, eco] = await Promise.all([
-      query<{ c: string }>('SELECT COUNT(*) AS c FROM users WHERE is_active = true'),
-      query<{ c: string }>("SELECT COUNT(*) AS c FROM subscriptions WHERE status = 'active'"),
-      query<{ s: string }>("SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE status = 'completed'"),
-      query<{ c: string }>("SELECT COUNT(*) AS c FROM tasks WHERE status IN ('queued','running')"),
-      query<{ c: string }>("SELECT COUNT(*) AS c FROM ecosystem_systems WHERE status = 'active'"),
+      this.repo.countActiveUsers(),
+      this.repo.countActiveSubscriptions(),
+      this.repo.sumCompletedPayments(),
+      this.repo.countActiveTasks(),
+      this.repo.countActiveEcosystemSystems(),
     ]);
 
     return {

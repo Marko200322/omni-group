@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../../../config';
-import { query } from '../../../database/connection';
 import { AuthRepository } from '../repository/auth.repository';
 import {
   AuthenticationError,
@@ -311,12 +310,7 @@ export class AuthService {
 
   private async logBootstrapAudit(userId: string, eventType: string, payload: Record<string, unknown>) {
     try {
-      await query(
-        `INSERT INTO audit_events
-         (actor_user_id, event_type, entity_type, entity_id, severity, payload)
-         VALUES ($1, $2, 'user', $1, 'info', $3)`,
-        [userId, eventType, JSON.stringify(payload)]
-      );
+      await this.repo.insertBootstrapAudit(userId, eventType, JSON.stringify(payload));
     } catch (error) {
       logger.warn('Failed to write bootstrap audit', {
         userId,

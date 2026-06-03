@@ -151,4 +151,13 @@ export class AuthRepository {
     );
     return rows[0]?.id || null;
   }
+
+  insertBootstrapAudit(userId: string, eventType: string, payloadJson: string) {
+    return query(
+      `INSERT INTO audit_events
+       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
+       VALUES ($1, $2, 'user', $1, 'info', $3)`,
+      [userId, eventType, payloadJson]
+    );
+  }
 }

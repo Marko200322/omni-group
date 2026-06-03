@@ -1,5 +1,4 @@
 import { NotFoundError } from '../../../utils/errors';
-import { query } from '../../../database/connection';
 import { SelfHealingRepository } from '../repository/self-healing.repository';
 
 const AUTO_HEAL_DEFAULT_CAP = 20;
@@ -56,11 +55,13 @@ export class SelfHealingService {
 
     const { rows } = await this.repo.markHealed(id, remediationAction, remediation);
     if (!rows[0]) throw new NotFoundError('Self-heal event');
-    await query(
-      `INSERT INTO audit_events
-       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
-       VALUES ($1, 'self_healing_manual_heal', 'self_heal_events', $2, 'warning', $3)`,
-      [actorUserId, id, JSON.stringify(remediation)]
+    await this.repo.insertAuditEvent(
+      actorUserId,
+      'self_healing_manual_heal',
+      'self_heal_events',
+      id,
+      'warning',
+      JSON.stringify(remediation)
     );
     return rows[0];
   }
@@ -114,11 +115,13 @@ export class SelfHealingService {
       }
     }
 
-    await query(
-      `INSERT INTO audit_events
-       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
-       VALUES ($1, 'self_healing_auto_scan', 'self_heal_events', 'bulk', 'warning', $2)`,
-      [userId, JSON.stringify({ totalCreated: created.length, options: opts })]
+    await this.repo.insertAuditEvent(
+      userId,
+      'self_healing_auto_scan',
+      'self_heal_events',
+      'bulk',
+      'warning',
+      JSON.stringify({ totalCreated: created.length, options: opts })
     );
 
     return { totalCreated: created.length, events: created };
@@ -139,11 +142,13 @@ export class SelfHealingService {
       healed.push(healedIssue as Record<string, unknown>);
     }
 
-    await query(
-      `INSERT INTO audit_events
-       (actor_user_id, event_type, entity_type, entity_id, severity, payload)
-       VALUES ($1, 'self_healing_auto_heal', 'self_heal_events', 'bulk', 'warning', $2)`,
-      [userId, JSON.stringify({ requested: maxEvents, cap, healed: healed.length })]
+    await this.repo.insertAuditEvent(
+      userId,
+      'self_healing_auto_heal',
+      'self_heal_events',
+      'bulk',
+      'warning',
+      JSON.stringify({ requested: maxEvents, cap, healed: healed.length })
     );
 
     return { attempted: detected.length, healed: healed.length, events: healed };
