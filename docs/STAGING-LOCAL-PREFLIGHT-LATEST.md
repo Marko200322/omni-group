@@ -1,8 +1,8 @@
 # Staging — lokalni preduslov (pre deploya na URL)
 
 **Datum:** 2026-06-03  
-**Commit za deploy:** [`464185a`](https://github.com/Marko200322/omni-group/commit/464185a)  
-**CI:** Run [#86](https://github.com/Marko200322/omni-group/actions/runs/26916425006) — **5/5 PASS**
+**Commit za deploy:** [`68c19f7`](https://github.com/Marko200322/omni-group/commit/68c19f7)  
+**CI:** Run [#87](https://github.com/Marko200322/omni-group/actions/runs/26916773900) — **5/5 PASS**
 
 **Status:** _lokalno spremno; remote staging deploy ceka vlasnika_
 
