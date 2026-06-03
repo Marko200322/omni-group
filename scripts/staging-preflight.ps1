@@ -53,11 +53,11 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ''
 Write-Host 'staging-preflight: PASS (lokalno)' -ForegroundColor Green
 Write-Host ''
-Write-Host 'Vlasnik — sledece na staging hostu:' -ForegroundColor Cyan
+Write-Host 'Vlasnik - sledece na staging hostu:' -ForegroundColor Cyan
 Write-Host '  1. Deploy commit/tag na staging (Atina + web + Nest po planu)' -ForegroundColor DarkGray
 Write-Host '  2. npm run migrate na staging DB (backup pre migracija)' -ForegroundColor DarkGray
 Write-Host '  3. staging-smoke-remote.ps1 (STAGING_ATINA_NODE_BASE=https://<STAGING_HOST>)' -ForegroundColor DarkGray
-Write-Host '     ili smoke-stack + smoke:all — vidi scripts/README.md Staging URL' -ForegroundColor DarkGray
+Write-Host '     ili smoke-stack + smoke:all - vidi scripts/README.md Staging URL' -ForegroundColor DarkGray
 Write-Host '  4. Popuni docs/STAGING-EXECUTION-LOG.template.md' -ForegroundColor DarkGray
 Write-Host ''
-Write-Host 'Runbook: docs/STAGING-RELEASE-CHECKLIST.md · docs/VLASNIK-PAKET.md' -ForegroundColor DarkGray
+Write-Host 'Runbook: docs/STAGING-RELEASE-CHECKLIST.md | docs/VLASNIK-PAKET.md' -ForegroundColor DarkGray
