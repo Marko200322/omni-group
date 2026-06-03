@@ -7449,3 +7449,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | GitHub CI Run #85 | **PASS** — 5/5 jobova |
 
 **Link na CI run:** [Run #85](https://github.com/Marko200322/omni-group/actions/runs/26916174717) · `53c1be0`
+
+---
+
+## Zapis (izvršen) — CI Run #86 + staging handoff (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Okruženje:** commit `464185a`; disk C: **~0.86 GB**; Atina + web UP
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #86 | **PASS** — 5/5 jobova |
+| `staging-smoke-remote.ps1` | **PASS** |
+| `STAGING-LOCAL-PREFLIGHT-LATEST.md` | novi handoff doc |
+
+**Link na CI run:** [Run #86](https://github.com/Marko200322/omni-group/actions/runs/26916425006) · `464185a`

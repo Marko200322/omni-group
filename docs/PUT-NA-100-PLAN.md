@@ -100,7 +100,7 @@ Označi `[x]` kad je zatvoreno.
 | Red | Akcija | Posle uspeha |
 |-----|--------|--------------|
 | 1 | Popuni `.env` (FINANCE, AI, COMMS minimum) | `check-atina-aggregators` + `check-stripe-env` = PASS |
-| 2 | `staging-preflight.ps1` **PASS lokalno** (`3f31b4f`, 2026-06-03) → **vlasnik:** staging deploy + migrate + `staging-smoke-remote.ps1` na URL | Upis u CEO-G evidenciju (staging sekcija) |
+| 2 | `staging-preflight.ps1` **PASS lokalno** (2026-06-03) → evidencija: [`STAGING-LOCAL-PREFLIGHT-LATEST.md`](./STAGING-LOCAL-PREFLIGHT-LATEST.md) → **vlasnik:** staging deploy + migrate + `staging-smoke-remote.ps1` na URL | Upis u CEO-G evidenciju (staging sekcija) |
 | 3 | Korak 1–3 iz [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md) | 10 × `[ ]` → `[x]` u CEO matrici |
 | 4 | Prod cutover + smoke na prod URL | CEO G Pass |
 | 5 | Ažuriraj [`COMPLETE-SYSTEM-PLAN-AND-CHECKLIST.md`](./COMPLETE-SYSTEM-PLAN-AND-CHECKLIST.md) odjeljak 0 na **100%** | — |
