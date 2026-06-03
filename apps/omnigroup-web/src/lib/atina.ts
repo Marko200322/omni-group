@@ -1,16 +1,5 @@
 // Server-side helper za čitanje javnih Atina endpoint-a iz Next 14 server komponenti.
-// Bez CORS-a u browseru — koristi se isključivo iz `app/**/page.tsx` (server) ili API ruta.
-//
-// Dokumentovani ugovor (apps/omnigroup-web/README.md, .env.example):
-//   - GET ${NEXT_PUBLIC_ATINA_API_BASE}/health           (Atina /health JSON)
-//   - GET ${NEXT_PUBLIC_ATINA_API_BASE}/api/v1/billing/plans (javni billing plans katalog)
-//
-// Placeholder kontekst (D.1, 2026-05-13, OneDrive dehidracija):
-//   Originalna implementacija ovog modula je izgubljena pa je rekonstruisana po
-//   dokumentovanom ugovoru gore. Pun runbook: docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md.
-//   TODO[D.1-restore]: kad vlasnik vrati pravi sadržaj iz OneDrive cloud-a / Git
-//   remote-a, uskladi ovo sa originalom (može biti dodatni snapshot polja, mapper,
-//   logging, itd.) — i obriši ovaj komentar blok.
+// Dokumentovani ugovor: GET /health + GET /api/v1/billing/plans (vidi README + .env.example).
 
 export type AtinaSnapshotSource = 'live' | 'unreachable' | 'partial' | 'placeholder';
 

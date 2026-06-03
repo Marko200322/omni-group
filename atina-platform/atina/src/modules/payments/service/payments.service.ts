@@ -97,14 +97,7 @@ export class PaymentsService {
     }
 
     // Get or create Stripe customer
-    const { rows: userRows } = await this.db.execute<{ email: string; name: string; stripe_customer_id?: string }>(
-      `SELECT u.email, u.name, s.stripe_customer_id
-       FROM users u
-       LEFT JOIN subscriptions s ON s.user_id = u.id
-       WHERE u.id = $1
-       ORDER BY s.created_at DESC LIMIT 1`,
-      [userId]
-    );
+    const { rows: userRows } = await this.db.getUserWithStripeCustomer(userId);
 
     let customerId = userRows[0]?.stripe_customer_id;
 
@@ -176,65 +169,34 @@ export class PaymentsService {
     const subscription = await requireStripe().subscriptions.retrieve(subscriptionRef);
 
     await this.db.runInTransaction(async (client) => {
-      // Create/update subscription
-      await client.query(
-        `INSERT INTO subscriptions
-           (user_id, plan_id, status, billing_cycle, stripe_subscription_id,
-            stripe_customer_id, current_period_start, current_period_end)
-         VALUES ($1, $2, 'active', $3, $4, $5, $6, $7)
-         ON CONFLICT (stripe_subscription_id) DO UPDATE SET
-           status = 'active',
-           current_period_start = EXCLUDED.current_period_start,
-           current_period_end = EXCLUDED.current_period_end,
-           updated_at = NOW()`,
-        [
-          userId, plan.id, billingCycle || 'monthly',
-          subscription.id, session.customer as string,
-          new Date(subscription.current_period_start * 1000),
-          new Date(subscription.current_period_end * 1000),
-        ]
-      );
+      await this.db.upsertStripeCheckoutSubscription(client, {
+        userId,
+        planId: plan.id,
+        billingCycle: billingCycle || 'monthly',
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: session.customer as string,
+        periodStart: new Date(subscription.current_period_start * 1000),
+        periodEnd: new Date(subscription.current_period_end * 1000),
+      });
 
-      // Update user plan
-      await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [userId, plan.id]);
+      await this.db.updateUserPlanId(userId, plan.id, client);
     });
 
     logger.info('Stripe checkout completed', { userId, planSlug });
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
-    await this.db.execute(
-      `UPDATE subscriptions
-       SET status = $2, current_period_start = $3, current_period_end = $4,
-           cancel_at_period_end = $5, updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [
-        subscription.id,
-        subscription.status,
-        new Date(subscription.current_period_start * 1000),
-        new Date(subscription.current_period_end * 1000),
-        subscription.cancel_at_period_end,
-      ]
-    );
+    await this.db.updateSubscriptionFromStripeEvent(subscription);
   }
 
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
-    await this.db.execute(
-      `UPDATE subscriptions
-       SET status = 'canceled', canceled_at = NOW(), updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [subscription.id]
-    );
+    await this.db.cancelSubscriptionByStripeId(subscription.id);
 
-    // Downgrade user to starter
-    const { rows } = await this.db.execute<{ user_id: string }>(
-      'SELECT user_id FROM subscriptions WHERE stripe_subscription_id = $1',
-      [subscription.id]
-    );
+    const { rows } = await this.db.getSubscriptionUserIdByStripeId(subscription.id);
     if (rows[0]) {
-      const { rows: starter } = await this.db.execute<{ id: string }>('SELECT id FROM plans WHERE slug = $1', ['starter']);
+      const { rows: starter } = await this.db.getPlanIdBySlug('starter');
       if (starter[0]) {
-        await this.db.execute('UPDATE users SET plan_id = $2 WHERE id = $1', [rows[0].user_id, starter[0].id]);
+        await this.db.updateUserPlanId(rows[0].user_id, starter[0].id);
       }
     }
   }
@@ -243,21 +205,17 @@ export class PaymentsService {
     const subscriptionId = stripeSubscriptionId(invoice.subscription as string | Stripe.Subscription | null);
     if (!subscriptionId) return;
 
-    const { rows: subRows } = await this.db.execute<{ user_id: string; plan_id: string; id: string }>(
-      'SELECT * FROM subscriptions WHERE stripe_subscription_id = $1',
-      [subscriptionId]
-    );
+    const { rows: subRows } = await this.db.getSubscriptionByStripeId(subscriptionId);
 
     if (!subRows[0]) return;
 
-    // Record payment
-    const { rows: paymentRows } = await this.db.execute<{ id: string }>(
-      `INSERT INTO payments
-         (user_id, subscription_id, amount, currency, status, provider, provider_payment_id, description)
-       VALUES ($1, $2, $3, $4, 'completed', 'stripe', $5, 'Subscription payment')
-       RETURNING id`,
-      [subRows[0].user_id, subRows[0].id, invoice.amount_paid / 100, invoice.currency.toUpperCase(), invoice.id]
-    );
+    const { rows: paymentRows } = await this.db.insertStripeCompletedPayment({
+      userId: subRows[0].user_id,
+      subscriptionId: subRows[0].id,
+      amount: invoice.amount_paid / 100,
+      currency: invoice.currency.toUpperCase(),
+      stripeInvoiceId: invoice.id,
+    });
 
     // Create invoice record
     const lineItems = invoice.lines.data.map(line => ({
@@ -281,28 +239,18 @@ export class PaymentsService {
     const subscriptionId = stripeSubscriptionId(invoice.subscription as string | Stripe.Subscription | null);
     if (!subscriptionId) return;
 
-    await this.db.execute(
-      `UPDATE subscriptions SET status = 'past_due', updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [subscriptionId]
-    );
+    await this.db.markSubscriptionPastDue(subscriptionId);
 
-    await this.db.execute(
-      `INSERT INTO payments
-         (user_id, subscription_id, amount, currency, status, provider, provider_payment_id, description)
-       SELECT s.user_id, s.id, $3, $4, 'failed', 'stripe', $2, 'Failed payment'
-       FROM subscriptions s WHERE s.stripe_subscription_id = $1`,
-      [subscriptionId, invoice.id, invoice.amount_due / 100, invoice.currency.toUpperCase()]
-    );
+    await this.db.insertStripeFailedPayment({
+      stripeSubscriptionId: subscriptionId,
+      stripeInvoiceId: invoice.id,
+      amount: invoice.amount_due / 100,
+      currency: invoice.currency.toUpperCase(),
+    });
   }
 
   async cancelSubscription(userId: string): Promise<void> {
-    const { rows } = await this.db.execute<{ stripe_subscription_id: string }>(
-      `SELECT stripe_subscription_id FROM subscriptions
-       WHERE user_id = $1 AND status = 'active'
-       ORDER BY created_at DESC LIMIT 1`,
-      [userId]
-    );
+    const { rows } = await this.db.getActiveStripeSubscriptionId(userId);
 
     if (!rows[0]?.stripe_subscription_id) throw new NotFoundError('Active subscription');
 
@@ -310,20 +258,11 @@ export class PaymentsService {
       cancel_at_period_end: true,
     });
 
-    await this.db.execute(
-      `UPDATE subscriptions SET cancel_at_period_end = true, updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [rows[0].stripe_subscription_id]
-    );
+    await this.db.setSubscriptionCancelAtPeriodEnd(rows[0].stripe_subscription_id);
   }
 
   async createBillingPortalSession(userId: string): Promise<string> {
-    const { rows } = await this.db.execute<{ stripe_customer_id: string }>(
-      `SELECT stripe_customer_id FROM subscriptions
-       WHERE user_id = $1 AND stripe_customer_id IS NOT NULL
-       ORDER BY created_at DESC LIMIT 1`,
-      [userId]
-    );
+    const { rows } = await this.db.getStripeCustomerId(userId);
 
     if (!rows[0]) throw new PaymentError('No Stripe customer found');
 
@@ -368,18 +307,13 @@ export class PaymentsService {
         cancelUrl: `${config.app.url}/billing/cancel`,
       });
       if (remote?.orderId) {
-        await this.db.execute(
-          `INSERT INTO payments
-             (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
-           VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
-          [
-            userId,
-            amount,
-            remote.orderId,
-            `PayPal ${plan.name} ${billingCycle}`,
-            JSON.stringify({ planSlug, billingCycle, orderId: remote.orderId, via: 'finance_aggregator' }),
-          ]
-        );
+        await this.db.insertPendingPayPalPayment({
+          userId,
+          amount,
+          orderId: remote.orderId,
+          description: `PayPal ${plan.name} ${billingCycle}`,
+          metadataJson: JSON.stringify({ planSlug, billingCycle, orderId: remote.orderId, via: 'finance_aggregator' }),
+        });
         return { orderId: remote.orderId, approveUrl: remote.approveUrl ?? '' };
       }
     }
@@ -410,26 +344,19 @@ export class PaymentsService {
     const approveLink = order.links.find((l: any) => l.rel === 'approve')?.href;
 
     // Store pending payment
-    await this.db.execute(
-      `INSERT INTO payments
-         (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
-       VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
-      [
-        userId, amount, order.id,
-        `PayPal ${plan.name} ${billingCycle}`,
-        JSON.stringify({ planSlug, billingCycle, orderId: order.id }),
-      ]
-    );
+    await this.db.insertPendingPayPalPayment({
+      userId,
+      amount,
+      orderId: order.id,
+      description: `PayPal ${plan.name} ${billingCycle}`,
+      metadataJson: JSON.stringify({ planSlug, billingCycle, orderId: order.id }),
+    });
 
     return { orderId: order.id, approveUrl: approveLink };
   }
 
   async capturePayPalOrder(orderId: string, userId: string): Promise<void> {
-    const { rows: ownerRows } = await this.db.execute<{ user_id: string; metadata: string | Record<string, unknown> }>(
-      `SELECT user_id, metadata FROM payments
-       WHERE provider_payment_id = $1 AND provider = 'paypal' AND status = 'pending'`,
-      [orderId]
-    );
+    const { rows: ownerRows } = await this.db.getPendingPayPalPaymentByOrderId(orderId);
     if (!ownerRows[0] || ownerRows[0].user_id !== userId) {
       throw new NotFoundError('Order');
     }
@@ -485,27 +412,21 @@ export class PaymentsService {
     const plan = await billingService.getPlanBySlug(planSlug);
 
     await this.db.runInTransaction(async (client) => {
-      // Update payment status
-      await client.query(
-        `UPDATE payments SET status = 'completed', provider_charge_id = $2, updated_at = NOW()
-         WHERE provider_payment_id = $1`,
-        [orderId, chargeId ?? null]
-      );
+      await this.db.completePayPalCapture(client, orderId, chargeId ?? null);
 
-      // Create subscription
       const now = new Date();
       const periodEnd = new Date(now);
       periodEnd.setMonth(periodEnd.getMonth() + (billingCycle === 'yearly' ? 12 : 1));
 
-      await client.query(
-        `INSERT INTO subscriptions
-           (user_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
-         VALUES ($1, $2, 'active', $3, $4, $5)`,
-        [userId, plan.id, billingCycle, now, periodEnd]
-      );
+      await this.db.insertActiveSubscription(client, {
+        userId,
+        planId: plan.id,
+        billingCycle,
+        periodStart: now,
+        periodEnd,
+      });
 
-      // Update user plan
-      await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [userId, plan.id]);
+      await this.db.updateUserPlanId(userId, plan.id, client);
     });
 
     logger.info('PayPal order captured', { orderId, userId, planSlug, viaFinance: storedMeta.via === 'finance_aggregator' });
@@ -542,17 +463,13 @@ export class PaymentsService {
       }
     }
 
-    const { rows } = await this.db.execute<{ id: string }>(
-      `INSERT INTO payments
-         (user_id, amount, currency, status, provider, description, metadata)
-       VALUES ($1, $2, $3, 'pending', 'wise', $4, $5)
-       RETURNING id`,
-      [
-        userId, amount, currency.toUpperCase(),
-        `Wise transfer for ${plan.name} plan`,
-        JSON.stringify({ planSlug, billingCycle, reference, instructions: 'pending_manual_verification' }),
-      ]
-    );
+    const { rows } = await this.db.insertPendingWisePayment({
+      userId,
+      amount,
+      currency: currency.toUpperCase(),
+      description: `Wise transfer for ${plan.name} plan`,
+      metadataJson: JSON.stringify({ planSlug, billingCycle, reference, instructions: 'pending_manual_verification' }),
+    });
 
     return {
       paymentId: rows[0].id,
@@ -572,16 +489,7 @@ export class PaymentsService {
     adminId: string,
     provider: 'wise' | 'manual' | 'kriptoman' = 'manual'
   ): Promise<void> {
-    const { rows } = await this.db.execute<{
-      user_id: string;
-      metadata: Record<string, unknown> | string;
-      amount: number;
-      currency: string;
-      status: string;
-    }>(
-      'SELECT user_id, metadata, amount, currency, status FROM payments WHERE id = $1 AND provider = $2',
-      [paymentId, provider]
-    );
+    const { rows } = await this.db.getPaymentForConfirm(paymentId, provider);
 
     if (!rows[0]) throw new NotFoundError('Payment');
     if (rows[0].status === 'completed') {
@@ -604,10 +512,7 @@ export class PaymentsService {
     const paymentAmount = toMoneyNumber(rows[0].amount);
 
     const activation = await this.db.runInTransaction(async (client) => {
-      await client.query(
-        `UPDATE payments SET status = 'completed', updated_at = NOW() WHERE id = $1`,
-        [paymentId]
-      );
+      await this.db.markPaymentCompleted(client, paymentId);
 
       const subscription = await this.activateLocalSubscription(
         client,
@@ -788,19 +693,13 @@ export class PaymentsService {
     const currency = config.payments.manual.currency || 'USD';
     const reference = buildTransferReference(userId);
 
-    const { rows } = await this.db.execute<{ id: string }>(
-      `INSERT INTO payments
-         (user_id, amount, currency, status, provider, description, metadata)
-       VALUES ($1, $2, $3, 'pending', 'manual', $4, $5)
-       RETURNING id`,
-      [
-        userId,
-        amount,
-        currency.toUpperCase(),
-        `Manual bank transfer — ${plan.name} (${billingCycle})`,
-        JSON.stringify({ planSlug, billingCycle, reference }),
-      ]
-    );
+    const { rows } = await this.db.insertManualPendingPayment({
+      userId,
+      amount,
+      currency: currency.toUpperCase(),
+      description: `Manual bank transfer — ${plan.name} (${billingCycle})`,
+      metadataJson: JSON.stringify({ planSlug, billingCycle, reference }),
+    });
 
     const instructions = buildTransferInstructions(reference, amount, currency, plan.name);
     const paymentId = rows[0].id;
@@ -846,20 +745,14 @@ export class PaymentsService {
   }
 
   async markManualPaymentSent(paymentId: string, userId: string): Promise<void> {
-    const { rows } = await this.db.execute<{ user_id: string; status: string }>(
-      `SELECT user_id, status FROM payments WHERE id = $1 AND provider = 'manual'`,
-      [paymentId]
-    );
+    const { rows } = await this.db.getManualPaymentOwnerStatus(paymentId);
 
     if (!rows[0] || rows[0].user_id !== userId) throw new NotFoundError('Payment');
     if (rows[0].status !== 'pending') {
       throw new PaymentError(`Payment is already '${rows[0].status}'`);
     }
 
-    await this.db.execute(
-      `UPDATE payments SET status = 'processing', updated_at = NOW() WHERE id = $1`,
-      [paymentId]
-    );
+    await this.db.markManualPaymentProcessing(paymentId);
 
     logger.info('Manual payment marked as sent', { paymentId, userId });
 
@@ -903,15 +796,15 @@ export class PaymentsService {
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + (billingCycle === 'yearly' ? 12 : 1));
 
-    const { rows: subRows } = await client.query<{ id: string }>(
-      `INSERT INTO subscriptions
-         (user_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
-       VALUES ($1, $2, 'active', $3, $4, $5)
-       RETURNING id`,
-      [userId, planId, billingCycle, now, periodEnd]
-    );
+    const { rows: subRows } = await this.db.insertActiveSubscriptionReturningId(client, {
+      userId,
+      planId,
+      billingCycle,
+      periodStart: now,
+      periodEnd,
+    });
 
-    await client.query('UPDATE users SET plan_id = $2 WHERE id = $1', [userId, planId]);
+    await this.db.updateUserPlanId(userId, planId, client);
     return { subscriptionId: subRows[0].id, periodStart: now, periodEnd };
   }
 
@@ -937,19 +830,13 @@ export class PaymentsService {
     const currency = config.payments.manual.currency || 'EUR';
     const asset = (cryptoCurrency ?? config.kriptoman.defaultCrypto).toUpperCase();
 
-    const { rows } = await this.db.execute<{ id: string }>(
-      `INSERT INTO payments
-         (user_id, amount, currency, status, provider, description, metadata)
-       VALUES ($1, $2, $3, 'pending', 'kriptoman', $4, $5)
-       RETURNING id`,
-      [
-        userId,
-        amount,
-        currency.toUpperCase(),
-        `Kriptoman — ${plan.name} (${billingCycle})`,
-        JSON.stringify({ planSlug, billingCycle, cryptoCurrency: asset }),
-      ]
-    );
+    const { rows } = await this.db.insertKriptomanPendingPayment({
+      userId,
+      amount,
+      currency: currency.toUpperCase(),
+      description: `Kriptoman — ${plan.name} (${billingCycle})`,
+      metadataJson: JSON.stringify({ planSlug, billingCycle, cryptoCurrency: asset }),
+    });
 
     const paymentId = rows[0].id;
     const callbackUrl = `${config.app.url}/api/v1/payments/kriptoman/webhook`;
@@ -969,27 +856,20 @@ export class PaymentsService {
       throw new PaymentError('Kriptoman invoice creation failed');
     }
 
-    await this.db.execute(
-      `UPDATE payments
-       SET provider_payment_id = $2,
-           metadata = metadata || $3::jsonb,
-           updated_at = NOW()
-       WHERE id = $1`,
-      [
-        paymentId,
-        invoice.invoiceId,
-        JSON.stringify({
-          planSlug,
-          billingCycle,
-          cryptoCurrency: asset,
-          kriptoman: {
-            paymentUrl: invoice.paymentUrl,
-            payAddress: invoice.payAddress,
-            cryptoAmount: invoice.cryptoAmount,
-            expiresAt: invoice.expiresAt,
-          },
-        }),
-      ]
+    await this.db.updateKriptomanPaymentMetadata(
+      paymentId,
+      invoice.invoiceId,
+      JSON.stringify({
+        planSlug,
+        billingCycle,
+        cryptoCurrency: asset,
+        kriptoman: {
+          paymentUrl: invoice.paymentUrl,
+          payAddress: invoice.payAddress,
+          cryptoAmount: invoice.cryptoAmount,
+          expiresAt: invoice.expiresAt,
+        },
+      })
     );
 
     return {
@@ -1023,14 +903,7 @@ export class PaymentsService {
   }
 
   async syncKriptomanPayment(paymentId: string, userId: string): Promise<{ status: string; activated: boolean }> {
-    const { rows } = await this.db.execute<{
-      status: string;
-      provider_payment_id: string | null;
-    }>(
-      `SELECT status, provider_payment_id FROM payments
-       WHERE id = $1 AND user_id = $2 AND provider = 'kriptoman'`,
-      [paymentId, userId]
-    );
+    const { rows } = await this.db.getKriptomanPaymentForSync(paymentId, userId);
     if (!rows[0]) throw new NotFoundError('Payment');
     if (rows[0].status === 'completed') {
       return { status: 'completed', activated: true };
@@ -1054,12 +927,7 @@ export class PaymentsService {
   ): Promise<void> {
     let paymentId = externalId;
     if (!paymentId && invoiceId) {
-      const { rows } = await this.db.execute<{ id: string }>(
-        `SELECT id FROM payments
-         WHERE provider = 'kriptoman' AND provider_payment_id = $1
-         LIMIT 1`,
-        [invoiceId]
-      );
+      const { rows } = await this.db.findKriptomanPaymentIdByInvoiceId(invoiceId);
       paymentId = rows[0]?.id;
     }
 
@@ -1068,10 +936,7 @@ export class PaymentsService {
       return;
     }
 
-    const { rows: statusRows } = await this.db.execute<{ status: string }>(
-      `SELECT status FROM payments WHERE id = $1 AND provider = 'kriptoman'`,
-      [paymentId]
-    );
+    const { rows: statusRows } = await this.db.getKriptomanPaymentStatus(paymentId);
     if (!statusRows[0]) return;
     if (statusRows[0].status === 'completed') return;
 
@@ -1080,14 +945,8 @@ export class PaymentsService {
 
   async getPaymentHistory(userId: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    const { rows: countRows } = await this.db.execute<{ count: string }>(
-      'SELECT COUNT(*) FROM payments WHERE user_id = $1', [userId]
-    );
-    const { rows } = await this.db.execute(
-      `SELECT * FROM payments WHERE user_id = $1
-       ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-      [userId, limit, offset]
-    );
+    const { rows: countRows } = await this.db.countPaymentsByUser(userId);
+    const { rows } = await this.db.listPaymentsByUser(userId, limit, offset);
     return { payments: rows, total: parseInt(countRows[0].count, 10) };
   }
 }

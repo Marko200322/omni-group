@@ -1,13 +1,4 @@
-// Display formatter helpers za AtinaPublicSnapshot — koristi se iz dashboard / admin
-// klijent komponenti i potencijalno iz dev/docs panela.
-//
-// Placeholder kontekst (D.1, 2026-05-13, OneDrive dehidracija):
-//   Originalna implementacija je izgubljena pa je rekonstruisana po dokumentovanom
-//   `AtinaPublicSnapshot` obliku iz `lib/atina.ts`. Pun runbook:
-//   docs/OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md.
-//   TODO[D.1-restore]: kad vlasnik vrati pravi sadržaj iz OneDrive cloud-a / Git
-//   remote-a, uskladi sa originalom (može biti dodatne formatter funkcije, lokalizacija,
-//   currency mapper, itd.) — i obriši ovaj komentar blok.
+// Display formatter helpers za AtinaPublicSnapshot (dashboard / admin klijenti).
 
 import type { AtinaPlanSummary, AtinaPublicSnapshot } from './atina';
 

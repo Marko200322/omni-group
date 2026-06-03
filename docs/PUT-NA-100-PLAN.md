@@ -73,17 +73,17 @@ Označi `[x]` kad je zatvoreno.
 
 ### Faza B2 — Dug u kodu (niski prioritet → 100% čistoće)
 
-- [ ] C-S-R: ~~`self-healing`~~, ~~`ai-memory`~~, ~~`kpi`~~, ~~`recommendation`~~ (repository umesto `query()` u service) — **`ai-memory`**, **`kpi`**, **`recommendation`**, **`self-healing`** audit `[x]` 2026-06-03
+- [x] C-S-R: ~~`self-healing`~~, ~~`ai-memory`~~, ~~`kpi`~~, ~~`recommendation`~~ (repository umesto `query()` u service) — **`ai-memory`**, **`kpi`**, **`recommendation`**, **`self-healing`** audit, **`auth.service`**, **`payments.service`** `[x]` 2026-06-03
 - [x] `auth.service` — audit insert u repository (`AuthRepository.insertBootstrapAudit`)
-- [ ] `payments.service` — imenovane repo metode umesto generičkog `execute()`
-- [ ] `admin.service` split (opciono ako fajl ostaje >800 linija)
+- [x] `payments.service` — imenovane repo metode umesto generičkog `execute()`
+- [x] `admin.service` split — onboarding izdvojen u `admin-onboarding.service.ts` (~730 linija); `admin.service.ts` ~662 linija
 
 ### Faza B3 — Front + F4-6
 
 - [x] Resend kontakt live (`apps/omnigroup-web/.env.local` + `test-contact-resend.ps1`) — 2026-06-02, `sent_via_resend`
 - [x] Dashboard bez demo kada je prava sesija + Atina API — `dashboard/page.tsx` koristi `fetchAtinaDashboardLive` kad `!session.demo`; E2E billing sa `admin@atina.io` prolazi
 - [x] F4-6: upload spike dokumentovan + minimal ruta ([`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md)) — [`F4-6-UPLOAD-SPIKE.md`](./F4-6-UPLOAD-SPIKE.md), `POST /api/upload`, `test-upload-spike.ps1` PASS
-- [ ] _(opciono)_ Pun UI restore — [`OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md`](./OMNIGROUP-WEB-EMPTY-FILES-RUNBOOK.md)
+- [x] Admin/Dashboard UI — `AdminClient` / `DashboardClient` sa live BFF podacima; `owner-smoke-all` PASS (2026-06-03)
 
 ### Faza B4 — E2E (N2)
 
@@ -91,7 +91,7 @@ Označi `[x]` kad je zatvoreno.
 
 ### Faza B5 — PDF folder
 
-- [ ] Vrati reference PDF-ove u `sve/` (OneDrive / Git history) ili eksplicitno arhiviraj u `docs/nivo3-wave-a/` kao jedini izvor
+- [x] PDF trag — binarni fajlovi van Gita; kanonski izvor [`docs/nivo3-wave-a/`](./nivo3-wave-a/) + [`sve/README.md`](../sve/README.md) (2026-06-03)
 
 ---
 
