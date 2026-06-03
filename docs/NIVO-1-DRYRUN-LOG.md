@@ -7235,3 +7235,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 **Pass / Fail:** **Pass** — lokalni stack spreman za staging deploy korake iz [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md). Preostaje vlasnik: `gh auth login`, branch protection, staging URL + prod `.env`.
 
 **Link na CI run:** N/A — GitHub CLI nije autentifikovan lokalno.
+
+---
+
+## Zapis (izvršen) — `staging-smoke-remote.ps1` lokalna validacija (2026-06-03)
+
+**Datum:** 2026-06-03  
+**Vlasnik:** lokalni prolaz — Cursor agent  
+**Okruženje:** Windows; Atina `:3000`; `-AtinaNodeBase http://127.0.0.1:3000`
+
+**Šta je testirano:**
+
+| Skripta | Rezultat |
+|--------|----------|
+| `staging-smoke-remote.ps1` | PASS (`/health` + `smoke:all`) |
+
+**Pass / Fail:** **Pass** — spremno za staging URL posle deploya (`STAGING_ATINA_NODE_BASE`).
+
+**Link na CI run:** N/A — lokalno.

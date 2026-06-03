@@ -21,7 +21,7 @@
 | **3** | Atina Node SaaS produkcioni gate (build, env, payments, SMTP, smoke, admin, rollback) | 1–3 h | **G** (8 stavki, redovi 226–234, bez 227) | [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md) | [`atina-platform/atina/docs/operations/release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md) · [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) · [`atina-platform/atina/docs/operations/deploy-rollback-checklist.md`](../atina-platform/atina/docs/operations/deploy-rollback-checklist.md) |
 | **4** | _(opciono)_ N2 red **0.3** — kontinuirani CI green na `main` | 10–30 min | N2 master red 0.3 | [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md) | [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) |
 
-**Pratece reference (čitaj uz Korak 3):** sve env varijable za prod u jednom mestu — [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md). **Lokalni preduslov pre staging deploya:** [`scripts/staging-preflight.ps1`](../scripts/staging-preflight.ps1) (brzo: `-SkipAtinaTestCi`).
+**Pratece reference (čitaj uz Korak 3):** sve env varijable za prod u jednom mestu — [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md). **Lokalni preduslov pre staging deploya:** [`scripts/staging-preflight.ps1`](../scripts/staging-preflight.ps1) (brzo: `-SkipAtinaTestCi`). **Posle deploya na staging:** [`scripts/staging-smoke-remote.ps1`](../scripts/staging-smoke-remote.ps1) (`STAGING_ATINA_NODE_BASE`).
 
 **Total ako sve uradiš za jedan dan:** ~2–4 sata aktivnog rada (uz pauze za webhook test i staging cool-down).
 
