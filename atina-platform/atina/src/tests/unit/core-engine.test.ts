@@ -131,6 +131,14 @@ describe('CoreEngine', () => {
       expect(res.body.error?.code).toBe('VALIDATION_ERROR');
     });
 
+    it('GET /health is exempt from global rate limiting', async () => {
+      const app = engine.getApp();
+      for (let i = 0; i < 105; i += 1) {
+        const res = await request(app).get('/health');
+        expect(res.status).toBe(200);
+      }
+    });
+
     it('GET /api/v1 returns 400 when JSON body is not strictly empty', async () => {
       const res = await request(engine.getApp()).get('/api/v1').send({ x: 1 });
       expect(res.status).toBe(400);
