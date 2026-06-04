@@ -58,12 +58,18 @@ Write-Host "  OK user=$($lj.user.email) redirect=$($lj.redirectTo)" -ForegroundC
 
 Write-Host "== Web BFF ai-memory ==" -ForegroundColor Cyan
 $memBody = '{"key":"smoke","value":{"ts":"' + (Get-Date -Format o) + '"},"namespace":"global"}'
-$rem = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/remember" -Method POST -ContentType 'application/json' -Body $memBody -WebSession $session -UseBasicParsing
-$rj = $rem.Content | ConvertFrom-Json
-if (-not $rj.ok) { throw "remember failed: $($rem.Content)" }
-$rec = Invoke-WebRequest -Uri ($web + '/api/atina/ai-memory/recall?namespace=global&key=smoke') -WebSession $session -UseBasicParsing
-$rc = $rec.Content | ConvertFrom-Json
-if (-not $rc.ok -or $rc.items.Count -lt 1) { throw "recall failed: $($rec.Content)" }
+Invoke-WithRateLimitRetry -Label 'ai-memory remember' -Action {
+  $rem = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/remember" -Method POST -ContentType 'application/json' -Body $memBody -WebSession $session -UseBasicParsing
+  $rj = $rem.Content | ConvertFrom-Json
+  if (-not $rj.ok) { throw "remember failed: $($rem.Content)" }
+  return $rj
+} | Out-Null
+$rc = Invoke-WithRateLimitRetry -Label 'ai-memory recall' -Action {
+  $rec = Invoke-WebRequest -Uri ($web + '/api/atina/ai-memory/recall?namespace=global&key=smoke') -WebSession $session -UseBasicParsing
+  $parsed = $rec.Content | ConvertFrom-Json
+  if (-not $parsed.ok -or $parsed.items.Count -lt 1) { throw "recall failed: $($rec.Content)" }
+  return $parsed
+}
 Write-Host "  OK recall items=$($rc.items.Count)" -ForegroundColor Green
 
 Write-Host "== Web contact stub ==" -ForegroundColor Cyan
