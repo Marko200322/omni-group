@@ -62,36 +62,47 @@ if ($dirty) {
 $current = (git branch --show-current).Trim()
 if ($current -ne 'main') {
   Write-Host ("Prebacujem sa {0} na main ..." -f $current) -ForegroundColor Yellow
-  git checkout main
+  if ((Invoke-GitQuiet -Args @('checkout', 'main')) -ne 0) {
+    Write-Host 'FAIL: git checkout main' -ForegroundColor Red
+    exit 1
+  }
 }
 
 if ((Invoke-GitQuiet -Args @('pull', '--ff-only', 'origin', 'main')) -ne 0) {
   Write-Host 'NAPOMENA: git pull nije uspeo - nastavljam sa lokalnim main.' -ForegroundColor Yellow
 }
 
-if (git show-ref --verify --quiet "refs/heads/$BranchName") {
+if ((Invoke-GitQuiet -Args @('show-ref', '--verify', '--quiet', "refs/heads/$BranchName")) -eq 0) {
   Write-Host ("FAIL: grana {0} vec postoji lokalno - obriši ili promeni -BranchName." -f $BranchName) -ForegroundColor Red
   exit 1
 }
 
-git checkout -b $BranchName
+if ((Invoke-GitQuiet -Args @('checkout', '-b', $BranchName)) -ne 0) {
+  Write-Host ("FAIL: git checkout -b {0}" -f $BranchName) -ForegroundColor Red
+  exit 1
+}
 $readme = Join-Path $repoRoot 'README.md'
 $stamp = Get-Date -Format 'yyyy-MM-dd'
 $line = "<!-- ci-trigger: $stamp -->"
 Add-Content -LiteralPath $readme -Value $line -Encoding utf8
-git add README.md
+if ((Invoke-GitQuiet -Args @('add', 'README.md')) -ne 0) {
+  Write-Host 'FAIL: git add README.md' -ForegroundColor Red
+  exit 1
+}
 $env:GIT_AUTHOR_NAME = 'Marko Kosic'
 $env:GIT_AUTHOR_EMAIL = 'markokosic020@gmail.com'
 $env:GIT_COMMITTER_NAME = 'Marko Kosic'
 $env:GIT_COMMITTER_EMAIL = 'markokosic020@gmail.com'
-git commit -m "chore: trigger first CI green run for N2 0.3"
+if ((Invoke-GitQuiet -Args @('commit', '-m', 'chore: trigger first CI green run for N2 0.3')) -ne 0) {
+  Write-Host 'FAIL: git commit' -ForegroundColor Red
+  exit 1
+}
 
 Write-Host ''
 Write-Host ("Grana {0} spremna (1 commit)." -f $BranchName) -ForegroundColor Green
 
 if ($Push) {
-  git push -u origin $BranchName
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  if ((Invoke-GitQuiet -Args @('push', '-u', 'origin', $BranchName)) -ne 0) { exit 1 }
   Write-Host ''
   Write-Host 'Otvori PR ka main:' -ForegroundColor Cyan
   Write-Host ("  https://github.com/{0}/compare/main...{1}?expand=1" -f $Repo, $BranchName) -ForegroundColor DarkGray
