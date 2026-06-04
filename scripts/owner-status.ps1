@@ -148,5 +148,5 @@ Write-Host '  Pun gate: verify-agent-handoff.ps1 | run-local-gates.ps1 | owner-s
 Write-Host '  Pre staging deploya: staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke' -ForegroundColor DarkGray
 Write-Host '  Posle deploya: staging-smoke-remote.ps1' -ForegroundColor DarkGray
 Write-Host '  Brzi dnevni gate: scripts\owner.cmd ili owner-daily.ps1 -ShowNext' -ForegroundColor DarkGray
-Write-Host '  Branch protection UI: scripts\owner-protection.cmd ili owner.cmd -OpenBranchProtection' -ForegroundColor DarkGray
+Write-Host '  Branch protection UI: scripts\owner-protection.cmd (checklist u terminalu)' -ForegroundColor DarkGray
 Write-Host '  Staging deploy koraci: scripts\owner-staging.cmd' -ForegroundColor DarkGray

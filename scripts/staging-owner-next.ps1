@@ -118,6 +118,8 @@ if ($ghOk) {
 }
 if ($OpenBranchProtection) {
   Start-Process ("https://github.com/{0}/settings/branches" -f $Repo)
+  Write-Host ''
+  & (Join-Path $scriptsDir 'print-branch-protection-checklist.ps1')
 }
 Write-Host ''
 Write-Host 'Korak 2 - Deploy na staging host (SSH, ne ovaj PC ako je disk pun)' -ForegroundColor Cyan
