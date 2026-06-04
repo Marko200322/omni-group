@@ -61,7 +61,7 @@ function Invoke-WithRateLimitRetry {
           }
         }
       }
-      $rateLimited = ($status -eq 429) -or ($detail -and $detail -match 'RATE_LIMIT')
+      $rateLimited = ($status -eq 429) -or ($detail -and ($detail -match 'RATE_LIMIT|Too many requests'))
       if ($rateLimited -and $attempt -lt $MaxAttempts) {
         $waitSec = 90
         if ($detail -match 'retryAfterSeconds[^0-9]*(\d+)') {

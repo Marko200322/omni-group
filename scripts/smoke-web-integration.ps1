@@ -80,31 +80,45 @@ if (-not $cj.ok) { throw "contact failed: $($contact.Content)" }
 Write-Host "  OK message=$($cj.message)" -ForegroundColor Green
 
 Write-Host "== Web /dashboard (session) ==" -ForegroundColor Cyan
-$dash = Invoke-WebRequest -Uri "$web/dashboard" -WebSession $session -UseBasicParsing
+$dash = Invoke-WithRateLimitRetry -Label 'Web /dashboard' -Action {
+  Invoke-WebRequest -Uri "$web/dashboard" -WebSession $session -UseBasicParsing
+}
 if ($dash.StatusCode -ne 200) { throw "dashboard HTTP $($dash.StatusCode)" }
 Write-Host "  OK len=$($dash.Content.Length)" -ForegroundColor Green
 
 Write-Host "== Web BFF billing + payments ==" -ForegroundColor Cyan
-$methods = Invoke-WebRequest -Uri "$web/api/atina/payments/methods" -WebSession $session -UseBasicParsing
-$mj = $methods.Content | ConvertFrom-Json
-if (-not $mj.ok) { throw "payments/methods failed: $($methods.Content)" }
+$mj = Invoke-WithRateLimitRetry -Label 'payments/methods' -Action {
+  $methods = Invoke-WebRequest -Uri "$web/api/atina/payments/methods" -WebSession $session -UseBasicParsing
+  $parsed = $methods.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "payments/methods failed: $($methods.Content)" }
+  return $parsed
+}
 Write-Host "  OK mode=$($mj.data.mode)" -ForegroundColor Green
 
-$bill = Invoke-WebRequest -Uri "$web/api/atina/billing/summary" -WebSession $session -UseBasicParsing
-$bj = $bill.Content | ConvertFrom-Json
-if (-not $bj.ok) { throw "billing/summary failed: $($bill.Content)" }
+$bj = Invoke-WithRateLimitRetry -Label 'billing/summary' -Action {
+  $bill = Invoke-WebRequest -Uri "$web/api/atina/billing/summary" -WebSession $session -UseBasicParsing
+  $parsed = $bill.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "billing/summary failed: $($bill.Content)" }
+  return $parsed
+}
 Write-Host "  OK billing summary" -ForegroundColor Green
 
 $coBody = '{"planSlug":"starter","billingCycle":"monthly"}'
-$co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $session -UseBasicParsing
-$cj2 = $co.Content | ConvertFrom-Json
-if (-not $cj2.ok -or -not $cj2.data.paymentId) { throw "manual checkout failed: $($co.Content)" }
+$cj2 = Invoke-WithRateLimitRetry -Label 'manual checkout' -Action {
+  $co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $session -UseBasicParsing
+  $parsed = $co.Content | ConvertFrom-Json
+  if (-not $parsed.ok -or -not $parsed.data.paymentId) { throw "manual checkout failed: $($co.Content)" }
+  return $parsed
+}
 Write-Host "  OK checkout paymentId=$($cj2.data.paymentId)" -ForegroundColor Green
 
 Write-Host "== Web BFF admin overview ==" -ForegroundColor Cyan
-$adm = Invoke-WebRequest -Uri "$web/api/atina/admin/overview" -WebSession $session -UseBasicParsing
-$aj = $adm.Content | ConvertFrom-Json
-if (-not $aj.ok) { throw "admin/overview failed: $($adm.Content)" }
+$aj = Invoke-WithRateLimitRetry -Label 'admin/overview' -Action {
+  $adm = Invoke-WebRequest -Uri "$web/api/atina/admin/overview" -WebSession $session -UseBasicParsing
+  $parsed = $adm.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "admin/overview failed: $($adm.Content)" }
+  return $parsed
+}
 Write-Host "  OK users=$($aj.data.users.total)" -ForegroundColor Green
 
 Write-Host "== Web BFF avatar agents ==" -ForegroundColor Cyan
@@ -126,9 +140,12 @@ try {
 }
 
 Write-Host "== Web BFF admin payments ==" -ForegroundColor Cyan
-$payList = Invoke-WebRequest -Uri "$web/api/atina/admin/payments?status=processing&provider=manual&limit=5" -WebSession $session -UseBasicParsing
-$plj = $payList.Content | ConvertFrom-Json
-if (-not $plj.ok) { throw "admin/payments failed: $($payList.Content)" }
+$plj = Invoke-WithRateLimitRetry -Label 'admin/payments' -Action {
+  $payList = Invoke-WebRequest -Uri "$web/api/atina/admin/payments?status=processing&provider=manual&limit=5" -WebSession $session -UseBasicParsing
+  $parsed = $payList.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "admin/payments failed: $($payList.Content)" }
+  return $parsed
+}
 Write-Host "  OK processing=$($plj.data.Count)" -ForegroundColor Green
 
 Write-Host ''
