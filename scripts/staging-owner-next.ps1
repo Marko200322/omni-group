@@ -32,8 +32,10 @@ $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
 $diskColor = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 2) { 'Yellow' } else { 'Green' }
 Write-Host ("Disk C: {0} GB" -f $freeGb) -ForegroundColor $diskColor
 if ($freeGb -lt 1) {
-  Write-Host '  UPOZORENJE: disk ispod 1 GB - oslobodi prostor ili koristi staging-preflight -SkipDiskCheck' -ForegroundColor Red
-  Write-Host '  Pregled: .\scripts\disk-report.ps1 | cleanup: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor DarkGray
+  Write-Host '  UPOZORENJE: disk ispod 1 GB - lokalni build preskoci' -ForegroundColor Red
+  Write-Host '  Docker vhdx: .\scripts\docker-disk-help.ps1 (Clean/Purge u Docker Desktop)' -ForegroundColor DarkGray
+  Write-Host '  Ili deploy na staging serveru (Korak 2 ispod) - ne zahteva lokalni disk' -ForegroundColor Yellow
+  Write-Host '  Lokalni gate posle cleanup: staging-preflight -SkipAtinaTestCi -SkipDiskCheck' -ForegroundColor DarkGray
 }
 
 try {
@@ -88,8 +90,8 @@ Write-Host '  Require PR + 5 status checks (vidi docs/GIT-BRANCH-PROTECTION.md)'
 Write-Host '  Provera: .\scripts\branch-protection-ready.ps1' -ForegroundColor DarkGray
 Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
 Write-Host ''
-Write-Host 'Korak 2 - Deploy na staging host' -ForegroundColor Cyan
-Write-Host ("  git checkout {0}  # deploy tag (poslednji zelen CI)" -f $deploySha) -ForegroundColor DarkGray
+Write-Host 'Korak 2 - Deploy na staging host (SSH, ne ovaj PC ako je disk pun)' -ForegroundColor Cyan
+Write-Host ("  git clone https://github.com/{0}.git && cd omni-group && git checkout {1}" -f $Repo, $deploySha) -ForegroundColor DarkGray
 Write-Host '  Atina: npm ci && npm run build && npm run migrate (backup DB pre migrate)' -ForegroundColor DarkGray
 Write-Host '  Web: npm ci && npm run build' -ForegroundColor DarkGray
 Write-Host ''
