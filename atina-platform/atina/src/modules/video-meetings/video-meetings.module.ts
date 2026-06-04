@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { z } from 'zod';
 import { IModule } from '../../core/ModuleRegistry';
 import { VideoMeetingsController } from './controller/video-meetings.controller';
 import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';

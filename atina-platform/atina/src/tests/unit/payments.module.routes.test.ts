@@ -43,8 +43,6 @@ describe('PaymentsModule HTTP routes', () => {
   let confirmWisePaymentSpy: jest.SpyInstance;
   let getPaymentMethodsSpy: jest.SpyInstance;
   let createManualCheckoutSpy: jest.SpyInstance;
-  let markManualPaymentSentSpy: jest.SpyInstance;
-  let confirmManualPaymentSpy: jest.SpyInstance;
 
   const WISE_PAYMENT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -98,10 +96,8 @@ describe('PaymentsModule HTTP routes', () => {
     createManualCheckoutSpy = jest
       .spyOn(PaymentsService.prototype, 'createManualCheckout')
       .mockResolvedValue({ paymentId: 'p-manual', reference: 'ATINA-X', amount: 29, currency: 'EUR', instructions: {} });
-    markManualPaymentSentSpy = jest
-      .spyOn(PaymentsService.prototype, 'markManualPaymentSent')
-      .mockResolvedValue(undefined);
-    confirmManualPaymentSpy = jest.spyOn(PaymentsService.prototype, 'confirmPendingPayment').mockResolvedValue(undefined);
+    jest.spyOn(PaymentsService.prototype, 'markManualPaymentSent').mockResolvedValue(undefined);
+    jest.spyOn(PaymentsService.prototype, 'confirmPendingPayment').mockResolvedValue(undefined);
   });
 
   afterAll(async () => {

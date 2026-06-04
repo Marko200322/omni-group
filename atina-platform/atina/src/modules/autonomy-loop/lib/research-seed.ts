@@ -2,7 +2,7 @@
 export function buildResearchSeedCandidates(
   category: string,
   name: string,
-  slug: string
+  _slug: string
 ): string[] {
   const query = `${category} ${name} SaaS software market trends`;
   const wikiTopic = `${name}`.replace(/\s+/g, '_');

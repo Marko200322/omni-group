@@ -1,5 +1,4 @@
 import * as db from '../../database/connection';
-import { ScalingService } from '../../modules/scaling/service/scaling.service';
 import { runDominusSwarmBatch } from '../../modules/dominus-swarm/dominus-swarm.runner';
 
 jest.mock('../../database/connection');

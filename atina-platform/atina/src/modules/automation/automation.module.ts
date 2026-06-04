@@ -8,7 +8,6 @@ import { StrictPaginationQueryDto } from '../../api/dto/pagination-query.dto';
 import { AutomationController } from './controller/automation.controller';
 import {
   AutomationTaskUuidParamsDto,
-  AutomationWorkflowStep,
   CreateWorkflowDto,
   ExecuteWorkflowDto,
 } from './dto/automation.dto';
