@@ -28,7 +28,7 @@ if (-not $run) {
 }
 
 $headFull = (git rev-parse HEAD).Trim()
-if ($run.head_sha -ne $headFull -and -not (Test-OmniEvidenceOnlyCommit)) {
+if ($run.head_sha -ne $headFull -and -not (Test-OmniDocsOnlyCommit)) {
   $matched = $null
   try {
     $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 10 -AllowCacheFallback)
@@ -82,8 +82,17 @@ if (-not $ciOk) {
   }
 }
 
-if ($SkipIfEvidenceOnlyHead -and (Test-OmniEvidenceOnlyCommit)) {
-  Write-Host 'sync-ci-evidence: skip (HEAD docs-only evidence commit)' -ForegroundColor DarkGray
+if ($SkipIfEvidenceOnlyHead -and (Test-OmniDocsOnlyCommit)) {
+  Write-Host 'sync-ci-evidence: skip (HEAD docs-only commit)' -ForegroundColor DarkGray
+  exit 0
+}
+
+if (Test-OmniDocsOnlyCommit -Sha $run.head_sha) {
+  Write-Host (
+    'sync-ci-evidence: skip (Run #{0} {1} docs-only; evidence ostaje na deploy SHA)' -f
+    $num,
+    $sha
+  ) -ForegroundColor DarkGray
   exit 0
 }
 

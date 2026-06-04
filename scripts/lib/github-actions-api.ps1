@@ -243,10 +243,15 @@ function Get-OmniDeployShaFromCommit {
   return $Sha
 }
 
-function Test-OmniEvidenceOnlyCommit {
+function Test-OmniDocsOnlyCommit {
   param([string]$Sha = 'HEAD')
   $subject = (git log -1 --format='%s' $Sha 2>$null)
-  return ($subject -match '^docs\(evidence\):')
+  return ($subject -match '^docs(\(|:)')
+}
+
+function Test-OmniEvidenceOnlyCommit {
+  param([string]$Sha = 'HEAD')
+  return (Test-OmniDocsOnlyCommit -Sha $Sha)
 }
 
 function Get-OmniGithubRecentRuns {
