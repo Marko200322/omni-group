@@ -33,8 +33,28 @@ $urlRun = $run.html_url
 $ciOk = $run.status -eq 'completed' -and $run.conclusion -eq 'success'
 if (-not $ciOk) {
   $label = if ($run.conclusion) { $run.conclusion } else { $run.status }
-  Write-Host ("FAIL: Run #{0} nije zelen ({1})" -f $num, $label) -ForegroundColor Red
-  exit 1
+  if ($SkipIfEvidenceOnlyHead -and (Test-OmniEvidenceOnlyCommit)) {
+    Write-Host ("sync-ci-evidence: skip (HEAD docs-only, Run #{0} [{1}])" -f $num, $label) -ForegroundColor DarkGray
+    exit 0
+  }
+  if ($run.status -ne 'completed') {
+    try {
+      $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 5 -AllowCacheFallback)
+      $lastGreen = @($recent | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })[0]
+      if ($lastGreen) {
+        Write-Host ("sync-ci-evidence: Run #{0} [{1}] - koristim poslednji zelen #{2}" -f $num, $label, $lastGreen.run_number) -ForegroundColor Yellow
+        $run = $lastGreen
+        $num = $run.run_number
+        $sha = $run.head_sha.Substring(0, 7)
+        $urlRun = $run.html_url
+        $ciOk = $true
+      }
+    } catch { }
+  }
+  if (-not $ciOk) {
+    Write-Host ("FAIL: Run #{0} nije zelen ({1})" -f $num, $label) -ForegroundColor Red
+    exit 1
+  }
 }
 
 if ($SkipIfEvidenceOnlyHead) {
