@@ -23,6 +23,16 @@ $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 Set-Location $repoRoot
 
+function Invoke-GitQuiet {
+  param([Parameter(Mandatory)][string[]]$Args)
+  $prev = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  & git @Args 2>&1 | Out-Null
+  $code = $LASTEXITCODE
+  $ErrorActionPreference = $prev
+  return $code
+}
+
 Write-Host '=== prepare-branch-protection-pr ===' -ForegroundColor Cyan
 Write-Host ''
 
@@ -55,8 +65,7 @@ if ($current -ne 'main') {
   git checkout main
 }
 
-git pull --ff-only origin main 2>$null
-if ($LASTEXITCODE -ne 0) {
+if ((Invoke-GitQuiet -Args @('pull', '--ff-only', 'origin', 'main')) -ne 0) {
   Write-Host 'NAPOMENA: git pull nije uspeo - nastavljam sa lokalnim main.' -ForegroundColor Yellow
 }
 
