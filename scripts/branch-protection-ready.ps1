@@ -92,4 +92,6 @@ Write-Host '       Compose (docker compose config)' -ForegroundColor DarkGray
 Write-Host ''
 Write-Host 'Runbook: docs/GIT-BRANCH-PROTECTION.md | evidencija: docs/GIT-A-EVIDENCE-LATEST.md' -ForegroundColor DarkGray
 Write-Host 'Posle branch protection: .\scripts\prepare-branch-protection-pr.ps1 (-Push za remote PR)' -ForegroundColor DarkGray
+Write-Host ''
+& (Join-Path $scriptsDir 'check-branch-protection.ps1')
 exit 0
