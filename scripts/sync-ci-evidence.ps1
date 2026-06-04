@@ -57,12 +57,9 @@ if (-not $ciOk) {
   }
 }
 
-if ($SkipIfEvidenceOnlyHead) {
-  $headFull = (git rev-parse HEAD).Trim()
-  if ($run.head_sha -eq $headFull -and (Test-OmniEvidenceOnlyCommit)) {
-    Write-Host ("sync-ci-evidence: skip (HEAD docs-only evidence, Run #{0} vec pokriven)" -f $num) -ForegroundColor DarkGray
-    exit 0
-  }
+if ($SkipIfEvidenceOnlyHead -and (Test-OmniEvidenceOnlyCommit)) {
+  Write-Host 'sync-ci-evidence: skip (HEAD docs-only evidence commit)' -ForegroundColor DarkGray
+  exit 0
 }
 
 $today = Get-Date -Format 'yyyy-MM-dd'
