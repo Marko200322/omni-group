@@ -254,6 +254,21 @@ function Test-OmniEvidenceOnlyCommit {
   return (Test-OmniDocsOnlyCommit -Sha $Sha)
 }
 
+function Select-OmniGreenRun {
+  param(
+    [Parameter(Mandatory)][object[]]$Runs,
+    [switch]$PreferCodeCommit
+  )
+  $green = @($Runs | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })
+  if ($PreferCodeCommit) {
+    foreach ($r in $green) {
+      if (-not (Test-OmniDocsOnlyCommit -Sha $r.head_sha)) { return $r }
+    }
+  }
+  if ($green.Count -gt 0) { return $green[0] }
+  return $null
+}
+
 function Get-OmniGithubRecentRuns {
   param(
     [string]$Repo = 'Marko200322/omni-group',

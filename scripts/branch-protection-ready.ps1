@@ -26,7 +26,7 @@ $jobs = @($ci.Jobs)
 if ($run -and ($run.status -ne 'completed' -or $run.conclusion -ne 'success')) {
   try {
     $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 5 -AllowCacheFallback)
-    $lastGreen = @($recent | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })[0]
+    $lastGreen = Select-OmniGreenRun -Runs $recent -PreferCodeCommit
     if ($lastGreen) {
       Write-Host ("NAPOMENA: Run #{0} nije zelen - proveravam poslednji zelen #{1}" -f $run.run_number, $lastGreen.run_number) -ForegroundColor Yellow
       $run = $lastGreen
@@ -44,6 +44,10 @@ $sha = $run.head_sha.Substring(0, 7)
 $label = if ($run.conclusion) { $run.conclusion } else { $run.status }
 Write-Host ("Poslednji CI run #{0}  {1}  [{2}]" -f $run.run_number, $sha, $label) -ForegroundColor $(if ($label -eq 'success') { 'Green' } else { 'Red' })
 Write-Host $run.html_url -ForegroundColor DarkGray
+$deploySha = Get-OmniDeployShaFromCommit -Sha $run.head_sha
+if ($deploySha -ne $run.head_sha) {
+  Write-Host ("  Deploy SHA (app kod): {0}" -f $deploySha.Substring(0, 7)) -ForegroundColor DarkGray
+}
 if ($ci.UsedCache) {
   Write-Host '  (podaci iz lokalnog cache-a)' -ForegroundColor Yellow
 }

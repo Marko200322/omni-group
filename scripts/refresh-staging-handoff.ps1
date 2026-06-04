@@ -42,7 +42,7 @@ try {
     if (-not $ciOk) {
       try {
         $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 5 -AllowCacheFallback)
-        $lastGreen = @($recent | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })[0]
+        $lastGreen = Select-OmniGreenRun -Runs $recent -PreferCodeCommit
         if ($lastGreen) {
           Write-Host ("NAPOMENA: Run #{0} [{1}] - koristim poslednji zelen #{2}" -f $run.run_number, $(if ($run.conclusion) { $run.conclusion } else { $run.status }), $lastGreen.run_number) -ForegroundColor Yellow
           $run = $lastGreen
@@ -66,7 +66,7 @@ try {
     $ciRange = "#$($run.run_number)"
     if ($runShort -ne $headShort) {
       $deployNote = " (HEAD $headShort; deploy preporucen $deployShort = poslednji zelen CI)"
-      Write-Host ("NAPOMENA: HEAD {0} != CI run {1} - deploy {1}" -f $headShort, $runShort) -ForegroundColor Yellow
+      Write-Host ("NAPOMENA: HEAD {0} != CI run {1} - deploy {2}" -f $headShort, $runShort, $deployShort) -ForegroundColor Yellow
     }
   }
 } catch {
