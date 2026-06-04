@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Proverava da li je GitHub branch protection ukljucen na main (zahteva gh auth).
+  Proverava da li je GitHub branch protection ukljucen na main (gh auth ili GITHUB_TOKEN/GH_TOKEN).
 
 .EXAMPLE
   .\scripts\check-branch-protection.ps1
@@ -12,6 +12,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $scriptsDir 'lib\github-actions-api.ps1')
+
 $expected = @(
   'Python (Doslednost dok + pytest)'
   'Atina SaaS (test:ci)'
@@ -23,37 +26,85 @@ $expected = @(
 Write-Host '=== check-branch-protection ===' -ForegroundColor Cyan
 Write-Host ''
 
-$ghOk = $false
-try {
-  gh auth status 2>$null | Out-Null
-  if ($LASTEXITCODE -eq 0) { $ghOk = $true }
-} catch { }
+function Test-GhAuthOk {
+  try {
+    gh auth status 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+  } catch {
+    return $false
+  }
+}
 
-if (-not $ghOk) {
-  Write-Host 'SKIP: gh nije ulogovan - ne mogu citati GitHub Settings.' -ForegroundColor Yellow
+function Get-BranchProtectionPayload {
+  param(
+    [string]$Repo,
+    [string]$Branch
+  )
+
+  if (Test-GhAuthOk) {
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $raw = gh api "repos/$Repo/branches/$Branch/protection" 2>&1
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    $text = ($raw | Out-String).Trim()
+    return [PSCustomObject]@{
+      Ok          = ($code -eq 0)
+      NotFound    = ($code -ne 0 -and $text -match '404|Branch not protected|Not Found')
+      ErrorText   = $text
+      Data        = if ($code -eq 0) { $text | ConvertFrom-Json } else { $null }
+      AuthSource  = 'gh'
+    }
+  }
+
+  $token = $env:GITHUB_TOKEN
+  if (-not $token) { $token = $env:GH_TOKEN }
+  if (-not $token) { return $null }
+
+  $uri = "https://api.github.com/repos/$Repo/branches/$Branch/protection"
+  try {
+    $data = Invoke-OmniGithubRest -Uri $uri
+    return [PSCustomObject]@{
+      Ok         = $true
+      NotFound   = $false
+      ErrorText  = ''
+      Data       = $data
+      AuthSource = 'token'
+    }
+  } catch {
+    $detail = [string]$_.ErrorDetails.Message
+    if (-not $detail) { $detail = $_.Exception.Message }
+    $notFound = ($detail -match '404|Branch not protected|Not Found')
+    return [PSCustomObject]@{
+      Ok         = $false
+      NotFound   = $notFound
+      ErrorText  = $detail
+      Data       = $null
+      AuthSource = 'token'
+    }
+  }
+}
+
+$result = Get-BranchProtectionPayload -Repo $Repo -Branch $Branch
+if (-not $result) {
+  Write-Host 'SKIP: nema GitHub auth (gh auth login ili GITHUB_TOKEN/GH_TOKEN u env).' -ForegroundColor Yellow
   Write-Host '  gh auth login  |  owner-protection.cmd za checklist' -ForegroundColor DarkGray
   exit 0
 }
 
-$prev = $ErrorActionPreference
-$ErrorActionPreference = 'Continue'
-$raw = gh api "repos/$Repo/branches/$Branch/protection" 2>&1
-$code = $LASTEXITCODE
-$ErrorActionPreference = $prev
-$text = ($raw | Out-String).Trim()
-
-if ($code -ne 0) {
-  if ($text -match '404|Branch not protected|Not Found') {
-    Write-Host ("FAIL: {0} nema branch protection rule." -f $Branch) -ForegroundColor Red
-    Write-Host '  Pokreni: scripts\owner-protection.cmd' -ForegroundColor Yellow
-    exit 1
-  }
-  Write-Host "FAIL: GitHub API - $text" -ForegroundColor Red
+if ($result.NotFound) {
+  Write-Host ("FAIL: {0} nema branch protection rule." -f $Branch) -ForegroundColor Red
+  Write-Host '  Pokreni: scripts\owner-protection.cmd' -ForegroundColor Yellow
   exit 1
 }
 
-$data = $text | ConvertFrom-Json
-Write-Host ("OK: {0} ima branch protection." -f $Branch) -ForegroundColor Green
+if (-not $result.Ok) {
+  Write-Host "FAIL: GitHub API ($($result.AuthSource)) - $($result.ErrorText)" -ForegroundColor Red
+  exit 1
+}
+
+$data = $result.Data
+Write-Host ("OK: {0} ima branch protection ({1})." -f $Branch, $result.AuthSource) -ForegroundColor Green
 
 if ($data.required_pull_request_reviews) {
   Write-Host '  Require PR before merge: da' -ForegroundColor DarkGray
