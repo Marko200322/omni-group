@@ -27,6 +27,31 @@ if (-not $run) {
   exit 1
 }
 
+$headFull = (git rev-parse HEAD).Trim()
+if ($run.head_sha -ne $headFull -and -not (Test-OmniEvidenceOnlyCommit)) {
+  $matched = $null
+  try {
+    $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 10 -AllowCacheFallback)
+    $matched = @(
+      $recent | Where-Object {
+        $_.head_sha -eq $headFull -and $_.status -eq 'completed' -and $_.conclusion -eq 'success'
+      }
+    )[0]
+  } catch { }
+  if ($matched) {
+    Write-Host ("sync-ci-evidence: cache Run #{0} != HEAD - koristim Run #{1}" -f $run.run_number, $matched.run_number) -ForegroundColor Yellow
+    $run = $matched
+  } elseif ($ci.UsedCache) {
+    Write-Host (
+      'sync-ci-evidence: skip (cache stale — Run #{0} {1} != HEAD {2}; sacekaj CI ili postavi GITHUB_TOKEN)' -f
+      $run.run_number,
+      $run.head_sha.Substring(0, 7),
+      $headFull.Substring(0, 7)
+    ) -ForegroundColor DarkGray
+    exit 0
+  }
+}
+
 $num = $run.run_number
 $sha = $run.head_sha.Substring(0, 7)
 $urlRun = $run.html_url
