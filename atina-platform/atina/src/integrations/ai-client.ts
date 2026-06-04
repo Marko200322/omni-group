@@ -67,9 +67,16 @@ export class AiClient extends AggregatorHttpClient {
     return this.request('POST', '/v1/memory/remember', payload);
   }
 
-  recall(namespace: string, key?: string): Promise<unknown | null> {
+  recall(
+    namespace: string,
+    key?: string,
+    opts?: { timeoutMs?: number; maxAttempts?: number },
+  ): Promise<unknown | null> {
     const query = key ? `?namespace=${encodeURIComponent(namespace)}&key=${encodeURIComponent(key)}` : `?namespace=${encodeURIComponent(namespace)}`;
-    return this.request('GET', `/v1/memory/recall${query}`);
+    return this.request('GET', `/v1/memory/recall${query}`, undefined, {
+      timeout: opts?.timeoutMs,
+      maxAttempts: opts?.maxAttempts,
+    });
   }
 
   fetchRecommendations(context: Record<string, unknown>): Promise<AiRecommendationResult | null> {

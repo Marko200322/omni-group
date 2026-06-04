@@ -41,7 +41,7 @@ export class AggregatorHttpClient {
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     path: string,
     body?: unknown,
-    config?: Pick<AxiosRequestConfig, 'timeout'>
+    config?: Pick<AxiosRequestConfig, 'timeout'> & { maxAttempts?: number }
   ): Promise<T | null> {
     if (!this.isConfigured()) {
       return null;
@@ -49,9 +49,10 @@ export class AggregatorHttpClient {
 
     const url = this.resolveUrl(path);
     const timeout = config?.timeout ?? 30000;
+    const maxAttempts = config?.maxAttempts ?? this.maxAttempts;
     let lastError: unknown;
 
-    for (let attempt = 1; attempt <= this.maxAttempts; attempt += 1) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         const response = await axios.request<T>({
           method,
@@ -65,7 +66,7 @@ export class AggregatorHttpClient {
       } catch (err) {
         lastError = err;
         const message = err instanceof Error ? err.message : String(err);
-        if (attempt >= this.maxAttempts) {
+        if (attempt >= maxAttempts) {
           logger.warn(`${this.aggregatorName} aggregator request failed after retries`, {
             path,
             attempts: attempt,

@@ -7,12 +7,22 @@ function escapeLikeFragment(s: string): string {
   return s.replace(/!/g, '!!').replace(/%/g, '!%').replace(/_/g, '!_');
 }
 
+/** Remote aggregator recall must not block API responses (BFF timeout ~8s). */
+const REMOTE_RECALL_TIMEOUT_MS = 2500;
+
 export class AiMemoryService {
   private readonly repo: AiMemoryRepository;
   private readonly ai = getAiClient();
 
   constructor(repo?: AiMemoryRepository) {
     this.repo = repo ?? new AiMemoryRepository();
+  }
+
+  private recallRemoteBounded(namespace: string, key?: string): Promise<unknown | null> {
+    return this.ai.recall(namespace, key, {
+      timeoutMs: REMOTE_RECALL_TIMEOUT_MS,
+      maxAttempts: 1,
+    });
   }
 
   async remember(userId: string, dto: RememberDtoType) {
@@ -43,7 +53,7 @@ export class AiMemoryService {
     const local = await this.repo.recallByLike(userId, likePattern);
 
     if (this.ai.isConfigured()) {
-      const remote = await this.ai.recall(namespace, key);
+      const remote = await this.recallRemoteBounded(namespace, key);
       if (remote) {
         return { local: local.rows, remote };
       }

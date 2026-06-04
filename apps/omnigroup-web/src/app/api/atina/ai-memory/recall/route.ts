@@ -9,6 +9,15 @@ type RecallRow = {
   created_at?: string;
 };
 
+type RecallPayload = RecallRow[] | { local?: RecallRow[]; remote?: unknown };
+
+function normalizeRecallItems(data: RecallPayload | null | undefined): RecallRow[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.local)) return data.local;
+  return [];
+}
+
 export async function GET(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
@@ -22,7 +31,7 @@ export async function GET(req: Request) {
   const qs = new URLSearchParams({ namespace });
   if (key) qs.set('key', key);
 
-  const r = await fetchAtinaForBff<RecallRow[]>(
+  const r = await fetchAtinaForBff<RecallPayload>(
     `/api/v1/ai-memory/recall?${qs.toString()}`,
     session,
     { method: 'GET' },
@@ -40,5 +49,5 @@ export async function GET(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, items: r.data ?? [] });
+  return NextResponse.json({ ok: true, items: normalizeRecallItems(r.data) });
 }
