@@ -87,6 +87,19 @@ if ($WithPreflight) {
   if (-not $Quiet) { Write-Host '' }
   if (-not $Quiet) { Write-Host '-- staging-preflight --' -ForegroundColor Cyan }
   $preflightSplat = @{ SkipAtinaTestCi = $true }
+  $diskFree = [math]::Round((Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'").FreeSpace / 1GB, 2)
+  if ($diskFree -lt 2) {
+    $preflightSplat.SkipDiskCheck = $true
+    if (-not $Quiet) {
+      Write-Host ("  NAPOMENA: disk ${diskFree} GB - preflight -SkipDiskCheck") -ForegroundColor Yellow
+    }
+  }
+  if ($diskFree -lt 1) {
+    $preflightSplat.SkipWebBuild = $true
+    if (-not $Quiet) {
+      Write-Host '  NAPOMENA: disk ispod 1 GB - preflight -SkipWebBuild' -ForegroundColor Yellow
+    }
+  }
   if (-not $atinaUp) {
     $preflightSplat.SkipAtinaSmoke = $true
     $preflightSplat.SkipDiskCheck = $true

@@ -105,7 +105,17 @@ Write-Host 'Korak 1 - Branch protection (~5 min)' -ForegroundColor Cyan
 Write-Host ("  https://github.com/{0}/settings/branches" -f $Repo) -ForegroundColor DarkGray
 Write-Host '  Require PR + 5 status checks (vidi docs/GIT-BRANCH-PROTECTION.md)' -ForegroundColor DarkGray
 Write-Host '  Provera: .\scripts\branch-protection-ready.ps1' -ForegroundColor DarkGray
-Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
+$ghOk = $false
+try {
+  gh auth status 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) { $ghOk = $true }
+} catch { }
+if ($ghOk) {
+  Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
+} else {
+  Write-Host '  gh auth login  (obavezno pre -Push)' -ForegroundColor Yellow
+  Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
+}
 if ($OpenBranchProtection) {
   Start-Process ("https://github.com/{0}/settings/branches" -f $Repo)
 }
