@@ -1,6 +1,6 @@
 ﻿# Evidencija — N2 red 0.3 (CI green na svakom merge-u na `main`)
 
-**Poslednji pregled repoa (2026-06-04):** **zelen** `CI (monorepo)` - Run [#191](https://github.com/Marko200322/omni-group/actions/runs/26947369369) na `main` (`e98f47c`), **5/5** jobova PASS. Niz zelenih run-ova: #77-191.
+**Poslednji pregled repoa (2026-06-04):** **zelen** `CI (monorepo)` - Run [#193](https://github.com/Marko200322/omni-group/actions/runs/26947924950) na `main` (`14c7b5a`), **5/5** jobova PASS. Niz zelenih run-ova: #77-193.
 
 **Poslednji push na `main` (agent, 2026-06-03):** Run [#77](https://github.com/Marko200322/omni-group/actions/runs/26912274234) — fix mock `sqlite3`/`bull` u `setup-env.ts`, `jest-ci-gate.mjs`. Runovi #78–#83 (docs/evidence) takođe **PASS**.
 
