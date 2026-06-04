@@ -1,6 +1,6 @@
 ﻿# Evidencija — CEO sekcija G (Atina SaaS produkcioni gate)
 
-**Poslednji pregled repoa (2026-06-04):** lokalni preduslov **PASS** (`c023ae9`) - CI Run [#151](https://github.com/Marko200322/omni-group/actions/runs/26934393505). Handoff: [STAGING-LOCAL-PREFLIGHT-LATEST.md](./STAGING-LOCAL-PREFLIGHT-LATEST.md). **Staging/prod red ispod i dalje prazan** (8 stavki ceka vlasnika na URL-u).
+**Poslednji pregled repoa (2026-06-04):** lokalni preduslov **PASS** (`10cef4b`) - CI Run [#153](https://github.com/Marko200322/omni-group/actions/runs/26934940518). Handoff: [STAGING-LOCAL-PREFLIGHT-LATEST.md](./STAGING-LOCAL-PREFLIGHT-LATEST.md). **Staging/prod red ispod i dalje prazan** (8 stavki ceka vlasnika na URL-u).
 
 **Status:** _lokalno spremno; ceka staging/prod sign-off vlasnika_
 
