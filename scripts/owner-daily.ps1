@@ -16,13 +16,16 @@
   .\scripts\owner-daily.ps1 -Quiet
 .EXAMPLE
   .\scripts\owner-daily.ps1 -ShowNext
+.EXAMPLE
+  .\scripts\owner-daily.ps1 -ShowNext -OpenBranchProtection
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipSmoke,
   [switch]$WithPreflight,
   [switch]$Quiet,
-  [switch]$ShowNext
+  [switch]$ShowNext,
+  [switch]$OpenBranchProtection
 )
 
 $ErrorActionPreference = 'Stop'
@@ -104,7 +107,7 @@ if ($failed) {
 
 if (-not $Quiet) {
   Write-Host 'owner-daily: PASS' -ForegroundColor Green
-  Write-Host 'Sledece (vlasnik): staging-owner-next.ps1' -ForegroundColor DarkGray
+  Write-Host 'Sledece (vlasnik): owner-daily.ps1 -ShowNext' -ForegroundColor DarkGray
   if (-not $dockerOk) {
     Write-Host 'Docker: .\scripts\docker-repair.ps1 pa start-local-stack.ps1' -ForegroundColor Yellow
   }
@@ -112,6 +115,8 @@ if (-not $Quiet) {
 
 if ($ShowNext) {
   Write-Host ''
-  & (Join-Path $scriptsDir 'staging-owner-next.ps1')
+  $nextSplat = @{}
+  if ($OpenBranchProtection) { $nextSplat.OpenBranchProtection = $true }
+  & (Join-Path $scriptsDir 'staging-owner-next.ps1') @nextSplat
 }
 exit 0
