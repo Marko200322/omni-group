@@ -62,7 +62,14 @@ try {
         $deployNote = " (CI run $runShort docs-only; deploy app kod $deployShort)"
         try {
           $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 10 -AllowCacheFallback)
-          $codeRun = Select-OmniGreenRun -Runs $recent -PreferCodeCommit
+          $codeRun = @(
+            $recent | Where-Object {
+              $_.head_sha -eq $deploySha -and $_.status -eq 'completed' -and $_.conclusion -eq 'success'
+            }
+          )[0]
+          if (-not $codeRun) {
+            $codeRun = Select-OmniGreenRun -Runs $recent -PreferCodeCommit
+          }
           if ($codeRun -and $codeRun.head_sha -eq $deploySha) {
             $runLine = "Run [#$($codeRun.run_number)]($($codeRun.html_url)) - **5/5 PASS**"
             $ciRange = "#$($codeRun.run_number)"

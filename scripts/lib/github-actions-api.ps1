@@ -76,23 +76,17 @@ function Invoke-OmniGithubRest {
   Invoke-RestMethod -Uri $Uri -Headers (Get-OmniGithubApiHeaders)
 }
 
-function Get-OmniGithubLatestMainRunFromHtml {
+function Parse-OmniGithubRunFromHtml {
   param(
-    [string]$Repo = 'Marko200322/omni-group',
-    [string]$WorkflowFile = 'ci-monorepo.yml'
+    [Parameter(Mandatory)][string]$Html,
+    [Parameter(Mandatory)][string]$RunId,
+    [string]$Repo = 'Marko200322/omni-group'
   )
-  $headers = @{ 'User-Agent' = 'omni-group-scripts' }
-  $listUrl = "https://github.com/$Repo/actions/workflows/$WorkflowFile"
-  $html = (Invoke-WebRequest -Uri $listUrl -UseBasicParsing -Headers $headers).Content
-
-  $runId = [regex]::Match($html, '/actions/runs/(\d+)').Groups[1].Value
-  if (-not $runId) { return $null }
-
-  $needle = "/actions/runs/$runId"
-  $idx = $html.IndexOf($needle)
+  $needle = "/actions/runs/$RunId"
+  $idx = $Html.IndexOf($needle)
   if ($idx -lt 0) { return $null }
-  $blockLen = [Math]::Min(2500, $html.Length - $idx)
-  $block = $html.Substring($idx, $blockLen)
+  $blockLen = [Math]::Min(2500, $Html.Length - $idx)
+  $block = $Html.Substring($idx, $blockLen)
 
   $runNumMatch = [regex]::Match($block, 'Run (\d+) of CI \(monorepo\)')
   if (-not $runNumMatch.Success) { return $null }
@@ -125,18 +119,51 @@ function Get-OmniGithubLatestMainRunFromHtml {
     $conclusion = 'cancelled'
   }
 
-  $htmlUrl = "https://github.com/$Repo/actions/runs/$runId"
-
-  $run = [PSCustomObject]@{
+  [PSCustomObject]@{
     run_number    = $runNumber
     head_sha      = $headSha
-    html_url      = $htmlUrl
+    html_url      = "https://github.com/$Repo/actions/runs/$RunId"
     status        = $status
     conclusion    = $conclusion
     display_title = $title
-    jobs_url      = "https://api.github.com/repos/$Repo/actions/runs/$runId/jobs"
+    jobs_url      = "https://api.github.com/repos/$Repo/actions/runs/$RunId/jobs"
   }
+}
 
+function Get-OmniGithubMainRunsFromHtml {
+  param(
+    [string]$Repo = 'Marko200322/omni-group',
+    [string]$WorkflowFile = 'ci-monorepo.yml',
+    [int]$Limit = 8
+  )
+  $headers = @{ 'User-Agent' = 'omni-group-scripts' }
+  $listUrl = "https://github.com/$Repo/actions/workflows/$WorkflowFile"
+  $html = (Invoke-WebRequest -Uri $listUrl -UseBasicParsing -Headers $headers).Content
+
+  $seen = @{}
+  $runs = @()
+  foreach ($m in [regex]::Matches($html, '/actions/runs/(\d+)')) {
+    $id = $m.Groups[1].Value
+    if ($seen.ContainsKey($id)) { continue }
+    $seen[$id] = $true
+    $run = Parse-OmniGithubRunFromHtml -Html $html -RunId $id -Repo $Repo
+    if ($run) { $runs += $run }
+    if ($runs.Count -ge $Limit) { break }
+  }
+  return $runs
+}
+
+function Get-OmniGithubLatestMainRunFromHtml {
+  param(
+    [string]$Repo = 'Marko200322/omni-group',
+    [string]$WorkflowFile = 'ci-monorepo.yml'
+  )
+  $headers = @{ 'User-Agent' = 'omni-group-scripts' }
+  $runs = @(Get-OmniGithubMainRunsFromHtml -Repo $Repo -WorkflowFile $WorkflowFile -Limit 1)
+  if ($runs.Count -eq 0) { return $null }
+
+  $run = $runs[0]
+  $conclusion = $run.conclusion
   $jobs = @(
     @{ name = 'Atina SaaS (test:ci)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
     @{ name = 'Atina System (verify:ci)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
@@ -287,11 +314,11 @@ function Get-OmniGithubRecentRuns {
   } catch {
     if (-not ($AllowCacheFallback -and (Test-OmniGithubRateLimitError $_))) { throw }
     try {
-      $scraped = Get-OmniGithubLatestMainRunFromHtml -Repo $Repo
-      if ($scraped -and $scraped.Run) {
-        Save-OmniGithubMainRunCache -Run $scraped.Run -Jobs @($scraped.Jobs)
-        Write-Host ('GitHub API rate limit - koristim HTML scrape (Run #{0})' -f $scraped.Run.run_number) -ForegroundColor Yellow
-        return @($scraped.Run)
+      $scrapedRuns = @(Get-OmniGithubMainRunsFromHtml -Repo $Repo -Limit $Limit)
+      if ($scrapedRuns.Count -gt 0) {
+        Save-OmniGithubMainRunCache -Run $scrapedRuns[0] -Jobs @()
+        Write-Host ('GitHub API rate limit - koristim HTML scrape ({0} run-ova, poslednji #{1})' -f $scrapedRuns.Count, $scrapedRuns[0].run_number) -ForegroundColor Yellow
+        return $scrapedRuns
       }
     } catch {
       Write-Host ("HTML scrape fallback: {0}" -f $_.Exception.Message) -ForegroundColor DarkGray
