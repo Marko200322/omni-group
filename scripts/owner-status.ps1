@@ -98,8 +98,9 @@ if ([string]::IsNullOrWhiteSpace($resend)) {
 
 $webEnvScript = Join-Path $scriptsDir 'check-web-env.ps1'
 if (Test-Path $webEnvScript) {
-  & $webEnvScript -Quiet | Out-Null
-  if ($LASTEXITCODE -eq 0) {
+  & $webEnvScript -Quiet *> $null
+  $webEnvOk = ($LASTEXITCODE -eq 0)
+  if ($webEnvOk) {
     Write-Host 'Web env: prod-spreman (check-web-env.ps1)' -ForegroundColor Green
   } else {
     Write-Host 'Web env: vidi check-web-env.ps1 (SESSION_SECRET / NEXT_PUBLIC_ATINA_API_BASE)' -ForegroundColor Yellow

@@ -41,8 +41,10 @@ if ($freeGb -lt 1) {
 try {
   $health = Invoke-RestMethod -Uri 'http://127.0.0.1:3000/health' -TimeoutSec 3
   Write-Host ("Atina :3000  {0}" -f $health.status) -ForegroundColor Green
+  $atinaUp = $true
 } catch {
   Write-Host 'Atina :3000  down' -ForegroundColor Yellow
+  $atinaUp = $false
 }
 
 try {
@@ -52,14 +54,28 @@ try {
   Write-Host 'Web :3010    down' -ForegroundColor Yellow
 }
 
+$dockerOk = $false
+try {
+  docker info *> $null
+  if ($LASTEXITCODE -eq 0) { $dockerOk = $true }
+} catch { }
+
+if (-not $dockerOk) {
+  Write-Host 'Docker: down (.\scripts\docker-repair.ps1)' -ForegroundColor Red
+}
+
 Write-Host ''
 $today = Get-Date -Format 'yyyy-MM-dd'
-Write-Host ("Lokalno zatvoreno ($today na ovom commit-u):") -ForegroundColor Green
+Write-Host ("Lokalno zatvoreno ($today):") -ForegroundColor Green
 Write-Host '  - GitHub CI monorepo (5/5 jobova)' -ForegroundColor DarkGray
-Write-Host '  - staging-preflight.ps1 -SkipAtinaTestCi' -ForegroundColor DarkGray
-Write-Host '  - staging-smoke-remote.ps1 (127.0.0.1:3000)' -ForegroundColor DarkGray
-Write-Host '  - owner-smoke-all.ps1' -ForegroundColor DarkGray
-Write-Host ''
+if ($atinaUp) {
+  Write-Host '  - staging-preflight.ps1 -SkipAtinaTestCi' -ForegroundColor DarkGray
+  Write-Host '  - owner-smoke-all.ps1' -ForegroundColor DarkGray
+} else {
+  Write-Host '  - staging-preflight -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke [-SkipWebBuild]' -ForegroundColor DarkGray
+  Write-Host '  - owner-smoke-all.ps1 -SkipAtinaSmoke' -ForegroundColor DarkGray
+}
+Write-Host '  - owner-gates-quick.ps1 -SkipSmoke' -ForegroundColor DarkGray
 
 $run = (Get-OmniGithubLatestMainRun -Repo $Repo -AllowCacheFallback).Run
 $deploySha = $sha

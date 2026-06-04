@@ -110,3 +110,4 @@ if (-not $Quiet) {
 }
 
 if ($ready -lt $required) { exit 1 }
+exit 0
