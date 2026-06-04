@@ -36,7 +36,7 @@ WHERE provider = 'manual'
   AND created_at < NOW() - INTERVAL '$MinAgeHours hours'
 ORDER BY created_at;
 "@
-  Write-Host 'WhatIf only — no rows updated.' -ForegroundColor Yellow
+  Write-Host 'WhatIf only - no rows updated.' -ForegroundColor Yellow
   exit 0
 }
 

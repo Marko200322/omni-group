@@ -86,7 +86,7 @@ if (-not $SkipWeb) {
       $w = Invoke-WebRequest -Uri 'http://127.0.0.1:3010/api/health' -UseBasicParsing -TimeoutSec 5
       if ($w.StatusCode -eq 200) { Write-Host "Web health OK (attempt $i)" -ForegroundColor Green; break }
     } catch {
-      if ($i -eq 30) { Write-Host 'Web još nije spreman — pokreni ručno: cd apps\omnigroup-web; npm.cmd run dev:clean' -ForegroundColor Yellow }
+      if ($i -eq 30) { Write-Host 'Web još nije spreman - pokreni ručno: cd apps\omnigroup-web; npm.cmd run dev:clean' -ForegroundColor Yellow }
       Start-Sleep -Seconds 2
     }
   }

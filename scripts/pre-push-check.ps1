@@ -21,7 +21,7 @@ $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
 Write-Host "Disk C: free ${freeGb} GB" -ForegroundColor $(if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 5) { 'Yellow' } else { 'DarkGray' })
 if ($freeGb -lt 1) {
-  Write-Host '  KRITICNO: disk ispod 1 GB — zaustavi dev servere i pokreni free-disk-space.ps1' -ForegroundColor Red
+  Write-Host '  KRITICNO: disk ispod 1 GB - zaustavi dev servere i pokreni free-disk-space.ps1' -ForegroundColor Red
 } elseif ($freeGb -lt 5) {
   Write-Host '  Upozorenje: pre npm ci / verify-monorepo (job python / Python (Doslednost dok + pytest); docs/GIT-BRANCH-PROTECTION.md; apps/omnigroup-web; npm run smoke:all) oslobodi >=5 GB' -ForegroundColor Yellow
 }
@@ -32,7 +32,7 @@ if (Test-Path $envLocal) {
   if ($LASTEXITCODE -eq 0) {
     Write-Host '.env.local je u .gitignore (OK)' -ForegroundColor Green
   } else {
-    throw '.env.local NIJE ignorisan — ne commit-uj tajne!'
+    throw '.env.local NIJE ignorisan - ne commit-uj tajne!'
   }
 }
 

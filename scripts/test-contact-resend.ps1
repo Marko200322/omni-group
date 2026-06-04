@@ -72,7 +72,7 @@ if ($expectResend) {
     throw "Očekivan sent_via_resend, dobijeno: $($json.message)"
   }
   if ($json.id) { Write-Host "  resend_id=$($json.id)" -ForegroundColor DarkGray }
-  Write-Host 'D.2 PASS — proveri inbox na CONTACT_EMAIL_TO' -ForegroundColor Green
+  Write-Host 'D.2 PASS - proveri inbox na CONTACT_EMAIL_TO' -ForegroundColor Green
 } else {
   if ($json.message -ne 'queued_local_stub') {
     throw "Očekivan queued_local_stub, dobijeno: $($json.message)"

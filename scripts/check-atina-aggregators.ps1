@@ -57,7 +57,7 @@ $platformExtras = @(
 )
 
 $optionalAggregatorAliases = @(
-  @{ Key = 'STRIPE_SECRET_KEY'; Hint = 'alias — koristi FINANCE_KEY' }
+  @{ Key = 'STRIPE_SECRET_KEY'; Hint = 'alias - koristi FINANCE_KEY' }
 )
 
 $stripeExtras = @(
