@@ -149,3 +149,4 @@ Write-Host '  Pre staging deploya: staging-preflight.ps1 -SkipAtinaTestCi -SkipD
 Write-Host '  Posle deploya: staging-smoke-remote.ps1' -ForegroundColor DarkGray
 Write-Host '  Brzi dnevni gate: scripts\owner.cmd ili owner-daily.ps1 -ShowNext' -ForegroundColor DarkGray
 Write-Host '  Branch protection UI: scripts\owner-protection.cmd ili owner.cmd -OpenBranchProtection' -ForegroundColor DarkGray
+Write-Host '  Staging deploy koraci: scripts\owner-staging.cmd' -ForegroundColor DarkGray
