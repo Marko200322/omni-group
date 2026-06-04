@@ -54,18 +54,29 @@ try {
     }
     $runLabel = if ($run.conclusion) { $run.conclusion } else { $run.status }
     if ($ciOk) {
+      $ciRange = "#$($run.run_number)"
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **5/5 PASS**"
       $deploySha = Get-OmniDeployShaFromCommit -Sha $runSha
       $deployShort = $deploySha.Substring(0, 7)
       if ($deployShort -ne $runShort) {
         $deployNote = " (CI run $runShort docs-only; deploy app kod $deployShort)"
+        try {
+          $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 10 -AllowCacheFallback)
+          $codeRun = Select-OmniGreenRun -Runs $recent -PreferCodeCommit
+          if ($codeRun -and $codeRun.head_sha -eq $deploySha) {
+            $runLine = "Run [#$($codeRun.run_number)]($($codeRun.html_url)) - **5/5 PASS**"
+            $ciRange = "#$($codeRun.run_number)"
+          }
+        } catch { }
       }
     } else {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **$runLabel**"
+      $ciRange = "#$($run.run_number)"
     }
-    $ciRange = "#$($run.run_number)"
     if ($runShort -ne $headShort) {
-      $deployNote = " (HEAD $headShort; deploy preporucen $deployShort = poslednji zelen CI)"
+      if (-not $deployNote) {
+        $deployNote = " (HEAD $headShort; deploy preporucen $deployShort = poslednji zelen CI)"
+      }
       Write-Host ("NAPOMENA: HEAD {0} != CI run {1} - deploy {2}" -f $headShort, $runShort, $deployShort) -ForegroundColor Yellow
     }
   }
