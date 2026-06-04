@@ -53,10 +53,10 @@ if ($dirty) {
 }
 
 $goLive = Join-Path $scriptsDir 'go-live-verify.ps1'
-$goLiveArgs = @('-SkipVerifyMonorepo')
-if ($SkipAtinaTestCi) { $goLiveArgs += '-SkipAtinaTestCi' }
-if ($SkipAtinaSmoke) { $goLiveArgs += '-SkipAtinaSmoke' }
-& $goLive @goLiveArgs
+$goLiveSplat = @{ SkipVerifyMonorepo = $true }
+if ($SkipAtinaTestCi) { $goLiveSplat.SkipAtinaTestCi = $true }
+if ($SkipAtinaSmoke) { $goLiveSplat.SkipAtinaSmoke = $true }
+& $goLive @goLiveSplat
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ''
