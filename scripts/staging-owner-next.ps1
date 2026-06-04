@@ -10,7 +10,8 @@
 #Requires -Version 5.1
 param(
   [string]$Repo = 'Marko200322/omni-group',
-  [switch]$RefreshHandoff
+  [switch]$RefreshHandoff,
+  [switch]$OpenBranchProtection
 )
 
 $ErrorActionPreference = 'Stop'
@@ -105,6 +106,9 @@ Write-Host ("  https://github.com/{0}/settings/branches" -f $Repo) -ForegroundCo
 Write-Host '  Require PR + 5 status checks (vidi docs/GIT-BRANCH-PROTECTION.md)' -ForegroundColor DarkGray
 Write-Host '  Provera: .\scripts\branch-protection-ready.ps1' -ForegroundColor DarkGray
 Write-Host '  Posle protection: .\scripts\prepare-branch-protection-pr.ps1 -Push' -ForegroundColor DarkGray
+if ($OpenBranchProtection) {
+  Start-Process ("https://github.com/{0}/settings/branches" -f $Repo)
+}
 Write-Host ''
 Write-Host 'Korak 2 - Deploy na staging host (SSH, ne ovaj PC ako je disk pun)' -ForegroundColor Cyan
 Write-Host ("  git clone https://github.com/{0}.git && cd omni-group && git checkout {1}" -f $Repo, $deploySha) -ForegroundColor DarkGray

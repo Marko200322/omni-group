@@ -63,6 +63,11 @@ if (-not $SkipSmoke) {
   if ($LASTEXITCODE -ne 0) { $failed = $true }
 }
 
+Write-Host ''
+Write-Host '-- audit-doc-gate-references --' -ForegroundColor Cyan
+& (Join-Path $scriptsDir 'audit-doc-gate-references.ps1')
+if ($LASTEXITCODE -ne 0) { $failed = $true }
+
 if ($WithPreflight) {
   Write-Host ''
   Write-Host '-- staging-preflight --' -ForegroundColor Cyan
