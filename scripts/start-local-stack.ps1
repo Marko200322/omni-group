@@ -41,7 +41,12 @@ if (-not (Test-DockerReady)) {
       if (Test-DockerReady) { $ok = $true; break }
       Start-Sleep -Seconds 3
     }
-    if (-not $ok) { throw 'Docker Desktop nije spreman posle ~2 min. Uključi ga ručno i ponovi.' }
+    if (-not $ok) {
+      Write-Host ''
+      Write-Host 'Docker Desktop nije spreman posle ~2 min.' -ForegroundColor Red
+      Write-Host '  Dijagnostika: .\scripts\docker-disk-help.ps1' -ForegroundColor Yellow
+      throw 'Docker engine nije dostupan. Vidi docker-disk-help.ps1 (servis com.docker.service / disk / Purge).'
+    }
   } else {
     throw 'Docker Desktop nije instaliran. Instaliraj ga pre Atina API-ja.'
   }

@@ -53,4 +53,38 @@ Write-Host 'Repo cleanup (ne dira Docker vhdx):' -ForegroundColor Cyan
 Write-Host '  .\scripts\free-disk-space.ps1 -CleanTemp' -ForegroundColor DarkGray
 Write-Host '  Low disk preflight: .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke' -ForegroundColor DarkGray
 Write-Host ''
+
+Write-Host 'Docker servis / engine:' -ForegroundColor Cyan
+$svc = Get-Service -Name 'com.docker.service' -ErrorAction SilentlyContinue
+if ($svc) {
+  $svcColor = if ($svc.Status -eq 'Running') { 'Green' } else { 'Red' }
+  Write-Host ("  com.docker.service: {0} (StartType: {1})" -f $svc.Status, $svc.StartType) -ForegroundColor $svcColor
+} else {
+  Write-Host '  com.docker.service: nije instaliran' -ForegroundColor DarkGray
+}
+
+$engineOk = $false
+try {
+  docker info *> $null
+  if ($LASTEXITCODE -eq 0) { $engineOk = $true }
+} catch { }
+
+if ($engineOk) {
+  Write-Host '  docker engine: OK' -ForegroundColor Green
+} else {
+  Write-Host '  docker engine: DOWN (npr. "Docker Desktop is unable to start")' -ForegroundColor Red
+  Write-Host ''
+  Write-Host 'Popravka (vlasnik, redom):' -ForegroundColor Yellow
+  Write-Host '  1. Restart racunara (posle oslobadjanja diska)' -ForegroundColor DarkGray
+  Write-Host '  2. Pokreni Docker Desktop iz Start menija (ne samo CLI)' -ForegroundColor DarkGray
+  Write-Host '  3. Ako i dalje pada: Docker Desktop -> Troubleshoot -> Restart / Clean / Purge data' -ForegroundColor DarkGray
+  Write-Host '  4. Admin PowerShell: wsl --shutdown ; Start-Service com.docker.service' -ForegroundColor DarkGray
+  Write-Host '  5. Posle engine OK: .\scripts\start-local-stack.ps1' -ForegroundColor DarkGray
+  if ($freeGb -lt 5) {
+    Write-Host ''
+    Write-Host 'NAPOMENA: disk ispod 5 GB cesto sprecava WSL/Docker start.' -ForegroundColor Yellow
+  }
+}
+
+Write-Host ''
 Write-Host 'docker-disk-help: done' -ForegroundColor Green
