@@ -1,6 +1,6 @@
 ﻿# Evidencija — CEO sekcija A (Git: `main` zaštićen, PR obavezni)
 
-**Poslednji pregled repoa (2026-06-04):** CI na `main` **zelen** (Run [#173](https://github.com/Marko200322/omni-group/actions/runs/26940510021), `0621a8c`) - spremno za Korak 3 (required checks). Branch protection **jos nije** podeÅ¡en.
+**Poslednji pregled repoa (2026-06-04):** CI na `main` **zelen** (Run [#175](https://github.com/Marko200322/omni-group/actions/runs/26941808555), `0f6b26a`) - spremno za Korak 3 (required checks). Branch protection **jos nije** podeÅ¡en.
 
 **Status:** _čeka vlasnika — GitHub Settings → Branches (5 required checks)_
 
