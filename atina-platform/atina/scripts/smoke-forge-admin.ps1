@@ -52,16 +52,16 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $retryHelper = Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $here))) 'scripts\rate-limit-retry.ps1'
 . $retryHelper
 
-$forgeStatus = Invoke-WithRateLimitRetry -Label 'forge status' -Action {
+$forgeStatus = Invoke-WithRateLimitRetry -Label 'forge status' -MaxAttempts 6 -Action {
   Invoke-RestMethod @t15 -Method GET -Uri "$base/api/v1/forge/status" -Headers $headers
 }
-$templates = Invoke-WithRateLimitRetry -Label 'workflow templates' -Action {
+$templates = Invoke-WithRateLimitRetry -Label 'workflow templates' -MaxAttempts 6 -Action {
   Invoke-RestMethod @t15 -Method GET -Uri "$base/api/v1/workflow-chain/templates" -Headers $headers
 }
-$adminOverview = Invoke-WithRateLimitRetry -Label 'admin overview' -Action {
+$adminOverview = Invoke-WithRateLimitRetry -Label 'admin overview' -MaxAttempts 6 -Action {
   Invoke-RestMethod @t15 -Method GET -Uri "$base/api/v1/admin/overview" -Headers $headers
 }
-$executionStats = Invoke-WithRateLimitRetry -Label 'admin execution stats' -Action {
+$executionStats = Invoke-WithRateLimitRetry -Label 'admin execution stats' -MaxAttempts 6 -Action {
   Invoke-RestMethod @t30 -Method GET -Uri "$base/api/v1/admin/workflow/templates/execution-stats?days=$ExecutionStatsDays" -Headers $headers
 }
 

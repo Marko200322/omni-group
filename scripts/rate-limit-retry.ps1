@@ -61,10 +61,10 @@ function Invoke-WithRateLimitRetry {
           }
         }
       }
-      $rateLimited = ($status -eq 429) -or ($detail -and ($detail -match 'RATE_LIMIT|Too many requests'))
+      $rateLimited = ($status -eq 429) -or ($detail -and ($detail -match 'RATE_LIMIT|Too many requests|RATE_LIMIT_EXCEEDED'))
       if ($rateLimited -and $attempt -lt $MaxAttempts) {
         $waitSec = 90
-        if ($detail -match 'retryAfterSeconds[^0-9]*(\d+)') {
+        if ($detail -match 'retryAfterSeconds["\s:]*(\d+)') {
           $waitSec = [int]$Matches[1] + 3
         }
         Write-Host "  $Label rate limit - cekam ${waitSec}s (pokusaj $attempt/$MaxAttempts)..." -ForegroundColor Yellow
