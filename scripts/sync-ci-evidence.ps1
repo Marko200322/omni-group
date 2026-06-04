@@ -43,7 +43,7 @@ if ($run.head_sha -ne $headFull -and -not (Test-OmniEvidenceOnlyCommit)) {
     $run = $matched
   } elseif ($ci.UsedCache) {
     Write-Host (
-      'sync-ci-evidence: skip (cache stale — Run #{0} {1} != HEAD {2}; sacekaj CI ili postavi GITHUB_TOKEN)' -f
+      'sync-ci-evidence: skip (cache stale - Run #{0} {1} != HEAD {2}; sacekaj CI ili postavi GITHUB_TOKEN)' -f
       $run.run_number,
       $run.head_sha.Substring(0, 7),
       $headFull.Substring(0, 7)
