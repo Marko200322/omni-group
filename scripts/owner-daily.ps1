@@ -14,12 +14,15 @@
   .\scripts\owner-daily.ps1 -SkipSmoke
 .EXAMPLE
   .\scripts\owner-daily.ps1 -Quiet
+.EXAMPLE
+  .\scripts\owner-daily.ps1 -ShowNext
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipSmoke,
   [switch]$WithPreflight,
-  [switch]$Quiet
+  [switch]$Quiet,
+  [switch]$ShowNext
 )
 
 $ErrorActionPreference = 'Stop'
@@ -105,5 +108,10 @@ if (-not $Quiet) {
   if (-not $dockerOk) {
     Write-Host 'Docker: .\scripts\docker-repair.ps1 pa start-local-stack.ps1' -ForegroundColor Yellow
   }
+}
+
+if ($ShowNext) {
+  Write-Host ''
+  & (Join-Path $scriptsDir 'staging-owner-next.ps1')
 }
 exit 0
