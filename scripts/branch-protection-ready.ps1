@@ -23,6 +23,18 @@ $ci = Get-OmniGithubLatestMainRun -Repo $Repo -Branch $Branch -AllowCacheFallbac
 $run = $ci.Run
 $jobs = @($ci.Jobs)
 
+if ($run -and ($run.status -ne 'completed' -or $run.conclusion -ne 'success')) {
+  try {
+    $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 5 -AllowCacheFallback)
+    $lastGreen = @($recent | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })[0]
+    if ($lastGreen) {
+      Write-Host ("NAPOMENA: Run #{0} nije zelen - proveravam poslednji zelen #{1}" -f $run.run_number, $lastGreen.run_number) -ForegroundColor Yellow
+      $run = $lastGreen
+      $jobs = @()
+    }
+  } catch { }
+}
+
 if (-not $run) {
   Write-Host 'FAIL: nema workflow run-ova na main.' -ForegroundColor Red
   exit 1

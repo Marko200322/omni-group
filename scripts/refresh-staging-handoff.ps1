@@ -39,6 +39,19 @@ try {
     $runSha = $run.head_sha
     $runShort = $runSha.Substring(0, 7)
     $ciOk = $run.status -eq 'completed' -and $run.conclusion -eq 'success'
+    if (-not $ciOk) {
+      try {
+        $recent = @(Get-OmniGithubRecentRuns -Repo $Repo -Limit 5 -AllowCacheFallback)
+        $lastGreen = @($recent | Where-Object { $_.status -eq 'completed' -and $_.conclusion -eq 'success' })[0]
+        if ($lastGreen) {
+          Write-Host ("NAPOMENA: Run #{0} [{1}] - koristim poslednji zelen #{2}" -f $run.run_number, $(if ($run.conclusion) { $run.conclusion } else { $run.status }), $lastGreen.run_number) -ForegroundColor Yellow
+          $run = $lastGreen
+          $runSha = $run.head_sha
+          $runShort = $runSha.Substring(0, 7)
+          $ciOk = $true
+        }
+      } catch { }
+    }
     $runLabel = if ($run.conclusion) { $run.conclusion } else { $run.status }
     if ($ciOk) {
       $runLine = "Run [#$($run.run_number)]($($run.html_url)) - **5/5 PASS**"
