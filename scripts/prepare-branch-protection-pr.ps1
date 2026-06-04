@@ -26,6 +26,18 @@ Set-Location $repoRoot
 Write-Host '=== prepare-branch-protection-pr ===' -ForegroundColor Cyan
 Write-Host ''
 
+if ($Push) {
+  $ghOk = $false
+  try {
+    gh auth status 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) { $ghOk = $true }
+  } catch { }
+  if (-not $ghOk) {
+    Write-Host 'FAIL: gh nije ulogovan - pre -Push: gh auth login' -ForegroundColor Red
+    exit 1
+  }
+}
+
 & (Join-Path $scriptsDir 'branch-protection-ready.ps1')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
