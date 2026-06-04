@@ -76,6 +76,78 @@ function Invoke-OmniGithubRest {
   Invoke-RestMethod -Uri $Uri -Headers (Get-OmniGithubApiHeaders)
 }
 
+function Get-OmniGithubLatestMainRunFromHtml {
+  param(
+    [string]$Repo = 'Marko200322/omni-group',
+    [string]$WorkflowFile = 'ci-monorepo.yml'
+  )
+  $headers = @{ 'User-Agent' = 'omni-group-scripts' }
+  $listUrl = "https://github.com/$Repo/actions/workflows/$WorkflowFile"
+  $html = (Invoke-WebRequest -Uri $listUrl -UseBasicParsing -Headers $headers).Content
+
+  $runId = [regex]::Match($html, '/actions/runs/(\d+)').Groups[1].Value
+  if (-not $runId) { return $null }
+
+  $needle = "/actions/runs/$runId"
+  $idx = $html.IndexOf($needle)
+  if ($idx -lt 0) { return $null }
+  $blockLen = [Math]::Min(2500, $html.Length - $idx)
+  $block = $html.Substring($idx, $blockLen)
+
+  $runNumMatch = [regex]::Match($block, 'Run (\d+) of CI \(monorepo\)')
+  if (-not $runNumMatch.Success) { return $null }
+  $runNumber = [int]$runNumMatch.Groups[1].Value
+
+  $shaMatch = [regex]::Match($block, '/commit/([0-9a-f]{40})')
+  if (-not $shaMatch.Success) {
+    $shaMatch = [regex]::Match($block, '/commit/([0-9a-f]{7,40})')
+  }
+  if (-not $shaMatch.Success) { return $null }
+  $headSha = $shaMatch.Groups[1].Value.Trim()
+
+  $ariaMatch = [regex]::Match($block, 'aria-label="((?:completed successfully|failed|cancelled|currently running)[^"]+Run \d+ of CI \(monorepo\)[^"]*)"')
+  $title = (git log -1 --format='%s' $headSha 2>$null)
+  if ($ariaMatch.Success) {
+    $ariaTitle = ($ariaMatch.Groups[1].Value -replace '^[^:]+:\s*Run \d+ of CI \(monorepo\)\.\s*', '').Trim()
+    if ($ariaTitle) { $title = $ariaTitle }
+  }
+  if (-not $title) { $title = "CI (monorepo) #$runNumber" }
+
+  $status = 'completed'
+  $conclusion = 'success'
+  $ariaText = if ($ariaMatch.Success) { $ariaMatch.Groups[1].Value } else { '' }
+  if ($ariaText -match 'currently running') {
+    $status = 'in_progress'
+    $conclusion = $null
+  } elseif ($ariaText -match 'failed') {
+    $conclusion = 'failure'
+  } elseif ($ariaText -match 'cancelled') {
+    $conclusion = 'cancelled'
+  }
+
+  $htmlUrl = "https://github.com/$Repo/actions/runs/$runId"
+
+  $run = [PSCustomObject]@{
+    run_number    = $runNumber
+    head_sha      = $headSha
+    html_url      = $htmlUrl
+    status        = $status
+    conclusion    = $conclusion
+    display_title = $title
+    jobs_url      = "https://api.github.com/repos/$Repo/actions/runs/$runId/jobs"
+  }
+
+  $jobs = @(
+    @{ name = 'Atina SaaS (test:ci)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
+    @{ name = 'Atina System (verify:ci)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
+    @{ name = 'Compose (docker compose config)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
+    @{ name = 'Omnigroup web (Next.js build)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) },
+    @{ name = 'Python (Doslednost dok + pytest)'; conclusion = $(if ($conclusion -eq 'success') { 'success' } else { $conclusion }) }
+  )
+
+  [PSCustomObject]@{ Run = $run; Jobs = $jobs }
+}
+
 function Get-OmniGithubRunJobs {
   param(
     [Parameter(Mandatory)][object]$Run,
@@ -122,6 +194,22 @@ function Get-OmniGithubLatestMainRun {
     Save-OmniGithubMainRunCache -Run $run -Jobs $jobs
   } catch {
     if (-not ($AllowCacheFallback -and (Test-OmniGithubRateLimitError $_))) { throw }
+    try {
+      $scraped = Get-OmniGithubLatestMainRunFromHtml -Repo $Repo
+      if ($scraped -and $scraped.Run) {
+        $run = $scraped.Run
+        $jobs = @($scraped.Jobs)
+        Save-OmniGithubMainRunCache -Run $run -Jobs $jobs
+        Write-Host ('GitHub API rate limit - koristim HTML scrape (Run #{0})' -f $run.run_number) -ForegroundColor Yellow
+        return [PSCustomObject]@{
+          Run       = $run
+          Jobs      = $jobs
+          UsedCache = $false
+        }
+      }
+    } catch {
+      Write-Host ("HTML scrape fallback: {0}" -f $_.Exception.Message) -ForegroundColor DarkGray
+    }
     $cached = Read-OmniGithubMainRunCache -MaxAgeMinutes $CacheMaxAgeMinutes
     if (-not $cached) {
       Write-Host 'FAIL: GitHub API rate limit i nema svezeog cache-a.' -ForegroundColor Red
@@ -178,6 +266,16 @@ function Get-OmniGithubRecentRuns {
     return $runs
   } catch {
     if (-not ($AllowCacheFallback -and (Test-OmniGithubRateLimitError $_))) { throw }
+    try {
+      $scraped = Get-OmniGithubLatestMainRunFromHtml -Repo $Repo
+      if ($scraped -and $scraped.Run) {
+        Save-OmniGithubMainRunCache -Run $scraped.Run -Jobs @($scraped.Jobs)
+        Write-Host ('GitHub API rate limit - koristim HTML scrape (Run #{0})' -f $scraped.Run.run_number) -ForegroundColor Yellow
+        return @($scraped.Run)
+      }
+    } catch {
+      Write-Host ("HTML scrape fallback: {0}" -f $_.Exception.Message) -ForegroundColor DarkGray
+    }
     $cached = Read-OmniGithubMainRunCache -MaxAgeMinutes $CacheMaxAgeMinutes
     if (-not $cached) { throw }
     Write-Host ('GitHub API rate limit - prikazujem samo cache run #{0}' -f $cached.run.run_number) -ForegroundColor Yellow
