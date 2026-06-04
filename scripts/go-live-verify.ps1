@@ -52,7 +52,9 @@ if (-not $SkipWebBuild) {
 
 Write-Host '== Web smoke integration ==' -ForegroundColor Cyan
 if ($SkipAtinaSmoke) {
-  Write-Host '  SKIP (-SkipAtinaSmoke; Atina/Docker nije dostupan)' -ForegroundColor Yellow
+  Write-Host '  Atina smoke preskocen (-SkipAtinaSmoke)' -ForegroundColor Yellow
+  & (Join-Path $root 'scripts\smoke-web-only.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } else {
   & (Join-Path $root 'scripts\smoke-web-integration.ps1')
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

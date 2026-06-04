@@ -67,7 +67,24 @@ foreach ($svc in @(
     $r = Invoke-QuickWebGet -Uri $svc.Url -TimeoutSec 4
     Write-Host "$($svc.Name): $($r.StatusCode)" -ForegroundColor Green
   } catch {
-    Write-Host "$($svc.Name): down (restart: .\scripts\restart-web-dev.ps1)" -ForegroundColor Red
+    if ($svc.Name -eq 'Atina') {
+      Write-Host "$($svc.Name): down (Docker/Postgres: .\scripts\docker-disk-help.ps1)" -ForegroundColor Red
+    } else {
+      Write-Host "$($svc.Name): down (restart: .\scripts\restart-web-dev.ps1)" -ForegroundColor Red
+    }
+  }
+}
+
+if (-not $Quick) {
+  $dockerOk = $false
+  try {
+    docker info *> $null
+    if ($LASTEXITCODE -eq 0) { $dockerOk = $true }
+  } catch { }
+  if ($dockerOk) {
+    Write-Host 'Docker engine: OK' -ForegroundColor Green
+  } else {
+    Write-Host 'Docker engine: down (.\scripts\docker-disk-help.ps1)' -ForegroundColor Red
   }
 }
 
@@ -127,5 +144,6 @@ if ($freeGb -lt 5) {
   Write-Host '  3. disk-report.ps1 / free-disk-space.ps1 -CleanTemp -SkipNext' -ForegroundColor DarkGray
 }
 Write-Host '  Pun gate: verify-agent-handoff.ps1 | run-local-gates.ps1 | owner-smoke-all.ps1' -ForegroundColor DarkGray
-Write-Host '  Pre staging deploya: staging-preflight.ps1 -SkipAtinaTestCi | posle: staging-smoke-remote.ps1' -ForegroundColor DarkGray
+Write-Host '  Pre staging deploya: staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke' -ForegroundColor DarkGray
+Write-Host '  Posle deploya: staging-smoke-remote.ps1' -ForegroundColor DarkGray
 Write-Host '  GitHub CI: github-ci-status.ps1 | branch-protection-ready.ps1 | staging-owner-next.ps1 (bez gh auth)' -ForegroundColor DarkGray
