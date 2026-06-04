@@ -56,28 +56,30 @@ if ($dockerOk) {
 }
 
 if (-not $SkipSmoke) {
-  Write-Host ''
+  if (-not $Quiet) { Write-Host '' }
   if ($atinaUp) {
-    Write-Host '-- owner-smoke-all (puni stack) --' -ForegroundColor Cyan
+    if (-not $Quiet) { Write-Host '-- owner-smoke-all (puni stack) --' -ForegroundColor Cyan }
     & (Join-Path $scriptsDir 'owner-smoke-all.ps1')
   } else {
-    Write-Host '-- owner-smoke-all -SkipAtinaSmoke --' -ForegroundColor Cyan
-    if (-not $dockerOk) {
-      Write-Host '  NAPOMENA: Docker down - pun smoke posle start-local-stack.ps1' -ForegroundColor Yellow
+    if (-not $Quiet) {
+      Write-Host '-- owner-smoke-all -SkipAtinaSmoke --' -ForegroundColor Cyan
+      if (-not $dockerOk) {
+        Write-Host '  NAPOMENA: Docker down - pun smoke posle start-local-stack.ps1' -ForegroundColor Yellow
+      }
     }
     & (Join-Path $scriptsDir 'owner-smoke-all.ps1') -SkipAtinaSmoke
   }
   if ($LASTEXITCODE -ne 0) { $failed = $true }
 }
 
-Write-Host ''
-Write-Host '-- audit-doc-gate-references --' -ForegroundColor Cyan
+if (-not $Quiet) { Write-Host '' }
+if (-not $Quiet) { Write-Host '-- audit-doc-gate-references --' -ForegroundColor Cyan }
 & (Join-Path $scriptsDir 'audit-doc-gate-references.ps1')
 if ($LASTEXITCODE -ne 0) { $failed = $true }
 
 if ($WithPreflight) {
-  Write-Host ''
-  Write-Host '-- staging-preflight --' -ForegroundColor Cyan
+  if (-not $Quiet) { Write-Host '' }
+  if (-not $Quiet) { Write-Host '-- staging-preflight --' -ForegroundColor Cyan }
   $preflightSplat = @{ SkipAtinaTestCi = $true }
   if (-not $atinaUp) {
     $preflightSplat.SkipAtinaSmoke = $true
