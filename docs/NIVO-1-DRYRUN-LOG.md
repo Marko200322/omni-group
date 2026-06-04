@@ -7702,3 +7702,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate-help-sn
 | `owner-gates-quick.ps1` | **PASS** |
 
 **Link na CI run:** [Run #120](https://github.com/Marko200322/omni-group/actions/runs/26924602250) Â· `dfa56ba`
+
+---
+
+## Zapis (izvrÅ¡en) â€” CI Run #122 (2026-06-04)
+
+| Skripta / job | Rezultat |
+|---------------|----------|
+| GitHub CI Run #122 | **PASS** â€” 5/5 jobova |
+| `owner-gates-quick.ps1` | **PASS** |
+
+**Link na CI run:** [Run #122](https://github.com/Marko200322/omni-group/actions/runs/26925046014) Â· `2d00e26`
