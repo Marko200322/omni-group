@@ -119,7 +119,7 @@ Write-Host ''
 Write-Host 'Runbook: docs/VLASNIK-PAKET.md | docs/STAGING-RELEASE-CHECKLIST.md' -ForegroundColor DarkGray
 Write-Host 'Staging preduslov (lokalno): docs/STAGING-LOCAL-PREFLIGHT-LATEST.md' -ForegroundColor DarkGray
 Write-Host 'Azuriraj handoff: .\scripts\refresh-staging-handoff.ps1' -ForegroundColor DarkGray
-Write-Host 'Brzi gate-ovi: .\scripts\owner-gates-quick.ps1 -RefreshHandoff' -ForegroundColor DarkGray
+Write-Host 'Brzi gate-ovi: .\scripts\owner-daily.ps1 | owner-gates-quick.ps1 -RefreshHandoff' -ForegroundColor DarkGray
 
 if ($RefreshHandoff) {
   Write-Host ''
