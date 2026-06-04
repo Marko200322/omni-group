@@ -12,11 +12,14 @@
   .\scripts\owner-daily.ps1 -WithPreflight
 .EXAMPLE
   .\scripts\owner-daily.ps1 -SkipSmoke
+.EXAMPLE
+  .\scripts\owner-daily.ps1 -Quiet
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipSmoke,
-  [switch]$WithPreflight
+  [switch]$WithPreflight,
+  [switch]$Quiet
 )
 
 $ErrorActionPreference = 'Stop'
@@ -24,15 +27,17 @@ $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 Set-Location $repoRoot
 
-Write-Host '=== owner-daily ===' -ForegroundColor Cyan
-Write-Host ''
+if (-not $Quiet) {
+  Write-Host '=== owner-daily ===' -ForegroundColor Cyan
+  Write-Host ''
+}
 
 & (Join-Path $scriptsDir 'owner-status.ps1')
 Write-Host ''
 
 $failed = $false
 
-Write-Host '-- branch-protection-ready --' -ForegroundColor Cyan
+if (-not $Quiet) { Write-Host '-- branch-protection-ready --' -ForegroundColor Cyan }
 & (Join-Path $scriptsDir 'branch-protection-ready.ps1')
 if ($LASTEXITCODE -ne 0) { $failed = $true }
 
@@ -85,14 +90,18 @@ if ($WithPreflight) {
 
 Write-Host ''
 if ($failed) {
-  Write-Host 'owner-daily: FAIL (vidi gore)' -ForegroundColor Red
-  Write-Host 'Pomoc: staging-owner-next.ps1 | docker-repair.ps1' -ForegroundColor DarkGray
+  if (-not $Quiet) {
+    Write-Host 'owner-daily: FAIL (vidi gore)' -ForegroundColor Red
+    Write-Host 'Pomoc: staging-owner-next.ps1 | docker-repair.ps1' -ForegroundColor DarkGray
+  }
   exit 1
 }
 
-Write-Host 'owner-daily: PASS' -ForegroundColor Green
-Write-Host 'Sledece (vlasnik): staging-owner-next.ps1' -ForegroundColor DarkGray
-if (-not $dockerOk) {
-  Write-Host 'Docker: .\scripts\docker-repair.ps1 pa start-local-stack.ps1' -ForegroundColor Yellow
+if (-not $Quiet) {
+  Write-Host 'owner-daily: PASS' -ForegroundColor Green
+  Write-Host 'Sledece (vlasnik): staging-owner-next.ps1' -ForegroundColor DarkGray
+  if (-not $dockerOk) {
+    Write-Host 'Docker: .\scripts\docker-repair.ps1 pa start-local-stack.ps1' -ForegroundColor Yellow
+  }
 }
 exit 0

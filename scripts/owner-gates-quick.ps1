@@ -27,7 +27,7 @@ Set-Location $repoRoot
 Write-Host '=== owner-gates-quick ===' -ForegroundColor Cyan
 Write-Host ''
 
-& (Join-Path $scriptsDir 'owner-daily.ps1') -SkipSmoke
+& (Join-Path $scriptsDir 'owner-daily.ps1') -SkipSmoke -Quiet
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $SkipSmoke) {
