@@ -12,10 +12,13 @@
   .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -MinDiskGb 1
 .EXAMPLE
   .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck
+.EXAMPLE
+  .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipAtinaTestCi,
+  [switch]$SkipAtinaSmoke,
   [switch]$SkipDiskCheck,
   [int]$MinDiskGb = 2
 )
@@ -50,11 +53,10 @@ if ($dirty) {
 }
 
 $goLive = Join-Path $scriptsDir 'go-live-verify.ps1'
-if ($SkipAtinaTestCi) {
-  & $goLive -SkipVerifyMonorepo -SkipAtinaTestCi
-} else {
-  & $goLive -SkipVerifyMonorepo
-}
+$goLiveArgs = @('-SkipVerifyMonorepo')
+if ($SkipAtinaTestCi) { $goLiveArgs += '-SkipAtinaTestCi' }
+if ($SkipAtinaSmoke) { $goLiveArgs += '-SkipAtinaSmoke' }
+& $goLive @goLiveArgs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ''

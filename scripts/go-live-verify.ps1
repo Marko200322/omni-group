@@ -7,10 +7,12 @@
 .EXAMPLE
   .\scripts\go-live-verify.ps1
   .\scripts\go-live-verify.ps1 -SkipAtinaTestCi
+  .\scripts\go-live-verify.ps1 -SkipAtinaTestCi -SkipAtinaSmoke
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipAtinaTestCi,
+  [switch]$SkipAtinaSmoke,
   [switch]$SkipWebBuild,
   [switch]$SkipVerifyMonorepo
 )
@@ -49,18 +51,22 @@ if (-not $SkipWebBuild) {
 }
 
 Write-Host '== Web smoke integration ==' -ForegroundColor Cyan
-& (Join-Path $root 'scripts\smoke-web-integration.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($SkipAtinaSmoke) {
+  Write-Host '  SKIP (-SkipAtinaSmoke; Atina/Docker nije dostupan)' -ForegroundColor Yellow
+} else {
+  & (Join-Path $root 'scripts\smoke-web-integration.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host '== Upload spike ==' -ForegroundColor Cyan
-& (Join-Path $root 'scripts\test-upload-spike.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  Write-Host '== Upload spike ==' -ForegroundColor Cyan
+  & (Join-Path $root 'scripts\test-upload-spike.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host '== E2E billing manual ==' -ForegroundColor Cyan
-Push-Location (Join-Path $root 'apps\omnigroup-web')
-npm run e2e:billing
-if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
-Pop-Location
+  Write-Host '== E2E billing manual ==' -ForegroundColor Cyan
+  Push-Location (Join-Path $root 'apps\omnigroup-web')
+  npm run e2e:billing
+  if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
+  Pop-Location
+}
 
 if (-not $SkipVerifyMonorepo) {
   Write-Host '== verify-monorepo ==' -ForegroundColor Cyan

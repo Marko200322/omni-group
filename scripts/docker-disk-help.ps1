@@ -51,6 +51,6 @@ Write-Host ''
 
 Write-Host 'Repo cleanup (ne dira Docker vhdx):' -ForegroundColor Cyan
 Write-Host '  .\scripts\free-disk-space.ps1 -CleanTemp' -ForegroundColor DarkGray
-Write-Host '  Low disk preflight: .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck' -ForegroundColor DarkGray
+Write-Host '  Low disk preflight: .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke' -ForegroundColor DarkGray
 Write-Host ''
 Write-Host 'docker-disk-help: done' -ForegroundColor Green

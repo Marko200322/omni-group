@@ -35,7 +35,7 @@ if ($freeGb -lt 1) {
   Write-Host '  UPOZORENJE: disk ispod 1 GB - lokalni build preskoci' -ForegroundColor Red
   Write-Host '  Docker vhdx: .\scripts\docker-disk-help.ps1 (Clean/Purge u Docker Desktop)' -ForegroundColor DarkGray
   Write-Host '  Ili deploy na staging serveru (Korak 2 ispod) - ne zahteva lokalni disk' -ForegroundColor Yellow
-  Write-Host '  Lokalni gate posle cleanup: staging-preflight -SkipAtinaTestCi -SkipDiskCheck' -ForegroundColor DarkGray
+  Write-Host '  Lokalni gate posle cleanup: staging-preflight -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke' -ForegroundColor DarkGray
 }
 
 try {
