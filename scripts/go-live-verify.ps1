@@ -23,12 +23,20 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Write-Host '== GO-LIVE VERIFY ==' -ForegroundColor Cyan
 
 if (-not $SkipAtinaTestCi) {
-  Write-Host '== Atina test:ci ==' -ForegroundColor Cyan
-  Push-Location (Join-Path $root 'atina-platform\atina')
-  npm run test:ci
-  if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
-  Pop-Location
-  Write-Host '  PASS' -ForegroundColor Green
+  $atinaDir = Join-Path $root 'atina-platform\atina'
+  $tscBin = Join-Path $atinaDir 'node_modules\.bin\tsc.cmd'
+  if (-not (Test-Path $tscBin)) {
+    Write-Host '== Atina test:ci ==' -ForegroundColor Cyan
+    Write-Host '  SKIP: node_modules/.bin/tsc nedostaje (Docker-only dev).' -ForegroundColor Yellow
+    Write-Host '  Pokreni: cd atina-platform/atina && npm ci  (ili -SkipAtinaTestCi; CI pokriva test:ci)' -ForegroundColor DarkGray
+  } else {
+    Write-Host '== Atina test:ci ==' -ForegroundColor Cyan
+    Push-Location $atinaDir
+    npm run test:ci
+    if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
+    Pop-Location
+    Write-Host '  PASS' -ForegroundColor Green
+  }
 }
 
 if (-not $SkipWebBuild) {
