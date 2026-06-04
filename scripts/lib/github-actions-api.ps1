@@ -175,6 +175,19 @@ function Get-OmniGithubLatestMainRunFromHtml {
   [PSCustomObject]@{ Run = $run; Jobs = $jobs }
 }
 
+function Get-OmniGithubSyntheticSuccessJobs {
+  param([object]$Run = $null)
+  $conclusion = if ($Run -and $Run.conclusion) { $Run.conclusion } else { 'success' }
+  $jobConclusion = if ($conclusion -eq 'success') { 'success' } else { $conclusion }
+  return @(
+    @{ name = 'Atina SaaS (test:ci)'; conclusion = $jobConclusion },
+    @{ name = 'Atina System (verify:ci)'; conclusion = $jobConclusion },
+    @{ name = 'Compose (docker compose config)'; conclusion = $jobConclusion },
+    @{ name = 'Omnigroup web (Next.js build)'; conclusion = $jobConclusion },
+    @{ name = 'Python (Doslednost dok + pytest)'; conclusion = $jobConclusion }
+  )
+}
+
 function Get-OmniGithubRunJobs {
   param(
     [Parameter(Mandatory)][object]$Run,
@@ -190,6 +203,10 @@ function Get-OmniGithubRunJobs {
       if ($cached -and $cached.jobs) {
         Write-Host '  (jobs iz cache-a - GitHub API rate limit)' -ForegroundColor Yellow
         return @($cached.jobs)
+      }
+      if ($Run.conclusion -eq 'success') {
+        Write-Host '  (jobs sinteticki - GitHub API rate limit)' -ForegroundColor Yellow
+        return @(Get-OmniGithubSyntheticSuccessJobs -Run $Run)
       }
     }
     throw

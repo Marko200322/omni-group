@@ -1,8 +1,8 @@
 ﻿# Staging - lokalni preduslov (pre deploya na URL)
 
 **Datum:** 2026-06-04  
-**Commit za deploy:** [dfa56ba](https://github.com/Marko200322/omni-group/commit/dfa56ba10ed776b370696665ef56b91dd521e91c) (CI run 1108fb2 docs-only; deploy app kod dfa56ba)  
-**CI:** Run [#120](https://github.com/Marko200322/omni-group/actions/runs/26924602250) - **5/5 PASS**
+**Commit za deploy:** [2d00e26](https://github.com/Marko200322/omni-group/commit/2d00e26817449a11dbe9b1206a25267ae7152c74) (CI run 7d3e053 docs-only; deploy app kod 2d00e26)  
+**CI:** Run [#122](https://github.com/Marko200322/omni-group/actions/runs/26925046014) - **5/5 PASS**
 
 **Status:** _lokalno spremno; remote staging deploy ceka vlasnika_
 
@@ -14,20 +14,20 @@ Kopiraj relevantne redove u [STAGING-EXECUTION-LOG.template.md](./STAGING-EXECUT
 
 | Gate | Rezultat | Napomena |
 |------|----------|----------|
-| GitHub CI (monorepo) | **PASS** | poslednji run #120 |
+| GitHub CI (monorepo) | **PASS** | poslednji run #122 |
 | branch-protection-ready.ps1 | **PASS** | spremno za GitHub Settings |
 | staging-smoke-remote.ps1 (127.0.0.1:3000) | **PASS** | /health + smoke:all |
 | owner-gates-quick.ps1 | **PASS** | CI + smoke + doc gate bundle |
 | owner-smoke-all.ps1 | **PASS** | ranije na istom commit-u |
 | Atina :3000 / Web :3010 | **ok / down** | health probe |
 
-**Disk C:** ~0.11 GB - ispod 1 GB; staging-preflight koristi `-MinDiskGb 1`
+**Disk C:** ~0.09 GB - ispod 1 GB; staging-preflight koristi `-MinDiskGb 1`
 
 ---
 
 ## Vlasnik - posle deploya na staging URL
 
-1. Deploy **dfa56ba** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))
+1. Deploy **2d00e26** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))
 2. **Backup DB** - npm run migrate na staging
 3. Remote smoke:
 
