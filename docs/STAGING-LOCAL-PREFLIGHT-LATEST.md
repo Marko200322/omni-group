@@ -1,8 +1,8 @@
 ﻿# Staging - lokalni preduslov (pre deploya na URL)
 
 **Datum:** 2026-06-04  
-**Commit za deploy:** [7509b0d](https://github.com/Marko200322/omni-group/commit/7509b0d4139c327fff6f613f157af94010f40cd3) (CI run 8350b96 docs-only; deploy app kod 7509b0d)  
-**CI:** Run [#188](https://github.com/Marko200322/omni-group/actions/runs/26946275285) - **5/5 PASS**
+**Commit za deploy:** [e98f47c](https://github.com/Marko200322/omni-group/commit/e98f47c1c2fe29db3c99814294dd5ad2aaa35dfe)  
+**CI:** Run [#191](https://github.com/Marko200322/omni-group/actions/runs/26947369369) - **5/5 PASS**
 
 **Status:** _lokalno spremno; remote staging deploy ceka vlasnika_
 
@@ -14,7 +14,7 @@ Kopiraj relevantne redove u [STAGING-EXECUTION-LOG.template.md](./STAGING-EXECUT
 
 | Gate | Rezultat | Napomena |
 |------|----------|----------|
-| GitHub CI (monorepo) | **PASS** | poslednji run #188 |
+| GitHub CI (monorepo) | **PASS** | poslednji run #191 |
 | branch-protection-ready.ps1 | **PASS** | spremno za GitHub Settings |
 | staging-smoke-remote.ps1 (127.0.0.1:3000) | **PASS** | /health + smoke:all |
 | owner-gates-quick.ps1 | **PASS** | CI + smoke + doc gate bundle |
@@ -28,7 +28,7 @@ Kopiraj relevantne redove u [STAGING-EXECUTION-LOG.template.md](./STAGING-EXECUT
 
 ## Vlasnik - posle deploya na staging URL
 
-1. Deploy **7509b0d** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))
+1. Deploy **e98f47c** (Atina + web + Nest po [STAGING-RELEASE-CHECKLIST.md](./STAGING-RELEASE-CHECKLIST.md))
 2. **Backup DB** - npm run migrate na staging
 3. Remote smoke:
 
