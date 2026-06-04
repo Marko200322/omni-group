@@ -40,12 +40,12 @@ if (-not $SkipDiskCheck -and $freeGb -lt $MinDiskGb) {
   exit 1
 }
 if ($SkipDiskCheck -and $freeGb -lt 1) {
-  Write-Host ("NAPOMENA: disk ${freeGb} GB — preskocena provera (-SkipDiskCheck).") -ForegroundColor Yellow
+  Write-Host ("NAPOMENA: disk ${freeGb} GB - preskocena provera (-SkipDiskCheck).") -ForegroundColor Yellow
 }
 
 $dirty = git status --short
 if ($dirty) {
-  Write-Host 'FAIL: working tree nije cist — commit/stash pre staging deploya.' -ForegroundColor Red
+  Write-Host 'FAIL: working tree nije cist - commit/stash pre staging deploya.' -ForegroundColor Red
   exit 1
 }
 
