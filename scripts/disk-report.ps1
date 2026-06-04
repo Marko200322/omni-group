@@ -32,12 +32,13 @@ $candidates = @(
   'atina-system\node_modules',
   'atina-system\dist',
   'node_modules',
-  '.pytest_cache'
+  '.pytest_cache',
+  "$env:LOCALAPPDATA\npm-cache"
 )
 
 $rows = @()
 foreach ($rel in $candidates) {
-  $p = Join-Path $repoRoot $rel
+  $p = if ([System.IO.Path]::IsPathRooted($rel)) { $rel } else { Join-Path $repoRoot $rel }
   if (-not (Test-Path $p)) { continue }
   $item = Get-Item -LiteralPath $p
   if ($item.PSIsContainer) {
@@ -55,4 +56,4 @@ foreach ($row in ($rows | Sort-Object MB -Descending | Select-Object -First $Top
 
 Write-Host ''
 Write-Host 'Cleanup: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor DarkGray
-Write-Host 'Staging gate needs ~1 GB free (use staging-preflight -MinDiskGb 1).' -ForegroundColor DarkGray
+Write-Host 'Low disk: staging-preflight -SkipAtinaTestCi -MinDiskGb 0 (posle owner-smoke-all).' -ForegroundColor DarkGray

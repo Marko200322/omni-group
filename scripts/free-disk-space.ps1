@@ -39,6 +39,9 @@ $paths = @(
   (Join-Path $repoRoot 'node_modules\.cache'),
   (Join-Path $repoRoot '.pytest_cache')
 )
+if ($env:LOCALAPPDATA) {
+  $paths += (Join-Path $env:LOCALAPPDATA 'npm-cache')
+}
 if (-not $SkipNext) {
   $paths += (Join-Path $repoRoot 'apps\omnigroup-web\.next')
 }
