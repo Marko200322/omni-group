@@ -44,6 +44,7 @@ $reg = Invoke-WithRateLimitRetry -Label 'register' -Action {
 }
 if (-not $reg.success) { throw "Register failed: $($reg | ConvertTo-Json -Compress)" }
 Write-Host "  register OK ($userEmail)" -ForegroundColor Green
+Start-Sleep -Seconds 2
 
 $userSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $loginBody = @{ email = $userEmail; password = $userPassword } | ConvertTo-Json -Compress
@@ -55,15 +56,21 @@ if (-not $lj.ok) { throw 'User login failed' }
 Write-Host '  user login OK' -ForegroundColor Green
 
 $coBody = (@{ planSlug = $PlanSlug; billingCycle = $BillingCycle } | ConvertTo-Json -Compress)
-$co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $userSession -UseBasicParsing
-$cj = $co.Content | ConvertFrom-Json
-if (-not $cj.ok -or -not $cj.data.paymentId) { throw "Checkout failed: $($co.Content)" }
+$cj = Invoke-WithRateLimitRetry -Label 'manual checkout' -Action {
+  $co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $userSession -UseBasicParsing
+  $parsed = $co.Content | ConvertFrom-Json
+  if (-not $parsed.ok -or -not $parsed.data.paymentId) { throw "Checkout failed: $($co.Content)" }
+  return $parsed
+}
 $paymentId = $cj.data.paymentId
 Write-Host "  checkout OK paymentId=$paymentId" -ForegroundColor Green
 
-$ms = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/mark-sent/$paymentId" -Method POST -ContentType 'application/json' -Body '{}' -WebSession $userSession -UseBasicParsing
-$mj = $ms.Content | ConvertFrom-Json
-if (-not $mj.ok) { throw "Mark sent failed: $($ms.Content)" }
+$mj = Invoke-WithRateLimitRetry -Label 'mark-sent' -Action {
+  $ms = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/mark-sent/$paymentId" -Method POST -ContentType 'application/json' -Body '{}' -WebSession $userSession -UseBasicParsing
+  $parsed = $ms.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "Mark sent failed: $($ms.Content)" }
+  return $parsed
+}
 Write-Host '  mark-sent OK' -ForegroundColor Green
 
 $adminSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
@@ -74,9 +81,12 @@ $aj = Invoke-WithRateLimitRetry -Label 'admin-login' -Action {
 }
 if (-not $aj.ok) { throw 'Admin login failed' }
 
-$cf = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/confirm/$paymentId" -Method POST -ContentType 'application/json' -Body '{}' -WebSession $adminSession -UseBasicParsing
-$cfj = $cf.Content | ConvertFrom-Json
-if (-not $cfj.ok) { throw "Confirm failed: $($cf.Content)" }
+$cfj = Invoke-WithRateLimitRetry -Label 'admin confirm' -Action {
+  $cf = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/confirm/$paymentId" -Method POST -ContentType 'application/json' -Body '{}' -WebSession $adminSession -UseBasicParsing
+  $parsed = $cf.Content | ConvertFrom-Json
+  if (-not $parsed.ok) { throw "Confirm failed: $($cf.Content)" }
+  return $parsed
+}
 Write-Host '  admin confirm OK' -ForegroundColor Green
 
 Write-Host ''
