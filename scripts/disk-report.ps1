@@ -19,6 +19,24 @@ $color = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 2) { 'Yellow' } else {
 
 Write-Host '=== disk-report ===' -ForegroundColor Cyan
 Write-Host ("C: free {0} GB" -f $freeGb) -ForegroundColor $color
+if ($freeGb -lt 2 -and $env:LOCALAPPDATA) {
+  $sysPaths = @(
+    (Join-Path $env:LOCALAPPDATA 'Docker'),
+    (Join-Path $env:LOCALAPPDATA 'npm-cache'),
+    (Join-Path $env:LOCALAPPDATA 'Temp')
+  )
+  Write-Host ''
+  Write-Host 'System (van repoa):' -ForegroundColor Yellow
+  foreach ($sp in $sysPaths) {
+    if (-not (Test-Path $sp)) { continue }
+    $mb = [math]::Round((Get-ChildItem -LiteralPath $sp -Recurse -File -ErrorAction SilentlyContinue |
+      Measure-Object Length -Sum).Sum / 1MB, 0)
+    if ($mb -gt 50) {
+      Write-Host ("  {0,-45} {1,8:N0} MB" -f $sp, $mb) -ForegroundColor DarkGray
+    }
+  }
+  Write-Host '  Docker puni disk? docker volume prune -f | Docker Desktop -> Troubleshoot -> Clean' -ForegroundColor DarkGray
+}
 Write-Host ''
 
 $candidates = @(

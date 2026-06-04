@@ -62,6 +62,7 @@ foreach ($p in $paths) {
 
 if (-not $SkipDocker) {
   docker system prune -f 2>$null
+  docker volume prune -f 2>$null
 }
 
 if ($CleanTemp -and $env:TEMP -and (Test-Path $env:TEMP)) {
