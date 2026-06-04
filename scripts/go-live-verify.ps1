@@ -32,6 +32,11 @@ if (-not $SkipAtinaTestCi) {
 if (-not $SkipWebBuild) {
   Write-Host '== Web build ==' -ForegroundColor Cyan
   Push-Location (Join-Path $root 'apps\omnigroup-web')
+  foreach ($p in @('.next', 'node_modules\.cache')) {
+    if (Test-Path $p) {
+      Remove-Item -Recurse -Force $p -ErrorAction SilentlyContinue
+    }
+  }
   npm run build
   if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
   Pop-Location
