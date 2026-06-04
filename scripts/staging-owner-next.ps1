@@ -32,7 +32,7 @@ $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
 $diskColor = if ($freeGb -lt 1) { 'Red' } elseif ($freeGb -lt 2) { 'Yellow' } else { 'Green' }
 Write-Host ("Disk C: {0} GB" -f $freeGb) -ForegroundColor $diskColor
 if ($freeGb -lt 1) {
-  Write-Host '  UPOZORENJE: disk ispod 1 GB - staging-preflight moze pasti; oslobodi prostor.' -ForegroundColor Red
+  Write-Host '  UPOZORENJE: disk ispod 1 GB - oslobodi prostor ili koristi staging-preflight -SkipDiskCheck' -ForegroundColor Red
   Write-Host '  Pregled: .\scripts\disk-report.ps1 | cleanup: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor DarkGray
 }
 

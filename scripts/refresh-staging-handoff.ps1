@@ -104,7 +104,7 @@ try {
 } catch { }
 
 $diskNote = if ($freeGb -lt 1) {
-  ' - ispod 1 GB; staging-preflight: `-SkipAtinaTestCi -MinDiskGb 0` (posle owner-smoke-all)'
+  ' - ispod 1 GB; staging-preflight: `-SkipAtinaTestCi -SkipDiskCheck` (posle owner-smoke-all)'
 } else {
   ''
 }

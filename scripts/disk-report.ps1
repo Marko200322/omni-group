@@ -56,4 +56,4 @@ foreach ($row in ($rows | Sort-Object MB -Descending | Select-Object -First $Top
 
 Write-Host ''
 Write-Host 'Cleanup: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor DarkGray
-Write-Host 'Low disk: staging-preflight -SkipAtinaTestCi -MinDiskGb 0 (posle owner-smoke-all).' -ForegroundColor DarkGray
+Write-Host 'Low disk: staging-preflight -SkipAtinaTestCi -SkipDiskCheck (posle owner-smoke-all).' -ForegroundColor DarkGray

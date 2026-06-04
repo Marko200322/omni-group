@@ -10,10 +10,13 @@
   .\scripts\staging-preflight.ps1
 .EXAMPLE
   .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -MinDiskGb 1
+.EXAMPLE
+  .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipAtinaTestCi,
+  [switch]$SkipDiskCheck,
   [int]$MinDiskGb = 2
 )
 
@@ -30,10 +33,14 @@ Write-Host ''
 
 $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
 $freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
-if ($freeGb -lt $MinDiskGb) {
+if (-not $SkipDiskCheck -and $freeGb -lt $MinDiskGb) {
   Write-Host "FAIL: C: ima ${freeGb} GB slobodno (minimum ${MinDiskGb} GB)." -ForegroundColor Red
   Write-Host '  Pokreni: .\scripts\free-disk-space.ps1 -SkipDocker -CleanTemp' -ForegroundColor Yellow
+  Write-Host '  Ili (posle owner-smoke-all): -SkipDiskCheck' -ForegroundColor Yellow
   exit 1
+}
+if ($SkipDiskCheck -and $freeGb -lt 1) {
+  Write-Host ("NAPOMENA: disk ${freeGb} GB — preskocena provera (-SkipDiskCheck).") -ForegroundColor Yellow
 }
 
 $dirty = git status --short
