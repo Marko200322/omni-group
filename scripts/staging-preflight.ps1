@@ -14,11 +14,14 @@
   .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck
 .EXAMPLE
   .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke
+.EXAMPLE
+  .\scripts\staging-preflight.ps1 -SkipAtinaTestCi -SkipDiskCheck -SkipAtinaSmoke -SkipWebBuild
 #>
 #Requires -Version 5.1
 param(
   [switch]$SkipAtinaTestCi,
   [switch]$SkipAtinaSmoke,
+  [switch]$SkipWebBuild,
   [switch]$SkipDiskCheck,
   [int]$MinDiskGb = 2
 )
@@ -56,6 +59,7 @@ $goLive = Join-Path $scriptsDir 'go-live-verify.ps1'
 $goLiveSplat = @{ SkipVerifyMonorepo = $true }
 if ($SkipAtinaTestCi) { $goLiveSplat.SkipAtinaTestCi = $true }
 if ($SkipAtinaSmoke) { $goLiveSplat.SkipAtinaSmoke = $true }
+if ($SkipWebBuild) { $goLiveSplat.SkipWebBuild = $true }
 & $goLive @goLiveSplat
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

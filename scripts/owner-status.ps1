@@ -84,7 +84,7 @@ if (-not $Quick) {
   if ($dockerOk) {
     Write-Host 'Docker engine: OK' -ForegroundColor Green
   } else {
-    Write-Host 'Docker engine: down (.\scripts\docker-disk-help.ps1)' -ForegroundColor Red
+    Write-Host 'Docker engine: down (.\scripts\docker-repair.ps1 | docker-disk-help.ps1)' -ForegroundColor Red
   }
 }
 

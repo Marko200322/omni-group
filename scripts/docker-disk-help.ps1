@@ -80,6 +80,7 @@ if ($engineOk) {
   Write-Host '  3. Ako i dalje pada: Docker Desktop -> Troubleshoot -> Restart / Clean / Purge data' -ForegroundColor DarkGray
   Write-Host '  4. Admin PowerShell: wsl --shutdown ; Start-Service com.docker.service' -ForegroundColor DarkGray
   Write-Host '  5. Posle engine OK: .\scripts\start-local-stack.ps1' -ForegroundColor DarkGray
+  Write-Host '  Auto-pokusaj: .\scripts\docker-repair.ps1' -ForegroundColor DarkGray
   if ($freeGb -lt 5) {
     Write-Host ''
     Write-Host 'NAPOMENA: disk ispod 5 GB cesto sprecava WSL/Docker start.' -ForegroundColor Yellow
