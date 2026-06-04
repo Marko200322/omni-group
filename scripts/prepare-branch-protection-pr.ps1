@@ -46,6 +46,12 @@ if ($Push) {
     Write-Host 'FAIL: gh nije ulogovan - pre -Push: gh auth login' -ForegroundColor Red
     exit 1
   }
+  Write-Host ''
+  & (Join-Path $scriptsDir 'check-branch-protection.ps1')
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host 'FAIL: ukljuci branch protection pre -Push (scripts\owner-protection.cmd)' -ForegroundColor Red
+    exit 1
+  }
 }
 
 & (Join-Path $scriptsDir 'branch-protection-ready.ps1')
