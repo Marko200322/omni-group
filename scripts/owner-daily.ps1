@@ -10,6 +10,8 @@
   .\scripts\owner-daily.ps1
 .EXAMPLE
   .\scripts\owner-daily.ps1 -WithPreflight
+.EXAMPLE
+  .\scripts\owner-daily.ps1 -SkipSmoke
 #>
 #Requires -Version 5.1
 param(

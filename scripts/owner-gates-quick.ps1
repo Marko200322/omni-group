@@ -2,10 +2,16 @@
 .SYNOPSIS
   Brzi lokalni gate-ovi pre branch protection / staging deploya.
 
+.DESCRIPTION
+  Delegira status + CI + doc audit na owner-daily -SkipSmoke.
+  Pun Atina smoke (staging-smoke-remote) samo bez -SkipSmoke.
+
 .EXAMPLE
   .\scripts\owner-gates-quick.ps1
 .EXAMPLE
   .\scripts\owner-gates-quick.ps1 -RefreshHandoff
+.EXAMPLE
+  .\scripts\owner-gates-quick.ps1 -SkipSmoke
 #>
 #Requires -Version 5.1
 param(
@@ -21,23 +27,15 @@ Set-Location $repoRoot
 Write-Host '=== owner-gates-quick ===' -ForegroundColor Cyan
 Write-Host ''
 
-$failed = $false
-
-Write-Host '-- branch-protection-ready --' -ForegroundColor Cyan
-& (Join-Path $scriptsDir 'branch-protection-ready.ps1')
-if ($LASTEXITCODE -ne 0) { $failed = $true }
+& (Join-Path $scriptsDir 'owner-daily.ps1') -SkipSmoke
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $SkipSmoke) {
   Write-Host ''
   Write-Host '-- staging-smoke-remote (local) --' -ForegroundColor Cyan
   & (Join-Path $scriptsDir 'staging-smoke-remote.ps1') -AtinaNodeBase 'http://127.0.0.1:3000'
-  if ($LASTEXITCODE -ne 0) { $failed = $true }
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
-
-Write-Host ''
-Write-Host '-- audit-doc-gate-references --' -ForegroundColor Cyan
-& (Join-Path $scriptsDir 'audit-doc-gate-references.ps1')
-if ($LASTEXITCODE -ne 0) { $failed = $true }
 
 if ($RefreshHandoff) {
   Write-Host ''
@@ -49,11 +47,6 @@ if ($RefreshHandoff) {
 }
 
 Write-Host ''
-if ($failed) {
-  Write-Host 'owner-gates-quick: FAIL (vidi gore)' -ForegroundColor Red
-  exit 1
-}
-
 Write-Host 'owner-gates-quick: PASS' -ForegroundColor Green
 Write-Host 'Sledece (vlasnik): staging-owner-next.ps1' -ForegroundColor DarkGray
 exit 0
