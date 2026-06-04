@@ -11,12 +11,19 @@
 param(
   [switch]$SkipDocker,
   [switch]$SkipNext,
-  [switch]$CleanTemp
+  [switch]$CleanTemp,
+  [switch]$ForceWebCache
 )
 
 $ErrorActionPreference = 'Continue'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
+$webDevPort = 3010
+
+function Test-WebDevRunning {
+  $conn = Get-NetTCPConnection -LocalPort $webDevPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+  return [bool]$conn
+}
 
 function Show-Free {
   $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
@@ -45,6 +52,21 @@ if ($env:LOCALAPPDATA) {
 if (-not $SkipNext) {
   $paths += (Join-Path $repoRoot 'apps\omnigroup-web\.next')
 }
+
+$webDevUp = Test-WebDevRunning
+if ($webDevUp -and -not $ForceWebCache) {
+  $webCache = Join-Path $repoRoot 'apps\omnigroup-web\node_modules\.cache'
+  $before = $paths.Count
+  $paths = @($paths | Where-Object { $_ -ne $webCache })
+  if (-not $SkipNext) {
+    $nextDir = Join-Path $repoRoot 'apps\omnigroup-web\.next'
+    $paths = @($paths | Where-Object { $_ -ne $nextDir })
+  }
+  if ($paths.Count -lt $before) {
+    Write-Host ("NAPOMENA: web dev slusa na :{0} - preskocen Next cache/.next (koristi -ForceWebCache ili restart-web-dev.ps1 posle)" -f $webDevPort) -ForegroundColor Yellow
+  }
+}
+
 foreach ($p in $paths) {
   if (Test-Path $p) {
     $sizeMb = 0
