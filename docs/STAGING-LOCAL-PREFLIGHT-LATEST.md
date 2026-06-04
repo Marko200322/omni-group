@@ -1,7 +1,7 @@
 ﻿# Staging - lokalni preduslov (pre deploya na URL)
 
 **Datum:** 2026-06-04  
-**Commit za deploy:** [7509b0d](https://github.com/Marko200322/omni-group/commit/7509b0d4139c327fff6f613f157af94010f40cd3)  
+**Commit za deploy:** [7509b0d](https://github.com/Marko200322/omni-group/commit/7509b0d4139c327fff6f613f157af94010f40cd3) (CI run 8350b96 docs-only; deploy app kod 7509b0d)  
 **CI:** Run [#188](https://github.com/Marko200322/omni-group/actions/runs/26946275285) - **5/5 PASS**
 
 **Status:** _lokalno spremno; remote staging deploy ceka vlasnika_
@@ -22,7 +22,7 @@ Kopiraj relevantne redove u [STAGING-EXECUTION-LOG.template.md](./STAGING-EXECUT
 | owner-smoke-all.ps1 | **PASS** | ranije na istom commit-u |
 | Atina :3000 / Web :3010 | **ok / 200** | health probe |
 
-**Disk C:** ~0.17 GB - ispod 1 GB; staging-preflight: `-SkipAtinaTestCi -SkipDiskCheck` (posle owner-smoke-all)
+**Disk C:** ~0.16 GB - ispod 1 GB; staging-preflight: `-SkipAtinaTestCi -SkipDiskCheck` (posle owner-smoke-all)
 
 ---
 
