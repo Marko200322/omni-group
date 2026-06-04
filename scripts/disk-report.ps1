@@ -35,7 +35,7 @@ if ($freeGb -lt 2 -and $env:LOCALAPPDATA) {
       Write-Host ("  {0,-45} {1,8:N0} MB" -f $sp, $mb) -ForegroundColor DarkGray
     }
   }
-  Write-Host '  Docker puni disk? docker volume prune -f | Docker Desktop -> Troubleshoot -> Clean' -ForegroundColor DarkGray
+  Write-Host '  Docker puni disk? .\scripts\docker-disk-help.ps1' -ForegroundColor DarkGray
 }
 Write-Host ''
 
