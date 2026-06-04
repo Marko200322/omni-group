@@ -25,6 +25,15 @@ function Test-DockerEngine {
 Write-Host '=== docker-repair ===' -ForegroundColor Cyan
 Write-Host ''
 
+$d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'"
+$freeGb = [math]::Round($d.FreeSpace / 1GB, 2)
+if ($freeGb -lt 3) {
+  Write-Host ("UPOZORENJE: C: ima ${freeGb} GB - Docker/WSL retko startuje ispod 3 GB.") -ForegroundColor Red
+  Write-Host '  Preporuka: Purge u Docker Desktop (Troubleshoot) ili deploy na staging serveru.' -ForegroundColor Yellow
+  Write-Host '  Detalji: .\scripts\docker-disk-help.ps1' -ForegroundColor DarkGray
+  Write-Host ''
+}
+
 & (Join-Path $scriptsDir 'docker-disk-help.ps1')
 Write-Host ''
 
@@ -67,6 +76,12 @@ if ($dockerExe) {
   Write-Host '  Docker Desktop.exe nije pronadjen' -ForegroundColor Red
 }
 
+if ($freeGb -lt 3) {
+  Write-Host 'docker-repair: preskoceno cekanje (disk < 3 GB).' -ForegroundColor Yellow
+  Write-Host 'Vlasnik: oslobodi disk ili Purge Docker data, pa restart PC.' -ForegroundColor Yellow
+  exit 1
+}
+
 Write-Host ("== Korak 4: cekam engine ({0}s) ==" -f $WaitSec) -ForegroundColor Cyan
 $ok = $false
 $steps = [math]::Max(1, [math]::Floor($WaitSec / 5))
@@ -85,7 +100,7 @@ if ($ok) {
   exit 0
 }
 
-Write-Host 'docker-repair: FAIL — engine i dalje down.' -ForegroundColor Red
+Write-Host 'docker-repair: FAIL - engine i dalje down.' -ForegroundColor Red
 Write-Host 'Vlasnik: restart PC, Docker Desktop -> Troubleshoot -> Restart / Clean / Purge data' -ForegroundColor Yellow
 Write-Host 'Detalji: .\scripts\docker-disk-help.ps1' -ForegroundColor DarkGray
 exit 1
