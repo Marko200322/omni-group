@@ -124,6 +124,15 @@ if (Test-Path $atinaEnv) {
     }
   }
   Write-Host "Atina agregatori: $filled/$total popunjeno (detalji: check-atina-aggregators.ps1)" -ForegroundColor DarkGray
+  $autonomyScript = Join-Path $scriptsDir 'check-autonomy-env.ps1'
+  if (Test-Path $autonomyScript) {
+    & $autonomyScript *> $null
+    if ($LASTEXITCODE -eq 0) {
+      Write-Host 'Autonomy env: PASS (check-autonomy-env.ps1)' -ForegroundColor Green
+    } else {
+      Write-Host 'Autonomy env: WARN (check-autonomy-env.ps1)' -ForegroundColor Yellow
+    }
+  }
   $financeKey = Read-DotEnvValue -Path $atinaEnv -Key 'FINANCE_KEY'
   if ([string]::IsNullOrWhiteSpace($financeKey)) {
     Write-Host 'Stripe: nije konfigurisan (check-stripe-env.ps1)' -ForegroundColor Yellow

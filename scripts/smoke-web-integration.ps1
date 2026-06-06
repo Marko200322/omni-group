@@ -82,7 +82,7 @@ Write-Host "  OK message=$($cj.message)" -ForegroundColor Green
 
 Write-Host "== Web /dashboard (session) ==" -ForegroundColor Cyan
 $dash = Invoke-WithRateLimitRetry -Label 'Web /dashboard' -Action {
-  Invoke-WebRequest -Uri "$web/dashboard" -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  Invoke-WebRequest -Uri "$web/dashboard" -WebSession $session -UseBasicParsing -TimeoutSec 90
 }
 if ($dash.StatusCode -ne 200) { throw "dashboard HTTP $($dash.StatusCode)" }
 Write-Host "  OK len=$($dash.Content.Length)" -ForegroundColor Green

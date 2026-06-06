@@ -16,10 +16,25 @@ $repoRoot = Split-Path -Parent $scriptsDir
 $webDir = Join-Path $repoRoot 'apps\omnigroup-web'
 $port = 3010
 
-$conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($conn) {
-  Write-Host "Stopping PID $($conn.OwningProcess) on :$port ..." -ForegroundColor Yellow
-  Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
+function Get-ListenerPidForPort {
+  param([int]$LocalPort)
+  try {
+    $conn = Get-NetTCPConnection -LocalPort $LocalPort -ErrorAction Stop | Select-Object -First 1
+    if ($conn) { return $conn.OwningProcess }
+  } catch {
+    $line = netstat -ano | Select-String ":$LocalPort\s" | Select-String 'LISTENING' | Select-Object -First 1
+    if ($line) {
+      $parts = ($line.ToString().Trim() -split '\s+')
+      return [int]$parts[-1]
+    }
+  }
+  return $null
+}
+
+$listenerPid = Get-ListenerPidForPort -LocalPort $port
+if ($listenerPid) {
+  Write-Host "Stopping PID $listenerPid on :$port ..." -ForegroundColor Yellow
+  Stop-Process -Id $listenerPid -Force -ErrorAction SilentlyContinue
   Start-Sleep -Seconds 2
 }
 
