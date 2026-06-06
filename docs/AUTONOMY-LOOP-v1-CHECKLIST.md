@@ -69,6 +69,8 @@ curl -X POST -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v1/auto
 - [x] Dashboard panel u `omnigroup-web` (`AutonomyLoopPanel`, `/dashboard#autonomy`)
 - [x] OpenRouter/Apify direktni fallback (bez gateway 404)
 - [x] Scrape seed: DuckDuckGo HTML + Wikipedia (ne Google)
+- [x] **Budget guard** (016 migration, daily/tick/reserve USD) + `/autonomy-loop/budget`
+- [x] **Telegram / COMMS** obaveštenja posle tick-a (`check-autonomy-env.ps1`)
 - [ ] Webhook iz CI kad deploy završi
 - [ ] Vector RAG po vertikali (ai-rag ingest auto)
 - [ ] Multi-tenant white-label auto-packaging
