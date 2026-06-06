@@ -301,6 +301,27 @@ export const config = {
     generatedDir: optional('AUTONOMY_GENERATED_DIR', 'data/generated-verticals'),
     maxVerticalsPerTick: optionalNumber('AUTONOMY_MAX_VERTICALS_PER_TICK', 3),
     realEcosystemRuns: optionalBool('AUTONOMY_REAL_ECOSYSTEM_RUNS', true),
+    budget: {
+      initialUsd: optionalNumber('AUTONOMY_INITIAL_BUDGET_USD', 50),
+      maxSpendPerTickUsd: optionalNumber('AUTONOMY_MAX_SPEND_PER_TICK_USD', 2),
+      maxSpendPerDayUsd: optionalNumber('AUTONOMY_MAX_SPEND_PER_DAY_USD', 10),
+      minReserveUsd: optionalNumber('AUTONOMY_MIN_RESERVE_USD', 15),
+      revenueReinvestRate: optionalNumber('AUTONOMY_REVENUE_REINVEST_RATE', 0.2),
+      marketingEnabled: optionalBool('AUTONOMY_MARKETING_ENABLED', false),
+      marketingMinPriority: optionalNumber('AUTONOMY_MARKETING_MIN_PRIORITY', 40),
+      costs: {
+        research: optionalNumber('AUTONOMY_COST_RESEARCH_USD', 0.2),
+        generate: optionalNumber('AUTONOMY_COST_GENERATE_USD', 0.05),
+        deploy: optionalNumber('AUTONOMY_COST_DEPLOY_USD', 0.1),
+        aiLearn: optionalNumber('AUTONOMY_COST_AI_LEARN_USD', 0.08),
+        marketing: optionalNumber('AUTONOMY_COST_MARKETING_USD', 0.5),
+      },
+    },
+    telegram: {
+      botToken: optional('TELEGRAM_BOT_TOKEN', ''),
+      chatId: optional('TELEGRAM_CHAT_ID', ''),
+      notifyAutonomy: optionalBool('AUTONOMY_TELEGRAM_NOTIFY', true),
+    },
   },
 };
 

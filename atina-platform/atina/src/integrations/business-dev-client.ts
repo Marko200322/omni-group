@@ -23,6 +23,11 @@ export class BusinessDevClient extends AggregatorHttpClient {
   listProviders(): Promise<unknown | null> {
     return this.request('GET', '/v1/integrations/providers');
   }
+
+  /** Marketing micro-spend — zahteva umeren maxBudgetUsd u payload-u. */
+  requestMarketingSpend(payload: Record<string, unknown>): Promise<Record<string, unknown> | null> {
+    return this.request<Record<string, unknown>>('POST', '/v1/marketing/spend', payload);
+  }
 }
 
 let defaultBusinessDevClient: BusinessDevClient | undefined;

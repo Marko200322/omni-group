@@ -11,3 +11,4 @@ export * from './captcha-client';
 export * from './domain-client';
 export * from './web3-storage-client';
 export * from './kriptoman-client';
+export * from './telegram-direct';

@@ -26,6 +26,14 @@ export class CommsClient extends AggregatorHttpClient {
   sendNotification(payload: CommsNotificationPayload & { userId?: string }): Promise<unknown | null> {
     return this.request('POST', '/v1/notifications/send', payload);
   }
+
+  sendTelegram(payload: {
+    chatId: string;
+    text: string;
+    parseMode?: string;
+  }): Promise<Record<string, unknown> | null> {
+    return this.request<Record<string, unknown>>('POST', '/v1/notifications/telegram', payload);
+  }
 }
 
 let defaultCommsClient: CommsClient | undefined;

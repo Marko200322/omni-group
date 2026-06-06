@@ -10,6 +10,7 @@ import type {
 } from '../dto/autonomy-loop.dto';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
 import { AutonomyOrchestratorService } from './autonomy-orchestrator.service';
+import { AutonomyBudgetService } from './autonomy-budget.service';
 import { DeployPipelineService } from './deploy-pipeline.service';
 import { IndustryRegistryService } from './industry-registry.service';
 import { MarketResearchService } from './market-research.service';
@@ -28,6 +29,7 @@ export class AutonomyLoopService {
   private readonly deploy = new DeployPipelineService();
   private readonly feedback = new RevenueFeedbackService();
   private readonly orchestrator = new AutonomyOrchestratorService();
+  private readonly budget = new AutonomyBudgetService();
 
   getSchedulerState() {
     return {
@@ -64,23 +66,34 @@ export class AutonomyLoopService {
   }
 
   async status() {
-    const [countResult, latestCycle, artifactsCount] = await Promise.all([
+    const [countResult, latestCycle, artifactsCount, budget] = await Promise.all([
       this.repo.countVerticals(),
       this.repo.getLatestCycle(),
       this.repo.listVerticals(1, 0),
+      this.budget.getStatus().catch(() => null),
     ]);
     return {
       seedCatalogSize: INDUSTRY_SEED_COUNT,
       verticalsInDb: parseInt(countResult.rows[0]?.count ?? '0', 10),
       scheduler: this.getSchedulerState(),
       latestCycle: latestCycle.rows[0] ?? null,
+      budget,
       config: {
         generatedDir: config.autonomy.generatedDir,
         gitRepoPath: config.autonomy.gitRepoPath || null,
         maxVerticalsPerTick: config.autonomy.maxVerticalsPerTick,
+        marketingEnabled: config.autonomy.budget.marketingEnabled,
+        telegramConfigured: Boolean(
+          config.autonomy.telegram.chatId &&
+            (config.autonomy.telegram.botToken || config.aggregators.comms.url)
+        ),
       },
       registrySample: artifactsCount.rows[0] ?? null,
     };
+  }
+
+  budgetStatus() {
+    return this.budget.getStatus();
   }
 
   seedVerticals() {

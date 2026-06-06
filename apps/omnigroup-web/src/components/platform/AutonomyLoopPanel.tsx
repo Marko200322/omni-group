@@ -7,6 +7,18 @@ import { Bot, Play, RefreshCw, Sparkles, Timer } from 'lucide-react';
 type AutonomyStatus = {
   seedCatalogSize?: number;
   verticalsInDb?: number;
+  budget?: {
+    initialUsd?: number;
+    balanceUsd?: number;
+    totalSpentUsd?: number;
+    totalRevenueUsd?: number;
+    minReserveUsd?: number;
+    maxSpendPerTickUsd?: number;
+    maxSpendPerDayUsd?: number;
+    spentTodayUsd?: number;
+    marketingEnabled?: boolean;
+    hardStop?: boolean;
+  } | null;
   scheduler?: {
     enabled?: boolean;
     running?: boolean;
@@ -181,6 +193,31 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
 
       {status && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+            <p className="text-xs text-slate-500">Budžet (USD)</p>
+            <p className="font-display text-xl font-bold text-white">
+              ${(status.budget?.balanceUsd ?? 0).toFixed(2)}
+              <span className="ml-1 text-sm font-normal text-slate-500">
+                / ${(status.budget?.initialUsd ?? 0).toFixed(0)}
+              </span>
+            </p>
+            {status.budget?.hardStop && (
+              <p className="mt-1 text-xs text-amber-300">Pauza — rezerva dostignuta</p>
+            )}
+          </div>
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+            <p className="text-xs text-slate-500">Danas / limit</p>
+            <p className="font-medium text-white">
+              ${(status.budget?.spentTodayUsd ?? 0).toFixed(2)}
+              <span className="text-slate-500">
+                {' '}
+                / ${(status.budget?.maxSpendPerDayUsd ?? 0).toFixed(0)}
+              </span>
+            </p>
+            <p className="text-xs text-slate-500">
+              tick max ${(status.budget?.maxSpendPerTickUsd ?? 0).toFixed(2)} · reinvest prihod
+            </p>
+          </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
             <p className="text-xs text-slate-500">Vertikale u bazi</p>
             <p className="font-display text-xl font-bold text-white">

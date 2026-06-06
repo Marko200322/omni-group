@@ -39,6 +39,11 @@ Migration `015_autonomy_loop.sql` adds:
 - `generated_artifacts` — module/page/workflow outputs
 - `autonomy_deploy_jobs` — Git + CI deploy pipeline jobs
 
+Migration `016_autonomy_budget.sql` adds:
+
+- `autonomy_budget_state` — singleton balance (initial, spent, revenue)
+- `autonomy_budget_ledger` — spend/revenue audit per autonomy action
+
 Module: `autonomy-loop` at `/api/v1/autonomy-loop/*`. Checklist: [`docs/AUTONOMY-LOOP-v1-CHECKLIST.md`](../../../docs/AUTONOMY-LOOP-v1-CHECKLIST.md).
 
 Migration `009_users_name_legacy_column.sql` adds `users.name` if missing (older DBs where `CREATE TABLE IF NOT EXISTS` skipped the full 001 shape), backfills from `email`, then sets `NOT NULL` + default — matches current app + integration seeds.

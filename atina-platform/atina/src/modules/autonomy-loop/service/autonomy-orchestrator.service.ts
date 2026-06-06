@@ -10,6 +10,13 @@ import type {
 } from '../dto/autonomy-loop.dto';
 import { INDUSTRY_SEED_COUNT } from '../data/industry-seed';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
+import {
+  AutonomyBudgetService,
+  createTickSpendTracker,
+  type TickSpendTracker,
+} from './autonomy-budget.service';
+import { AutonomyMarketingService } from './autonomy-marketing.service';
+import { AutonomyNotifierService } from './autonomy-notifier.service';
 import { DeployPipelineService } from './deploy-pipeline.service';
 import { IndustryRegistryService } from './industry-registry.service';
 import { MarketResearchService } from './market-research.service';
@@ -30,14 +37,18 @@ export class AutonomyOrchestratorService {
   private readonly generator = new ModuleGeneratorService();
   private readonly deploy = new DeployPipelineService();
   private readonly feedback = new RevenueFeedbackService();
+  private readonly budget = new AutonomyBudgetService();
+  private readonly marketing = new AutonomyMarketingService();
+  private readonly notifier = new AutonomyNotifierService();
   private readonly ai = getAiClient();
 
   async runClosedLoopForVertical(
     userId: string | null,
     slug: string,
-    opts?: { runDeploy?: boolean }
+    opts?: { runDeploy?: boolean; tickTracker?: TickSpendTracker }
   ): Promise<ClosedLoopResult> {
     const actorUserId = userId ?? undefined;
+    const tracker = opts?.tickTracker ?? createTickSpendTracker();
     const { rows: cycleRows } = await this.repo.createCycle(userId, 'closed_loop', slug);
     const cycleId = cycleRows[0]?.id as string;
     const steps: AutonomyCycleStep[] = [];
@@ -47,61 +58,134 @@ export class AutonomyOrchestratorService {
       const vertical = await this.registry.getBySlug(slug);
       if (!vertical) throw new NotFoundError('Industry vertical');
 
-      try {
-        const researchDto: ResearchVerticalDtoType = { intensity: 55 };
-        const researchResult = await this.research.research(slug, researchDto);
+      const priorityScore = parseFloat(String(vertical.priority_score ?? 0));
+
+      const researchSpend = await this.budget.spend(
+        'market_research',
+        config.autonomy.budget.costs.research,
+        tracker,
+        { verticalSlug: slug, metadata: { via: 'aggregator_scrape_ai' } }
+      );
+      if (researchSpend.ok) {
+        try {
+          const researchDto: ResearchVerticalDtoType = { intensity: 55 };
+          const researchResult = await this.research.research(slug, researchDto);
+          steps.push({
+            step: 'market_research',
+            status: 'ok',
+            detail: {
+              tam: researchResult.research.tam_estimate_usd,
+              spentUsd: researchSpend.amountUsd,
+            },
+          });
+
+          const marketingSpend = await this.budget.spend(
+            'marketing',
+            config.autonomy.budget.costs.marketing,
+            tracker,
+            { verticalSlug: slug, metadata: { channel: 'business_dev' } }
+          );
+          if (marketingSpend.ok) {
+            const mkt = await this.marketing.spendForVertical(
+              slug,
+              String(vertical.category),
+              marketingSpend.amountUsd,
+              priorityScore
+            );
+            steps.push({
+              step: 'marketing_spend',
+              status: mkt.ok ? 'ok' : 'skipped',
+              detail: mkt as Record<string, unknown>,
+            });
+          } else {
+            steps.push({
+              step: 'marketing_spend',
+              status: 'skipped',
+              detail: { reason: marketingSpend.reason },
+            });
+          }
+        } catch (err) {
+          success = false;
+          steps.push({
+            step: 'market_research',
+            status: 'failed',
+            detail: { error: err instanceof Error ? err.message : String(err) },
+          });
+        }
+      } else {
         steps.push({
           step: 'market_research',
-          status: 'ok',
-          detail: { tam: researchResult.research.tam_estimate_usd },
-        });
-      } catch (err) {
-        success = false;
-        steps.push({
-          step: 'market_research',
-          status: 'failed',
-          detail: { error: err instanceof Error ? err.message : String(err) },
+          status: 'skipped',
+          detail: { reason: researchSpend.reason, budgetGuard: true },
         });
       }
 
-      try {
-        const genDto: GenerateVerticalDtoType = { includePage: true, includeWorkflow: true };
-        const genResult = await this.generator.generate(slug, genDto);
+      const generateSpend = await this.budget.spend(
+        'module_generate',
+        config.autonomy.budget.costs.generate,
+        tracker,
+        { verticalSlug: slug }
+      );
+      if (generateSpend.ok) {
+        try {
+          const genDto: GenerateVerticalDtoType = { includePage: true, includeWorkflow: true };
+          const genResult = await this.generator.generate(slug, genDto);
+          steps.push({
+            step: 'module_generate',
+            status: 'ok',
+            detail: { artifacts: genResult.artifacts.length, outputDir: genResult.outputDir },
+          });
+        } catch (err) {
+          success = false;
+          steps.push({
+            step: 'module_generate',
+            status: 'failed',
+            detail: { error: err instanceof Error ? err.message : String(err) },
+          });
+        }
+      } else {
         steps.push({
           step: 'module_generate',
-          status: 'ok',
-          detail: { artifacts: genResult.artifacts.length, outputDir: genResult.outputDir },
-        });
-      } catch (err) {
-        success = false;
-        steps.push({
-          step: 'module_generate',
-          status: 'failed',
-          detail: { error: err instanceof Error ? err.message : String(err) },
+          status: 'skipped',
+          detail: { reason: generateSpend.reason, budgetGuard: true },
         });
       }
 
       const shouldDeploy = opts?.runDeploy ?? config.autonomy.autoDeploy;
       if (shouldDeploy) {
-        try {
-          const deployDto: DeployVerticalDtoType = {
-            gitCommit: Boolean(config.autonomy.gitRepoPath),
-            triggerCi: true,
-            notes: `Autonomy closed loop — ${slug}`,
-          };
-          const deployResult = await this.deploy.deploy(slug, deployDto, userId ?? undefined);
+        const deploySpend = await this.budget.spend(
+          'deploy',
+          config.autonomy.budget.costs.deploy,
+          tracker,
+          { verticalSlug: slug, metadata: { git: Boolean(config.autonomy.gitRepoPath) } }
+        );
+        if (deploySpend.ok) {
+          try {
+            const deployDto: DeployVerticalDtoType = {
+              gitCommit: Boolean(config.autonomy.gitRepoPath),
+              triggerCi: true,
+              notes: `Autonomy closed loop — ${slug}`,
+            };
+            const deployResult = await this.deploy.deploy(slug, deployDto, userId ?? undefined);
+            steps.push({
+              step: 'deploy',
+              status: deployResult.status === 'failed' ? 'failed' : 'ok',
+              detail: deployResult as Record<string, unknown>,
+            });
+            if (deployResult.status === 'failed') success = false;
+          } catch (err) {
+            success = false;
+            steps.push({
+              step: 'deploy',
+              status: 'failed',
+              detail: { error: err instanceof Error ? err.message : String(err) },
+            });
+          }
+        } else {
           steps.push({
             step: 'deploy',
-            status: deployResult.status === 'failed' ? 'failed' : 'ok',
-            detail: deployResult as Record<string, unknown>,
-          });
-          if (deployResult.status === 'failed') success = false;
-        } catch (err) {
-          success = false;
-          steps.push({
-            step: 'deploy',
-            status: 'failed',
-            detail: { error: err instanceof Error ? err.message : String(err) },
+            status: 'skipped',
+            detail: { reason: deploySpend.reason, budgetGuard: true },
           });
         }
       } else {
@@ -111,6 +195,12 @@ export class AutonomyOrchestratorService {
       if (userId) {
         try {
           const fb = await this.feedback.sync(userId, { lookbackDays: 30 });
+          for (const row of fb.updates) {
+            const rev = typeof row.revenueApplied === 'number' ? row.revenueApplied : 0;
+            if (rev > 0 && typeof row.slug === 'string') {
+              await this.budget.creditRevenue(rev, 'payment_reinvest', { verticalSlug: row.slug });
+            }
+          }
           steps.push({
             step: 'revenue_feedback',
             status: 'ok',
@@ -127,7 +217,13 @@ export class AutonomyOrchestratorService {
         steps.push({ step: 'revenue_feedback', status: 'skipped', detail: { reason: 'no_actor_user' } });
       }
 
-      if (this.ai.isConfigured()) {
+      const learnSpend = await this.budget.spend(
+        'ai_learn',
+        config.autonomy.budget.costs.aiLearn,
+        tracker,
+        { verticalSlug: slug }
+      );
+      if (learnSpend.ok && this.ai.isConfigured()) {
         void this.ai
           .remember({
             namespace: 'autonomy-loop',
@@ -137,6 +233,12 @@ export class AutonomyOrchestratorService {
           })
           .catch(() => undefined);
         steps.push({ step: 'ai_learn', status: 'ok' });
+      } else if (!learnSpend.ok) {
+        steps.push({
+          step: 'ai_learn',
+          status: 'skipped',
+          detail: { reason: learnSpend.reason, budgetGuard: true },
+        });
       } else {
         steps.push({ step: 'ai_learn', status: 'skipped', detail: { reason: 'ai_not_configured' } });
       }
@@ -160,6 +262,25 @@ export class AutonomyOrchestratorService {
   }
 
   async tick(userId: string | null, dto: TickAutonomyDtoType) {
+    const gate = await this.budget.canOperate();
+    if (!gate.ok) {
+      await this.notifier.notify({
+        title: 'Autonomy pauziran',
+        message: `Razlog: ${gate.reason}. Stanje: $${gate.status.balanceUsd.toFixed(2)} (rezerva $${gate.status.minReserveUsd}).`,
+        severity: 'warning',
+        userId,
+        metadata: gate.status as unknown as Record<string, unknown>,
+      });
+      return {
+        processed: 0,
+        results: [],
+        seedCatalogSize: INDUSTRY_SEED_COUNT,
+        budget: gate.status,
+        paused: true,
+        pauseReason: gate.reason,
+      };
+    }
+
     const countResult = await this.repo.countVerticals();
     const total = parseInt(countResult.rows[0]?.count ?? '0', 10);
     if (total === 0) {
@@ -169,20 +290,39 @@ export class AutonomyOrchestratorService {
     const max = dto.maxVerticals ?? config.autonomy.maxVerticalsPerTick;
     const { rows: picks } = await this.repo.pickVerticalsForCycle(max);
     const results: ClosedLoopResult[] = [];
+    const tickTracker = createTickSpendTracker();
 
     for (const vertical of picks) {
       const result = await this.runClosedLoopForVertical(userId, vertical.slug, {
         runDeploy: dto.runDeploy,
+        tickTracker,
       });
       results.push(result);
     }
 
     await this.feedback.boostActiveVerticals(userId);
+    const budget = await this.budget.getStatus();
+
+    const okCount = results.filter((r) => r.success).length;
+    await this.notifier.notify({
+      title: 'Autonomy tick završen',
+      message: [
+        `Vertikala: ${results.length}, uspeh: ${okCount}`,
+        `Potrošeno u tick-u: $${tickTracker.spentUsd.toFixed(2)}`,
+        `Budžet: $${budget.balanceUsd.toFixed(2)} / $${budget.initialUsd.toFixed(2)}`,
+        `Danas potrošeno: $${budget.spentTodayUsd.toFixed(2)} / $${budget.maxSpendPerDayUsd}`,
+      ].join('\n'),
+      severity: okCount === results.length ? 'info' : 'warning',
+      userId,
+      metadata: { tickSpentUsd: tickTracker.spentUsd, budget },
+    });
 
     return {
       processed: results.length,
       results,
       seedCatalogSize: INDUSTRY_SEED_COUNT,
+      budget,
+      tickSpentUsd: tickTracker.spentUsd,
     };
   }
 

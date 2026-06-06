@@ -9,6 +9,10 @@ export class AutonomyLoopController {
     sendSuccess(res, await this.service.status(), 'Autonomy loop status');
   };
 
+  budget = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, await this.service.budgetStatus(), 'Autonomy budget status');
+  };
+
   seedVerticals = async (_req: Request, res: Response): Promise<void> => {
     const data = await this.service.seedVerticals();
     sendCreated(res, data, `Seeded ${data.inserted} industry verticals`);

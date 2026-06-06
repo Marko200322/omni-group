@@ -55,6 +55,14 @@ export class AutonomyLoopModule implements IModule {
     );
 
     this.router.get(
+      '/budget',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.budget
+    );
+
+    this.router.get(
       '/verticals',
       authenticate,
       validateQuery(ListVerticalsQueryDto),
