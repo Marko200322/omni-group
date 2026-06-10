@@ -18,8 +18,8 @@ export default function ContactPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Kontakt</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient">Razgovarajmo o projektu</h1>
           <p className="mt-4 text-slate-400">
-            Javi se Omni Group timu — forma šalje na <code className="text-violet-300">/api/contact</code>.
-            U produkciji dodaj Resend/SMTP u rutu.
+            Javi se Omni Group timu — odgovaramo u roku od jednog radnog dana. Opisite projekat, rok i budžet;
+            poslaćemo konkretnu ponudu bez obaveze.
           </p>
         </FadeIn>
         <motion.form

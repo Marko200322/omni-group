@@ -25,6 +25,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { SparkChart } from '@/components/ui/SparkChart';
 import { FormatLocalDateTime } from '@/components/ui/FormatLocalDateTime';
+import { formatEur, getCategoryPricingMatrix } from '@/lib/category-pricing';
+import { AutonomyLoopPanel } from '@/components/platform/AutonomyLoopPanel';
+import { ProductFactoryPanel } from '@/components/platform/ProductFactoryPanel';
 type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionUser: SessionUser | null;
@@ -181,7 +184,10 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
       <section id="billing" className="mt-6">
         <GlassCard delay={0.4}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold text-white">Billing planovi</h2>
+            <h2 className="font-display text-lg font-semibold text-white">Interni planovi (operator)</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Ovo nije cenovnik za klijente — samo RBAC/limiti u bazi. Klijentima prodaješ isporuke sa /pricing.
+            </p>
             <button
               type="button"
               className="btn-ghost flex items-center gap-1 text-violet-300"
@@ -217,6 +223,66 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
             disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
           />
         </div>
+
+        <div className="mt-6">
+          <h3 className="mb-3 font-display text-base font-semibold text-white">Cene po industrijskoj kategoriji</h3>
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-white/[0.03] uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-3 py-2">Kategorija</th>
+                  <th className="px-3 py-2">Tarifa</th>
+                  <th className="px-3 py-2">Poslovni</th>
+                  <th className="px-3 py-2">Rast</th>
+                  <th className="px-3 py-2">Partner</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-slate-300">
+                {getCategoryPricingMatrix().slice(0, 12).map((row) => (
+                  <tr key={row.slug}>
+                    <td className="px-3 py-2 text-white">{row.nameSr}</td>
+                    <td className="px-3 py-2">{row.tierLabel}</td>
+                    <td className="px-3 py-2">{formatEur(row.plans[0].monthly)}</td>
+                    <td className="px-3 py-2">{formatEur(row.plans[1].monthly)}</td>
+                    <td className="px-3 py-2">{formatEur(row.plans[2].monthly)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Prikaz prvih 12 kategorija ·{' '}
+            <Link href="/pricing" className="text-violet-300 underline-offset-2 hover:underline">
+              cenovnik isporuka
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      <section id="factory" className="mt-6">
+        <GlassCard delay={0.38}>
+          <h2 className="font-display text-lg font-semibold text-white">Product Factory</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Izolovane klijentske narudžbine i interni SaaS lane — greenfield scaffold, test gate, deploy prep.
+          </p>
+          <ProductFactoryPanel
+            isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+            disabled={isDemo || !sessionUser}
+          />
+        </GlassCard>
+      </section>
+
+      <section id="autonomy" className="mt-6">
+        <GlassCard delay={0.39}>
+          <h2 className="font-display text-lg font-semibold text-white">Autonomy Loop</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Operator petlja — rollout, outbound, evolution tick. Samo za interni tim.
+          </p>
+          <AutonomyLoopPanel
+            isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+            disabled={isDemo || !sessionUser}
+          />
+        </GlassCard>
       </section>
 
       <section id="settings" className="mt-6">
@@ -226,6 +292,9 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
             Brzi linkovi za marketing sajt, klijentski workspace i internu dokumentaciju.
           </p>
           <motion.div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/admin/mobile" className="btn-primary text-sm">
+              Mobilni admin (telefon)
+            </Link>
             <Link href="/" className="btn-glass text-sm">
               Marketing sajt
             </Link>

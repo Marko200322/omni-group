@@ -205,14 +205,23 @@ export function buildClientMetrics(
           ? '—'
           : '72%',
     planName: String(planName),
-    sparkUsage: [
-      { label: 'P1', value: wf?.completed ?? 45 },
-      { label: 'P2', value: wf?.running ?? 62 },
-      { label: 'P3', value: wf?.failed ?? 58 },
-      { label: 'P4', value: live?.tasksTotal ?? 71 },
-      { label: 'P5', value: 68 },
-      { label: 'P6', value: 82 },
-    ],
+    sparkUsage: authenticated
+      ? [
+          { label: 'P1', value: wf?.completed ?? 0 },
+          { label: 'P2', value: wf?.running ?? 0 },
+          { label: 'P3', value: wf?.failed ?? 0 },
+          { label: 'P4', value: live?.tasksTotal ?? 0 },
+          { label: 'P5', value: 0 },
+          { label: 'P6', value: 0 },
+        ]
+      : [
+          { label: 'P1', value: 12 },
+          { label: 'P2', value: 18 },
+          { label: 'P3', value: 24 },
+          { label: 'P4', value: 28 },
+          { label: 'P5', value: 32 },
+          { label: 'P6', value: 36 },
+        ],
     tasks,
     notifications,
   };

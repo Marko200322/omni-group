@@ -8,7 +8,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
 
-  let body: { planSlug?: string; billingCycle?: string; cryptoCurrency?: string } = {};
+  let body: { planSlug?: string; billingCycle?: string; cryptoCurrency?: string; industryCategory?: string } =
+    {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -17,6 +18,10 @@ export async function POST(req: Request) {
 
   const planSlug = typeof body.planSlug === 'string' ? body.planSlug : '';
   const billingCycle = body.billingCycle === 'yearly' ? 'yearly' : 'monthly';
+  const industryCategory =
+    typeof body.industryCategory === 'string' && /^[a-z0-9_-]+$/.test(body.industryCategory)
+      ? body.industryCategory
+      : undefined;
   if (!['starter', 'pro', 'enterprise'].includes(planSlug)) {
     return NextResponse.json({ ok: false, error: 'invalid_plan' }, { status: 400 });
   }
@@ -30,6 +35,7 @@ export async function POST(req: Request) {
         planSlug,
         billingCycle,
         ...(body.cryptoCurrency ? { cryptoCurrency: body.cryptoCurrency } : {}),
+        ...(industryCategory ? { industryCategory } : {}),
       }),
     },
   );

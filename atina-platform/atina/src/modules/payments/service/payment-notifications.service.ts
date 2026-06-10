@@ -10,6 +10,7 @@ import {
   renderPaidInvoiceEmail,
   type InvoiceLineItem,
 } from '../templates/invoice-email.template';
+import { generateInvoicePdfBuffer } from './invoice-pdf.service';
 
 export { formatBillingCycleSr, formatDateSr, type InvoiceLineItem };
 
@@ -118,6 +119,21 @@ export class PaymentNotificationsService {
     });
 
     await this.notifications.sendEmail(adminTo, subject, html, text);
+
+    try {
+      const { WebPushService } = await import('../../admin/service/web-push.service');
+      const push = new WebPushService();
+      if (push.isConfigured()) {
+        await push.notifyAdmins({
+          title: 'Nova uplata na čekanju',
+          body: `${input.userName} · ${formatMoney(input.amount, input.currency)} · ${input.planName}`,
+          url: '/admin/mobile',
+          tag: `payment-pending-${input.paymentId}`,
+        });
+      }
+    } catch {
+      /* push optional */
+    }
   }
 
   async sendInvoiceConfirmationToClient(input: InvoicePaidEmailInput): Promise<void> {
@@ -141,7 +157,29 @@ export class PaymentNotificationsService {
       billingUrl,
     });
 
-    await this.notifications.sendEmail(input.toEmail, subject, html, text);
+    const pdf = await generateInvoicePdfBuffer({
+      invoiceNumber: input.invoiceNumber,
+      brandName: invoiceBrand().name,
+      toName: input.toName,
+      toEmail: input.toEmail,
+      planName: input.planName,
+      billingCycle: input.billingCycle,
+      amount: input.amount,
+      total: input.total,
+      currency: input.currency,
+      lineItems: input.lineItems,
+      periodStart: input.periodStart,
+      periodEnd: input.periodEnd,
+      purchasedAt: input.purchasedAt,
+    });
+
+    await this.notifications.sendEmail(input.toEmail, subject, html, text, [
+      {
+        filename: `${input.invoiceNumber}.pdf`,
+        content: pdf,
+        contentType: 'application/pdf',
+      },
+    ]);
   }
 
   buildPurchaseConfirmedMessage(input: {

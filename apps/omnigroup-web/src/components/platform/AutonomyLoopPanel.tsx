@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, Play, RefreshCw, Sparkles, Timer } from 'lucide-react';
+import { formatEur } from '@/lib/category-pricing';
+import { calculateDeliverableQuote } from '@/lib/dynamic-pricing';
 
 type AutonomyStatus = {
   seedCatalogSize?: number;
@@ -48,6 +50,40 @@ type VerticalRow = {
   };
 };
 
+type CategoryRolloutRow = {
+  order?: number;
+  category?: string;
+  categoryName?: string;
+  phase?: 'pending' | 'in_progress' | 'ready' | 'empty';
+  total?: number;
+  readyCount?: number;
+  completionPct?: number;
+  outboundDrafts?: number;
+  segment?: 'freelance' | 'legacy_smb';
+};
+
+type CategoryRolloutSummary = {
+  totalCategories?: number;
+  freelanceCategories?: number;
+  legacyCategories?: number;
+  freelanceReadyCount?: number;
+  completedCategories?: number;
+  inProgressCategories?: number;
+  overallCompletionPct?: number;
+  nextCategory?: string | null;
+  nextCategoryName?: string | null;
+  categories?: CategoryRolloutRow[];
+};
+
+type OutboundStats = {
+  warmupComplete?: boolean;
+  warmupMode?: boolean;
+  dailyCap?: number;
+  sentToday?: number;
+  remainingToday?: number;
+  byStatus?: Record<string, number>;
+};
+
 type Props = {
   isAdmin?: boolean;
   disabled?: boolean;
@@ -73,19 +109,31 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastTick, setLastTick] = useState<Record<string, unknown> | null>(null);
+  const [outbound, setOutbound] = useState<OutboundStats | null>(null);
+  const [rollout, setRollout] = useState<CategoryRolloutSummary | null>(null);
+  const [lastBatch, setLastBatch] = useState<Record<string, unknown> | null>(null);
+  const [lastEvolution, setLastEvolution] = useState<Record<string, unknown> | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const [stRes, vRes] = await Promise.all([
+      const [stRes, vRes, obRes, catRes] = await Promise.all([
         fetch('/api/atina/autonomy-loop/status'),
         fetch('/api/atina/autonomy-loop/verticals?limit=6'),
+        fetch('/api/atina/autonomy-loop/outbound/stats'),
+        fetch('/api/atina/autonomy-loop/categories/status'),
       ]);
       const stJson = (await stRes.json()) as { ok?: boolean; data?: AutonomyStatus; error?: string };
       const vJson = (await vRes.json()) as {
         ok?: boolean;
         data?: { verticals?: VerticalRow[] };
+        error?: string;
+      };
+      const obJson = (await obRes.json()) as { ok?: boolean; data?: OutboundStats; error?: string };
+      const catJson = (await catRes.json()) as {
+        ok?: boolean;
+        data?: CategoryRolloutSummary;
         error?: string;
       };
       if (!stRes.ok || !stJson.ok) {
@@ -95,6 +143,12 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
       }
       if (vRes.ok && vJson.ok) {
         setVerticals(vJson.data?.verticals ?? []);
+      }
+      if (obRes.ok && obJson.ok) {
+        setOutbound(obJson.data ?? null);
+      }
+      if (catRes.ok && catJson.ok) {
+        setRollout(catJson.data ?? null);
       }
     } catch {
       setError('network_error');
@@ -130,6 +184,29 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     }
   };
 
+  const runEvolutionTick = async () => {
+    setBusy('evolution');
+    setError(null);
+    try {
+      const res = await fetch('/api/atina/autonomy-loop/evolution/tick', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
+      if (!res.ok || !json.ok) {
+        setError(json.error ?? `evolution_${res.status}`);
+        return;
+      }
+      setLastEvolution(json.data ?? null);
+      await load();
+    } catch {
+      setError('evolution_network');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const runResearch = async (slug: string) => {
     setBusy(`research:${slug}`);
     setError(null);
@@ -149,6 +226,109 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
       setError('research_network');
     } finally {
       setBusy(null);
+    }
+  };
+
+  const runCategoryBatch = async (
+    category: string,
+    mode: 'research' | 'generate' | 'full' = 'full',
+  ) => {
+    setBusy(`batch:${category}`);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/atina/autonomy-loop/categories/${encodeURIComponent(category)}/batch`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode, limit: 8, processAllVerticals: true }),
+        },
+      );
+      const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
+      if (!res.ok || !json.ok) {
+        setError(json.error ?? `batch_${res.status}`);
+        return;
+      }
+      setLastBatch(json.data ?? null);
+      await load();
+    } catch {
+      setError('batch_network');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runRollout = async (maxCategories: number) => {
+    setBusy('rollout');
+    setError(null);
+    try {
+      const res = await fetch('/api/atina/autonomy-loop/categories/rollout/async', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'full',
+          limit: 8,
+          maxCategories,
+          processAllVerticals: true,
+        }),
+      });
+      const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
+      if (!res.ok || !json.ok) {
+        setError(json.error ?? `rollout_${res.status}`);
+        return;
+      }
+
+      for (let i = 0; i < 360; i += 1) {
+        await new Promise((r) => setTimeout(r, 5000));
+        const jobRes = await fetch('/api/atina/autonomy-loop/categories/rollout/job');
+        const jobJson = (await jobRes.json()) as {
+          ok?: boolean;
+          data?: { active?: { status?: string }; last?: { status?: string; result?: Record<string, unknown> } };
+        };
+        if (!jobRes.ok || !jobJson.ok) continue;
+        const active = jobJson.data?.active;
+        const last = jobJson.data?.last;
+        if (active?.status === 'running') continue;
+        if (last?.status === 'completed' && last.result) {
+          setLastBatch(last.result);
+          break;
+        }
+        if (last?.status === 'failed') {
+          setError('rollout_job_failed');
+          break;
+        }
+      }
+      await load();
+    } catch {
+      setError('rollout_network');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const phaseLabel = (phase?: CategoryRolloutRow['phase']) => {
+    switch (phase) {
+      case 'ready':
+        return 'Spremno';
+      case 'in_progress':
+        return 'U toku';
+      case 'empty':
+        return 'Prazno';
+      default:
+        return 'Čeka';
+    }
+  };
+
+  const phaseColor = (phase?: CategoryRolloutRow['phase']) => {
+    switch (phase) {
+      case 'ready':
+        return 'text-emerald-300';
+      case 'in_progress':
+        return 'text-violet-300';
+      case 'empty':
+        return 'text-slate-500';
+      default:
+        return 'text-amber-300';
     }
   };
 
@@ -237,6 +417,35 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
             </p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+            <p className="text-xs text-slate-500">Industrije rollout</p>
+            <p className="font-medium text-white">
+              {rollout?.completedCategories ?? 0}/{rollout?.totalCategories ?? 50} spremno
+              {typeof rollout?.freelanceReadyCount === 'number' && (
+                <span className="ml-2 text-violet-300/90">
+                  · online {rollout.freelanceReadyCount}/{rollout.freelanceCategories ?? 25}
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-slate-500">
+              {rollout?.freelanceCategories ?? 25} freelance + {rollout?.legacyCategories ?? 25} legacy ·{' '}
+              {rollout?.overallCompletionPct ?? 0}% vertikala
+              {rollout?.nextCategoryName && (
+                <span className="ml-1 text-violet-300">→ {rollout.nextCategoryName}</span>
+              )}
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+            <p className="text-xs text-slate-500">Outbound queue</p>
+            <p className="font-medium text-white">
+              {outbound?.byStatus?.draft ?? 0} draft · {outbound?.byStatus?.queued ?? 0} queued
+            </p>
+            <p className="text-xs text-slate-500">
+              {outbound?.warmupComplete ? 'Warmup OK' : 'Warmup — samo draft'}
+              {' · '}
+              {outbound?.sentToday ?? 0}/{outbound?.dailyCap ?? 20} danas
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
             <p className="text-xs text-slate-500">Poslednji tick</p>
             <p className="text-sm text-white">{formatRelative(status.scheduler?.lastTickAt)}</p>
           </div>
@@ -270,6 +479,33 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           <>
             <button
               type="button"
+              onClick={() => void runRollout(1)}
+              disabled={Boolean(busy)}
+              className="btn-primary inline-flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4" />
+              {busy === 'rollout' ? 'Rollout…' : 'Sledeća kategorija (full)'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runRollout(50)}
+              disabled={Boolean(busy)}
+              className="btn-glass inline-flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4" />
+              {busy === 'rollout' ? 'Rollout…' : 'Sve industrije (×50)'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runEvolutionTick()}
+              disabled={Boolean(busy)}
+              className="btn-glass inline-flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4" />
+              {busy === 'evolution' ? 'Evolution…' : 'Evolution tick (E3)'}
+            </button>
+            <button
+              type="button"
               onClick={() => void toggleScheduler(true)}
               disabled={Boolean(busy) || status?.scheduler?.running}
               className="btn-glass inline-flex items-center gap-2 text-sm disabled:opacity-50"
@@ -289,6 +525,35 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
         )}
       </div>
 
+      {lastBatch && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 text-xs text-violet-100"
+        >
+          <p className="font-medium text-violet-300">
+            Batch {String(lastBatch.category ?? '')} — {String(lastBatch.succeeded ?? 0)}/
+            {String(lastBatch.processed ?? 0)} OK
+          </p>
+          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
+            {JSON.stringify(lastBatch, null, 2)}
+          </pre>
+        </motion.div>
+      )}
+
+      {lastEvolution && (
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 text-xs text-violet-100"
+        >
+          <p className="font-medium text-violet-300">Evolution tick završen</p>
+          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
+            {JSON.stringify(lastEvolution, null, 2)}
+          </pre>
+        </motion.div>
+      )}
+
       {lastTick && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
@@ -300,6 +565,57 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
             {JSON.stringify(lastTick, null, 2)}
           </pre>
         </motion.div>
+      )}
+
+      {rollout && rollout.categories && rollout.categories.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-violet-400" />
+            <h3 className="text-sm font-semibold text-white">
+              25 online kategorija (primarno) — rollout redom · legacy SMB = dodatak u katalogu
+            </h3>
+          </div>
+          <ul className="max-h-96 space-y-1.5 overflow-y-auto pr-1">
+            {rollout.categories.map((row) => {
+              const cat = String(row.category ?? '');
+              const isBusy = busy === `batch:${cat}`;
+              const segmentLabel = row.segment === 'legacy_smb' ? 'SMB' : 'FL';
+              return (
+                <li
+                  key={cat}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs"
+                >
+                  <span className="w-6 shrink-0 text-slate-500">{row.order}.</span>
+                  <span className="w-6 shrink-0 rounded bg-white/5 px-1 text-center text-[10px] text-slate-400">
+                    {segmentLabel}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-white">{row.categoryName ?? cat}</p>
+                    <p className="text-slate-500">
+                      {row.readyCount ?? 0}/{row.total ?? 0} spremno · {row.completionPct ?? 0}%
+                      {(row.outboundDrafts ?? 0) > 0 && (
+                        <span className="ml-2 text-cyan-300">{row.outboundDrafts} draft</span>
+                      )}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 font-medium ${phaseColor(row.phase)}`}>
+                    {phaseLabel(row.phase)}
+                  </span>
+                  {isAdmin && row.phase !== 'ready' && row.phase !== 'empty' && (
+                    <button
+                      type="button"
+                      onClick={() => void runCategoryBatch(cat, 'full')}
+                      disabled={Boolean(busy) || !cat}
+                      className="btn-glass shrink-0 px-2 py-1 text-[11px] disabled:opacity-50"
+                    >
+                      {isBusy ? '…' : 'Full'}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
       <div>
@@ -314,6 +630,15 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           {verticals.map((v) => {
             const slug = String(v.slug ?? '');
             const aiOk = v.research?.ai_enriched;
+            const category = String(v.category ?? '');
+            const proPrice = category
+              ? calculateDeliverableQuote({
+                  deliverableId: 'vertical-package',
+                  industryCategory: category,
+                  paymentProvider: 'manual',
+                  marketIntensity: 55,
+                }).clientPriceEur
+              : null;
             return (
               <li
                 key={slug}
@@ -323,6 +648,9 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
                   <p className="truncate font-medium text-white">{v.name ?? slug}</p>
                   <p className="text-xs text-slate-500">
                     {v.category} · {v.status ?? 'pending'}
+                    {proPrice != null && (
+                      <span className="ml-2 text-emerald-300">Paket {formatEur(proPrice)}/mes</span>
+                    )}
                     {aiOk && (
                       <span className="ml-2 inline-flex items-center gap-0.5 text-violet-300">
                         <Sparkles className="h-3 w-3" /> AI

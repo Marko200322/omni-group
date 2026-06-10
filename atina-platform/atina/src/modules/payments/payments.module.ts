@@ -20,6 +20,23 @@ const KriptomanCheckoutDto = CheckoutDto.extend({
   cryptoCurrency: z.string().min(2).max(12).optional(),
 }).strict();
 
+const DeliverableCheckoutDto = z
+  .object({
+    deliverableId: z.string().trim().min(2).max(64).regex(/^[a-z0-9_-]+$/),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    paymentProvider: z.enum(['manual', 'kriptoman', 'stripe', 'paypal']).optional(),
+    marketIntensity: z.number().min(0).max(100).optional(),
+    tamEstimateUsd: z.number().finite().optional(),
+    competitionScore: z.number().min(0).max(100).optional(),
+  })
+  .strict();
+
 const OrderIdParamsDto = z
   .object({
     orderId: z.string().trim().min(2).max(120).regex(/^[a-zA-Z0-9_-]+$/, 'Invalid order id format'),
@@ -138,6 +155,15 @@ export class PaymentsModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
       this.controller.createManualCheckout
+    );
+    this.router.post(
+      '/manual/deliverable-checkout',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(DeliverableCheckoutDto),
+      this.controller.createDeliverableManualCheckout
     );
     this.router.post(
       '/manual/mark-sent/:paymentId',

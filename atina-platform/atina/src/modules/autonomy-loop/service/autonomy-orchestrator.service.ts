@@ -17,11 +17,14 @@ import {
 } from './autonomy-budget.service';
 import { AutonomyMarketingService } from './autonomy-marketing.service';
 import { AutonomyNotifierService } from './autonomy-notifier.service';
+import { CategoryRolloutJobService } from './category-rollout-job.service';
 import { DeployPipelineService } from './deploy-pipeline.service';
 import { IndustryRegistryService } from './industry-registry.service';
 import { MarketResearchService } from './market-research.service';
 import { ModuleGeneratorService } from './module-generator.service';
 import { RevenueFeedbackService } from './revenue-feedback.service';
+import { PlatformEvolutionTickService } from './platform-evolution-tick.service';
+import { ProductFactoryInternalService } from '../../product-factory/service/product-factory-internal.service';
 
 export type ClosedLoopResult = {
   cycleId: string;
@@ -40,7 +43,29 @@ export class AutonomyOrchestratorService {
   private readonly budget = new AutonomyBudgetService();
   private readonly marketing = new AutonomyMarketingService();
   private readonly notifier = new AutonomyNotifierService();
+  private readonly categoryRolloutJob = new CategoryRolloutJobService();
   private readonly ai = getAiClient();
+  private readonly evolutionTick = new PlatformEvolutionTickService();
+  private readonly productFactoryInternal = new ProductFactoryInternalService();
+
+  private async runProductFactoryInternalSafe(userId: string | null) {
+    if (!userId || !config.productFactory.enabled || !config.productFactory.internalLaneEnabled) {
+      return { processed: 0, results: [], skipped: true as const, reason: 'product_factory_internal_disabled' };
+    }
+    try {
+      return await this.productFactoryInternal.tick(userId, config.productFactory.maxInternalPerTick);
+    } catch {
+      return { processed: 0, results: [], skipped: true as const, reason: 'product_factory_internal_unavailable' };
+    }
+  }
+
+  private async runEvolutionSafe(userId: string | null) {
+    try {
+      return await this.evolutionTick.tick(userId);
+    } catch {
+      return { processed: 0, results: [], skipped: true as const, reason: 'evolution_unavailable' };
+    }
+  }
 
   async runClosedLoopForVertical(
     userId: string | null,
@@ -128,12 +153,23 @@ export class AutonomyOrchestratorService {
       );
       if (generateSpend.ok) {
         try {
-          const genDto: GenerateVerticalDtoType = { includePage: true, includeWorkflow: true };
-          const genResult = await this.generator.generate(slug, genDto);
+          const genDto: GenerateVerticalDtoType = {
+            includePage: true,
+            includeWorkflow: true,
+            includeOutreach: true,
+            includeQualityPack: true,
+            includeDeliverablePack: true,
+            queueOutbound: true,
+          };
+          const genResult = await this.generator.generate(slug, genDto, userId);
           steps.push({
             step: 'module_generate',
             status: 'ok',
-            detail: { artifacts: genResult.artifacts.length, outputDir: genResult.outputDir },
+            detail: {
+              artifacts: genResult.artifacts.length,
+              outputDir: genResult.outputDir,
+              outboundDraftId: genResult.outboundDraft?.id ?? null,
+            },
           });
         } catch (err) {
           success = false;
@@ -287,6 +323,39 @@ export class AutonomyOrchestratorService {
       await this.registry.seedAll();
     }
 
+    if (config.autonomy.categoryRolloutEnabled) {
+      const active = this.categoryRolloutJob.getActiveJob();
+      if (active?.status === 'running') {
+        const budget = await this.budget.getStatus();
+        return {
+          processed: 0,
+          results: [],
+          seedCatalogSize: INDUSTRY_SEED_COUNT,
+          budget,
+          categoryRollout: { skipped: true, reason: 'job_already_running', jobId: active.id },
+        };
+      }
+
+      const job = this.categoryRolloutJob.startJob(userId, {
+        mode: 'full',
+        limit: config.autonomy.categoryRolloutBatchSize,
+        maxCategories: config.autonomy.categoryRolloutMaxCategoriesPerTick,
+        processAllVerticals: true,
+      });
+      const budget = await this.budget.getStatus();
+      const evolution = await this.runEvolutionSafe(userId);
+      const productFactoryInternal = await this.runProductFactoryInternalSafe(userId);
+      return {
+        processed: 0,
+        results: [],
+        seedCatalogSize: INDUSTRY_SEED_COUNT,
+        budget,
+        categoryRollout: { asyncJobStarted: true, jobId: job.id, status: job.status },
+        platformEvolution: evolution,
+        productFactoryInternal,
+      };
+    }
+
     const max = dto.maxVerticals ?? config.autonomy.maxVerticalsPerTick;
     const { rows: picks } = await this.repo.pickVerticalsForCycle(max);
     const results: ClosedLoopResult[] = [];
@@ -317,12 +386,17 @@ export class AutonomyOrchestratorService {
       metadata: { tickSpentUsd: tickTracker.spentUsd, budget },
     });
 
+    const platformEvolution = await this.runEvolutionSafe(userId);
+    const productFactoryInternal = await this.runProductFactoryInternalSafe(userId);
+
     return {
       processed: results.length,
       results,
       seedCatalogSize: INDUSTRY_SEED_COUNT,
       budget,
       tickSpentUsd: tickTracker.spentUsd,
+      platformEvolution,
+      productFactoryInternal,
     };
   }
 

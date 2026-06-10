@@ -12,6 +12,29 @@ spec:
               value: prod-postgres
             - name: REDIS_HOST
               value: prod-redis
+            - name: AUTONOMY_ENABLED
+              value: "true"
+            - name: AUTONOMY_AUTO_START_SCHEDULER
+              value: "true"
+            - name: AUTONOMY_ROLLOUT_SEGMENT
+              value: freelance
+            - name: AUTONOMY_EVOLUTION_CODE_EDIT
+              value: "false"
+            - name: WEB_APP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: atina-saas-env
+                  key: WEB_APP_URL
+            - name: VAPID_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: atina-saas-env
+                  key: VAPID_PUBLIC_KEY
+            - name: VAPID_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: atina-saas-env
+                  key: VAPID_PRIVATE_KEY
 ---
 apiVersion: apps/v1
 kind: Deployment

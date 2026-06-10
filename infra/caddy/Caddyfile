@@ -1,0 +1,9 @@
+# Zameni domenima pre deploya: SITE_DOMAIN, API_DOMAIN
+
+{$SITE_DOMAIN:localhost} {
+	reverse_proxy web:3000
+}
+
+{$API_DOMAIN:localhost:3000} {
+	reverse_proxy atina-api:3000
+}

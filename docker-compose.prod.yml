@@ -1,0 +1,124 @@
+# Produkcija — VPS: docker compose -f docker-compose.prod.yml up -d
+# Preduslov: .env u atina-platform/atina/.env + apps/omnigroup-web/.env.production
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-atina_saas_db}
+      POSTGRES_USER: ${DB_USER:-atina_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-atina_user}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [omni_net]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [omni_net]
+
+  migrate:
+    build:
+      context: ./atina-platform/atina
+      dockerfile: Dockerfile
+      target: production
+    env_file:
+      - ./atina-platform/atina/.env
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      REDIS_HOST: redis
+    command: npm run migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [omni_net]
+    profiles: [setup]
+
+  atina-api:
+    build:
+      context: ./atina-platform/atina
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - ./atina-platform/atina/.env
+    environment:
+      NODE_ENV: production
+      APP_NODE_ENV: production
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      AUTONOMY_ENABLED: ${AUTONOMY_ENABLED:-true}
+      AUTONOMY_AUTO_START_SCHEDULER: ${AUTONOMY_AUTO_START_SCHEDULER:-true}
+      AUTONOMY_ROLLOUT_SEGMENT: ${AUTONOMY_ROLLOUT_SEGMENT:-freelance}
+      AUTONOMY_EVOLUTION_CODE_EDIT: ${AUTONOMY_EVOLUTION_CODE_EDIT:-false}
+    ports:
+      - '${ATINA_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks: [omni_net]
+
+  web:
+    build:
+      context: ./apps/omnigroup-web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./apps/omnigroup-web/.env.production
+    environment:
+      NODE_ENV: production
+      PORT: 3010
+    ports:
+      - '${WEB_PORT:-3010}:3000'
+    depends_on:
+      atina-api:
+        condition: service_healthy
+    networks: [omni_net]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - atina-api
+    networks: [omni_net]
+    profiles: [tls]
+
+volumes:
+  pg_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  omni_net:
+    driver: bridge

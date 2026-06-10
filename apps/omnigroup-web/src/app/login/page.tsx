@@ -128,30 +128,18 @@ function LoginForm() {
         {status === 'loading' ? 'Prijava…' : 'Prijavi se'}
       </motion.button>
       <p className="text-center text-xs text-slate-500">
-        Demo = samo pregled UI-ja · za billing i avatare koristi <strong className="text-slate-400">Prijavi se</strong>
+        Nemate nalog? <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">Kontaktirajte nas</Link> za pristup.
       </p>
-      <div className="grid grid-cols-2 gap-3 pt-1">
-        <motion.button
-          type="button"
-          disabled={status === 'loading'}
-          className="btn-glass text-center text-sm disabled:opacity-60"
-          whileHover={{ scale: 1.03 }}
-          whileTap={tapScale}
-          onClick={() => startDemo('client')}
-        >
-          Klijent demo
-        </motion.button>
-        <motion.button
-          type="button"
-          disabled={status === 'loading'}
-          className="btn-glass text-center text-sm disabled:opacity-60"
-          whileHover={{ scale: 1.03 }}
-          whileTap={tapScale}
-          onClick={() => startDemo('admin')}
-        >
-          Admin demo
-        </motion.button>
-      </div>
+      <motion.button
+        type="button"
+        disabled={status === 'loading'}
+        className="btn-glass w-full text-center text-sm disabled:opacity-60"
+        whileHover={{ scale: 1.02 }}
+        whileTap={tapScale}
+        onClick={() => startDemo('client')}
+      >
+        Pregled demo portala
+      </motion.button>
     </motion.form>
   );
 }
@@ -164,7 +152,7 @@ export default function LoginPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <AnimatedBackground variant="admin" />
+      <AnimatedBackground variant="client" />
       <div className="relative z-10 flex w-full flex-col lg:flex-row">
         <motion.div
           variants={staggerContainer}
@@ -189,10 +177,11 @@ export default function LoginPage() {
           <motion.div variants={fadeUp}>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white md:text-5xl">
-              Prijava u <span className="text-gradient animate-gradient-text">workspace</span>
+              Klijentski <span className="text-gradient animate-gradient-text">portal</span>
             </h1>
             <p className="mt-4 max-w-md text-slate-400">
-              Prava prijava koristi Atina auth (email + lozinka). Posle prijave imaš billing, avatare i AI memoriju.
+              Pratite porudžbine, projekte i podršku na jednom mestu. Plaćanje preko banke, video konsultacije i
+              status isporuke — sve na dohvat ruke.
             </p>
           </motion.div>
 
@@ -222,10 +211,10 @@ export default function LoginPage() {
             >
               <OmniGroupLogoMark size={72} />
             </motion.div>
-            <p className="font-display text-2xl font-bold text-gradient">Premium by design</p>
+            <p className="font-display text-2xl font-bold text-gradient">Vaša digitalna isporuka</p>
             <p className="mt-4 text-sm text-slate-400">
-              Operator konzola, klijentski workspace i marketing sajt — jedan brend Omni Group, moduli Atina ·
-              Astra · Titan ispod haube.
+              Softver po meri, testiran pre isporuke. Svaka porudžbina je izolovana — vaši podaci i kod ostaju
+              isključivo vaši.
             </p>
           </motion.div>
         </div>

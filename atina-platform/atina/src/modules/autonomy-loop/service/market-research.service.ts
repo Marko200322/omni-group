@@ -1,7 +1,9 @@
 import { getAiClient, getScraperClient } from '../../../integrations';
 import { NotFoundError } from '../../../utils/errors';
 import type { ResearchVerticalDtoType } from '../dto/autonomy-loop.dto';
-import { buildResearchSeedCandidates, pickResearchSeedUrl } from '../lib/research-seed';
+import { buildResearchQuery, buildResearchSeedCandidates, pickResearchSeedUrl } from '../lib/research-seed';
+import { getCategoryDeliveryProfile } from '../lib/vertical-delivery-profiles';
+import { resolveVerticalDeliveryPack } from '../lib/vertical-delivery-resolver';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
 
 export class MarketResearchService {
@@ -15,16 +17,16 @@ export class MarketResearchService {
 
     await this.repo.updateVerticalStatus(slug, 'researching');
 
-    const queryBase = `${vertical.category} ${vertical.name} software market`;
+    const category = String(vertical.category);
+    const name = String(vertical.name);
+    const profile = getCategoryDeliveryProfile(category);
+    const intensity = dto.intensity ?? profile.marketIntensityDefault;
+    const queryBase = buildResearchQuery(category, name, slug);
+
     const seedCandidates = dto.seedUrl
       ? [dto.seedUrl]
-      : buildResearchSeedCandidates(String(vertical.category), String(vertical.name), slug);
-    const seedUrl = pickResearchSeedUrl(
-      String(vertical.category),
-      String(vertical.name),
-      slug,
-      dto.seedUrl
-    );
+      : buildResearchSeedCandidates(category, name, slug);
+    const seedUrl = pickResearchSeedUrl(category, name, slug, dto.seedUrl);
 
     const scrapePreview: Record<string, unknown> = {};
     const scraper = getScraperClient();
@@ -57,47 +59,70 @@ export class MarketResearchService {
     let aiAnalysis: string[] = [];
     let aiEnriched = false;
     if (this.ai.isConfigured()) {
-      const rec = await this.ai.fetchRecommendations({
-        mode: 'market-research',
-        verticalSlug: slug,
-        category: vertical.category,
-        query: queryBase,
-        intensity: dto.intensity,
-      });
-      aiAnalysis = rec?.recommendations ?? [];
-      aiEnriched = aiAnalysis.length > 0;
+      try {
+        const rec = await this.ai.fetchRecommendations({
+          mode: 'market-research',
+          verticalSlug: slug,
+          category,
+          query: queryBase,
+          intensity,
+        });
+        aiAnalysis = rec?.recommendations ?? [];
+        aiEnriched = aiAnalysis.length > 0;
+      } catch {
+        aiEnriched = false;
+      }
     }
 
-    const tamEstimate = Math.round(50000 + dto.intensity * 1200 + (vertical.category.length * 800));
-    const competitionScore = Math.min(100, 30 + Math.round(dto.intensity / 2));
+    const tamEstimate = Math.round(50_000 + intensity * 1200 + category.length * 800);
+    const competitionScore = Math.min(100, 30 + Math.round(intensity / 2));
+
+    const draftPack = resolveVerticalDeliveryPack({
+      slug,
+      category,
+      name,
+      researchData: {
+        tam_estimate_usd: tamEstimate,
+        competition_score: competitionScore,
+      },
+    });
 
     const research = {
       researched_at: new Date().toISOString(),
       query: queryBase,
       seed_url: seedUrl,
-      intensity: dto.intensity,
+      intensity,
       tam_estimate_usd: tamEstimate,
       competition_score: competitionScore,
-      keywords: [vertical.category, slug.replace(/-/g, ' '), 'saas', 'automation', 'crm'],
-      value_proposition: aiAnalysis[0] ?? `All-in-one ops panel for ${vertical.name}`,
+      keywords: draftPack.keywords,
+      value_proposition: aiAnalysis[0] ?? draftPack.valueProp,
       opportunities: aiAnalysis.length
         ? aiAnalysis
-        : [
-            'CRM + scheduling for vertical workflows',
-            'Automated follow-up and invoicing',
-            'AI support trained on vertical FAQs',
-          ],
+        : profile.outreachHooks.map((h) => `${h} (${name})`),
+      research_focus: profile.researchFocus,
+      recommended_deliverables: draftPack.recommendedDeliverables.map((d) => d.id),
+      core_modules: profile.coreModules,
+      vertical_package_quote_eur: draftPack.verticalPackageQuoteEur,
       scrape: scrapePreview,
       scraper_configured: scraper.isConfigured(),
       ai_enriched: aiEnriched,
     };
 
-    const priorityBoost = Math.min(25, dto.intensity / 4 + (scraper.isConfigured() ? 5 : 0));
-    const { rows: updated } = await this.repo.updateVerticalResearch(slug, research, 'ready');
+    const priorityBoost = Math.min(25, intensity / 4 + (scraper.isConfigured() ? 5 : 0));
+    const { rows: updated } = await this.repo.updateVerticalResearch(slug, research, 'researching');
     if (updated[0]) {
       await this.repo.applyRevenueFeedback(slug, 0, priorityBoost);
     }
 
-    return { vertical: updated[0] ?? null, research };
+    return {
+      vertical: updated[0] ?? null,
+      research,
+      deliveryPreview: resolveVerticalDeliveryPack({
+        slug,
+        category,
+        name,
+        researchData: research,
+      }),
+    };
   }
 }

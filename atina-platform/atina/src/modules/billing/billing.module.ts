@@ -10,6 +10,9 @@ import {
   BillingInvoiceIdParamsDto,
   BillingLimitKeyParamsDto,
   BillingPlanSlugParamsDto,
+  BillingPlansQueryDto,
+  BillingQuoteCatalogQueryDto,
+  BillingQuoteBodyDto,
 } from './dto/billing.dto';
 
 export class BillingModule implements IModule {
@@ -30,11 +33,46 @@ export class BillingModule implements IModule {
   }
 
   private setupRoutes(): void {
-    this.router.get('/plans', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getPlans);
+    this.router.get(
+      '/deliverables',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getDeliverables
+    );
+    this.router.get(
+      '/quotes',
+      validateQuery(BillingQuoteCatalogQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getQuoteCatalog
+    );
+    this.router.post(
+      '/quote',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(BillingQuoteBodyDto),
+      this.controller.postQuote
+    );
+    this.router.get(
+      '/industry-catalog',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getIndustryCatalog
+    );
+    this.router.get(
+      '/category-pricing',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getCategoryPricing
+    );
+    this.router.get(
+      '/plans',
+      validateQuery(BillingPlansQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getPlans
+    );
     this.router.get(
       '/plans/:slug',
       validateParams(BillingPlanSlugParamsDto),
-      validateQuery(StrictEmptyQueryDto),
+      validateQuery(BillingPlansQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getPlan
     );

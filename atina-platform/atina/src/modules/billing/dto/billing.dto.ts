@@ -29,3 +29,63 @@ export const BillingLimitKeyParamsDto = z
       .regex(/^[a-zA-Z0-9_.-]+$/, 'Invalid limit key format'),
   })
   .strict();
+
+export const BillingPlansQueryDto = z
+  .object({
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
+      .optional(),
+  })
+  .strict();
+
+export const BillingQuoteCatalogQueryDto = z
+  .object({
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    verticalSlug: z
+      .string()
+      .trim()
+      .min(3)
+      .max(120)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    paymentProvider: z.enum(['manual', 'kriptoman', 'stripe', 'paypal']).optional(),
+    tamEstimateUsd: z.coerce.number().finite().optional(),
+    competitionScore: z.coerce.number().min(0).max(100).optional(),
+    marketIntensity: z.coerce.number().min(0).max(100).optional(),
+  })
+  .strict();
+
+export const BillingQuoteBodyDto = z
+  .object({
+    deliverableId: z.string().trim().min(2).max(64).regex(/^[a-z0-9_-]+$/),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    verticalSlug: z
+      .string()
+      .trim()
+      .min(3)
+      .max(120)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    billingCycle: z.enum(['one_time', 'monthly', 'yearly']).optional(),
+    paymentProvider: z.enum(['manual', 'kriptoman', 'stripe', 'paypal']).optional(),
+    tamEstimateUsd: z.number().finite().optional(),
+    competitionScore: z.number().min(0).max(100).optional(),
+    marketIntensity: z.number().min(0).max(100).optional(),
+  })
+  .strict();

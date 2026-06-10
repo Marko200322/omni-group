@@ -1,8 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { AtinaPlanSummary } from '@/lib/atina';
+import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import {
+  formatEur,
+  getIndustryCategory,
+  getPlanPriceForCategory,
+  type PlanSlug,
+} from '@/lib/category-pricing';
 
 type PaymentMethod = {
   id: string;
@@ -29,6 +37,8 @@ type KriptomanCheckout = {
   amount: number;
   currency: string;
 };
+
+type WiseCheckout = ManualCheckout;
 
 type BillingSummary = {
   subscription: {
@@ -65,17 +75,28 @@ type Props = {
 };
 
 export function BillingCheckoutPanel({ plans, disabled }: Props) {
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get('category') ?? '';
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [mode, setMode] = useState<string>('manual');
   const [planSlug, setPlanSlug] = useState('pro');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [industryCategory, setIndustryCategory] = useState(initialCategory);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
   const [kriptomanCheckout, setKriptomanCheckout] = useState<KriptomanCheckout | null>(null);
+  const [wiseCheckout, setWiseCheckout] = useState<WiseCheckout | null>(null);
   const [cryptoCurrency, setCryptoCurrency] = useState('USDT');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [purchase, setPurchase] = useState<BillingSummary | null>(null);
+
+  const quotedAmount = useMemo(() => {
+    const slug = (['starter', 'pro', 'enterprise'].includes(planSlug) ? planSlug : 'pro') as PlanSlug;
+    return getPlanPriceForCategory(slug, billingCycle, industryCategory || null);
+  }, [planSlug, billingCycle, industryCategory]);
+
+  const categoryMeta = getIndustryCategory(industryCategory);
 
   useEffect(() => {
     let cancelled = false;
@@ -122,7 +143,12 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       const res = await fetch('/api/atina/payments/kriptoman/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planSlug, billingCycle, cryptoCurrency }),
+        body: JSON.stringify({
+          planSlug,
+          billingCycle,
+          cryptoCurrency,
+          ...(industryCategory ? { industryCategory } : {}),
+        }),
       });
       const json = (await res.json()) as { ok?: boolean; data?: KriptomanCheckout; error?: string; detail?: string };
       if (!res.ok || !json.ok || !json.data) {
@@ -137,7 +163,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [planSlug, billingCycle, cryptoCurrency]);
+  }, [planSlug, billingCycle, cryptoCurrency, industryCategory]);
 
   const syncKriptoman = useCallback(async () => {
     if (!kriptomanCheckout?.paymentId) return;
@@ -165,6 +191,86 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     }
   }, [kriptomanCheckout?.paymentId]);
 
+  const checkoutPayload = useCallback(
+    () => ({
+      planSlug,
+      billingCycle,
+      ...(industryCategory ? { industryCategory } : {}),
+    }),
+    [planSlug, billingCycle, industryCategory],
+  );
+
+  const startStripeCheckout = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/atina/payments/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload()),
+      });
+      const json = (await res.json()) as { ok?: boolean; data?: { url?: string | null }; detail?: string; error?: string };
+      if (!res.ok || !json.ok || !json.data?.url) {
+        throw new Error(json.detail ?? json.error ?? 'stripe_checkout_failed');
+      }
+      window.location.href = json.data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Stripe checkout nije uspeo.');
+    } finally {
+      setLoading(false);
+    }
+  }, [checkoutPayload]);
+
+  const startPayPalCheckout = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/atina/payments/paypal/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload()),
+      });
+      const json = (await res.json()) as {
+        ok?: boolean;
+        data?: { approveUrl?: string };
+        detail?: string;
+        error?: string;
+      };
+      if (!res.ok || !json.ok || !json.data?.approveUrl) {
+        throw new Error(json.detail ?? json.error ?? 'paypal_order_failed');
+      }
+      window.location.href = json.data.approveUrl;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'PayPal checkout nije uspeo.');
+    } finally {
+      setLoading(false);
+    }
+  }, [checkoutPayload]);
+
+  const startWiseCheckout = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setWiseCheckout(null);
+    setCheckout(null);
+    setKriptomanCheckout(null);
+    try {
+      const res = await fetch('/api/atina/payments/wise/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload()),
+      });
+      const json = (await res.json()) as { ok?: boolean; data?: WiseCheckout; detail?: string; error?: string };
+      if (!res.ok || !json.ok || !json.data) {
+        throw new Error(json.detail ?? json.error ?? 'wise_transfer_failed');
+      }
+      setWiseCheckout(json.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Wise transfer nije uspeo.');
+    } finally {
+      setLoading(false);
+    }
+  }, [checkoutPayload]);
+
   const startManualCheckout = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -174,7 +280,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       const res = await fetch('/api/atina/payments/manual/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planSlug, billingCycle }),
+        body: JSON.stringify({
+          planSlug,
+          billingCycle,
+          ...(industryCategory ? { industryCategory } : {}),
+        }),
       });
       const json = (await res.json()) as { ok?: boolean; data?: ManualCheckout; error?: string; detail?: string };
       if (!res.ok || !json.ok || !json.data) {
@@ -186,7 +296,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [planSlug, billingCycle]);
+  }, [planSlug, billingCycle, industryCategory]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -210,6 +320,9 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
 
   const manualAvailable = methods.some((m) => m.id === 'manual' && m.available);
   const kriptomanAvailable = methods.some((m) => m.id === 'kriptoman' && m.available);
+  const stripeAvailable = methods.some((m) => m.id === 'stripe' && m.available);
+  const paypalAvailable = methods.some((m) => m.id === 'paypal' && m.available);
+  const wiseAvailable = methods.some((m) => m.id === 'wise' && m.available);
 
   return (
     <motion.div className="mt-4 space-y-4">
@@ -256,9 +369,20 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
 
       {mode === 'manual' && (
         <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-          Režim bez firme — bankovni transfer. Kad otvoriš firmu, prebaci na Stripe (PAYMENTS_MODE=sandbox/live).
+          Režim bez firme — bankovni transfer. Cena zavisi od industrijske kategorije; isti iznos vidiš na /pricing.
         </p>
       )}
+
+      <IndustryCategorySelect
+        value={industryCategory}
+        onChange={(slug) => {
+          setIndustryCategory(slug);
+          setCheckout(null);
+          setKriptomanCheckout(null);
+          setSent(false);
+        }}
+        className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
+      />
 
       <motion.div className="grid gap-3 sm:grid-cols-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <label className="block text-sm">
@@ -269,11 +393,20 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             onChange={(e) => setPlanSlug(e.target.value)}
             disabled={disabled || loading}
           >
-            {plans.map((p) => (
-              <option key={p.slug ?? p.name} value={p.slug ?? 'pro'}>
-                {p.name ?? p.slug}
-              </option>
-            ))}
+            {plans.map((p) => {
+              const slug = (p.slug ?? 'pro') as PlanSlug;
+              const price = getPlanPriceForCategory(
+                slug,
+                billingCycle,
+                industryCategory || null,
+              );
+              return (
+                <option key={p.slug ?? p.name} value={p.slug ?? 'pro'}>
+                  {p.name ?? p.slug} — {formatEur(price)}
+                  {billingCycle === 'yearly' ? '/god' : '/mes'}
+                </option>
+              );
+            })}
             {!plans.length && (
               <>
                 <option value="starter">Starter</option>
@@ -296,6 +429,13 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           </select>
         </label>
       </motion.div>
+
+      <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
+        Iznos za uplatu:{' '}
+        <span className="font-semibold text-white">{formatEur(quotedAmount)}</span>
+        {billingCycle === 'yearly' ? ' / godišnje' : ' / mesečno'}
+        {categoryMeta ? ` · ${categoryMeta.nameSr}` : ' · standardna tarifa'}
+      </p>
 
       {kriptomanAvailable && (
         <div className="space-y-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
@@ -324,21 +464,53 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         </div>
       )}
 
-      {manualAvailable ? (
-        <button
-          type="button"
-          className="btn-primary text-sm disabled:opacity-50"
-          onClick={startManualCheckout}
-          disabled={disabled || loading}
-        >
-          {loading ? 'Generišem uputstvo…' : 'Generiši uputstvo za uplatu (banka)'}
-        </button>
-      ) : (
-        !kriptomanAvailable && (
-          <p className="text-sm text-amber-400/90">
-            Ručna uplata nije podešena — popuni MANUAL_PAYMENT_* ili KRIPTOMAN_* u Atina .env.
-          </p>
-        )
+      <div className="flex flex-wrap gap-2">
+        {stripeAvailable && (
+          <button
+            type="button"
+            className="btn-primary text-sm disabled:opacity-50"
+            onClick={startStripeCheckout}
+            disabled={disabled || loading}
+          >
+            Plati karticom (Stripe)
+          </button>
+        )}
+        {paypalAvailable && (
+          <button
+            type="button"
+            className="btn-glass text-sm disabled:opacity-50"
+            onClick={startPayPalCheckout}
+            disabled={disabled || loading}
+          >
+            PayPal
+          </button>
+        )}
+        {wiseAvailable && (
+          <button
+            type="button"
+            className="btn-glass text-sm disabled:opacity-50"
+            onClick={startWiseCheckout}
+            disabled={disabled || loading}
+          >
+            Wise transfer
+          </button>
+        )}
+        {manualAvailable && (
+          <button
+            type="button"
+            className="btn-glass text-sm disabled:opacity-50"
+            onClick={startManualCheckout}
+            disabled={disabled || loading}
+          >
+            Banka (manual)
+          </button>
+        )}
+      </div>
+
+      {!stripeAvailable && !paypalAvailable && !wiseAvailable && !manualAvailable && !kriptomanAvailable && (
+        <p className="text-sm text-amber-400/90">
+          Nijedan način plaćanja nije podešen — popuni PAYMENTS/STRIPE/PAYPAL u Atina .env.
+        </p>
       )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
@@ -387,6 +559,30 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         </motion.div>
       )}
 
+      {wiseCheckout && (
+        <motion.div
+          className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 text-sm text-slate-200"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="font-medium text-white">Wise uputstvo</p>
+          <ul className="mt-3 space-y-1 font-mono text-xs">
+            <li>Referenca: {wiseCheckout.reference}</li>
+            <li>
+              Iznos: {Number(wiseCheckout.amount).toFixed(2)} {wiseCheckout.currency}
+            </li>
+            {Object.entries(wiseCheckout.instructions).map(([k, v]) =>
+              v ? (
+                <li key={k}>
+                  {k}: {v}
+                </li>
+              ) : null
+            )}
+          </ul>
+          <p className="mt-4 text-xs text-slate-400">Admin potvrđuje uplatu posle provere Wise transfera.</p>
+        </motion.div>
+      )}
+
       {checkout && (
         <motion.div
           className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm text-slate-200"
@@ -396,6 +592,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           <p className="font-medium text-white">Uputstvo za uplatu</p>
           <p className="mt-2 text-xs text-slate-400">
             Kupuješ: <span className="text-white">{planSlug}</span> · {formatCycle(billingCycle)}
+            {categoryMeta ? ` · ${categoryMeta.nameSr}` : ''}
           </p>
           <ul className="mt-3 space-y-1 font-mono text-xs">
             <li>Referenca: {checkout.reference}</li>

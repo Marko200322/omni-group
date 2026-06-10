@@ -6,6 +6,7 @@ import { getInfrastructureClient } from '../../../integrations';
 import { NotFoundError } from '../../../utils/errors';
 import type { DeployVerticalDtoType } from '../dto/autonomy-loop.dto';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
+import { LocalInfrastructureService } from './local-infrastructure.service';
 
 export class DeployPipelineService {
   private readonly repo = new AutonomyLoopRepository();
@@ -51,12 +52,21 @@ export class DeployPipelineService {
       } catch (err) {
         errors.push(err instanceof Error ? err.message : String(err));
       }
-    } else if (dto.triggerCi && !this.infrastructure.isConfigured()) {
-      deployResult = {
-        simulated: true,
-        message: 'Infrastructure aggregator not configured — deploy queued locally',
-        verticalSlug: slug,
-      };
+    } else if (dto.triggerCi) {
+      const local = new LocalInfrastructureService();
+      if (local.isAvailable()) {
+        deployResult = local.triggerDeploy({
+          phase: 'autonomy',
+          notes: dto.notes ?? `Deploy vertical ${slug}`,
+          actorUserId,
+        });
+      } else {
+        deployResult = {
+          simulated: true,
+          message: 'Infrastructure not configured — deploy queued locally',
+          verticalSlug: slug,
+        };
+      }
     }
 
     const status = errors.length ? 'failed' : gitCommitSha || deployResult ? 'completed' : 'queued';

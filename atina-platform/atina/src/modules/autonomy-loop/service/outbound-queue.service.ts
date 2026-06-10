@@ -1,0 +1,203 @@
+import { config } from '../../../config';
+import { getAiClient } from '../../../integrations';
+import { NotificationsService } from '../../notifications/service/notifications.service';
+import { resolveVerticalDeliveryPack } from '../lib/vertical-delivery-resolver';
+import { renderOutreachEmailMarkdown } from '../templates/vertical-templates';
+import { OutboundQueueRepository, type OutboundMessageRow, type OutboundStatus } from '../repository/outbound-queue.repository';
+
+export type OutboundQueueStats = {
+  warmupComplete: boolean;
+  warmupMode: boolean;
+  dailyCap: number;
+  sentToday: number;
+  remainingToday: number;
+  byStatus: Record<string, number>;
+};
+
+function parseOutreachMarkdown(md: string): { subject: string; bodyText: string; bodyHtml: string } {
+  const subjectMatch = md.match(/\*\*Subject A:\*\*\s*(.+)/);
+  const subject = subjectMatch?.[1]?.trim() ?? 'Ponuda — Omni Group isporuka';
+  const parts = md.split('---');
+  const bodySection = parts.length >= 2 ? parts[1] : md;
+  const bodyText = bodySection
+    .replace(/\*\*Subject [AB]:\*\*.*\n/g, '')
+    .replace(/\{\{[^}]+\}\}/g, '')
+    .trim();
+  const bodyHtml = bodyText
+    .split('\n\n')
+    .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+    .join('\n');
+  return { subject, bodyText, bodyHtml };
+}
+
+export class OutboundQueueService {
+  private readonly repo = new OutboundQueueRepository();
+  private readonly notifications = new NotificationsService();
+
+  async getStats(): Promise<OutboundQueueStats> {
+    const sentTodayResult = await this.repo.countSentToday();
+    const sentToday = parseInt(sentTodayResult.rows[0]?.count ?? '0', 10);
+    const statusRows = await this.repo.countByStatus();
+    const byStatus: Record<string, number> = {};
+    for (const row of statusRows.rows as Array<{ status?: string; count: string }>) {
+      if (row.status) byStatus[row.status] = parseInt(row.count, 10);
+    }
+    const dailyCap = config.outreach.dailyCap;
+    return {
+      warmupComplete: config.outreach.domainWarmupComplete,
+      warmupMode: config.outreach.warmupMode,
+      dailyCap,
+      sentToday,
+      remainingToday: Math.max(0, dailyCap - sentToday),
+      byStatus,
+    };
+  }
+
+  async createDraftFromVertical(input: {
+    userId?: string | null;
+    verticalSlug: string;
+    category: string;
+    name: string;
+    researchData?: Record<string, unknown> | null;
+    leadEmail?: string | null;
+    leadName?: string | null;
+    leadCompany?: string | null;
+    source?: string;
+    scrapeContext?: Record<string, unknown>;
+  }): Promise<OutboundMessageRow> {
+    const pack = resolveVerticalDeliveryPack({
+      slug: input.verticalSlug,
+      category: input.category,
+      name: input.name,
+      researchData: input.researchData ?? null,
+    });
+
+    let markdown = renderOutreachEmailMarkdown(pack);
+    const ai = getAiClient();
+    if (ai.isConfigured() && input.scrapeContext) {
+      try {
+        const rec = await ai.fetchRecommendations({
+          mode: 'outreach-email',
+          verticalSlug: input.verticalSlug,
+          category: input.category,
+          query: `Write a short cold email for ${pack.displayName}. Context: ${JSON.stringify(input.scrapeContext).slice(0, 500)}`,
+          intensity: 60,
+        });
+        if (rec?.recommendations?.[0]) {
+          markdown = `${markdown}\n\n<!-- AI variant -->\n${rec.recommendations[0]}`;
+        }
+      } catch {
+        /* template-only outreach when AI unavailable */
+      }
+    }
+
+    const parsed = parseOutreachMarkdown(markdown);
+    const initialStatus: OutboundStatus = config.outreach.domainWarmupComplete ? 'queued' : 'draft';
+
+    const { rows } = await this.repo.insert({
+      userId: input.userId,
+      verticalSlug: input.verticalSlug,
+      category: input.category,
+      leadEmail: input.leadEmail,
+      leadName: input.leadName,
+      leadCompany: input.leadCompany,
+      subject: parsed.subject,
+      bodyHtml: parsed.bodyHtml,
+      bodyText: parsed.bodyText,
+      status: initialStatus,
+      source: input.source ?? 'vertical_delivery',
+      metadata: {
+        warmup_blocked: !config.outreach.domainWarmupComplete,
+        subtype: pack.subtype,
+        vertical_package_eur: pack.verticalPackageQuoteEur,
+        outreach_markdown_preview: markdown.slice(0, 2000),
+      },
+    });
+    return rows[0];
+  }
+
+  async createDraftsFromScrape(input: {
+    userId: string;
+    verticalSlug: string;
+    category: string;
+    verticalName: string;
+    leadsDiscovered: number;
+    platformsScraped: string[];
+    sampleLinks?: string[];
+  }): Promise<{ created: number; ids: string[] }> {
+    const count = Math.min(5, Math.max(1, Math.floor(input.leadsDiscovered / 10) || 1));
+    const ids: string[] = [];
+    for (let i = 0; i < count; i += 1) {
+      const row = await this.createDraftFromVertical({
+        userId: input.userId,
+        verticalSlug: input.verticalSlug,
+        category: input.category,
+        name: input.verticalName,
+        source: 'client_hunter_scrape',
+        leadName: `Lead ${i + 1}`,
+        leadCompany: input.platformsScraped[i % input.platformsScraped.length] ?? 'prospect',
+        scrapeContext: {
+          platforms: input.platformsScraped,
+          sample_links: input.sampleLinks?.slice(0, 3) ?? [],
+          lead_index: i + 1,
+        },
+      });
+      ids.push(row.id);
+    }
+    return { created: count, ids };
+  }
+
+  async processSendQueue(): Promise<{ processed: number; sent: number; blocked: number; failed: number }> {
+    const devFallback =
+      config.outreach.devSendToFallback && Boolean(config.outreach.fallbackNotifyEmail?.trim());
+
+    if (!config.outreach.domainWarmupComplete && !devFallback) {
+      return { processed: 0, sent: 0, blocked: 0, failed: 0 };
+    }
+
+    const stats = await this.getStats();
+    const slots = stats.remainingToday;
+    if (slots <= 0) {
+      return { processed: 0, sent: 0, blocked: 0, failed: 0 };
+    }
+
+    const { rows: queued } = devFallback
+      ? await this.repo.listDrafts(Math.min(slots, 10))
+      : await this.repo.listQueued(slots);
+    let sent = 0;
+    let failed = 0;
+
+    for (const msg of queued) {
+      const to = devFallback
+        ? config.outreach.fallbackNotifyEmail!.trim()
+        : msg.lead_email?.trim() || config.outreach.fallbackNotifyEmail;
+      if (!to) {
+        await this.repo.updateStatus(msg.id, 'failed', {
+          metadata: { error: 'no_recipient' },
+        });
+        failed += 1;
+        continue;
+      }
+      try {
+        await this.notifications.sendEmail(to, msg.subject, msg.body_html, msg.body_text ?? undefined);
+        await this.repo.updateStatus(msg.id, 'sent', { sentAt: new Date() });
+        sent += 1;
+      } catch (err) {
+        await this.repo.updateStatus(msg.id, 'failed', {
+          metadata: { error: err instanceof Error ? err.message : String(err) },
+        });
+        failed += 1;
+      }
+    }
+
+    return { processed: queued.length, sent, blocked: 0, failed };
+  }
+
+  async queueDraftsForWarmupComplete(): Promise<{ queued: number }> {
+    if (!config.outreach.domainWarmupComplete) {
+      return { queued: 0 };
+    }
+    const { rows } = await this.repo.promoteDraftsToQueued(200);
+    return { queued: rows.length };
+  }
+}

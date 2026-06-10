@@ -21,6 +21,33 @@ export const ResearchVerticalDto = z.object({
 export const GenerateVerticalDto = z.object({
   includePage: z.boolean().default(true),
   includeWorkflow: z.boolean().default(true),
+  includeOutreach: z.boolean().default(true),
+  includeQualityPack: z.boolean().default(true),
+  includeDeliverablePack: z.boolean().default(true),
+  queueOutbound: z.boolean().default(true),
+});
+
+export const CategoryParamDto = z.object({
+  category: z
+    .string()
+    .trim()
+    .min(2)
+    .max(80)
+    .regex(/^[a-z0-9_]+$/, 'Invalid category slug'),
+});
+
+export const CategoryBatchDto = z.object({
+  mode: z.enum(['research', 'generate', 'full']).default('generate'),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  processAllVerticals: z.boolean().default(false),
+});
+
+export const CategoryRolloutDto = z.object({
+  mode: z.enum(['research', 'generate', 'full']).default('full'),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  maxCategories: z.coerce.number().int().min(1).max(50).default(1),
+  startFromCategory: z.string().trim().max(80).optional(),
+  processAllVerticals: z.boolean().default(true),
 });
 
 export const DeployVerticalDto = z.object({
@@ -42,6 +69,9 @@ export type VerticalSlugParamDtoType = z.infer<typeof VerticalSlugParamDto>;
 export type ListVerticalsQueryDtoType = z.infer<typeof ListVerticalsQueryDto>;
 export type ResearchVerticalDtoType = z.infer<typeof ResearchVerticalDto>;
 export type GenerateVerticalDtoType = z.infer<typeof GenerateVerticalDto>;
+export type CategoryParamDtoType = z.infer<typeof CategoryParamDto>;
+export type CategoryBatchDtoType = z.infer<typeof CategoryBatchDto>;
+export type CategoryRolloutDtoType = z.infer<typeof CategoryRolloutDto>;
 export type DeployVerticalDtoType = z.infer<typeof DeployVerticalDto>;
 export type TickAutonomyDtoType = z.infer<typeof TickAutonomyDto>;
 export type FeedbackSyncDtoType = z.infer<typeof FeedbackSyncDto>;

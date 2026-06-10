@@ -17,6 +17,15 @@ export const RunClientHunterDto = z.preprocess(
       mode: z.enum(['hunt', 'discover', 'nurture']).default('hunt'),
       intensity: z.number().int().min(1).max(100).default(25),
       revenueEstimate: z.number().finite().positive().optional(),
+      verticalSlug: z
+        .string()
+        .trim()
+        .min(2)
+        .max(120)
+        .regex(/^[a-z0-9-]+$/, 'Invalid vertical slug')
+        .optional(),
+      category: z.string().trim().max(80).optional(),
+      verticalName: z.string().trim().max(200).optional(),
     })
     .strict()
 );

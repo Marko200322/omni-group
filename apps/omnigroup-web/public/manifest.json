@@ -1,0 +1,18 @@
+{
+  "name": "Omni Group Admin",
+  "short_name": "OG Admin",
+  "description": "Mobilna operator konzola — uplate, fabrika, autonomy.",
+  "start_url": "/admin/mobile",
+  "display": "standalone",
+  "background_color": "#0a0a12",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

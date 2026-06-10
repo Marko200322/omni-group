@@ -16,10 +16,23 @@ import type {
   AdminWorkflowTemplateExecutionStatsQueryDtoType,
 } from '../dto/admin.dto';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
+import { z } from 'zod';
 import { AdminService } from '../service/admin.service';
+import { WebPushService } from '../service/web-push.service';
+
+const PushSubscribeDto = z
+  .object({
+    endpoint: z.string().url(),
+    keys: z.object({
+      p256dh: z.string().min(1),
+      auth: z.string().min(1),
+    }),
+  })
+  .strict();
 
 export class AdminController {
   private readonly service = new AdminService();
+  private readonly webPush = new WebPushService();
 
   getOverview = async (req: Request, res: Response): Promise<void> => {
     const data = await this.service.getOverview(req.query as unknown as AdminOverviewQueryDtoType);
@@ -123,5 +136,24 @@ export class AdminController {
       req.body as AdminOnboardingRetryAllBodyDtoType
     );
     sendSuccess(res, result.data, result.message);
+  };
+
+  getPushVapidPublicKey = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, {
+      publicKey: this.webPush.getPublicKey(),
+      configured: this.webPush.isConfigured(),
+    });
+  };
+
+  subscribePush = async (req: Request, res: Response): Promise<void> => {
+    const body = PushSubscribeDto.parse(req.body);
+    await this.webPush.upsertSubscription(req.user!.userId, body, req.headers['user-agent']);
+    sendSuccess(res, { subscribed: true });
+  };
+
+  unsubscribePush = async (req: Request, res: Response): Promise<void> => {
+    const endpoint = typeof req.body?.endpoint === 'string' ? req.body.endpoint : '';
+    if (endpoint) await this.webPush.removeSubscription(req.user!.userId, endpoint);
+    sendSuccess(res, { unsubscribed: true });
   };
 }

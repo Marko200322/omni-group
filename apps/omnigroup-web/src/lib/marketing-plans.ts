@@ -1,6 +1,15 @@
-/** Javni cenovnik — usklađen sa Atina planovima (starter / pro / enterprise). */
+/** Legacy platform plan metadata — INTERNAL ONLY, not sold publicly. Use deliverable-catalog for client pricing. */
+import {
+  BASE_PLAN_PRICES,
+  formatEur,
+  getPlanPriceForCategory,
+  type PlanSlug,
+} from './category-pricing';
+
+export { formatEur };
+
 export type MarketingPlan = {
-  slug: 'starter' | 'pro' | 'enterprise';
+  slug: PlanSlug;
   name: string;
   tagline: string;
   priceMonthly: number;
@@ -13,13 +22,11 @@ export type MarketingPlan = {
   href: string;
 };
 
-export const MARKETING_PLANS: MarketingPlan[] = [
+const MARKETING_PLAN_META: Omit<MarketingPlan, 'priceMonthly' | 'priceYearly'>[] = [
   {
     slug: 'starter',
     name: 'Poslovni',
     tagline: 'Za preduzetnike i solo timove',
-    priceMonthly: 39,
-    priceYearly: 390,
     currency: 'EUR',
     highlight: false,
     forWho: 'Vlasnik firme, freelancer ili mala agencija koja želi jedan panel umesto haosa u Excelu i Viberu.',
@@ -37,8 +44,6 @@ export const MARKETING_PLANS: MarketingPlan[] = [
     slug: 'pro',
     name: 'Rast',
     tagline: 'Za timove koji automatizuju prodaju i operacije',
-    priceMonthly: 99,
-    priceYearly: 990,
     currency: 'EUR',
     highlight: true,
     forWho: 'Firme sa 3–15 ljudi koje prodaju usluge, vode klijente i hoće AI podršku + automatizacije.',
@@ -56,8 +61,6 @@ export const MARKETING_PLANS: MarketingPlan[] = [
     slug: 'enterprise',
     name: 'Partner',
     tagline: 'Za veće timove i white-label partnere',
-    priceMonthly: 249,
-    priceYearly: 2490,
     currency: 'EUR',
     highlight: false,
     forWho: 'Agencije, veći SMB i partneri koji prodaju platformu pod svojim brendom.',
@@ -72,6 +75,22 @@ export const MARKETING_PLANS: MarketingPlan[] = [
     href: '/contact',
   },
 ];
+
+/** Base marketing plans (standard tier / bez kategorije). */
+export const MARKETING_PLANS: MarketingPlan[] = MARKETING_PLAN_META.map((meta) => ({
+  ...meta,
+  priceMonthly: BASE_PLAN_PRICES[meta.slug].monthly,
+  priceYearly: BASE_PLAN_PRICES[meta.slug].yearly,
+}));
+
+/** Plans adjusted for an industry category (healthcare, retail, …). */
+export function getMarketingPlansForCategory(industryCategory?: string | null): MarketingPlan[] {
+  return MARKETING_PLAN_META.map((meta) => ({
+    ...meta,
+    priceMonthly: getPlanPriceForCategory(meta.slug, 'monthly', industryCategory),
+    priceYearly: getPlanPriceForCategory(meta.slug, 'yearly', industryCategory),
+  }));
+}
 
 export const IMPLEMENTATION_ADDONS = [
   {
@@ -93,11 +112,3 @@ export const IMPLEMENTATION_ADDONS = [
     desc: 'Integracije, custom workflow, deploy na tvom domenu i SLA.',
   },
 ];
-
-export function formatEur(amount: number): string {
-  return new Intl.NumberFormat('sr-RS', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}

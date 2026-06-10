@@ -16,13 +16,14 @@ import {
   LogOut,
   ChevronRight,
   FolderKanban,
-  Zap,
   LifeBuoy,
   Bot,
   MessageCircle,
   UserCircle,
   Activity,
   Shield,
+  Factory,
+  Package,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -36,7 +37,9 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 
 const adminNav: NavItem[] = [
   { href: '/admin', label: 'Pregled', icon: LayoutDashboard },
-  { href: '/dashboard', label: 'Workspace', icon: FolderKanban },
+  { href: '/dashboard', label: 'Klijentski portal', icon: FolderKanban },
+  { href: '/admin#factory', label: 'Product Factory', icon: Factory },
+  { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
   { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin#users', label: 'Korisnici', icon: Users },
   { href: '/admin#billing', label: 'Billing', icon: CreditCard },
@@ -46,12 +49,11 @@ const adminNav: NavItem[] = [
 
 const clientNav: NavItem[] = [
   { href: '/dashboard', label: 'Pregled', icon: LayoutDashboard },
+  { href: '/dashboard#orders', label: 'Porudžbine', icon: Package },
   { href: '/dashboard#projects', label: 'Projekti', icon: FolderKanban },
-  { href: '/dashboard#automations', label: 'Automacije', icon: Zap },
-  { href: '/dashboard#autonomy', label: 'Autonomy', icon: Bot },
-  { href: '/dashboard#billing', label: 'Plan & naplata', icon: CreditCard },
+  { href: '/dashboard#quote', label: 'Nova porudžbina', icon: CreditCard },
   { href: '/dashboard#support', label: 'Podrška', icon: LifeBuoy },
-  { href: '/dashboard#sales', label: 'Prodaja', icon: MessageCircle },
+  { href: '/dashboard#consultation', label: 'Konsultacije', icon: MessageCircle },
   { href: '/dashboard#account', label: 'Nalog', icon: UserCircle },
 ];
 
@@ -106,7 +108,7 @@ export function PlatformShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const nav = variant === 'admin' ? adminNav : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
-  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Omni Group Workspace';
+  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Klijentski portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
 
   async function handleLogout() {
@@ -175,7 +177,7 @@ export function PlatformShell({
         </motion.nav>
         <div className="border-t border-white/[0.06] p-3 space-y-2">
           <Link href="/" className="btn-ghost flex w-full items-center gap-2 text-slate-400">
-            Marketing sajt
+            Javni sajt
           </Link>
           <button
             type="button"

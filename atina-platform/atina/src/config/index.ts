@@ -76,9 +76,16 @@ export const config = {
     env: optional('NODE_ENV', 'development'),
     port: optionalNumber('PORT', 3000),
     url: optional('APP_URL', 'http://localhost:3000'),
+    /** Next.js marketing/dashboard URL (Stripe/PayPal return links). */
+    webUrl: optional('WEB_APP_URL', optional('NEXT_PUBLIC_SITE_URL', 'http://localhost:3010')),
     name: optional('APP_NAME', 'ATINA'),
     isDev: optional('NODE_ENV', 'development') === 'development',
     isProd: optional('NODE_ENV', 'development') === 'production',
+  },
+  webPush: {
+    publicKey: optional('VAPID_PUBLIC_KEY', ''),
+    privateKey: optional('VAPID_PRIVATE_KEY', ''),
+    subject: optional('VAPID_SUBJECT', 'mailto:admin@omnigroup.io'),
   },
   jwt: {
     secret: optional('JWT_SECRET', 'change-me-in-production'),
@@ -130,6 +137,8 @@ export const config = {
       url: optional('INFRASTRUCTURE_URL', ''),
       key: optional('INFRASTRUCTURE_KEY', ''),
     },
+    /** Kad nema remote infra agregatora — lokalni test/git prep (checklist A/F). */
+    infrastructureLocalFallback: optionalBool('INFRASTRUCTURE_LOCAL_FALLBACK', true),
     storage: {
       url: optional('STORAGE_URL', ''),
       key: optional('STORAGE_KEY', ''),
@@ -160,6 +169,13 @@ export const config = {
   craftor: {
     useRealScraper: optionalBool('CRAFTOR_USE_REAL_SCRAPER', false),
     deployPath: optional('CRAFTOR_DEPLOY_PATH', ''),
+  },
+  productFactory: {
+    enabled: optionalBool('PRODUCT_FACTORY_ENABLED', true),
+    outputDir: optional('PRODUCT_FACTORY_OUTPUT_DIR', 'data/product-factory'),
+    runTestsOnBuild: optionalBool('PRODUCT_FACTORY_RUN_TESTS', true),
+    internalLaneEnabled: optionalBool('PRODUCT_FACTORY_INTERNAL_LANE', true),
+    maxInternalPerTick: optionalNumber('PRODUCT_FACTORY_MAX_INTERNAL_PER_TICK', 1),
   },
   apex: {
     maxSimBatchProfiles: optionalNumber('APEX_MAX_SIM_BATCH_PROFILES', 1000),
@@ -292,6 +308,45 @@ export const config = {
     crm: optionalBool('ENABLE_CRM', true),
     analytics: optionalBool('ENABLE_ANALYTICS', true),
   },
+  pricing: {
+    eurUsdRate: optionalNumber('PRICING_EUR_USD_RATE', 0.92),
+    targetMarginPct: optionalNumber('PRICING_TARGET_MARGIN_PCT', 35),
+    yearlyInfraDiscount: optionalNumber('PRICING_YEARLY_INFRA_DISCOUNT', 0.85),
+    defaultTamUsd: optionalNumber('PRICING_DEFAULT_TAM_USD', 50_000),
+    competitionDiscountMax: optionalNumber('PRICING_COMPETITION_DISCOUNT_MAX', 0.25),
+    resourceUnitCosts: {
+      aiUsdPer1kTokens: optionalNumber('PRICING_COST_AI_USD_PER_1K_TOKENS', 0.002),
+      scraperUsdPerRun: optionalNumber('PRICING_COST_SCRAPER_USD_PER_RUN', 0.05),
+      infraUsdPerHour: optionalNumber('PRICING_COST_INFRA_USD_PER_HOUR', 2),
+      supportUsdPerHour: optionalNumber('PRICING_COST_SUPPORT_USD_PER_HOUR', 25),
+      storageUsdPerGbMonth: optionalNumber('PRICING_COST_STORAGE_USD_PER_GB', 0.1),
+    },
+    paymentProviders: {
+      manual: {
+        feeRate: optionalNumber('PRICING_FEE_MANUAL_RATE', 0),
+        fixedEur: optionalNumber('PRICING_FEE_MANUAL_FIXED_EUR', 0),
+      },
+      kriptoman: {
+        feeRate: optionalNumber('PRICING_FEE_KRIPTOMAN_RATE', 0.015),
+        fixedEur: optionalNumber('PRICING_FEE_KRIPTOMAN_FIXED_EUR', 0),
+      },
+      stripe: {
+        feeRate: optionalNumber('PRICING_FEE_STRIPE_RATE', 0.029),
+        fixedEur: optionalNumber('PRICING_FEE_STRIPE_FIXED_EUR', 0.25),
+      },
+      paypal: {
+        feeRate: optionalNumber('PRICING_FEE_PAYPAL_RATE', 0.034),
+        fixedEur: optionalNumber('PRICING_FEE_PAYPAL_FIXED_EUR', 0.35),
+      },
+    },
+    tierMultipliers: {
+      budget: optionalNumber('PRICING_TIER_BUDGET', 0.75),
+      standard: optionalNumber('PRICING_TIER_STANDARD', 1),
+      premium: optionalNumber('PRICING_TIER_PREMIUM', 1.35),
+      regulated: optionalNumber('PRICING_TIER_REGULATED', 1.65),
+      nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.6),
+    },
+  },
   autonomy: {
     enabled: optionalBool('AUTONOMY_ENABLED', false),
     autoStartScheduler: optionalBool('AUTONOMY_AUTO_START_SCHEDULER', false),
@@ -301,6 +356,15 @@ export const config = {
     generatedDir: optional('AUTONOMY_GENERATED_DIR', 'data/generated-verticals'),
     maxVerticalsPerTick: optionalNumber('AUTONOMY_MAX_VERTICALS_PER_TICK', 3),
     realEcosystemRuns: optionalBool('AUTONOMY_REAL_ECOSYSTEM_RUNS', true),
+    categoryRolloutEnabled: optionalBool('AUTONOMY_CATEGORY_ROLLOUT_ENABLED', true),
+    categoryRolloutMaxCategoriesPerTick: optionalNumber('AUTONOMY_CATEGORY_ROLLOUT_MAX_CATEGORIES', 1),
+    categoryRolloutBatchSize: optionalNumber('AUTONOMY_CATEGORY_ROLLOUT_BATCH_SIZE', 8),
+    /** freelance = samo online poslovi (#1–25); legacy_smb = SMB dodatak; all = svih 50 */
+    rolloutSegment: optional('AUTONOMY_ROLLOUT_SEGMENT', 'freelance'),
+    evolutionRunTestsOnDeploy: optionalBool('AUTONOMY_EVOLUTION_RUN_TESTS', true),
+    evolutionCodeEditEnabled: optionalBool('AUTONOMY_EVOLUTION_CODE_EDIT', true),
+    /** Optional absolute path to generated-verticals-index.json on host monorepo */
+    webGeneratedIndexPath: optional('AUTONOMY_WEB_GENERATED_INDEX_PATH', ''),
     budget: {
       initialUsd: optionalNumber('AUTONOMY_INITIAL_BUDGET_USD', 50),
       maxSpendPerTickUsd: optionalNumber('AUTONOMY_MAX_SPEND_PER_TICK_USD', 2),
@@ -322,6 +386,14 @@ export const config = {
       chatId: optional('TELEGRAM_CHAT_ID', ''),
       notifyAutonomy: optionalBool('AUTONOMY_TELEGRAM_NOTIFY', true),
     },
+  },
+  outreach: {
+    warmupMode: optionalBool('OUTREACH_WARMUP_MODE', true),
+    domainWarmupComplete: optionalBool('OUTREACH_DOMAIN_WARMUP_COMPLETE', false),
+    dailyCap: optionalNumber('OUTREACH_DAILY_CAP', 20),
+    fallbackNotifyEmail: optional('OUTREACH_FALLBACK_EMAIL', optional('ADMIN_EMAIL', '')),
+    /** Dev: šalji draftove na fallback email bez domain warmup (ne za produkciju). */
+    devSendToFallback: optionalBool('OUTREACH_DEV_SEND_TO_FALLBACK', false),
   },
 };
 

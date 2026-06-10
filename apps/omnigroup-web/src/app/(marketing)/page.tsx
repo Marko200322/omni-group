@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Modula u platformi', value: '40+' },
-  { label: 'Smoke test', value: 'PASS' },
-  { label: 'Stack', value: 'Docker' },
-  { label: 'Valuta', value: 'EUR' },
+  { label: 'Online industrija', value: '25+' },
+  { label: 'Isporuka', value: 'Po meri' },
+  { label: 'Plaćanje', value: 'EUR / banka' },
+  { label: 'Podrška', value: '24/7 AI' },
 ];
 
 const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
@@ -44,25 +44,25 @@ export default function HomePage() {
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
               <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-200">
-                <Sparkles className="h-3.5 w-3.5" /> Omni Group · AI · Automatizacija
+                <Sparkles className="h-3.5 w-3.5" /> Omni Group · Digitalna isporuka
               </p>
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-                Sistemi koji{' '}
-                <span className="text-gradient">rade u produkciji</span>, ne u prezentaciji
+                Softver i automatizacija{' '}
+                <span className="text-gradient">po meri za vašu firmu</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                Jedan panel za klijente, prodaju i operacije — CRM, automatizacije, AI podrška i uplate na račun,
-                prilagođeno malim i srednjim firmama u Srbiji i regionu.
+                Ne kupujete platformu — dobijate gotovo rešenje: CRM, AI podršku, lead gen i custom softver,
+                testiran pre isporuke. Transparentan cenovnik, profesionalna podrška.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
-                <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
-                  Otvori platformu <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link href="/services" className="btn-glass">
-                  Usluge
+                <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
+                  Zatražite ponudu <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  Proizvodi
+                  Rešenja
+                </Link>
+                <Link href="/contact" className="btn-glass">
+                  Zakažite poziv
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -238,14 +238,15 @@ export default function HomePage() {
             Spremni za sledeći nivo?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Pokreni demo dashboard ili zakaži poziv — platforma je već u repou, čeka tvoj produkcioni cutover.
+            Zakažite besplatan uvodni poziv ili se prijavite u klijentski portal — pratite porudžbine i status
+            isporuke u realnom vremenu.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/contact" className="btn-primary">
-              Kontaktiraj tim
+              Zakažite konsultaciju
             </Link>
             <Link href="/login" className="btn-glass">
-              Prijava
+              Klijentski portal
             </Link>
           </div>
         </motion.div>

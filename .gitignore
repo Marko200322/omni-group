@@ -26,3 +26,7 @@ sistem_naplate/pdfs/*.pdf
 # Skripte i runbook-i upućuju na docs/* za commit-able nalaze; tmp/ ostaje lokalno (npr. JSON / CSV za dashboard).
 tmp/
 scripts/.cache/
+.npm-cache/
+.tmp/
+.local-workspace/
+.docker-wsl/

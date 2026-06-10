@@ -5,10 +5,34 @@ import { headerFirst } from '../../../utils/http-headers';
 import { z } from 'zod';
 import { PaymentHistoryQueryDto } from '../dto/payments.dto';
 
+const DeliverableCheckoutDto = z
+  .object({
+    deliverableId: z.string().trim().min(2).max(64).regex(/^[a-z0-9_-]+$/),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/)
+      .optional(),
+    paymentProvider: z.enum(['manual', 'kriptoman', 'stripe', 'paypal']).optional(),
+    marketIntensity: z.number().min(0).max(100).optional(),
+    tamEstimateUsd: z.number().finite().optional(),
+    competitionScore: z.number().min(0).max(100).optional(),
+  })
+  .strict();
+
 const CheckoutDto = z
   .object({
     planSlug: z.enum(['starter', 'pro', 'enterprise']),
     billingCycle: z.enum(['monthly', 'yearly']).default('monthly'),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
+      .optional(),
   })
   .strict();
 
@@ -25,8 +49,13 @@ export class PaymentsController {
 
   // Stripe
   createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle } = CheckoutDto.parse(req.body);
-    const result = await this.service.createStripeCheckoutSession(req.user!.userId, planSlug, billingCycle);
+    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const result = await this.service.createStripeCheckoutSession(
+      req.user!.userId,
+      planSlug,
+      billingCycle,
+      industryCategory,
+    );
     sendCreated(res, result, 'Checkout session created');
   };
 
@@ -54,8 +83,13 @@ export class PaymentsController {
 
   // PayPal
   createPayPalOrder = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle } = CheckoutDto.parse(req.body);
-    const result = await this.service.createPayPalOrder(req.user!.userId, planSlug, billingCycle);
+    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const result = await this.service.createPayPalOrder(
+      req.user!.userId,
+      planSlug,
+      billingCycle,
+      industryCategory,
+    );
     sendCreated(res, result);
   };
 
@@ -66,8 +100,13 @@ export class PaymentsController {
 
   // Wise
   createWiseTransfer = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle } = CheckoutDto.parse(req.body);
-    const result = await this.service.createWiseTransfer(req.user!.userId, planSlug, billingCycle);
+    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const result = await this.service.createWiseTransfer(
+      req.user!.userId,
+      planSlug,
+      billingCycle,
+      industryCategory,
+    );
     sendCreated(res, result, 'Transfer instructions generated');
   };
 
@@ -87,9 +126,20 @@ export class PaymentsController {
   };
 
   createManualCheckout = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle } = CheckoutDto.parse(req.body);
-    const result = await this.service.createManualCheckout(req.user!.userId, planSlug, billingCycle);
+    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const result = await this.service.createManualCheckout(
+      req.user!.userId,
+      planSlug,
+      billingCycle,
+      industryCategory
+    );
     sendCreated(res, result, 'Bank transfer instructions generated');
+  };
+
+  createDeliverableManualCheckout = async (req: Request, res: Response): Promise<void> => {
+    const body = DeliverableCheckoutDto.parse(req.body);
+    const result = await this.service.createDeliverableManualCheckout(req.user!.userId, body);
+    sendCreated(res, result, 'Deliverable checkout generated');
   };
 
   markManualPaymentSent = async (req: Request, res: Response): Promise<void> => {
@@ -103,12 +153,13 @@ export class PaymentsController {
   };
 
   createKriptomanCheckout = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, cryptoCurrency } = KriptomanCheckoutDto.parse(req.body);
+    const { planSlug, billingCycle, cryptoCurrency, industryCategory } = KriptomanCheckoutDto.parse(req.body);
     const result = await this.service.createKriptomanCheckout(
       req.user!.userId,
       planSlug,
       billingCycle,
-      cryptoCurrency
+      cryptoCurrency,
+      industryCategory
     );
     sendCreated(res, result, 'Kriptoman checkout created');
   };

@@ -1,5 +1,22 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { BillingRepository, type PlanRow } from '../repository/billing.repository';
+import {
+  getCategoryPricingMatrix,
+  getIndustryCategory,
+  getPlanPriceForCategory,
+  INDUSTRY_CATEGORIES,
+  listPricingTiers,
+  PRICING_TIER_META,
+  type PlanSlug,
+} from '../lib/category-pricing';
+import { getIndustryCatalog, getIndustryCatalogStats } from '../../../shared/industry/industry-catalog';
+import { listDeliverables } from '../lib/deliverable-catalog';
+import {
+  calculateDeliverableQuote,
+  quoteAllDeliverables,
+  type PaymentProviderId,
+  type QuoteInput,
+} from '../lib/dynamic-pricing.engine';
 
 export type Plan = PlanRow;
 
@@ -14,15 +31,83 @@ function normalizePlan(row: PlanRow): Plan {
 export class BillingService {
   private readonly repo = new BillingRepository();
 
-  async getPlans(): Promise<Plan[]> {
+  async getPlans(industryCategory?: string | null): Promise<Plan[]> {
     const { rows } = await this.repo.listActivePlans();
-    return rows.map(normalizePlan);
+    const plans = rows.map(normalizePlan);
+    if (!industryCategory?.trim()) return plans;
+    const cat = getIndustryCategory(industryCategory);
+    if (!cat) return plans;
+    return plans.map((plan) => this.applyCategoryPricing(plan, cat.slug));
   }
 
-  async getPlanBySlug(slug: string): Promise<Plan> {
+  async getPlanBySlug(slug: string, industryCategory?: string | null): Promise<Plan> {
     const { rows } = await this.repo.getPlanBySlug(slug);
     if (!rows[0]) throw new NotFoundError('Plan');
-    return normalizePlan(rows[0]);
+    const plan = normalizePlan(rows[0]);
+    if (!industryCategory?.trim()) return plan;
+    const cat = getIndustryCategory(industryCategory);
+    if (!cat) return plan;
+    return this.applyCategoryPricing(plan, cat.slug);
+  }
+
+  getCategoryPricingCatalog() {
+    return {
+      tiers: listPricingTiers(),
+      categories: getCategoryPricingMatrix(),
+      industryCategories: INDUSTRY_CATEGORIES,
+      tierMeta: PRICING_TIER_META,
+    };
+  }
+
+  getIndustryCatalog() {
+    return {
+      ...getIndustryCatalogStats(),
+      categories: getIndustryCatalog(),
+    };
+  }
+
+  getDeliverableCatalog() {
+    return listDeliverables();
+  }
+
+  quoteDeliverable(input: QuoteInput) {
+    try {
+      return calculateDeliverableQuote(input);
+    } catch (err) {
+      throw new ValidationError(err instanceof Error ? err.message : 'Invalid quote input');
+    }
+  }
+
+  quoteCatalog(input: {
+    industryCategory?: string | null;
+    verticalSlug?: string | null;
+    paymentProvider?: PaymentProviderId;
+    tamEstimateUsd?: number | null;
+    competitionScore?: number | null;
+    marketIntensity?: number | null;
+  }) {
+    return quoteAllDeliverables({
+      industryCategory: input.industryCategory,
+      verticalSlug: input.verticalSlug,
+      paymentProvider: input.paymentProvider,
+      tamEstimateUsd: input.tamEstimateUsd,
+      competitionScore: input.competitionScore,
+      marketIntensity: input.marketIntensity,
+    });
+  }
+
+  private applyCategoryPricing(plan: Plan, industryCategory: string): Plan {
+    const slug = plan.slug as PlanSlug;
+    if (!['starter', 'pro', 'enterprise'].includes(slug)) return plan;
+    const category = getIndustryCategory(industryCategory);
+    return {
+      ...plan,
+      price_monthly: getPlanPriceForCategory(slug, 'monthly', industryCategory),
+      price_yearly: getPlanPriceForCategory(slug, 'yearly', industryCategory),
+      description: category
+        ? `${plan.description ?? ''} · Cena za kategoriju: ${category.nameSr}.`.trim()
+        : plan.description,
+    };
   }
 
   async getPlanById(id: string): Promise<Plan> {

@@ -205,6 +205,39 @@ export class AdminModule implements IModule {
       validateBody(AdminOnboardingRetryAllBodyDto),
       this.controller.retryAllOnboarding
     );
+
+    this.router.get(
+      '/push/vapid-public-key',
+      ...auth,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getPushVapidPublicKey
+    );
+
+    this.router.post(
+      '/push/subscribe',
+      ...auth,
+      adminMutationLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(
+        z
+          .object({
+            endpoint: z.string().url(),
+            keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
+          })
+          .strict()
+      ),
+      this.controller.subscribePush
+    );
+
+    this.router.delete(
+      '/push/subscribe',
+      ...auth,
+      adminMutationLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(z.object({ endpoint: z.string().url() }).strict()),
+      this.controller.unsubscribePush
+    );
   }
 
   async shutdown(): Promise<void> {}

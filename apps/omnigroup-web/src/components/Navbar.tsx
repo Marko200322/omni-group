@@ -10,15 +10,10 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 
 const links = [
   { href: '/', label: 'Početna' },
-  { href: '/products', label: 'Proizvodi' },
+  { href: '/products', label: 'Rešenja' },
   { href: '/services', label: 'Usluge' },
-  { href: '/pricing', label: 'Cene' },
+  { href: '/pricing', label: 'Cenovnik' },
   { href: '/contact', label: 'Kontakt' },
-];
-
-const appLinks = [
-  { href: '/dashboard', label: 'Klijent' },
-  { href: '/admin', label: 'Admin' },
 ];
 
 function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
@@ -72,22 +67,11 @@ export function Navbar() {
               </motion.div>
             ))}
           </LayoutGroup>
-          <span className="mx-2 h-4 w-px bg-white/10" />
-          {appLinks.map((l) => (
-            <motion.div key={l.href} variants={fadeUp}>
-              <Link
-                href={l.href}
-                className="rounded-lg px-3 py-2 text-sm text-slate-400 transition hover:text-violet-200"
-              >
-                <motion.span whileHover={{ y: -1 }}>{l.label}</motion.span>
-              </Link>
-            </motion.div>
-          ))}
         </motion.nav>
         <div className="hidden items-center gap-3 md:flex">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={tapScale}>
             <Link href="/login" className="btn-ghost text-sm">
-              Prijava
+              Klijentski portal
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={tapScale}>
@@ -130,7 +114,7 @@ export function Navbar() {
               animate="visible"
               className="px-4 py-4"
             >
-              {[...links, ...appLinks].map((l) => (
+              {links.map((l) => (
                 <motion.div key={l.href} variants={fadeUp}>
                   <Link
                     href={l.href}
@@ -143,7 +127,7 @@ export function Navbar() {
               ))}
               <motion.div variants={fadeUp} className="mt-3 grid gap-2">
                 <Link href="/login" className="btn-glass block text-center" onClick={() => setOpen(false)}>
-                  Prijava
+                  Klijentski portal
                 </Link>
                 <Link href="/contact" className="btn-primary block text-center" onClick={() => setOpen(false)}>
                   Započni projekat

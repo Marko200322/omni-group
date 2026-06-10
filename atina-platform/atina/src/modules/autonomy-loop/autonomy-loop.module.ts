@@ -8,6 +8,9 @@ import { config } from '../../config';
 import logger from '../../utils/logger';
 import { AutonomyLoopController } from './controller/autonomy-loop.controller';
 import {
+  CategoryBatchDto,
+  CategoryParamDto,
+  CategoryRolloutDto,
   DeployVerticalDto,
   FeedbackSyncDto,
   GenerateVerticalDto,
@@ -79,6 +82,15 @@ export class AutonomyLoopModule implements IModule {
       this.controller.getVertical
     );
 
+    this.router.get(
+      '/verticals/:slug/delivery-pack',
+      authenticate,
+      validateParams(VerticalSlugParamDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getDeliveryPack
+    );
+
     this.router.post(
       '/verticals/seed',
       authenticate,
@@ -107,6 +119,67 @@ export class AutonomyLoopModule implements IModule {
     );
 
     this.router.post(
+      '/categories/:category/batch',
+      authenticate,
+      requireAdmin,
+      validateParams(CategoryParamDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(CategoryBatchDto),
+      this.controller.processCategoryBatch
+    );
+
+    this.router.get(
+      '/categories/status',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getCategoriesRolloutStatus
+    );
+
+    this.router.post(
+      '/categories/rollout',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(CategoryRolloutDto),
+      this.controller.processCategoriesRollout
+    );
+
+    this.router.post(
+      '/categories/rollout/async',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(CategoryRolloutDto),
+      this.controller.startCategoriesRolloutJob
+    );
+
+    this.router.get(
+      '/categories/rollout/job',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getCategoriesRolloutJob
+    );
+
+    this.router.get(
+      '/outbound/stats',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.outboundStats
+    );
+
+    this.router.post(
+      '/outbound/process-send',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.processOutboundSend
+    );
+
+    this.router.post(
       '/verticals/:slug/deploy',
       authenticate,
       validateParams(VerticalSlugParamDto),
@@ -129,6 +202,23 @@ export class AutonomyLoopModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(TickAutonomyDto),
       this.controller.tick
+    );
+
+    this.router.get(
+      '/evolution/tasks',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listEvolutionTasks
+    );
+
+    this.router.post(
+      '/evolution/tick',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.runEvolutionTick
     );
 
     this.router.post(

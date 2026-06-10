@@ -11,7 +11,9 @@ export const metadata: Metadata = {
     template: '%s · Omni Group',
   },
   description:
-    'Omni Group — premium web, klijentski workspace i operator konzola. Moduli: Atina, Astra, Titan.',
+    'Omni Group — digitalne usluge, softver po meri i mesečna podrška za vaš biznis. Transparentne cene po industriji.',
+  manifest: '/manifest.json',
+  icons: { icon: '/icon.svg', apple: '/icon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

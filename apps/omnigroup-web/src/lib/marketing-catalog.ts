@@ -13,6 +13,12 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react';
+import {
+  formatEur,
+  getModulePriceLabel,
+  getPlanPriceForCategory,
+  type PlanSlug,
+} from './category-pricing';
 
 export type CatalogItem = {
   id: string;
@@ -381,3 +387,31 @@ export const MODULE_STACK = [
   { name: 'Astra', role: 'Automatizacija', icon: Zap, href: '/dashboard#automations' },
   { name: 'Titan', role: 'Operacije', icon: Sparkles, href: '/admin#workflows' },
 ] as const;
+
+/** Apply industry-category pricing labels to catalog (once-off service prices stay fixed). */
+export function withCatalogPricing(
+  categories: CatalogCategory[],
+  industryCategory?: string | null,
+): CatalogCategory[] {
+  return categories.map((cat) => ({
+    ...cat,
+    items: cat.items.map((item) => {
+      if (item.priceOnce != null) return item;
+      if (item.priceLabel === 'uključeno') return item;
+      if (item.id === 'support-basic') {
+        const starter = getPlanPriceForCategory('starter', 'monthly', industryCategory);
+        return {
+          ...item,
+          priceLabel: `uključeno u ${formatEur(starter)}/mes`,
+          priceMonthly: starter,
+        };
+      }
+      const minPlan = (item.includedIn?.[0] ?? 'pro') as PlanSlug;
+      return {
+        ...item,
+        priceLabel: getModulePriceLabel(cat.id, industryCategory, item.includedIn),
+        priceMonthly: getPlanPriceForCategory(minPlan, 'monthly', industryCategory),
+      };
+    }),
+  }));
+}

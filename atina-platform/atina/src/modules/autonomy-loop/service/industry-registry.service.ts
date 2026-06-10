@@ -15,7 +15,13 @@ export class IndustryRegistryService {
     const entries = buildIndustrySeedEntries();
     let inserted = 0;
     for (const entry of entries) {
-      const { rows } = await this.repo.upsertVertical(entry.slug, entry.category, entry.name, 'seed');
+      const { rows } = await this.repo.upsertVertical(
+        entry.slug,
+        entry.category,
+        entry.name,
+        'seed',
+        entry.subtype
+      );
       if (rows[0]) inserted += 1;
     }
     return { inserted, total: INDUSTRY_SEED_COUNT };

@@ -36,9 +36,15 @@ export class NotificationsService {
     return !placeholderMarkers.some((marker) => smtpUser.includes(marker));
   }
 
-  async sendEmail(to: string, subject: string, html: string, text?: string): Promise<void> {
+  async sendEmail(
+    to: string,
+    subject: string,
+    html: string,
+    text?: string,
+    attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>,
+  ): Promise<void> {
     const comms = getCommsClient();
-    if (comms.isConfigured()) {
+    if (comms.isConfigured() && !attachments?.length) {
       const sent = await comms.sendEmail({ to, subject, html, text, channel: 'email' });
       if (sent) {
         logger.info('Email sent via comms aggregator', { to, subject });
@@ -55,8 +61,13 @@ export class NotificationsService {
       subject,
       html,
       text: text || subject,
+      attachments: attachments?.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType ?? 'application/pdf',
+      })),
     });
-    logger.info('Email sent', { to, subject });
+    logger.info('Email sent', { to, subject, attachments: attachments?.length ?? 0 });
   }
 
   async createNotification(data: {

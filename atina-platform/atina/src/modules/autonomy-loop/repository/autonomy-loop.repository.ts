@@ -66,17 +66,19 @@ export class AutonomyLoopRepository {
     slug: string,
     category: string,
     name: string,
-    status: VerticalStatus = 'seed'
+    status: VerticalStatus = 'seed',
+    subtype?: string | null
   ) {
     return query<VerticalRow>(
-      `INSERT INTO industry_verticals (slug, category, name, status)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO industry_verticals (slug, category, subtype, name, status)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (slug) DO UPDATE SET
          category = EXCLUDED.category,
+         subtype = COALESCE(EXCLUDED.subtype, industry_verticals.subtype),
          name = EXCLUDED.name,
          updated_at = NOW()
        RETURNING *`,
-      [slug, category, name, status]
+      [slug, category, subtype ?? null, name, status]
     );
   }
 
@@ -139,6 +141,50 @@ export class AutonomyLoopRepository {
          RANDOM()
        LIMIT $1`,
       [limit]
+    );
+  }
+
+  async pickVerticalsByCategory(
+    category: string,
+    limit: number,
+    offset = 0,
+    statusIn?: VerticalStatus[]
+  ) {
+    const params: unknown[] = [category];
+    let statusClause = '';
+    if (statusIn?.length) {
+      params.push(statusIn);
+      statusClause = ` AND status = ANY($${params.length}::text[])`;
+    }
+    params.push(limit, offset);
+    const limitIdx = params.length - 1;
+    const offsetIdx = params.length;
+    return query<VerticalRow>(
+      `SELECT * FROM industry_verticals
+       WHERE category = $1${statusClause}
+       ORDER BY
+         CASE status WHEN 'seed' THEN 1 WHEN 'researching' THEN 2 WHEN 'ready' THEN 3 ELSE 4 END,
+         slug ASC
+       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      params
+    );
+  }
+
+  async countVerticalsGroupedByCategory() {
+    return query<{ category: string; status: string; count: string }>(
+      `SELECT category, status, COUNT(*)::text AS count
+       FROM industry_verticals
+       GROUP BY category, status
+       ORDER BY category, status`
+    );
+  }
+
+  async countOutboundGroupedByCategory() {
+    return query<{ category: string; status: string; count: string }>(
+      `SELECT COALESCE(category, 'unknown') AS category, status, COUNT(*)::text AS count
+       FROM outbound_messages
+       GROUP BY category, status
+       ORDER BY category, status`
     );
   }
 

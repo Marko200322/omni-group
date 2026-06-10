@@ -72,6 +72,7 @@ import { AlertSystemModule } from '../modules/alert-system/alert-system.module';
 import { ScalingModule } from '../modules/scaling/scaling.module';
 import { AiRagModule } from '../modules/ai-rag/ai-rag.module';
 import { AutonomyLoopModule } from '../modules/autonomy-loop/autonomy-loop.module';
+import { ProductFactoryModule } from '../modules/product-factory/product-factory.module';
 import { DealOfferModule } from '../modules/deal-offer/deal-offer.module';
 import { FollowUpModule } from '../modules/follow-up/follow-up.module';
 import { FollowUpAutomationModule } from '../modules/follow-up-automation/follow-up-automation.module';
@@ -170,6 +171,7 @@ export class CoreEngine {
     moduleRegistry.register(new ScalingModule());
     moduleRegistry.register(new AiRagModule());
     moduleRegistry.register(new AutonomyLoopModule());
+    if (config.productFactory.enabled) moduleRegistry.register(new ProductFactoryModule());
 
     if (config.features.automation) moduleRegistry.register(new AutomationModule());
     if (config.features.scraper) moduleRegistry.register(new ScraperModule());

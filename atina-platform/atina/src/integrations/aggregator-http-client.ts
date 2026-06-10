@@ -65,11 +65,15 @@ export class AggregatorHttpClient {
         return response.data;
       } catch (err) {
         lastError = err;
+        const status =
+          axios.isAxiosError(err) && err.response?.status ? err.response.status : undefined;
+        const noRetry = status !== undefined && status >= 400 && status < 500 && status !== 408 && status !== 429;
         const message = err instanceof Error ? err.message : String(err);
-        if (attempt >= maxAttempts) {
-          logger.warn(`${this.aggregatorName} aggregator request failed after retries`, {
+        if (noRetry || attempt >= maxAttempts) {
+          logger.warn(`${this.aggregatorName} aggregator request failed`, {
             path,
             attempts: attempt,
+            status,
             message,
           });
           break;

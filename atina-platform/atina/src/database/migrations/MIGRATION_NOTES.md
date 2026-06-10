@@ -47,3 +47,11 @@ Migration `016_autonomy_budget.sql` adds:
 Module: `autonomy-loop` at `/api/v1/autonomy-loop/*`. Checklist: [`docs/AUTONOMY-LOOP-v1-CHECKLIST.md`](../../../docs/AUTONOMY-LOOP-v1-CHECKLIST.md).
 
 Migration `009_users_name_legacy_column.sql` adds `users.name` if missing (older DBs where `CREATE TABLE IF NOT EXISTS` skipped the full 001 shape), backfills from `email`, then sets `NOT NULL` + default — matches current app + integration seeds.
+
+## 018 outbound messages
+
+Migration `018_outbound_messages.sql` — outbound email queue (draft → queued → sent).
+
+## 019 platform evolution
+
+Migration `019_platform_evolution.sql` — `platform_evolution_tasks` queue for self-modification tasks (UI, tests, deploy prep). Checklist: [`docs/operations/CHECKLIST-100-PROCENTA.md`](../../../docs/operations/CHECKLIST-100-PROCENTA.md).
