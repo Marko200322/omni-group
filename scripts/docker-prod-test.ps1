@@ -2,7 +2,8 @@
 #Requires -Version 5.1
 param(
   [switch]$SkipBuild,
-  [switch]$KeepRunning
+  [switch]$KeepRunning,
+  [switch]$ResetVolumes
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,6 +35,12 @@ $composeArgs = @('-f', $composeFile, '-p', $project, '--env-file', '.env.docker.
 
 Write-Host "=== Docker prod test (project: $project) ===" -ForegroundColor Cyan
 Write-Host "Ports: API $atinaPort, Web $webPort"
+
+if ($ResetVolumes) {
+  Write-Host '[0/4] Reset volumes (down -v)...' -ForegroundColor Yellow
+  docker compose @composeArgs down -v
+  if ($LASTEXITCODE -ne 0) { throw 'docker compose down -v failed' }
+}
 
 if (-not $SkipBuild) {
   Write-Host '[1/4] Building atina-api...' -ForegroundColor Yellow

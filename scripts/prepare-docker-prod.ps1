@@ -46,6 +46,8 @@ DB_USER=atina_user
 DB_PASSWORD=$dbPass
 ATINA_PORT=$AtinaPort
 WEB_PORT=$WebPort
+SITE_DOMAIN=localhost
+API_DOMAIN=localhost
 AUTONOMY_ENABLED=false
 AUTONOMY_AUTO_START_SCHEDULER=false
 "@

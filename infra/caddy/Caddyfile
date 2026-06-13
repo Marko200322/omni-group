@@ -1,9 +1,9 @@
-# Zameni domenima pre deploya: SITE_DOMAIN, API_DOMAIN
+# Env: SITE_DOMAIN (web), API_DOMAIN (API) — postavi u .env.docker.prod ili VPS env
 
-{$SITE_DOMAIN:localhost} {
+{$SITE_DOMAIN} {
 	reverse_proxy web:3000
 }
 
-{$API_DOMAIN:localhost:3000} {
+{$API_DOMAIN} {
 	reverse_proxy atina-api:3000
 }

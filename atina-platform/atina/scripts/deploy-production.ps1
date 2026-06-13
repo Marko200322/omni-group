@@ -32,12 +32,18 @@ Write-Host '  - OUTREACH_DEV_SEND_TO_FALLBACK=true dok nema warmup domena'
 Write-Host '  - AUTONOMY_EVOLUTION_CODE_EDIT=false na produkciji'
 Write-Host ''
 
-Step '2' 'Docker stack (API + Web + Postgres + Redis):'
+Step '2' 'Docker stack (API + Web + Postgres + Redis + Caddy TLS):'
 Write-Host "  cd $repoRoot"
-Write-Host '  docker compose -f docker-compose.prod.yml --profile setup run --rm migrate'
-Write-Host '  docker compose -f docker-compose.prod.yml up -d'
-Write-Host '  # TLS: docker compose -f docker-compose.prod.yml --profile tls up -d caddy'
-Write-Host "  # ili samo Atina: cd $atinaRoot && docker compose up -d"
+Write-Host '  .\scripts\prepare-vps-prod.ps1 -SiteDomain tvoj-domen.com'
+Write-Host '  # kopiraj .env.vps.prod -> .env.docker.prod (+ atina + web env)'
+Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm migrate'
+Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm seed'
+Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d'
+Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile tls up -d caddy'
+Write-Host ''
+Write-Host '  Lokalni docker test (pre VPS-a):'
+Write-Host '  .\scripts\prepare-docker-prod.ps1'
+Write-Host '  .\scripts\docker-prod-test.ps1 [-ResetVolumes]'
 Write-Host ''
 
 if (-not $SkipDockerBuild) {
