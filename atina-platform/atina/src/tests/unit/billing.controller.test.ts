@@ -39,7 +39,7 @@ describe('BillingController', () => {
     mockService.getPlanBySlug.mockResolvedValue({ slug: 'pro' } as never);
     const r = res();
     await controller.getPlan({ params: { slug: 'pro' } } as unknown as Request, r);
-    expect(mockService.getPlanBySlug).toHaveBeenCalledWith('pro');
+    expect(mockService.getPlanBySlug).toHaveBeenCalledWith('pro', undefined);
   });
 
   it('getCurrentSubscription uses authenticated user', async () => {

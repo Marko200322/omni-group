@@ -162,7 +162,7 @@ describe('IntegrationHubModule HTTP routes', () => {
       })
     );
     expect(integrationHubRepo.touchSync).toHaveBeenCalledWith(id, 'u1');
-    expect(integrationHubRepo.ensureShadowEcosystemForIntegration).not.toHaveBeenCalled();
+    expect(integrationHubRepo.ensureShadowEcosystemForIntegration).toHaveBeenCalledWith(id, 'u1', 'Slack', 'slack');
     expect(integrationHubRepo.createRun).not.toHaveBeenCalled();
   });
 

@@ -153,7 +153,7 @@ describe('BillingModule HTTP routes', () => {
     const res = await request(server).get('/billing/plans/pro');
     expect(res.status).toBe(200);
     expect(res.body.data.slug).toBe('pro');
-    expect(billingSvc.getPlanBySlug).toHaveBeenCalledWith('pro');
+    expect(billingSvc.getPlanBySlug).toHaveBeenCalledWith('pro', undefined);
   });
 
   it('GET /billing/plans/:slug returns 400 for invalid slug format', async () => {

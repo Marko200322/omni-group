@@ -184,21 +184,29 @@ describe('PaymentsService', () => {
       );
     });
 
-    it('uses dynamic price_data when Stripe price id missing', async () => {
+    it('uses dynamic price_data when Stripe price missing', async () => {
       billingApi.getPlanBySlug.mockResolvedValueOnce({
         ...planFull,
         stripe_price_id_monthly: null,
         stripe_price_id_yearly: null,
       } as never);
-      dbApi.getUserWithStripeCustomer.mockResolvedValueOnce({
-        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_1' }],
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
       } as never);
 
       await service.createStripeCheckoutSession('u1', 'pro', 'monthly');
 
       expect(testStripeApi.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          line_items: [expect.objectContaining({ price_data: expect.any(Object) })],
+          line_items: [
+            expect.objectContaining({
+              price_data: expect.objectContaining({
+                currency: 'eur',
+                unit_amount: 2900,
+              }),
+            }),
+          ],
         }),
       );
     });

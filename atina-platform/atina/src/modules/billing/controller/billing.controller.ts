@@ -13,14 +13,14 @@ export class BillingController {
 
   getPlans = async (req: Request, res: Response): Promise<void> => {
     const industryCategory =
-      typeof req.query.industryCategory === 'string' ? req.query.industryCategory : undefined;
+      typeof req.query?.industryCategory === 'string' ? req.query.industryCategory : undefined;
     const plans = await this.service.getPlans(industryCategory);
     sendSuccess(res, plans);
   };
 
   getPlan = async (req: Request, res: Response): Promise<void> => {
     const industryCategory =
-      typeof req.query.industryCategory === 'string' ? req.query.industryCategory : undefined;
+      typeof req.query?.industryCategory === 'string' ? req.query.industryCategory : undefined;
     const plan = await this.service.getPlanBySlug(req.params.slug, industryCategory);
     sendSuccess(res, plan);
   };

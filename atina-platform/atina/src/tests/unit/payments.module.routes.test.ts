@@ -388,6 +388,6 @@ describe('PaymentsModule HTTP routes', () => {
       .post('/payments/manual/checkout')
       .send({ planSlug: 'pro', billingCycle: 'monthly' });
     expect(res.status).toBe(201);
-    expect(createManualCheckoutSpy).toHaveBeenCalledWith('u1', 'pro', 'monthly');
+    expect(createManualCheckoutSpy).toHaveBeenCalledWith('u1', 'pro', 'monthly', undefined);
   });
 });

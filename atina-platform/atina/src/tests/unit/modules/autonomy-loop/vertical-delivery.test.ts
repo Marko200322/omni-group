@@ -4,15 +4,15 @@ import {
   CATEGORY_DELIVERY_PROFILES,
   getCategoryDeliveryProfile,
   listCategoryDeliveryProfiles,
-} from '../../../modules/autonomy-loop/lib/vertical-delivery-profiles';
-import { resolveVerticalDeliveryPack } from '../../../modules/autonomy-loop/lib/vertical-delivery-resolver';
+} from '../../../../modules/autonomy-loop/lib/vertical-delivery-profiles';
+import { resolveVerticalDeliveryPack } from '../../../../modules/autonomy-loop/lib/vertical-delivery-resolver';
 import {
   deliveryPackToTemplateVars,
   renderOutreachEmailMarkdown,
   renderQualityChecklistJson,
   renderVerticalModuleTs,
   renderVerticalWorkflowJson,
-} from '../../../modules/autonomy-loop/templates/vertical-templates';
+} from '../../../../modules/autonomy-loop/templates/vertical-templates';
 
 describe('vertical delivery pack', () => {
   it('defines 25 freelance category profiles in order', () => {

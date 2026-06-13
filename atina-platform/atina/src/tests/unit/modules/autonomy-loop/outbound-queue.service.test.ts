@@ -1,3 +1,11 @@
+jest.mock('../../../../database/connection');
+
+jest.mock('../../../../modules/notifications/service/notifications.service', () => ({
+  NotificationsService: jest.fn().mockImplementation(() => ({
+    sendEmail: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 import { OutboundQueueService } from '../../../../modules/autonomy-loop/service/outbound-queue.service';
 
 jest.mock('../../../../config', () => ({

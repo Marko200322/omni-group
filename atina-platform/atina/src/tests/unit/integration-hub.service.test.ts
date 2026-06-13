@@ -99,7 +99,12 @@ describe('IntegrationHubService', () => {
     );
     expect(first.syncedRecords).toBe(second.syncedRecords);
     expect(typeof first.syncedAt).toBe('string');
-    expect(integrationHubRepo.ensureShadowEcosystemForIntegration).not.toHaveBeenCalled();
+    expect(integrationHubRepo.ensureShadowEcosystemForIntegration).toHaveBeenCalledWith(
+      'integration-abc',
+      'u1',
+      'Slack',
+      'slack',
+    );
     expect(integrationHubRepo.createRun).not.toHaveBeenCalled();
   });
 

@@ -6,7 +6,7 @@ import {
   resetIndustryCatalogCache,
   resolveIndustryContext,
   resolveVerticalSlug,
-} from '../../../../shared/industry/industry-catalog';
+} from '../../../shared/industry/industry-catalog';
 
 describe('industry-catalog', () => {
   afterEach(() => {

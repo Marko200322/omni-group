@@ -145,7 +145,7 @@ describe('NotificationsModule', () => {
         text: 'plain',
       })
     );
-    expect(logger.info).toHaveBeenCalledWith('Email sent', { to: 'to@test.com', subject: 'Hello' });
+    expect(logger.info).toHaveBeenCalledWith('Email sent', { to: 'to@test.com', subject: 'Hello', attachments: 0 });
     notifSmtp.user = '';
   });
 

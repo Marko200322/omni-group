@@ -91,7 +91,10 @@ describe('PaymentNotificationsService', () => {
       'client@test.com',
       expect.stringContaining('Faktura INV-202605-0001'),
       expect.stringContaining('Plaćeno'),
-      expect.stringContaining('Pro Plan (monthly)')
+      expect.any(String),
+      expect.arrayContaining([
+        expect.objectContaining({ filename: expect.stringMatching(/\.pdf$/i), content: expect.any(Buffer) }),
+      ]),
     );
   });
 });
