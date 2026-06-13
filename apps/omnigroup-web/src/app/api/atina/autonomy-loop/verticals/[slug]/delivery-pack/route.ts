@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-
-const DEFAULT_API_BASE = 'http://127.0.0.1:3000';
+import { resolveAtinaApiBase } from '@/lib/atina-api-base';
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
 export async function GET(_req: Request, context: RouteContext) {
   const { slug } = await context.params;
-  const apiBase = (process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE).replace(/\/+$/, '');
+  const apiBase = resolveAtinaApiBase();
   try {
     const res = await fetch(`${apiBase}/api/v1/autonomy-loop/verticals/${encodeURIComponent(slug)}/delivery-pack`, {
       cache: 'no-store',

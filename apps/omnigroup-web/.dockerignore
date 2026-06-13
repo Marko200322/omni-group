@@ -1,0 +1,9 @@
+node_modules
+.next
+node_modules/.cache/omnigroup-next
+.git
+*.log
+.env*
+!.env.production.example
+coverage
+.turbo

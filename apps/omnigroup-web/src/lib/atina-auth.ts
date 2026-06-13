@@ -1,4 +1,5 @@
 import type { AuthSession } from './auth-session';
+import { resolveAtinaApiBase } from './atina-api-base';
 
 const DEFAULT_API_BASE = 'http://127.0.0.1:3000';
 const DEFAULT_TIMEOUT_MS = 8000;
@@ -35,8 +36,7 @@ type AtinaEnvelope<T> = {
 export type AtinaFetchMeta = NonNullable<AtinaEnvelope<unknown>['meta']>;
 
 function resolveApiBase(): string {
-  const raw = process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE;
-  return raw.replace(/\/+$/, '');
+  return resolveAtinaApiBase(DEFAULT_API_BASE);
 }
 
 async function fetchAtina<T>(

@@ -14,7 +14,8 @@ param(
   [string]$WebBase = 'http://127.0.0.1:3010',
   [string]$AtinaBase = 'http://127.0.0.1:3000',
   [string]$Email = 'admin@atina.io',
-  [string]$Password = 'Admin@123456'
+  [string]$Password = 'Admin@123456',
+  [switch]$SkipEnsureWeb
 )
 
 $ErrorActionPreference = 'Stop'
@@ -24,8 +25,10 @@ $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BffTimeoutSec = 45
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
 
-& (Join-Path $scriptsDir 'ensure-web-dev.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $SkipEnsureWeb) {
+  & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 function Invoke-BffLogin {
   param(

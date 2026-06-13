@@ -142,12 +142,20 @@ export function buildAuthSession(input: {
   };
 }
 
+function sessionCookieSecure(): boolean {
+  const flag = (process.env.COOKIE_SECURE ?? '').trim().toLowerCase();
+  if (flag === 'false' || flag === '0') return false;
+  if (flag === 'true' || flag === '1') return true;
+  const site = (process.env.NEXT_PUBLIC_SITE_URL ?? '').trim().toLowerCase();
+  return site.startsWith('https://');
+}
+
 export async function setSessionCookie(session: AuthSession): Promise<void> {
   const token = await sealSession(session);
   const maxAge = Math.max(60, Math.floor((session.exp - Date.now()) / 1000));
   cookies().set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: sessionCookieSecure(),
     sameSite: 'lax',
     path: '/',
     maxAge,
@@ -157,7 +165,7 @@ export async function setSessionCookie(session: AuthSession): Promise<void> {
 export async function clearSessionCookie(): Promise<void> {
   cookies().set(SESSION_COOKIE, '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: sessionCookieSecure(),
     sameSite: 'lax',
     path: '/',
     maxAge: 0,

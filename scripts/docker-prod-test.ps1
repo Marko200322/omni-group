@@ -30,38 +30,40 @@ foreach ($line in Get-Content (Join-Path $atinaRoot '.env.docker.prod')) {
 }
 if (-not $adminPass) { throw 'ADMIN_PASSWORD missing in .env.docker.prod' }
 
+$composeArgs = @('-f', $composeFile, '-p', $project, '--env-file', '.env.docker.prod')
+
 Write-Host "=== Docker prod test (project: $project) ===" -ForegroundColor Cyan
 Write-Host "Ports: API $atinaPort, Web $webPort"
 
 if (-not $SkipBuild) {
   Write-Host '[1/4] Building atina-api...' -ForegroundColor Yellow
-  docker compose -f $composeFile -p $project --env-file .env.docker.prod build --progress=plain atina-api
+  docker compose @composeArgs build --progress=plain atina-api
   if ($LASTEXITCODE -ne 0) { throw 'atina-api build failed' }
   Write-Host '[1/4] Building web...' -ForegroundColor Yellow
-  docker compose -f $composeFile -p $project --env-file .env.docker.prod build --progress=plain web
+  docker compose @composeArgs build --progress=plain web
   if ($LASTEXITCODE -ne 0) { throw 'web build failed' }
 }
 
 Write-Host '[2/4] Starting postgres + redis...' -ForegroundColor Yellow
-docker compose -f $composeFile -p $project --env-file .env.docker.prod up -d postgres redis
+docker compose @composeArgs up -d postgres redis
 if ($LASTEXITCODE -ne 0) { throw 'postgres/redis start failed' }
 
 $deadline = (Get-Date).AddMinutes(2)
 do {
   Start-Sleep -Seconds 3
-  $pg = docker compose -f $composeFile -p $project ps postgres --format '{{.Health}}' 2>$null
+  $pg = docker compose @composeArgs ps postgres --format '{{.Health}}' 2>$null
   if ($pg -eq 'healthy') { break }
 } while ((Get-Date) -lt $deadline)
 if ($pg -ne 'healthy') { throw 'Postgres not healthy in time' }
 
 Write-Host '[3/4] Running migrations + seed...' -ForegroundColor Yellow
-docker compose -f $composeFile -p $project --env-file .env.docker.prod --profile setup run --rm migrate
+docker compose @composeArgs --profile setup run --rm migrate
 if ($LASTEXITCODE -ne 0) { throw 'Migration failed' }
-docker compose -f $composeFile -p $project --env-file .env.docker.prod --profile setup run --rm seed
+docker compose @composeArgs --profile setup run --rm seed
 if ($LASTEXITCODE -ne 0) { throw 'Seed failed' }
 
 Write-Host '[4/4] Starting API + Web...' -ForegroundColor Yellow
-docker compose -f $composeFile -p $project --env-file .env.docker.prod up -d atina-api web
+docker compose @composeArgs up -d atina-api web
 if ($LASTEXITCODE -ne 0) { throw 'atina-api/web start failed' }
 
 $deadline = (Get-Date).AddMinutes(5)
@@ -99,7 +101,7 @@ Write-Host "  API:  http://127.0.0.1:$atinaPort/health"
 Write-Host "  Web:  http://127.0.0.1:$webPort"
 Write-Host "  Login: admin@atina.io / $adminPass"
 Write-Host ''
-docker compose -f $composeFile -p $project ps
+docker compose @composeArgs ps
 
 if (-not $KeepRunning) {
   Write-Host 'Stack ostaje pokrenut (koristi -KeepRunning). Za stop:'

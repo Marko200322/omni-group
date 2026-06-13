@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-
-const DEFAULT_API_BASE = 'http://127.0.0.1:3000';
+import { resolveAtinaApiBase } from '@/lib/atina-api-base';
 
 export async function GET(req: Request) {
-  const apiBase = (process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE).replace(/\/+$/, '');
+  const apiBase = resolveAtinaApiBase();
   const url = new URL(req.url);
   const qs = url.searchParams.toString();
   try {

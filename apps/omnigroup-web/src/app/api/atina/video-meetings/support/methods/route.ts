@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
+import { resolveAtinaApiBase } from '@/lib/atina-api-base';
 
 export async function GET() {
-  const base = (process.env.NEXT_PUBLIC_ATINA_API_BASE ?? 'http://127.0.0.1:3000').replace(/\/+$/, '');
+  const base = resolveAtinaApiBase();
   try {
     const res = await fetch(`${base}/api/v1/video-meetings/support/methods`, {
       headers: { Accept: 'application/json' },

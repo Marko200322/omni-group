@@ -37,7 +37,7 @@ services:
       dockerfile: Dockerfile
       target: builder
     env_file:
-      - ./atina-platform/atina/.env.docker.prod.docker.prod
+      - ./atina-platform/atina/.env.docker.prod
     environment:
       NODE_ENV: production
       DB_HOST: postgres
@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile
       target: builder
     env_file:
-      - ./atina-platform/atina/.env.docker.prod.docker.prod
+      - ./atina-platform/atina/.env.docker.prod
     environment:
       NODE_ENV: production
       DB_HOST: postgres
@@ -85,6 +85,7 @@ services:
       AUTONOMY_AUTO_START_SCHEDULER: ${AUTONOMY_AUTO_START_SCHEDULER:-true}
       AUTONOMY_ROLLOUT_SEGMENT: ${AUTONOMY_ROLLOUT_SEGMENT:-freelance}
       AUTONOMY_EVOLUTION_CODE_EDIT: ${AUTONOMY_EVOLUTION_CODE_EDIT:-false}
+      PHASE: v2
     ports:
       - '${ATINA_PORT:-3000}:3000'
     depends_on:

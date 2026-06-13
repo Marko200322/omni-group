@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-
-const DEFAULT_API_BASE = 'http://127.0.0.1:3000';
+import { resolveAtinaApiBase } from '@/lib/atina-api-base';
 
 export async function GET() {
-  const apiBase = (process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE).replace(/\/+$/, '');
+  const apiBase = resolveAtinaApiBase();
   try {
     const res = await fetch(`${apiBase}/api/v1/billing/category-pricing`, {
       cache: 'no-store',

@@ -45,12 +45,15 @@ if (-not $data.summary) {
   throw 'Smoke workflow template verification failed: summary missing.'
 }
 
-if (-not $data.templates) {
+$summaryRuns = [int]($data.summary.totalRuns)
+$templates = @()
+if ($null -ne $data.templates) {
+  $templates = @($data.templates)
+} elseif ($summaryRuns -gt 0) {
   throw 'Smoke workflow template verification failed: templates list missing.'
 }
 
-$template = @($data.templates | Where-Object { $_.templateKey -eq $TemplateKey } | Select-Object -First 1)
-$summaryRuns = [int]($data.summary.totalRuns)
+$template = @($templates | Where-Object { $_.templateKey -eq $TemplateKey } | Select-Object -First 1)
 
 if ($template.Count -eq 0) {
   if ($RequireTemplateKey) {

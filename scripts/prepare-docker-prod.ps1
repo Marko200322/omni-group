@@ -26,11 +26,19 @@ function Read-EnvValue([string]$Path, [string]$Key) {
 
 $localAtinaEnv = Join-Path $atinaRoot '.env'
 $localWebEnv = Join-Path $webRoot '.env.local'
-$dbPass = New-RandomSecret 24
-$jwt = New-RandomSecret 48
-$jwtRefresh = New-RandomSecret 48
-$sessionSecret = New-RandomSecret 48
-$adminPass = New-RandomSecret 16
+$composeEnvPath = Join-Path $repoRoot '.env.docker.prod'
+$atinaDockerEnvPath = Join-Path $atinaRoot '.env.docker.prod'
+
+$existingComposeDbPass = Read-EnvValue $composeEnvPath 'DB_PASSWORD'
+$dbPass = if ($existingComposeDbPass) { $existingComposeDbPass } else { New-RandomSecret 24 }
+$jwt = Read-EnvValue $atinaDockerEnvPath 'JWT_SECRET'
+if (-not $jwt) { $jwt = New-RandomSecret 48 }
+$jwtRefresh = Read-EnvValue $atinaDockerEnvPath 'JWT_REFRESH_SECRET'
+if (-not $jwtRefresh) { $jwtRefresh = New-RandomSecret 48 }
+$sessionSecret = Read-EnvValue (Join-Path $webRoot '.env.production') 'SESSION_SECRET'
+if (-not $sessionSecret) { $sessionSecret = New-RandomSecret 48 }
+$adminPass = Read-EnvValue $atinaDockerEnvPath 'ADMIN_PASSWORD'
+if (-not $adminPass) { $adminPass = New-RandomSecret 16 }
 
 $composeEnv = @"
 DB_NAME=atina_saas_db
@@ -41,7 +49,7 @@ WEB_PORT=$WebPort
 AUTONOMY_ENABLED=false
 AUTONOMY_AUTO_START_SCHEDULER=false
 "@
-Set-Content -Path (Join-Path $repoRoot '.env.docker.prod') -Value $composeEnv -Encoding UTF8
+Set-Content -Path $composeEnvPath -Value $composeEnv -Encoding UTF8
 
 $copyKeys = @(
   'AI_URL','AI_KEY','AI_MODEL','SCRAPER_URL','SCRAPER_KEY','COMMS_URL','COMMS_KEY',
@@ -57,6 +65,7 @@ $atinaLines = @(
   "APP_URL=http://127.0.0.1:$AtinaPort",
   "WEB_APP_URL=http://127.0.0.1:$WebPort",
   'APP_NAME=ATINA',
+  'PHASE=v2',
   'DB_HOST=postgres',
   'DB_PORT=5432',
   'DB_NAME=atina_saas_db',
@@ -88,7 +97,7 @@ foreach ($key in $copyKeys) {
   if ($val) { $atinaLines += "$key=$val" }
 }
 
-Set-Content -Path (Join-Path $atinaRoot '.env.docker.prod') -Value ($atinaLines -join "`n") -Encoding UTF8
+Set-Content -Path $atinaDockerEnvPath -Value ($atinaLines -join "`n") -Encoding UTF8
 
 $resendKey = Read-EnvValue $localWebEnv 'RESEND_API_KEY'
 $resendFrom = Read-EnvValue $localWebEnv 'CONTACT_EMAIL_FROM'
@@ -98,6 +107,7 @@ $webEnv = @(
   "NEXT_PUBLIC_ATINA_API_BASE=http://127.0.0.1:$AtinaPort",
   "NEXT_PUBLIC_SITE_URL=http://127.0.0.1:$WebPort",
   'ATINA_API_BASE=http://atina-api:3000',
+  'COOKIE_SECURE=false',
   "SESSION_SECRET=$sessionSecret",
   "RESEND_API_KEY=$resendKey",
   "CONTACT_EMAIL_FROM=$resendFrom",

@@ -1,5 +1,5 @@
 // Server-side helper za čitanje javnih Atina endpoint-a iz Next 14 server komponenti.
-// Dokumentovani ugovor: GET /health + GET /api/v1/billing/plans (vidi README + .env.example).
+import { resolveAtinaApiBase } from './atina-api-base';
 
 export type AtinaSnapshotSource = 'live' | 'unreachable' | 'partial' | 'placeholder';
 
@@ -29,8 +29,7 @@ const DEFAULT_API_BASE = 'http://127.0.0.1:3000';
 const DEFAULT_TIMEOUT_MS = 5000;
 
 function resolveApiBase(): string {
-  const raw = process.env.NEXT_PUBLIC_ATINA_API_BASE ?? DEFAULT_API_BASE;
-  return raw.replace(/\/+$/, '');
+  return resolveAtinaApiBase(DEFAULT_API_BASE);
 }
 
 async function fetchJson(url: string, timeoutMs: number): Promise<{ ok: boolean; status: number; data: unknown }> {
