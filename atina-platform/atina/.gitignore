@@ -7,6 +7,10 @@ logs/
 .env
 .env.local
 .env.*.local
+KLJUCEVI-POPUNI.local.txt
+ADMIN-CREDENTIALS*.txt
+.env.vps.prod
+.env.docker.prod
 .DS_Store
 Thumbs.db
 *.js.map

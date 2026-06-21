@@ -12,8 +12,15 @@ const mockScraper = {
   scrape: jest.fn().mockResolvedValue({ links: ['a', 'b', 'c', 'd', 'e'] }),
 };
 
+const mockLeadDb = {
+  isEnrichmentActive: jest.fn().mockReturnValue(false),
+  enrichFromHuntContext: jest.fn().mockResolvedValue([]),
+  getStatus: jest.fn().mockReturnValue({ phase: 'F0', enabled: false }),
+};
+
 jest.mock('../../integrations', () => ({
   getScraperClient: () => mockScraper,
+  getLeadDatabaseService: () => mockLeadDb,
 }));
 
 jest.mock('../../utils/ecosystem-idempotency', () => ({

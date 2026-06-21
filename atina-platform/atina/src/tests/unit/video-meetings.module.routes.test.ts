@@ -81,6 +81,7 @@ describe('VideoMeetingsModule HTTP routes', () => {
         name: 'Mila',
         title: 'Podrška',
         avatarUrl: null,
+        backgroundUrl: null,
         avatarType: 'initials',
         capabilities: { chat: true, voice: false, video: false, ai: false, aggregator: false },
         agentType: 'support',

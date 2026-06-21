@@ -78,6 +78,24 @@ jest.mock('../../modules/payments/service/payment-notifications.service', () => 
   PaymentNotificationsService: jest.fn().mockImplementation(() => paymentNotifyApi),
 }));
 
+jest.mock('../../modules/billing/service/revenue-allocation.service', () => ({
+  RevenueAllocationService: jest.fn().mockImplementation(() => ({
+    allocateConfirmedPayment: jest.fn().mockResolvedValue({
+      paymentId: 'pay',
+      grossEur: 29,
+      currency: 'EUR',
+      paymentFeeEur: 0,
+      taxReserveEur: 0,
+      resourceReserveEur: 0,
+      systemReinvestEur: 0,
+      ownerNetEur: 29,
+      lines: [],
+      quoteSnapshot: null,
+      alreadyApplied: false,
+    }),
+  })),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PaymentsService } = require('../../modules/payments/service/payments.service');
 // eslint-disable-next-line @typescript-eslint/no-require-imports

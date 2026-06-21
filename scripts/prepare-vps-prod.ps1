@@ -4,6 +4,8 @@ param(
   [Parameter(Mandatory)]
   [string]$SiteDomain,
   [string]$ApiDomain = '',
+  [ValidateSet('v2', 'v3')]
+  [string]$Phase = 'v2',
   [switch]$DryRun
 )
 
@@ -11,6 +13,16 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $atinaRoot = Join-Path $repoRoot 'atina-platform\atina'
 $webRoot = Join-Path $repoRoot 'apps\omnigroup-web'
+
+function Read-EnvValue([string]$Path, [string]$Key) {
+  if (-not (Test-Path $Path)) { return $null }
+  foreach ($line in Get-Content $Path) {
+    if ($line -match "^\s*$([regex]::Escape($Key))\s*=\s*(.*)$") {
+      return $Matches[1].Trim()
+    }
+  }
+  return $null
+}
 
 if (-not $ApiDomain) {
   if ($SiteDomain -match '^api\.') { $ApiDomain = $SiteDomain }
@@ -37,6 +49,7 @@ ATINA_PORT=3000
 WEB_PORT=3010
 SITE_DOMAIN=$SiteDomain
 API_DOMAIN=$ApiDomain
+PHASE=$Phase
 AUTONOMY_ENABLED=true
 AUTONOMY_AUTO_START_SCHEDULER=true
 AUTONOMY_ROLLOUT_SEGMENT=freelance
@@ -49,7 +62,7 @@ $atinaEnv = @(
   "APP_URL=$apiUrl",
   "WEB_APP_URL=$siteUrl",
   'APP_NAME=ATINA',
-  'PHASE=v2',
+  "PHASE=$Phase",
   'DB_HOST=postgres',
   'DB_PORT=5432',
   'DB_NAME=atina_saas_db',
@@ -69,18 +82,58 @@ $atinaEnv = @(
   'ADMIN_NAME=System Admin',
   'PAYMENTS_MODE=manual',
   'ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION=true',
+  'ENABLE_CRM=true',
+  'ENABLE_SCRAPER=true',
   'AUTONOMY_ENABLED=true',
   'AUTONOMY_AUTO_START_SCHEDULER=true',
+  'AUTONOMY_REAL_ECOSYSTEM_RUNS=true',
   'AUTONOMY_EVOLUTION_CODE_EDIT=false',
   'AUTONOMY_ROLLOUT_SEGMENT=freelance',
-  'SMTP_ENABLED=false',
-  '# Popuni agregatore pre go-live:',
-  '# AI_URL= AI_KEY= AI_MODEL=',
-  '# SCRAPER_URL= SCRAPER_KEY=',
-  '# COMMS_URL= COMMS_KEY=',
-  '# RESEND_API_KEY= (Atina notifikacije)',
-  '# MANUAL_PAYMENT_IBAN= MANUAL_PAYMENT_ACCOUNT_NAME='
-) -join "`n"
+  'AUTONOMY_GIT_REPO_PATH=/opt/omni-group',
+  'AUTONOMY_INITIAL_BUDGET_USD=40',
+  'AUTONOMY_MAX_SPEND_PER_DAY_USD=4',
+  'AUTONOMY_MAX_SPEND_PER_TICK_USD=1.5',
+  'AUTONOMY_MIN_RESERVE_USD=10',
+  'AUTONOMY_MARKETING_ENABLED=false',
+  'OUTREACH_DAILY_CAP=20',
+  'OUTREACH_WARMUP_MODE=true',
+  'OUTREACH_DOMAIN_WARMUP_COMPLETE=false',
+  'OUTREACH_DEV_SEND_TO_FALLBACK=false',
+  'LEAD_DATABASE_ENABLED=false',
+  'LEAD_DATABASE_ROLLOUT_PHASE=F1',
+  'LEAD_ENRICH_ON_HUNT=false',
+  'CURSOR_EVOLUTION_ENABLED=false',
+  'CURSOR_RUNTIME=cloud',
+  'SMTP_ENABLED=false'
+)
+
+$copyKeys = @(
+  'AI_URL', 'AI_KEY', 'AI_MODEL', 'SCRAPER_URL', 'SCRAPER_KEY', 'COMMS_URL', 'COMMS_KEY',
+  'BUSINESS_AND_DEV_URL', 'BUSINESS_AND_DEV_KEY', 'PAYMENT_NOTIFY_EMAIL', 'OUTREACH_FALLBACK_EMAIL',
+  'MANUAL_PAYMENT_ACCOUNT_NAME', 'MANUAL_PAYMENT_IBAN', 'MANUAL_PAYMENT_BANK', 'MANUAL_PAYMENT_SWIFT',
+  'MANUAL_PAYMENT_CURRENCY', 'MANUAL_PAYMENT_NOTE', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID',
+  'ELEVENLABS_API_KEY', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT',
+  'SALES_MEETINGS_ENABLED', 'CURSOR_API_KEY', 'CURSOR_MODEL'
+)
+
+$localAtinaEnv = Join-Path $atinaRoot '.env'
+$localWebEnv = Join-Path $webRoot '.env.local'
+foreach ($key in $copyKeys) {
+  $val = Read-EnvValue $localAtinaEnv $key
+  if (-not $val) { $val = Read-EnvValue $localWebEnv $key }
+  if ($val) { $atinaEnv += "$key=$val" }
+}
+
+$atinaEnv = $atinaEnv -join "`n"
+
+$resendKey = Read-EnvValue $localWebEnv 'RESEND_API_KEY'
+$resendFrom = Read-EnvValue $localWebEnv 'CONTACT_EMAIL_FROM'
+$resendTo = Read-EnvValue $localWebEnv 'CONTACT_EMAIL_TO'
+if (-not $resendFrom) { $resendFrom = "noreply@$SiteDomain" }
+if (-not $resendTo) {
+  $resendTo = Read-EnvValue $localAtinaEnv 'PAYMENT_NOTIFY_EMAIL'
+  if (-not $resendTo) { $resendTo = "admin@$SiteDomain" }
+}
 
 $webEnv = @(
   "NEXT_PUBLIC_ATINA_API_BASE=$apiUrl",
@@ -88,9 +141,9 @@ $webEnv = @(
   'ATINA_API_BASE=http://atina-api:3000',
   'COOKIE_SECURE=true',
   "SESSION_SECRET=$sessionSecret",
-  '# RESEND_API_KEY=',
-  "CONTACT_EMAIL_FROM=noreply@$SiteDomain",
-  "CONTACT_EMAIL_TO=admin@$SiteDomain"
+  "RESEND_API_KEY=$resendKey",
+  "CONTACT_EMAIL_FROM=$resendFrom",
+  "CONTACT_EMAIL_TO=$resendTo"
 ) -join "`n"
 
 $outCompose = Join-Path $repoRoot '.env.vps.prod'
@@ -100,6 +153,7 @@ $outWeb = Join-Path $webRoot '.env.vps.production'
 Write-Host '=== VPS produkcija — env šabloni ===' -ForegroundColor Cyan
 Write-Host "  Site: $siteUrl"
 Write-Host "  API:  $apiUrl"
+Write-Host "  Phase: $Phase"
 Write-Host ''
 
 if ($DryRun) {
@@ -123,11 +177,4 @@ Write-Host "Admin login: admin@atina.io / $adminPass" -ForegroundColor Yellow
 Write-Host '(Sačuvaj lozinku — nije u gitu.)'
 Write-Host ''
 Write-Host 'Deploy na VPS:' -ForegroundColor Cyan
-Write-Host '  git clone https://github.com/Marko200322/omni-group.git /opt/omni-group'
-Write-Host '  cd /opt/omni-group && cp .env.vps.prod .env.docker.prod'
-Write-Host '  cp atina-platform/atina/.env.vps.prod atina-platform/atina/.env.docker.prod'
-Write-Host '  cp apps/omnigroup-web/.env.vps.production apps/omnigroup-web/.env.production'
-Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm migrate'
-Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm seed'
-Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d'
-Write-Host '  docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile tls up -d caddy'
+Write-Host '  .\scripts\deploy-to-vps.ps1 -VpsHost <IP> -SiteDomain omnigrouptech.com'
