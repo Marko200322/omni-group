@@ -23,18 +23,18 @@ export default function ProductsPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Rešenja</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Solutions</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Šta dobijate kao klijent
+            What you get as a client
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Gotovi paketi, setup, retainer i vertikalna rešenja — uključujući softver po meri, testiran pre isporuke.
-            Cene su transparentne i automatski izračunate.
+            Turnkey packages, setup, retainers, and vertical solutions — including custom software, tested before delivery.
+            Pricing is transparent and calculated automatically.
             {generatedCount > 0 ? (
               <span className="mt-2 block text-sm text-violet-200/90">
-                {generatedCount} generisanih online niša —{' '}
+                {generatedCount} generated online niches —{' '}
                 <Link href="/solutions" className="underline underline-offset-2 hover:text-violet-100">
-                  pregled kataloga
+                  browse catalog
                 </Link>
                 .
               </span>
@@ -57,7 +57,7 @@ export default function ProductsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-10">
             <div className="mb-4 flex items-center gap-2 text-violet-200">
               <Sparkles className="h-4 w-4" />
-              <p className="text-sm font-medium">Istaknuta vertikalna rešenja</p>
+              <p className="text-sm font-medium">Featured vertical solutions</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {featuredVerticals.map((v) => (
@@ -89,18 +89,18 @@ export default function ProductsPage() {
           <div className="flex items-start gap-3">
             <Package className="mt-1 h-6 w-6 text-violet-300" />
             <div>
-              <p className="font-display text-xl font-semibold text-white">Tačan iznos?</p>
+              <p className="font-display text-xl font-semibold text-white">Need an exact amount?</p>
               <p className="mt-1 text-sm text-slate-400">
-                Kalkulator na cenovniku uključuje proviziju platnog API-ja i potrošnju resursa.
+                The pricing calculator includes payment API fees and resource consumption.
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/pricing" className="btn-glass text-sm">
-              Kalkulator cena
+              Pricing calculator
             </Link>
             <Link href="/login?next=/dashboard%23quote" className="btn-primary text-sm">
-              Generiši uputstvo
+              Generate brief
             </Link>
           </div>
         </motion.div>

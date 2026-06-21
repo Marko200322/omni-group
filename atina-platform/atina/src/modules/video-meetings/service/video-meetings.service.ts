@@ -42,9 +42,9 @@ export class VideoMeetingsService {
     const methods: Array<{ id: string; label: string; available: boolean; description: string }> = [
       {
         id: 'manual',
-        label: 'Ručno zakazivanje',
+        label: 'Manual scheduling',
         available: true,
-        description: 'Support tim potvrđuje termin i šalje link emailom.',
+        description: 'Support team confirms the slot and sends a link by email.',
       },
     ];
 
@@ -53,7 +53,7 @@ export class VideoMeetingsService {
         id: 'zoom',
         label: 'Zoom',
         available: true,
-        description: 'Automatski Zoom soba za svaki poziv.',
+        description: 'Automatic Zoom room for each call.',
       });
     }
 
@@ -62,7 +62,7 @@ export class VideoMeetingsService {
         id: 'google_meet',
         label: 'Google Meet',
         available: true,
-        description: 'Instant link ka Google Meet sobi.',
+        description: 'Instant link to a Google Meet room.',
       });
     }
 

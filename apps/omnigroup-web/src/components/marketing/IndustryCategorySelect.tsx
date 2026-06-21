@@ -6,6 +6,7 @@ import {
   getIndustryCategory,
   resolvePricingTier,
 } from '@/lib/category-pricing';
+import { categoryLabel, tierLabel } from '@/lib/display-text';
 
 type Props = {
   value: string;
@@ -21,23 +22,23 @@ export function IndustryCategorySelect({ value, onChange, className, showTierHin
   return (
     <div className={className}>
       <label className="block text-sm">
-        <span className="text-slate-400">Industrijska kategorija</span>
+        <span className="text-slate-400">Industry category</span>
         <select
           className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
-          <option value="">Standard (prosečan SMB)</option>
+          <option value="">Standard (typical SMB)</option>
           {INDUSTRY_CATEGORIES.map((cat) => (
             <option key={cat.slug} value={cat.slug}>
-              {cat.nameSr} — {PRICING_TIER_META[cat.tier].labelSr}
+              {categoryLabel(cat)} — {tierLabel(PRICING_TIER_META[cat.tier])}
             </option>
           ))}
         </select>
       </label>
       {showTierHint && selected && (
         <p className="mt-2 text-xs text-slate-500">
-          Tarifni nivo: <span className="text-violet-300">{PRICING_TIER_META[tier].labelSr}</span> —{' '}
+          Pricing tier: <span className="text-violet-300">{tierLabel(PRICING_TIER_META[tier])}</span> —{' '}
           {PRICING_TIER_META[tier].description}
         </p>
       )}

@@ -37,26 +37,26 @@ export type PlatformVariant = 'admin' | 'client';
 type NavItem = { href: string; label: string; icon: LucideIcon };
 
 const adminNav: NavItem[] = [
-  { href: '/admin', label: 'Pregled', icon: LayoutDashboard },
-  { href: '/dashboard', label: 'Klijentski portal', icon: FolderKanban },
+  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Client portal', icon: FolderKanban },
   { href: '/admin#factory', label: 'Product Factory', icon: Factory },
-  { href: '/admin#resources', label: 'Resursi', icon: ShoppingCart },
+  { href: '/admin#resources', label: 'Resources', icon: ShoppingCart },
   { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
   { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
-  { href: '/admin#users', label: 'Korisnici', icon: Users },
+  { href: '/admin#users', label: 'Users', icon: Users },
   { href: '/admin#billing', label: 'Billing', icon: CreditCard },
-  { href: '/admin#system', label: 'Sistem', icon: Activity },
-  { href: '/admin#settings', label: 'Podešavanja', icon: Settings },
+  { href: '/admin#system', label: 'System', icon: Activity },
+  { href: '/admin#settings', label: 'Settings', icon: Settings },
 ];
 
 const clientNav: NavItem[] = [
-  { href: '/dashboard', label: 'Pregled', icon: LayoutDashboard },
-  { href: '/dashboard#orders', label: 'Porudžbine', icon: Package },
-  { href: '/dashboard#projects', label: 'Projekti', icon: FolderKanban },
-  { href: '/dashboard#quote', label: 'Nova porudžbina', icon: CreditCard },
-  { href: '/dashboard#support', label: 'Podrška', icon: LifeBuoy },
-  { href: '/dashboard#consultation', label: 'Konsultacije', icon: MessageCircle },
-  { href: '/dashboard#account', label: 'Nalog', icon: UserCircle },
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard#orders', label: 'Orders', icon: Package },
+  { href: '/dashboard#projects', label: 'Projects', icon: FolderKanban },
+  { href: '/dashboard#quote', label: 'New order', icon: CreditCard },
+  { href: '/dashboard#support', label: 'Support', icon: LifeBuoy },
+  { href: '/dashboard#consultation', label: 'Consultations', icon: MessageCircle },
+  { href: '/dashboard#account', label: 'Account', icon: UserCircle },
 ];
 
 type Props = {
@@ -110,7 +110,7 @@ export function PlatformShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const nav = variant === 'admin' ? adminNav : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
-  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Klijentski portal';
+  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
 
   async function handleLogout() {
@@ -179,30 +179,30 @@ export function PlatformShell({
         </motion.nav>
         <div className="border-t border-white/[0.06] p-3 space-y-2">
           <Link href="/" className="btn-ghost flex w-full items-center gap-2 text-slate-400">
-            Javni sajt
+            Public site
           </Link>
           <button
             type="button"
             onClick={handleLogout}
             className="btn-ghost flex w-full items-center gap-2 text-slate-400"
           >
-            <LogOut className="h-4 w-4" /> Odjava
+            <LogOut className="h-4 w-4" /> Sign out
           </button>
           {isDemo && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-              <p className="font-medium text-amber-200">Demo pregled</p>
+              <p className="font-medium text-amber-200">Demo preview</p>
               <p className="mt-1 text-amber-100/90">
-                Billing, avatar i AI memorija rade samo sa pravom prijavom.
+                Billing, avatar, and AI memory work only with a real sign-in.
               </p>
               <Link href="/login" className="mt-2 inline-block font-medium text-white underline-offset-2 hover:underline">
-                Prijavi se →
+                Sign in →
               </Link>
             </div>
           )}
           {variant === 'admin' && !isDemo && (
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
               <Shield className="h-3.5 w-3.5 shrink-0" />
-              Admin sesija — zaštiti prod `.env`
+              Admin session — protect prod `.env`
             </div>
           )}
         </div>
@@ -228,7 +228,7 @@ export function PlatformShell({
             >
               <div className="flex h-14 items-center justify-between px-4">
                 <span className={`font-display font-bold ${accent}`}>{brand}</span>
-                <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Zatvori">
+                <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Close">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -256,7 +256,7 @@ export function PlatformShell({
             type="button"
             className="rounded-lg p-2 text-slate-300 hover:bg-white/5 lg:hidden"
             onClick={() => setSidebarOpen(true)}
-            aria-label="Meni"
+            aria-label="Menu"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -264,9 +264,9 @@ export function PlatformShell({
             <Search className="h-4 w-4 text-slate-500" />
             <input
               type="search"
-              placeholder="Pretraga (uskoro)"
+              placeholder="Search (coming soon)"
               readOnly
-              aria-label="Pretraga — uskoro"
+              aria-label="Search — coming soon"
               className="w-full cursor-not-allowed bg-transparent text-sm text-slate-500 outline-none placeholder:text-slate-600"
             />
           </div>
@@ -274,7 +274,7 @@ export function PlatformShell({
             <motion.button
               type="button"
               className="relative rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white"
-              aria-label="Obaveštenja"
+              aria-label="Notifications"
               whileHover={{ scale: 1.08 }}
               whileTap={tapScale}
             >

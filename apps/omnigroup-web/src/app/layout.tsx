@@ -11,14 +11,14 @@ export const metadata: Metadata = {
     template: '%s · Omni Group',
   },
   description:
-    'Omni Group — digitalne usluge, softver po meri i mesečna podrška za vaš biznis. Transparentne cene po industriji.',
+    'Omni Group — custom software, digital services, and monthly support for your business. Transparent industry-based pricing.',
   manifest: '/manifest.json',
   icons: { icon: '/icon.svg', apple: '/icon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sr" className={`${inter.variable} ${syne.variable}`}>
+    <html lang="en" className={`${inter.variable} ${syne.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

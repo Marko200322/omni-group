@@ -221,7 +221,7 @@ export function buildAllocationPlan(
       bucket: 'system_reinvest',
       target: 'autonomy_budget',
       label: 'System development reinvest',
-      labelSr: 'Reinvesticija u razvoj sistema',
+      labelSr: 'System development reinvest',
       amountEur: systemReinvestEur,
       reason: `${Math.round(reinvestRate * 100)}% of operating profit → autonomy budget (evolution, verticals, AI)`,
     });
@@ -232,7 +232,7 @@ export function buildAllocationPlan(
       bucket: 'owner_net',
       target: 'owner',
       label: 'Owner net profit',
-      labelSr: 'Tvoj čist deo',
+      labelSr: 'Your net share',
       amountEur: ownerNetEur,
       reason: 'After resources, tax reserve, fees, and system reinvest — yours to keep or distribute',
     });

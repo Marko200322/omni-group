@@ -26,7 +26,7 @@ export function ClientSiteView({ site }: Props) {
       <header className="border-b border-white/10 bg-black/20 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-5">
           <div>
-            <p className="text-xs uppercase tracking-widest text-violet-300/80">Klijentski sajt</p>
+            <p className="text-xs uppercase tracking-widest text-violet-300/80">Client site</p>
             <h1 className="font-display text-2xl font-bold text-white">{site.title}</h1>
             {site.tagline ? <p className="mt-1 text-sm text-slate-400">{site.tagline}</p> : null}
           </div>
@@ -77,17 +77,17 @@ export function ClientSiteView({ site }: Props) {
             </div>
             {activePage.kind === 'shop' ? (
               <div className="mt-8 rounded-xl border border-violet-500/30 bg-violet-500/10 p-6 text-sm text-slate-300">
-                Demo katalog — checkout i plaćanje se aktiviraju nakon produkcijskog deploy-a.
+                Demo catalog — checkout and payments activate after production deploy.
               </div>
             ) : null}
             {activePage.kind === 'contact' ? (
               <Link href="/contact" className="btn-primary mt-8 inline-flex text-sm">
-                Kontaktirajte nas
+                Contact us
               </Link>
             ) : null}
           </>
         ) : (
-          <p className="text-slate-400">Sadržaj u pripremi.</p>
+          <p className="text-slate-400">Content coming soon.</p>
         )}
       </motion.main>
 

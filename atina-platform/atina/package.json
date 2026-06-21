@@ -39,6 +39,7 @@
     "smoke:all": "powershell -NoProfile -ExecutionPolicy Bypass -File \"./scripts/smoke-all.ps1\"",
     "smoke:hunting": "powershell -NoProfile -ExecutionPolicy Bypass -File \"./scripts/smoke-hunting.ps1\"",
     "smoke:hunting:quick": "powershell -NoProfile -ExecutionPolicy Bypass -File \"./scripts/smoke-hunting.ps1\" -SkipPipeline",
+    "test:hunt-pipeline": "python test_pipeline.py",
     "dev:check": "npm run smoke:all && npm run lint",
     "free:port": "powershell -NoProfile -ExecutionPolicy Bypass -File \"./scripts/free-port.ps1\"",
     "dev:bootstrap": "npm run db:up && npm run migrate && npm run seed",

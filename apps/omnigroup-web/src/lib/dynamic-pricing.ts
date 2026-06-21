@@ -162,7 +162,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
 
   const quote: QuoteBreakdown = {
     deliverableId: deliverable.id,
-    deliverableName: deliverable.nameSr,
+    deliverableName: deliverable.name,
     billing,
     currency: 'EUR',
     anchorEur: deliverable.anchorEur,
@@ -201,7 +201,7 @@ export function quoteAllDeliverables(input: Omit<QuoteInput, 'deliverableId'>) {
 }
 
 export function formatBillingLabel(billing: DeliverableBilling) {
-  if (billing === 'one_time') return 'jednokratno';
-  if (billing === 'yearly') return '/ god';
-  return '/ mes';
+  if (billing === 'one_time') return 'one-time';
+  if (billing === 'yearly') return '/ yr';
+  return '/ mo';
 }

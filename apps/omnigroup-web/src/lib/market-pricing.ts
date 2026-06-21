@@ -60,8 +60,8 @@ export function getCategoryMarketIndex(categorySlug?: string | null): number {
 }
 
 export function formatMarketIndexLabel(index: number): string {
-  if (index >= 1.25) return 'Premium tržište';
-  if (index >= 1.05) return 'Iznad proseka';
-  if (index >= 0.95) return 'Prosečno tržište';
-  return 'Pristupačan segment';
+  if (index >= 1.25) return 'Premium market';
+  if (index >= 1.05) return 'Above average';
+  if (index >= 0.95) return 'Average market';
+  return 'Accessible segment';
 }

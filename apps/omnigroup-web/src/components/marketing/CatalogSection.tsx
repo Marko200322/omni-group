@@ -57,11 +57,11 @@ export function CatalogSection({ categories, showIncluded = false }: Props) {
                     <span className="text-sm font-semibold text-emerald-300">{item.priceLabel}</span>
                     {showIncluded && item.includedIn && item.includedIn.length > 0 && (
                       <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                        Paket: {item.includedIn.join(' · ')}
+                        Plan: {item.includedIn.join(' · ')}
                       </span>
                     )}
                     <span className="inline-flex items-center gap-1 text-xs text-violet-300 opacity-0 transition group-hover:opacity-100">
-                      Detalji <ArrowRight className="h-3 w-3" />
+                      Details <ArrowRight className="h-3 w-3" />
                     </span>
                   </div>
                 </Link>

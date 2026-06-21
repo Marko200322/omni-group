@@ -14,7 +14,7 @@ export default function PayPalSuccessPage() {
   useEffect(() => {
     if (!token) {
       setStatus('err');
-      setMessage('Nedostaje PayPal token.');
+      setMessage('PayPal token missing.');
       return;
     }
     (async () => {
@@ -25,7 +25,7 @@ export default function PayPalSuccessPage() {
         setStatus('ok');
       } catch (err) {
         setStatus('err');
-        setMessage(err instanceof Error ? err.message : 'Capture nije uspeo');
+        setMessage(err instanceof Error ? err.message : 'Capture failed');
       }
     })();
   }, [token]);
@@ -35,18 +35,18 @@ export default function PayPalSuccessPage() {
       {status === 'loading' && <Loader2 className="mx-auto h-12 w-12 animate-spin text-violet-400" />}
       {status === 'ok' && <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-400" />}
       <h1 className="mt-4 font-display text-2xl font-bold text-white">
-        {status === 'loading' ? 'Potvrđujem PayPal…' : status === 'ok' ? 'PayPal uplata uspešna' : 'Greška'}
+        {status === 'loading' ? 'Confirming PayPal…' : status === 'ok' ? 'PayPal payment successful' : 'Error'}
       </h1>
       <p className="mt-2 text-slate-400">
         {status === 'ok'
-          ? 'Plan je aktiviran. Faktura stiže na email.'
+          ? 'Plan activated. Invoice will arrive by email.'
           : status === 'err'
             ? message
-            : 'Sačekaj trenutak…'}
+            : 'Please wait…'}
       </p>
       {status !== 'loading' && (
         <Link href="/dashboard#billing" className="btn-primary mt-8 inline-block text-sm">
-          Nazad na billing
+          Back to billing
         </Link>
       )}
     </div>

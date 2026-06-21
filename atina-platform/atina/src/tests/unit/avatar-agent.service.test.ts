@@ -27,7 +27,7 @@ jest.mock('../../modules/video-meetings/providers/avatar-ai-aggregator.provider'
     aggregator: true,
   }),
   runConversationTurn: jest.fn().mockResolvedValue({
-    text: 'Zdravo iz agregatora',
+    text: 'Hello from aggregator',
     replySource: 'aggregator',
     audioMime: 'audio/mpeg',
     audioBase64: 'abc',
@@ -84,7 +84,7 @@ describe('AvatarAgentService aggregator path', () => {
   it('startSession uses aggregator conversation turn', async () => {
     const service = new AvatarAgentService();
     const session = await service.startSession('u1', 'support', 'stefan');
-    expect(session.greeting.text).toBe('Zdravo iz agregatora');
+    expect(session.greeting.text).toBe('Hello from aggregator');
     expect(session.capabilities.aggregator).toBe(true);
   });
 });

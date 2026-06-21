@@ -29,19 +29,19 @@ export function Footer() {
         <motion.div variants={fadeUp}>
           <OmniGroupLogo href="/" size="sm" />
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
-            Digitalna isporuka po meri — CRM, automatizacije, AI podrška i softver za vašu industriju.
-            Transparentne cene, profesionalna podrška.
+            Custom digital delivery — CRM, automations, AI support, and software built for your industry.
+            Transparent pricing, professional support.
           </p>
         </motion.div>
         <motion.div variants={fadeUp} className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
           <motion.div className="flex flex-col gap-2">
-            <span className="font-medium text-white">Kompanija</span>
+            <span className="font-medium text-white">Company</span>
             {[
-              { href: '/', label: 'Početna' },
-              { href: '/products', label: 'Rešenja' },
-              { href: '/services', label: 'Usluge' },
-              { href: '/pricing', label: 'Cenovnik' },
-              { href: '/contact', label: 'Kontakt' },
+              { href: '/', label: 'Home' },
+              { href: '/products', label: 'Solutions' },
+              { href: '/services', label: 'Services' },
+              { href: '/pricing', label: 'Pricing' },
+              { href: '/contact', label: 'Contact' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">
@@ -51,11 +51,11 @@ export function Footer() {
             ))}
           </motion.div>
           <motion.div className="flex flex-col gap-2">
-            <span className="font-medium text-white">Klijentima</span>
+            <span className="font-medium text-white">For clients</span>
             {[
-              { href: '/login', label: 'Klijentski portal' },
-              { href: '/pricing', label: 'Zatražite ponudu' },
-              { href: '/contact', label: 'Zakažite poziv' },
+              { href: '/login', label: 'Client portal' },
+              { href: '/pricing', label: 'Request a quote' },
+              { href: '/contact', label: 'Schedule a call' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">
@@ -65,11 +65,11 @@ export function Footer() {
             ))}
           </motion.div>
           <motion.div className="flex flex-col gap-2">
-            <span className="font-medium text-white">Isporuke</span>
+            <span className="font-medium text-white">Deliverables</span>
             {[
-              { href: '/products', label: 'Vertikalna rešenja' },
+              { href: '/products', label: 'Vertical solutions' },
               { href: '/services', label: 'Setup & onboarding' },
-              { href: '/pricing', label: 'Retaineri' },
+              { href: '/pricing', label: 'Retainers' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">
@@ -86,7 +86,7 @@ export function Footer() {
         viewport={{ once: true }}
         className="mt-10 text-center text-xs text-slate-600"
       >
-        © {new Date().getFullYear()} Omni Group · Profesionalna digitalna isporuka
+        © {new Date().getFullYear()} Omni Group · Professional digital delivery
       </motion.p>
     </motion.footer>
   );

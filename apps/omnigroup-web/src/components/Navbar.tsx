@@ -9,12 +9,12 @@ import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 
 const links = [
-  { href: '/', label: 'Početna' },
-  { href: '/products', label: 'Rešenja' },
-  { href: '/solutions', label: 'Niše' },
-  { href: '/services', label: 'Usluge' },
-  { href: '/pricing', label: 'Cenovnik' },
-  { href: '/contact', label: 'Kontakt' },
+  { href: '/', label: 'Home' },
+  { href: '/products', label: 'Solutions' },
+  { href: '/solutions', label: 'Industries' },
+  { href: '/services', label: 'Services' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
@@ -72,19 +72,19 @@ export function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={tapScale}>
             <Link href="/login" className="btn-ghost text-sm">
-              Klijentski portal
+              Client portal
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={tapScale}>
             <Link href="/contact" className="btn-primary text-sm">
-              Započni projekat
+              Start a project
             </Link>
           </motion.div>
         </div>
         <motion.button
           type="button"
           className="rounded-lg p-2 text-white md:hidden"
-          aria-label="Meni"
+          aria-label="Menu"
           onClick={() => setOpen(!open)}
           whileTap={tapScale}
         >
@@ -128,10 +128,10 @@ export function Navbar() {
               ))}
               <motion.div variants={fadeUp} className="mt-3 grid gap-2">
                 <Link href="/login" className="btn-glass block text-center" onClick={() => setOpen(false)}>
-                  Klijentski portal
+                  Client portal
                 </Link>
                 <Link href="/contact" className="btn-primary block text-center" onClick={() => setOpen(false)}>
-                  Započni projekat
+                  Start a project
                 </Link>
               </motion.div>
             </motion.div>

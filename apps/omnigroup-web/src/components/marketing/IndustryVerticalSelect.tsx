@@ -8,6 +8,7 @@ import {
   PRICING_TIER_META,
   getIndustryCategory,
   resolvePricingTier,
+  type PricingTier,
 } from '@/lib/category-pricing';
 import type { IndustryCatalogCategory } from '@/lib/industry-catalog';
 
@@ -22,6 +23,14 @@ type Props = {
   onChange: (selection: IndustrySelection) => void;
   className?: string;
   showTierHint?: boolean;
+};
+
+const TIER_DESCRIPTION_EN: Record<PricingTier, string> = {
+  budget: 'Salons, hospitality, retail — lower entry, same modules.',
+  standard: 'Average SMB — reference pricing from the site.',
+  premium: 'Finance, legal, tech — more compliance and AI quotas.',
+  regulated: 'Healthcare, public sector, energy — SLA and audit trail.',
+  nonprofit: 'Discount for associations, foundations, and humanitarian orgs.',
 };
 
 export function IndustryVerticalSelect({
@@ -67,7 +76,7 @@ export function IndustryVerticalSelect({
   return (
     <div className={className}>
       <label className="block text-sm">
-        <span className="text-slate-400">Industrija</span>
+        <span className="text-slate-400">Industry</span>
         <select
           className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
           value={industryCategory}
@@ -75,18 +84,18 @@ export function IndustryVerticalSelect({
             onChange({ industryCategory: e.target.value, verticalSlug: '' });
           }}
         >
-          <option value="">Standard (prosečan SMB)</option>
-          <optgroup label="Freelance platforma">
+          <option value="">Standard (average SMB)</option>
+          <optgroup label="Freelance platform">
             {FREELANCE_INDUSTRY_CATEGORIES.map((cat) => (
               <option key={cat.slug} value={cat.slug}>
-                {cat.nameSr} — {PRICING_TIER_META[cat.tier].labelSr}
+                {cat.name} — {PRICING_TIER_META[cat.tier].label}
               </option>
             ))}
           </optgroup>
-          <optgroup label="SMB vertikale (legacy)">
+          <optgroup label="SMB verticals (legacy)">
             {LEGACY_SMB_INDUSTRY_CATEGORIES.map((cat) => (
               <option key={cat.slug} value={cat.slug}>
-                {cat.nameSr} — {PRICING_TIER_META[cat.tier].labelSr}
+                {cat.name} — {PRICING_TIER_META[cat.tier].label}
               </option>
             ))}
           </optgroup>
@@ -96,7 +105,7 @@ export function IndustryVerticalSelect({
       {industryCategory && (
         <label className="mt-3 block text-sm">
           <span className="text-slate-400">
-            Pod-industrija {loading ? '(učitavam…)' : subIndustries.length ? '' : '(opšta)'}
+            Sub-industry {loading ? '(loading…)' : subIndustries.length ? '' : '(general)'}
           </span>
           <select
             className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
@@ -104,7 +113,7 @@ export function IndustryVerticalSelect({
             disabled={!subIndustries.length}
             onChange={(e) => onChange({ industryCategory, verticalSlug: e.target.value })}
           >
-            <option value="">Sve pod-industrije u {selected?.nameSr ?? industryCategory}</option>
+            <option value="">All sub-industries in {selected?.name ?? industryCategory}</option>
             {subIndustries.map((sub) => (
               <option key={sub.slug} value={sub.slug}>
                 {sub.name}
@@ -116,14 +125,14 @@ export function IndustryVerticalSelect({
 
       {showTierHint && selected && (
         <p className="mt-2 text-xs text-slate-500">
-          Tarifni nivo: <span className="text-violet-300">{PRICING_TIER_META[tier].labelSr}</span>
+          Pricing tier: <span className="text-violet-300">{PRICING_TIER_META[tier].label}</span>
           {selectedSub ? (
             <>
               {' '}
-              · Isporuka za: <span className="text-violet-300">{selectedSub.name}</span>
+              · Delivery for: <span className="text-violet-300">{selectedSub.name}</span>
             </>
           ) : null}
-          {!selectedSub && <> — {PRICING_TIER_META[tier].description}</>}
+          {!selectedSub && <> — {TIER_DESCRIPTION_EN[tier]}</>}
         </p>
       )}
     </div>

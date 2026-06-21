@@ -1,7 +1,7 @@
 {
   "name": "Omni Group Admin",
   "short_name": "OG Admin",
-  "description": "Mobilna operator konzola — uplate, fabrika, autonomy.",
+  "description": "Mobile operator console — payments, factory, autonomy.",
   "start_url": "/admin/mobile",
   "display": "standalone",
   "background_color": "#0a0a12",

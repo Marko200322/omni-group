@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import { InvoicePreviewClient } from './InvoicePreviewClient';
 
 export const metadata: Metadata = {
-  title: 'Pregled faktura',
-  description: 'Premium HTML šabloni faktura koje Omni Group platforma šalje klijentima.',
+  title: 'Invoice preview',
+  description: 'Premium HTML invoice templates sent by the Omni Group platform to clients.',
   robots: { index: false, follow: false },
 };
 

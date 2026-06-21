@@ -143,7 +143,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       setSpeaking(true);
       const utter = new SpeechSynthesisUtterance(msg.text);
-      utter.lang = 'sr-RS';
+      utter.lang = 'en-US';
       utter.onend = () => setSpeaking(false);
       utter.onerror = () => setSpeaking(false);
       window.speechSynthesis.speak(utter);
@@ -163,7 +163,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
         setRoster(agentsJson.data.agents);
       }
     } catch {
-      setError('Ne mogu da učitam tim avatara.');
+      setError('Could not load the avatar team.');
     } finally {
       setBooting(false);
     }
@@ -251,27 +251,27 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
       setMessages((prev) => [...prev, json.data!.message]);
       await playResponse(json.data.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri slanju poruke.');
+      setError(err instanceof Error ? err.message : 'Could not send message.');
     } finally {
       setLoading(false);
     }
   }, [agentType, disabled, input, loading, playResponse, sessionId]);
 
-  const label = agentType === 'support' ? 'Support tim' : 'Prodajni tim';
+  const label = agentType === 'support' ? 'Support team' : 'Sales team';
 
   if (pickerMode) {
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
         <motion.div className="flex items-center gap-2 text-sm text-slate-400">
           <Users className="h-4 w-4" />
-          Izaberi {label.toLowerCase()} ({roster.length} avatara)
+          Choose {label.toLowerCase()} ({roster.length} avatars)
           {roster[0]?.rosterSource === 'aggregator' && (
-            <span className="text-violet-300/90">· generisano preko AI agregatora</span>
+            <span className="text-violet-300/90">· generated via AI aggregator</span>
           )}
         </motion.div>
         {booting && roster.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" /> Učitavam tim...
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -319,7 +319,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
     <div className="space-y-4">
       <div className="flex justify-end">
         <button type="button" onClick={resetToPicker} className="btn-glass text-xs">
-          Promeni agenta ({roster.length} u timu)
+          Change agent ({roster.length} on team)
         </button>
       </div>
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -334,12 +334,12 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
 
         <div className="flex min-h-[320px] flex-1 flex-col rounded-2xl border border-white/10 bg-white/[0.02]">
           <div className="border-b border-white/5 px-4 py-3 text-sm text-slate-400">
-            Razgovor sa {agent?.name ?? 'avatarom'} · {label}
+            Chat with {agent?.name ?? 'avatar'} · {label}
           </div>
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
             {booting && (
               <p className="flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" /> Avatar se budi...
+                <Loader2 className="h-4 w-4 animate-spin" /> Avatar is waking up...
               </p>
             )}
             <AnimatePresence initial={false}>
@@ -361,7 +361,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
                       onClick={() => void playResponse(m)}
                       className="mt-2 flex items-center gap-1 text-xs text-violet-300 hover:underline"
                     >
-                      <Volume2 className="h-3 w-3" /> Ponovi
+                      <Volume2 className="h-3 w-3" /> Replay
                     </button>
                   )}
                 </motion.div>
@@ -370,7 +370,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
             {loading && (
               <p className="text-xs text-slate-500">
                 <Mic className="mr-1 inline h-3 w-3" />
-                {agent?.name ?? 'Agent'} razmišlja...
+                {agent?.name ?? 'Agent'} is thinking...
               </p>
             )}
           </div>
@@ -386,7 +386,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
                   }
                 }}
                 disabled={disabled || booting || loading || !sessionId}
-                placeholder="Piši — avatar razume i odgovara glasom..."
+                placeholder="Type a message — the avatar replies with voice..."
                 className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
               />
               <button

@@ -24,21 +24,21 @@ type MeetingRow = {
 function providerLabel(id: string) {
   if (id === 'zoom') return 'Zoom';
   if (id === 'google_meet') return 'Google Meet';
-  return 'Ručno';
+  return 'Manual';
 }
 
 function statusLabel(status: string) {
-  if (status === 'scheduled') return 'Zakazan';
-  if (status === 'completed') return 'Završen';
-  if (status === 'canceled') return 'Otkazan';
-  return 'Na čekanju';
+  if (status === 'scheduled') return 'Scheduled';
+  if (status === 'completed') return 'Completed';
+  if (status === 'canceled') return 'Canceled';
+  return 'Pending';
 }
 
 function formatDate(iso?: string | null) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString('sr-RS', { dateStyle: 'short', timeStyle: 'short' });
+  return d.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
 }
 
 type Props = {
@@ -78,7 +78,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
           if (list.length > 0) setProvider(list[0].id);
         }
       } catch {
-        if (!cancelled) setError('Ne mogu da učitam support opcije.');
+        if (!cancelled) setError('Could not load support options.');
       }
     })();
     void loadMeetings();
@@ -89,7 +89,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
 
   const bookMeeting = useCallback(async () => {
     if (topic.trim().length < 3) {
-      setError('Tema mora imati bar 3 karaktera.');
+      setError('Topic must be at least 3 characters.');
       return;
     }
     setLoading(true);
@@ -116,14 +116,14 @@ export function SupportMeetingPanel({ disabled }: Props) {
       }
       setSuccess(
         json.data?.status === 'scheduled' && json.data.meeting_url
-          ? 'Poziv je zakazan — proveri email za link.'
-          : 'Zahtev je poslat — support tim će potvrditi termin i poslati link.',
+          ? 'Call scheduled — check your email for the link.'
+          : 'Request sent — support will confirm the time and send a link.',
       );
       setTopic('');
       setDescription('');
       await loadMeetings();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri zakazivanju.');
+      setError(err instanceof Error ? err.message : 'Could not schedule the call.');
     } finally {
       setLoading(false);
     }
@@ -134,31 +134,31 @@ export function SupportMeetingPanel({ disabled }: Props) {
       <ConversationalAvatarPanel agentType="support" disabled={disabled} />
 
       <motion.div className="border-t border-white/5 pt-6">
-        <h3 className="font-display text-base font-semibold text-white">Zakaži live poziv sa timom</h3>
-        <p className="mt-1 text-sm text-slate-500">Zoom, Google Meet ili ručno — pored AI avatara.</p>
+        <h3 className="font-display text-base font-semibold text-white">Schedule a live call with our team</h3>
+        <p className="mt-1 text-sm text-slate-500">Zoom, Google Meet, or manual scheduling — alongside the AI avatar.</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="space-y-3">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Tema poziva</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Call topic</label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="npr. Pomoć sa integracijom API-ja"
+              placeholder="e.g. Help with API integration"
               disabled={disabled || loading}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
             />
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Opis (opciono)</label>
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Description (optional)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="Kratko opiši problem..."
+              placeholder="Briefly describe the issue..."
               disabled={disabled || loading}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500"
             />
             {methods.length > 0 && (
               <>
-                <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Platforma</label>
+                <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Platform</label>
                 <select
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
@@ -180,7 +180,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
               className="btn-primary mt-2 inline-flex items-center gap-2 text-sm disabled:opacity-50"
             >
               <Video className="h-4 w-4" />
-              {loading ? 'Šaljem...' : 'Zakaži support poziv'}
+              {loading ? 'Sending…' : 'Schedule support call'}
             </button>
             {error && <p className="text-sm text-rose-400">{error}</p>}
             {success && <p className="text-sm text-emerald-400">{success}</p>}
@@ -189,10 +189,10 @@ export function SupportMeetingPanel({ disabled }: Props) {
           <div>
             <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
               <Calendar className="h-4 w-4" />
-              Tvoji support pozivi
+              Your support calls
             </div>
             {meetings.length === 0 ? (
-              <p className="text-sm text-slate-500">Još nema zakazanih poziva.</p>
+              <p className="text-sm text-slate-500">No scheduled calls yet.</p>
             ) : (
               <ul className="space-y-2">
                 {meetings.map((m) => (
@@ -209,7 +209,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
                         rel="noreferrer"
                         className="mt-2 inline-flex text-xs text-cyan-300 hover:underline"
                       >
-                        Pridruži se pozivu
+                        Join call
                       </a>
                     )}
                   </li>

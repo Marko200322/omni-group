@@ -14,11 +14,11 @@ type Project = {
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  draft: { label: 'Zahtev primljen', color: 'text-slate-300', icon: Clock },
-  building: { label: 'Razvoj u toku', color: 'text-cyan-300', icon: Hammer },
-  built: { label: 'Verzija izgrađena', color: 'text-violet-300', icon: Package },
-  tested: { label: 'Testirano i spremno', color: 'text-emerald-300', icon: CheckCircle2 },
-  failed: { label: 'Potrebna pažnja tima', color: 'text-amber-300', icon: AlertCircle },
+  draft: { label: 'Request received', color: 'text-slate-300', icon: Clock },
+  building: { label: 'In development', color: 'text-cyan-300', icon: Hammer },
+  built: { label: 'Build complete', color: 'text-violet-300', icon: Package },
+  tested: { label: 'Tested & ready', color: 'text-emerald-300', icon: CheckCircle2 },
+  failed: { label: 'Team attention needed', color: 'text-amber-300', icon: AlertCircle },
 };
 
 function resolveStatus(project: Project) {
@@ -67,19 +67,19 @@ export function ClientOrdersPanel({ disabled }: Props) {
   if (disabled) {
     return (
       <p className="text-sm text-slate-500">
-        Prijavite se da pratite status vaših porudžbina i isporuka.
+        Sign in to track your orders and delivery status.
       </p>
     );
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Učitavamo vaše porudžbine…</p>;
+    return <p className="text-sm text-slate-500">Loading your orders…</p>;
   }
 
   if (error) {
     return (
       <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
-        Trenutno ne možemo učitati porudžbine. Pokušajte ponovo ili kontaktirajte podršku.
+        We couldn&apos;t load orders right now. Try again or contact support.
       </p>
     );
   }
@@ -88,9 +88,9 @@ export function ClientOrdersPanel({ disabled }: Props) {
     return (
       <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center">
         <Package className="mx-auto h-8 w-8 text-slate-500" />
-        <p className="mt-3 font-medium text-white">Još nema aktivnih porudžbina</p>
+        <p className="mt-3 font-medium text-white">No active orders yet</p>
         <p className="mt-1 text-sm text-slate-500">
-          Započnite u sekciji Porudžbina — tim će vam dostaviti rešenje po meri, potpuno testirano.
+          Start in the New order section — our team will deliver a custom, fully tested solution.
         </p>
       </div>
     );
@@ -119,7 +119,7 @@ export function ClientOrdersPanel({ disabled }: Props) {
               </p>
             </div>
             <p className="mt-2 text-xs text-slate-500">
-              Svaka porudžbina je izolovana — vaš softver ne deli kod ni infrastrukturu sa drugim klijentima.
+              Each order is isolated — your software does not share code or infrastructure with other clients.
             </p>
           </li>
         );

@@ -42,7 +42,7 @@ describe('PaymentNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'client@test.com',
-      expect.stringContaining('Proforma faktura'),
+      expect.stringContaining('Proforma invoice'),
       expect.stringContaining('RS123'),
       expect.stringContaining('ATINA-REF-1')
     );
@@ -62,7 +62,7 @@ describe('PaymentNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'owner@test.com',
-      expect.stringContaining('čekanju'),
+      expect.stringContaining('pending'),
       expect.stringContaining('client@test.com'),
       expect.stringContaining('pay-1')
     );
@@ -89,8 +89,8 @@ describe('PaymentNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'client@test.com',
-      expect.stringContaining('Faktura INV-202605-0001'),
-      expect.stringContaining('Plaćeno'),
+      expect.stringContaining('Invoice INV-202605-0001'),
+      expect.stringContaining('Paid'),
       expect.any(String),
       expect.arrayContaining([
         expect.objectContaining({ filename: expect.stringMatching(/\.pdf$/i), content: expect.any(Buffer) }),

@@ -1,4 +1,4 @@
-/** Grupiše isporuke za marketing CatalogSection (ne platformu). */
+/** Groups deliverables for marketing CatalogSection (not the platform UI). */
 
 import { Briefcase, LineChart, Shield, Wrench, Zap } from 'lucide-react';
 import type { CatalogCategory } from './marketing-catalog';
@@ -19,11 +19,11 @@ const CATEGORY_ICONS: Record<DeliverableDefinition['category'], CatalogCategory[
 };
 
 const CATEGORY_SUBTITLES: Record<DeliverableDefinition['category'], string> = {
-  implementation: 'Ono što platforma isporuči — spremno za tvog klijenta',
-  consulting: 'Analiza, integracije i dizajn procesa',
-  retainer: 'Mesečna isporuka i održavanje',
-  growth: 'Landing, copy i prodajni materijali',
-  vertical: 'Gotova rešenja po industriji — CRM, AI, automatizacije',
+  implementation: 'What the platform delivers — ready for your client',
+  consulting: 'Analysis, integrations, and process design',
+  retainer: 'Monthly delivery and maintenance',
+  growth: 'Landing pages, copy, and sales materials',
+  vertical: 'Ready-made industry solutions — CRM, AI, automations',
 };
 
 export function buildDeliverableCatalogCategories(
@@ -64,7 +64,7 @@ export function buildDeliverableCatalogCategories(
         if (verticalSlug) query.set('vertical', verticalSlug);
         return {
           id: d.id,
-          name: d.nameSr,
+          name: d.name,
           description: d.description,
           priceLabel: `${formatEur(quote.clientPriceEur)} ${formatBillingLabel(d.billing)}`,
           priceMonthly: d.billing === 'monthly' ? quote.clientPriceEur : undefined,

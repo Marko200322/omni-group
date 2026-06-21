@@ -19,13 +19,13 @@ export default function ServicesPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Usluge</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Services</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Usluge za vaš biznis
+            Services for your business
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Implementacija, savetovanje, podrška i marketing — cene prilagođene vašoj industriji i tržištu.
-            Izaberite kategoriju da vidite orientacione cene.
+            Implementation, consulting, support, and marketing — pricing tailored to your industry and market.
+            Select a category to see indicative prices.
           </p>
         </motion.div>
 
@@ -44,15 +44,15 @@ export default function ServicesPage() {
           className="mt-16 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-8"
         >
           <div>
-            <p className="font-display text-xl font-semibold text-white">Paketi i proizvodi</p>
-            <p className="mt-1 text-sm text-slate-400">CRM, AI podrška, automatizacije — pregledaj šta nudimo.</p>
+            <p className="font-display text-xl font-semibold text-white">Packages and products</p>
+            <p className="mt-1 text-sm text-slate-400">CRM, AI support, automations — browse what we offer.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/products" className="btn-primary inline-flex items-center gap-2 text-sm">
-              Proizvodi <ArrowRight className="h-4 w-4" />
+              Products <ArrowRight className="h-4 w-4" />
             </Link>
             <Link href="/pricing" className="btn-glass text-sm">
-              Mesečni paketi
+              Monthly packages
             </Link>
           </div>
         </motion.div>

@@ -1,4 +1,4 @@
-// Display formatter helpers za AtinaPublicSnapshot (dashboard / admin klijenti).
+// Display formatter helpers for AtinaPublicSnapshot (dashboard / admin clients).
 
 import type { AtinaPlanSummary, AtinaPublicSnapshot } from './atina';
 
@@ -19,13 +19,12 @@ export function formatPlanLine(p: AtinaPlanSummary): string {
 export function describeSource(s: AtinaPublicSnapshot): string {
   switch (s.source) {
     case 'live':
-      return 'Atina API odgovara, podaci su sveži.';
+      return 'Atina API is responding; data is fresh.';
     case 'partial':
-      return 'Atina API delimično odgovara — neki endpoint nije dostupan, vidi errors.';
+      return 'Atina API partially responding — some endpoint unavailable, see errors.';
     case 'unreachable':
-      return 'Atina API nije dostupan (host, port ili network).';
+      return 'Atina API unreachable (host, port, or network).';
     case 'placeholder':
-      return 'Privremeni placeholder — originalni helper nije rekonstruisan.';
+      return 'Temporary placeholder — original helper not reconstructed.';
   }
 }
-

@@ -47,7 +47,7 @@ function resolveCheckoutAmount(
 
 function categoryCheckoutLabel(industryCategory?: string | null): string {
   const cat = getIndustryCategory(industryCategory);
-  return cat ? ` · ${cat.nameSr}` : '';
+  return cat ? ` · ${cat.name}` : '';
 }
 
 function toMoneyNumber(value: unknown): number {
@@ -655,7 +655,7 @@ export class PaymentsService {
       });
 
       const lineItems = [{
-        description: `${deliverable.nameSr} (${deliverable.billing})`,
+        description: `${deliverable.name} (${deliverable.billing})`,
         amount: paymentAmount,
         quantity: 1,
       }];
@@ -684,7 +684,7 @@ export class PaymentsService {
             toEmail: client.email,
             toName: client.name,
             invoiceNumber,
-            planName: deliverable.nameSr,
+            planName: deliverable.name,
             planSlug: deliverable.id,
             planDescription: deliverable.description,
             billingCycle: deliverable.billing,
@@ -811,7 +811,7 @@ export class PaymentsService {
       paymentNotifications.createInAppPaymentNotification(
         rows[0].user_id,
         'payment_confirmed',
-        'Kupovina potvrđena',
+        'Purchase confirmed',
         paymentNotifications.buildPurchaseConfirmedMessage({
           planName: plan.name,
           billingCycle,
@@ -844,8 +844,8 @@ export class PaymentsService {
     if (mode === 'manual' || config.payments.manual.accountName || config.payments.manual.iban) {
       methods.push({
         id: 'manual',
-        label: 'Bankovni transfer',
-        description: 'Uplata na lični/poslovni račun — aktivacija nakon admin potvrde (bez Stripe/PayPal naloga).',
+        label: 'Bank transfer',
+        description: 'Pay to a personal or business account — activation after admin confirmation (no Stripe/PayPal account required).',
         available: true,
       });
     }
@@ -853,8 +853,8 @@ export class PaymentsService {
     if (mode !== 'manual' && config.stripe.secretKey) {
       methods.push({
         id: 'stripe',
-        label: 'Kartica (Stripe)',
-        description: 'Checkout preko Stripe test/live naloga.',
+        label: 'Card (Stripe)',
+        description: 'Checkout via Stripe test or live account.',
         available: true,
       });
     }
@@ -863,7 +863,7 @@ export class PaymentsService {
       methods.push({
         id: 'paypal',
         label: 'PayPal',
-        description: 'Sandbox ili live PayPal nalog.',
+        description: 'Sandbox or live PayPal account.',
         available: true,
       });
     }
@@ -871,8 +871,8 @@ export class PaymentsService {
     if (mode !== 'manual') {
       methods.push({
         id: 'wise',
-        label: 'Wise / devizna uplata',
-        description: 'Uputstvo za transfer + ručna potvrda.',
+        label: 'Wise / international transfer',
+        description: 'Transfer instructions + manual confirmation.',
         available: true,
       });
     }
@@ -881,8 +881,8 @@ export class PaymentsService {
     if (config.kriptoman.enabled && kriptoman.isConfigured()) {
       methods.push({
         id: 'kriptoman',
-        label: 'Kriptovalute (Kriptoman)',
-        description: 'Plaćanje USDT/BTC preko Kriptoman checkout linka.',
+        label: 'Crypto (Kriptoman)',
+        description: 'Pay USDT/BTC via Kriptoman checkout link.',
         available: true,
       });
     }
@@ -893,7 +893,7 @@ export class PaymentsService {
       manualConfigured: Boolean(config.payments.manual.accountName && config.payments.manual.iban),
       note:
         mode === 'manual'
-          ? 'Režim bez firme: koristi bankovni transfer dok ne otvoriš firmu i uključiš Stripe live.'
+          ? 'No-company mode: use bank transfer until you register a company and enable Stripe live.'
           : undefined,
     };
   }
@@ -955,8 +955,8 @@ export class PaymentsService {
       paymentNotifications.createInAppPaymentNotification(
         userId,
         'payment_pending',
-        'Uputstvo za uplatu poslato',
-        `Proveri email ili dashboard za IBAN i referencu ${reference}.`,
+        'Payment instructions sent',
+        `Check your email or dashboard for IBAN and reference ${reference}.`,
         { paymentId, reference }
       ),
       'checkout_in_app_notification'
@@ -1009,7 +1009,7 @@ export class PaymentsService {
       userId,
       amount,
       currency: currency.toUpperCase(),
-      description: `Isporuka — ${deliverable.nameSr}${categoryLabel}`,
+      description: `Deliverable — ${deliverable.name}${categoryLabel}`,
       metadataJson: JSON.stringify({
         purchaseType: 'deliverable',
         deliverableId: deliverable.id,
@@ -1021,7 +1021,7 @@ export class PaymentsService {
       }),
     });
 
-    const instructions = buildTransferInstructions(reference, amount, currency, deliverable.nameSr);
+    const instructions = buildTransferInstructions(reference, amount, currency, deliverable.name);
     const paymentId = rows[0].id;
 
     const { rows: userRows } = await this.db.getUserById(userId);
@@ -1030,7 +1030,7 @@ export class PaymentsService {
         paymentNotifications.sendManualCheckoutInstructions({
           toEmail: userRows[0].email,
           toName: userRows[0].name,
-          planName: deliverable.nameSr,
+          planName: deliverable.name,
           planSlug: deliverable.id,
           planDescription: deliverable.description,
           billingCycle: deliverable.billing,
@@ -1048,8 +1048,8 @@ export class PaymentsService {
       paymentNotifications.createInAppPaymentNotification(
         userId,
         'payment_pending',
-        'Uputstvo za isporuku',
-        `Referenca ${reference} · ${deliverable.nameSr}`,
+        'Delivery instructions',
+        `Reference ${reference} · ${deliverable.name}`,
         { paymentId, reference, deliverableId: deliverable.id }
       ),
       'deliverable_checkout_in_app'
@@ -1062,7 +1062,7 @@ export class PaymentsService {
       currency: currency.toUpperCase(),
       instructions,
       quote: {
-        deliverableName: deliverable.nameSr,
+        deliverableName: deliverable.name,
         clientPriceEur: quote.clientPriceEur,
       },
     };
@@ -1099,7 +1099,7 @@ export class PaymentsService {
         paymentNotifications.notifyAdminPaymentPending({
           userEmail: user.email,
           userName: user.name,
-          planName: deliverable?.nameSr ?? deliverableId,
+          planName: deliverable?.name ?? deliverableId,
           billingCycle: String(metadata.billing ?? 'one_time'),
           amount: Number(payment.amount),
           currency: payment.currency,

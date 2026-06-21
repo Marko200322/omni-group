@@ -277,7 +277,7 @@ export const config = {
     defaultDurationMinutes: optionalNumber('MEETING_DEFAULT_DURATION_MIN', 30),
     support: {
       agentName: optional('SUPPORT_AGENT_NAME', 'Mila'),
-      agentTitle: optional('SUPPORT_AGENT_TITLE', 'Tehnička podrška'),
+      agentTitle: optional('SUPPORT_AGENT_TITLE', 'Technical support'),
       agentAvatarUrl: optional('SUPPORT_AGENT_AVATAR_URL', ''),
       voiceId: optional('SUPPORT_AGENT_VOICE_ID', ''),
       persona: optional('SUPPORT_AGENT_PERSONA', ''),

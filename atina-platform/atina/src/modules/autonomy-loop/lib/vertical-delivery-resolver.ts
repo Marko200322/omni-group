@@ -9,6 +9,7 @@ import {
 
 export type DeliverableQuoteSummary = {
   id: string;
+  name: string;
   nameSr: string;
   clientPriceEur: number;
   billing: DeliverableBilling;
@@ -91,6 +92,7 @@ export function resolveVerticalDeliveryPack(input: {
       });
       return {
         id,
+        name: def.name,
         nameSr: def.nameSr,
         clientPriceEur: quote.clientPriceEur,
         billing: def.billing,

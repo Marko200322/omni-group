@@ -21,13 +21,13 @@ export function ModulesSection() {
           viewport={{ once: true }}
           className="mb-12 text-center"
         >
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Moduli</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Modules</p>
           <h2 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
-            Tri modula, <span className="text-gradient">jedan brend</span>
+            Three modules, <span className="text-gradient">one brand</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Omni Group je brend. Atina, Astra i Titan su produkt moduli koji pokrivaju API, automatizaciju i
-            operacije.
+            Omni Group is the brand. Atina, Astra, and Titan are product modules covering API, automation, and
+            operations.
           </p>
         </motion.div>
         <motion.div className="grid gap-6 md:grid-cols-3">
@@ -48,7 +48,7 @@ export function ModulesSection() {
                 <h3 className="mt-2 font-display text-xl font-semibold text-white">{m.tagline}</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">{m.description}</p>
                 <span className="mt-6 inline-flex items-center gap-1 text-sm text-violet-300 transition group-hover:text-white">
-                  Otvori modul <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  Open module <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </span>
               </Link>
             </motion.div>

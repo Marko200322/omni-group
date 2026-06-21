@@ -69,7 +69,7 @@ function LoginForm() {
           if (!res.ok || !data.ok) {
             setStatus('err');
             if (data.error === 'atina_unreachable') {
-              setErrMsg('Atina API nije dostupan — pokreni backend ili koristi demo prijavu.');
+              setErrMsg('Atina API is unavailable — start the backend or use demo sign-in.');
             } else {
               setErrMsg(data.error ?? data.detail ?? `HTTP ${res.status}`);
             }
@@ -99,13 +99,13 @@ function LoginForm() {
             type="email"
             required
             disabled={status === 'loading'}
-            placeholder="vi@firma.com"
+            placeholder="you@company.com"
             className="w-full rounded-xl border border-white/10 bg-black/40 py-3 pl-10 pr-4 text-white outline-none transition-shadow focus:border-violet-500/50 focus:shadow-[0_0_24px_rgba(139,92,246,0.2)]"
           />
         </div>
       </label>
       <label className="block text-sm text-slate-400">
-        Lozinka
+        Password
         <div className="relative mt-1">
           <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <input
@@ -125,10 +125,10 @@ function LoginForm() {
         whileHover={{ scale: 1.03, y: -2 }}
         whileTap={tapScale}
       >
-        {status === 'loading' ? 'Prijava…' : 'Prijavi se'}
+        {status === 'loading' ? 'Signing in…' : 'Sign in'}
       </motion.button>
       <p className="text-center text-xs text-slate-500">
-        Nemate nalog? <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">Kontaktirajte nas</Link> za pristup.
+        No account? <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">Contact us</Link> for access.
       </p>
       <motion.button
         type="button"
@@ -138,7 +138,7 @@ function LoginForm() {
         whileTap={tapScale}
         onClick={() => startDemo('client')}
       >
-        Pregled demo portala
+        Preview demo portal
       </motion.button>
     </motion.form>
   );
@@ -171,17 +171,17 @@ export default function LoginPage() {
               <motion.span whileHover={{ x: -4 }}>
                 <ArrowLeft className="inline h-4 w-4" />
               </motion.span>{' '}
-              Nazad na sajt
+              Back to site
             </Link>
           </motion.div>
           <motion.div variants={fadeUp}>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white md:text-5xl">
-              Klijentski <span className="text-gradient animate-gradient-text">portal</span>
+              Client <span className="text-gradient animate-gradient-text">portal</span>
             </h1>
             <p className="mt-4 max-w-md text-slate-400">
-              Pratite porudžbine, projekte i podršku na jednom mestu. Plaćanje preko banke, video konsultacije i
-              status isporuke — sve na dohvat ruke.
+              Track orders, projects, and support in one place. Bank payments, video consultations, and delivery
+              status — all at your fingertips.
             </p>
           </motion.div>
 
@@ -211,10 +211,10 @@ export default function LoginPage() {
             >
               <OmniGroupLogoMark size={72} />
             </motion.div>
-            <p className="font-display text-2xl font-bold text-gradient">Vaša digitalna isporuka</p>
+            <p className="font-display text-2xl font-bold text-gradient">Your digital delivery</p>
             <p className="mt-4 text-sm text-slate-400">
-              Softver po meri, testiran pre isporuke. Svaka porudžbina je izolovana — vaši podaci i kod ostaju
-              isključivo vaši.
+              Custom software, tested before delivery. Every order is isolated — your data and code remain exclusively
+              yours.
             </p>
           </motion.div>
         </div>

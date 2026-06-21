@@ -59,14 +59,14 @@ type BillingSummary = {
 };
 
 function formatCycle(cycle?: string) {
-  return cycle === 'yearly' ? 'Godišnja pretplata' : 'Mesečna pretplata';
+  return cycle === 'yearly' ? 'Annual subscription' : 'Monthly subscription';
 }
 
 function formatDate(iso?: string) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('sr-RS');
+  return d.toLocaleDateString('en-US');
 }
 
 type Props = {
@@ -127,7 +127,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         setMode(json.data.mode ?? 'manual');
         setMethods(json.data.methods ?? []);
       } catch {
-        if (!cancelled) setError('Ne mogu da učitam načine plaćanja.');
+        if (!cancelled) setError('Unable to load payment methods.');
       }
     })();
     return () => {
@@ -159,7 +159,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         window.open(json.data.paymentUrl, '_blank', 'noopener,noreferrer');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri Kriptoman checkout-u.');
+      setError(err instanceof Error ? err.message : 'Kriptoman checkout failed.');
     } finally {
       setLoading(false);
     }
@@ -183,9 +183,9 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         throw new Error(json.detail ?? json.error ?? 'sync_failed');
       }
       if (json.data?.activated) setSent(true);
-      else setError('Uplata još nije potvrđena na mreži. Sačekaj nekoliko minuta i probaj ponovo.');
+      else setError('Payment is not confirmed on the network yet. Wait a few minutes and try again.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri proveri uplate.');
+      setError(err instanceof Error ? err.message : 'Failed to verify payment.');
     } finally {
       setLoading(false);
     }
@@ -215,7 +215,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       }
       window.location.href = json.data.url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Stripe checkout nije uspeo.');
+      setError(err instanceof Error ? err.message : 'Stripe checkout failed.');
     } finally {
       setLoading(false);
     }
@@ -241,7 +241,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       }
       window.location.href = json.data.approveUrl;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'PayPal checkout nije uspeo.');
+      setError(err instanceof Error ? err.message : 'PayPal checkout failed.');
     } finally {
       setLoading(false);
     }
@@ -265,7 +265,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       }
       setWiseCheckout(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Wise transfer nije uspeo.');
+      setError(err instanceof Error ? err.message : 'Wise transfer failed.');
     } finally {
       setLoading(false);
     }
@@ -292,7 +292,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       }
       setCheckout(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri kreiranju uplate.');
+      setError(err instanceof Error ? err.message : 'Failed to create payment.');
     } finally {
       setLoading(false);
     }
@@ -312,7 +312,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       }
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri potvrdi slanja.');
+      setError(err instanceof Error ? err.message : 'Failed to confirm submission.');
     } finally {
       setLoading(false);
     }
@@ -332,32 +332,32 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Tvoja kupovina (aktivno)</p>
+          <p className="font-medium text-white">Your subscription (active)</p>
           <ul className="mt-3 space-y-1 text-sm">
             <li>
               <span className="text-slate-500">Plan:</span>{' '}
               {purchase.subscription.plan_name ?? purchase.subscription.plan_slug}
             </li>
             <li>
-              <span className="text-slate-500">Tip:</span> {formatCycle(purchase.subscription.billing_cycle)}
+              <span className="text-slate-500">Type:</span> {formatCycle(purchase.subscription.billing_cycle)}
             </li>
             <li>
-              <span className="text-slate-500">Važi do:</span>{' '}
+              <span className="text-slate-500">Valid until:</span>{' '}
               {formatDate(purchase.subscription.current_period_end)}
             </li>
             {purchase.latestInvoice?.invoice_number && (
               <>
                 <li>
-                  <span className="text-slate-500">Faktura:</span> {purchase.latestInvoice.invoice_number}
+                  <span className="text-slate-500">Invoice:</span> {purchase.latestInvoice.invoice_number}
                 </li>
                 <li>
-                  <span className="text-slate-500">Plaćeno:</span>{' '}
+                  <span className="text-slate-500">Paid:</span>{' '}
                   {Number(purchase.latestInvoice.total_amount ?? 0).toFixed(2)}{' '}
                   {purchase.latestInvoice.currency ?? 'EUR'}
                 </li>
                 {purchase.latestInvoice.line_items?.[0]?.description && (
                   <li>
-                    <span className="text-slate-500">Stavka:</span>{' '}
+                    <span className="text-slate-500">Line item:</span>{' '}
                     {purchase.latestInvoice.line_items[0].description}
                   </li>
                 )}
@@ -369,7 +369,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
 
       {mode === 'manual' && (
         <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-          Režim bez firme — bankovni transfer. Cena zavisi od industrijske kategorije; isti iznos vidiš na /pricing.
+          Sole proprietor mode — bank transfer. Price depends on industry category; same amount shown on /pricing.
         </p>
       )}
 
@@ -403,7 +403,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               return (
                 <option key={p.slug ?? p.name} value={p.slug ?? 'pro'}>
                   {p.name ?? p.slug} — {formatEur(price)}
-                  {billingCycle === 'yearly' ? '/god' : '/mes'}
+                  {billingCycle === 'yearly' ? '/yr' : '/mo'}
                 </option>
               );
             })}
@@ -417,31 +417,31 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           </select>
         </label>
         <label className="block text-sm">
-          <span className="text-slate-400">Ciklus</span>
+          <span className="text-slate-400">Billing cycle</span>
           <select
             className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
             value={billingCycle}
             onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly')}
             disabled={disabled || loading}
           >
-            <option value="monthly">Mesečno</option>
-            <option value="yearly">Godišnje</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Annual</option>
           </select>
         </label>
       </motion.div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
-        Iznos za uplatu:{' '}
+        Amount due:{' '}
         <span className="font-semibold text-white">{formatEur(quotedAmount)}</span>
-        {billingCycle === 'yearly' ? ' / godišnje' : ' / mesečno'}
-        {categoryMeta ? ` · ${categoryMeta.nameSr}` : ' · standardna tarifa'}
+        {billingCycle === 'yearly' ? ' / year' : ' / month'}
+        {categoryMeta ? ` · ${categoryMeta.name}` : ' · standard tier'}
       </p>
 
       {kriptomanAvailable && (
         <div className="space-y-2 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
-          <p className="text-xs font-medium text-amber-100">Kriptoman — kripto uplata</p>
+          <p className="text-xs font-medium text-amber-100">Kriptoman — crypto payment</p>
           <label className="block text-sm">
-            <span className="text-slate-400">Valuta</span>
+            <span className="text-slate-400">Currency</span>
             <select
               className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
               value={cryptoCurrency}
@@ -459,7 +459,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             onClick={startKriptomanCheckout}
             disabled={disabled || loading}
           >
-            {loading ? 'Kriptoman…' : 'Plati preko Kriptoman'}
+            {loading ? 'Kriptoman…' : 'Pay with Kriptoman'}
           </button>
         </div>
       )}
@@ -472,7 +472,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             onClick={startStripeCheckout}
             disabled={disabled || loading}
           >
-            Plati karticom (Stripe)
+            Pay with card (Stripe)
           </button>
         )}
         {paypalAvailable && (
@@ -502,14 +502,14 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             onClick={startManualCheckout}
             disabled={disabled || loading}
           >
-            Banka (manual)
+            Bank transfer (manual)
           </button>
         )}
       </div>
 
       {!stripeAvailable && !paypalAvailable && !wiseAvailable && !manualAvailable && !kriptomanAvailable && (
         <p className="text-sm text-amber-400/90">
-          Nijedan način plaćanja nije podešen — popuni PAYMENTS/STRIPE/PAYPAL u Atina .env.
+          No payment methods are configured — set PAYMENTS/STRIPE/PAYPAL in Atina .env.
         </p>
       )}
 
@@ -525,14 +525,14 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           <ul className="mt-3 space-y-1 font-mono text-xs">
             <li>Payment ID: {kriptomanCheckout.paymentId}</li>
             <li>
-              Iznos: {kriptomanCheckout.amount.toFixed(2)} {kriptomanCheckout.currency}
+              Amount: {kriptomanCheckout.amount.toFixed(2)} {kriptomanCheckout.currency}
             </li>
             {kriptomanCheckout.cryptoAmount && (
               <li>
-                Kripto: {kriptomanCheckout.cryptoAmount} {kriptomanCheckout.cryptoCurrency}
+                Crypto: {kriptomanCheckout.cryptoAmount} {kriptomanCheckout.cryptoCurrency}
               </li>
             )}
-            {kriptomanCheckout.payAddress && <li>Adresa: {kriptomanCheckout.payAddress}</li>}
+            {kriptomanCheckout.payAddress && <li>Address: {kriptomanCheckout.payAddress}</li>}
           </ul>
           {kriptomanCheckout.paymentUrl && (
             <a
@@ -541,7 +541,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               rel="noopener noreferrer"
               className="mt-3 inline-block text-xs text-amber-300 underline"
             >
-              Otvori checkout ponovo
+              Reopen checkout
             </a>
           )}
           {!sent ? (
@@ -551,10 +551,10 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               onClick={syncKriptoman}
               disabled={loading}
             >
-              Proveri da li je uplata stigla
+              Check if payment arrived
             </button>
           ) : (
-            <p className="mt-4 text-emerald-300">Uplata potvrđena — plan je aktiviran.</p>
+            <p className="mt-4 text-emerald-300">Payment confirmed — plan activated.</p>
           )}
         </motion.div>
       )}
@@ -565,11 +565,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Wise uputstvo</p>
+          <p className="font-medium text-white">Wise instructions</p>
           <ul className="mt-3 space-y-1 font-mono text-xs">
-            <li>Referenca: {wiseCheckout.reference}</li>
+            <li>Reference: {wiseCheckout.reference}</li>
             <li>
-              Iznos: {Number(wiseCheckout.amount).toFixed(2)} {wiseCheckout.currency}
+              Amount: {Number(wiseCheckout.amount).toFixed(2)} {wiseCheckout.currency}
             </li>
             {Object.entries(wiseCheckout.instructions).map(([k, v]) =>
               v ? (
@@ -579,7 +579,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               ) : null
             )}
           </ul>
-          <p className="mt-4 text-xs text-slate-400">Admin potvrđuje uplatu posle provere Wise transfera.</p>
+          <p className="mt-4 text-xs text-slate-400">Admin confirms payment after verifying the Wise transfer.</p>
         </motion.div>
       )}
 
@@ -589,15 +589,15 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Uputstvo za uplatu</p>
+          <p className="font-medium text-white">Payment instructions</p>
           <p className="mt-2 text-xs text-slate-400">
-            Kupuješ: <span className="text-white">{planSlug}</span> · {formatCycle(billingCycle)}
-            {categoryMeta ? ` · ${categoryMeta.nameSr}` : ''}
+            Purchasing: <span className="text-white">{planSlug}</span> · {formatCycle(billingCycle)}
+            {categoryMeta ? ` · ${categoryMeta.name}` : ''}
           </p>
           <ul className="mt-3 space-y-1 font-mono text-xs">
-            <li>Referenca: {checkout.reference}</li>
+            <li>Reference: {checkout.reference}</li>
             <li>
-              Iznos: {Number(checkout.amount).toFixed(2)} {checkout.currency}
+              Amount: {Number(checkout.amount).toFixed(2)} {checkout.currency}
             </li>
             {Object.entries(checkout.instructions).map(([k, v]) =>
               v ? (
@@ -614,11 +614,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               onClick={markSent}
               disabled={loading}
             >
-              Poslao sam uplatu
+              I have sent the payment
             </button>
           ) : (
             <p className="mt-4 text-emerald-300">
-              Hvala — admin potvrđuje uplatu i aktivira plan (obično do 24h).
+              Thank you — an admin will confirm payment and activate your plan (usually within 24 hours).
             </p>
           )}
         </motion.div>

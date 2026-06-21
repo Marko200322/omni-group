@@ -71,7 +71,7 @@ const paymentNotifyApi = {
   notifyAdminPaymentPending: jest.fn().mockResolvedValue(undefined),
   sendInvoiceConfirmationToClient: jest.fn().mockResolvedValue(undefined),
   createInAppPaymentNotification: jest.fn().mockResolvedValue(undefined),
-  buildPurchaseConfirmedMessage: jest.fn().mockReturnValue('Kupljeno: Pro (Mesečna pretplata).'),
+  buildPurchaseConfirmedMessage: jest.fn().mockReturnValue('Purchased: Pro (Monthly subscription).'),
 };
 
 jest.mock('../../modules/payments/service/payment-notifications.service', () => ({

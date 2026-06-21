@@ -53,7 +53,8 @@ export type VerticalDeliveryPack = {
   outreachHooks: string[];
   recommendedDeliverables: Array<{
     id: string;
-    nameSr: string;
+    name?: string;
+    nameSr?: string;
     clientPriceEur: number;
     billing: string;
   }>;

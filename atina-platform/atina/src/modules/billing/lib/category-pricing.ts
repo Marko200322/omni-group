@@ -29,31 +29,31 @@ export const PRICING_TIER_META: Record<
     label: 'Budget SMB',
     labelSr: 'Mali biznis',
     multiplier: 0.75,
-    description: 'Saloni, ugostiteljstvo, retail — niži entry, isti moduli.',
+    description: 'Salons, hospitality, retail — lower entry, same modules.',
   },
   standard: {
     label: 'Standard',
     labelSr: 'Standard',
     multiplier: 1,
-    description: 'Prosečan SMB — referentne cene sa sajta.',
+    description: 'Typical SMB — reference prices from the site.',
   },
   premium: {
     label: 'Premium',
     labelSr: 'Premium',
     multiplier: 1.35,
-    description: 'Finansije, pravo, tech — više compliance i AI kvote.',
+    description: 'Finance, legal, tech — more compliance and AI quota.',
   },
   regulated: {
     label: 'Regulated',
     labelSr: 'Regulisane industrije',
     multiplier: 1.65,
-    description: 'Zdravstvo, javni sektor, energija — SLA i audit trail.',
+    description: 'Healthcare, public sector, energy — SLA and audit trail.',
   },
   nonprofit: {
     label: 'Nonprofit',
     labelSr: 'NVO / neprofitne',
     multiplier: 0.6,
-    description: 'Popust za udruženja, fondacije i humanitarne org.',
+    description: 'Discount for associations, foundations, and humanitarian orgs.',
   },
 };
 
@@ -141,7 +141,7 @@ export function getPlanPriceForCategory(
 export function getCategoryPricingMatrix() {
   return INDUSTRY_CATEGORIES.map((cat) => ({
     ...cat,
-    tierLabel: PRICING_TIER_META[cat.tier].labelSr,
+    tierLabel: PRICING_TIER_META[cat.tier].label,
     plans: (['starter', 'pro', 'enterprise'] as PlanSlug[]).map((slug) => ({
       slug,
       monthly: getPlanPriceForCategory(slug, 'monthly', cat.slug),
@@ -182,9 +182,9 @@ export function getModulePriceLabel(
 ): string {
   if (includedIn?.length === 3) {
     const min = getPlanPriceForCategory('starter', 'monthly', industryCategory);
-    return `u paketu od €${min}/mes`;
+    return `in bundle from €${min}/mo`;
   }
   const minPlan = PRODUCT_CATALOG_MIN_PLAN[catalogCategoryId] ?? includedIn?.[0] ?? 'pro';
   const price = getPlanPriceForCategory(minPlan, 'monthly', industryCategory);
-  return `od €${price}/mes`;
+  return `from €${price}/mo`;
 }

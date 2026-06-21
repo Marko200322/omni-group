@@ -4,15 +4,15 @@ import { Suspense } from 'react';
 import { DevDocsSections, type DocSection } from './DevDocsSections';
 
 export const metadata: Metadata = {
-  title: 'Repo dokovi',
+  title: 'Repo docs',
   description:
-    'Interni pregled repo putanja po sekcijama: pretraga (#dev-docs-search), sidra #sec-…, kopiranje linkova (noindex).',
+    'Internal browse of repo paths by section: search (#dev-docs-search), anchors #sec-…, link copying (noindex).',
   robots: { index: false, follow: false },
 };
 
 const sections: DocSection[] = [
   {
-    title: 'Ulaz i navigacija',
+    title: 'Entry and navigation',
     paths: [
       'README.md',
       'NIVO-1-START.md',
@@ -118,7 +118,7 @@ const sections: DocSection[] = [
     ],
   },
   {
-    title: 'Nivo 3 — Talas A (master spec dokumenti)',
+    title: 'Level 3 — Wave A (master spec documents)',
     paths: [
       'docs/nivo3-wave-a/01-master-spec-final.md',
       'docs/nivo3-wave-a/02-ultimate-ultra.md',
@@ -129,7 +129,7 @@ const sections: DocSection[] = [
     ],
   },
   {
-    title: 'Faza 4 i dashboard (dizajn)',
+    title: 'Phase 4 and dashboard (design)',
     paths: [
       'docs/DASHBOARD-AUTH-ROADMAP.md',
       'docs/FAZA-4-F4-6-NEXT.md',
@@ -169,7 +169,7 @@ const sections: DocSection[] = [
     ],
   },
   {
-    title: 'Python (koren monorepa)',
+    title: 'Python (monorepo root)',
     paths: [
       'docs/PYTHON-ASTRA-OPS.md',
       'tests/README.md',
@@ -221,11 +221,11 @@ const sections: DocSection[] = [
     ],
   },
   {
-    title: 'Alati (monorepo)',
+    title: 'Tools (monorepo)',
     paths: ['tools/youtube-pipeline/RUNBOOK.md'],
   },
   {
-    title: 'Omnigroup Next (ova aplikacija)',
+    title: 'Omnigroup Next (this app)',
     paths: [
       'apps/omnigroup-web/README.md',
       'apps/omnigroup-web/src/app/layout.tsx',
@@ -268,65 +268,65 @@ export default function DevDocsPage() {
   return (
     <div className="px-4 py-16">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-4xl font-bold text-gradient">Dev — repo dokovi</h1>
+        <h1 className="text-4xl font-bold text-gradient">Dev — repo docs</h1>
         <p className="mt-4 text-sm text-gray-500">
-          Izvor liste: <code className="text-violet-400">src/app/dev/docs/page.tsx</code> — podeljeno po
-          sekcijama; pretraga u <code className="text-violet-400">DevDocsSections.tsx</code> filtrira
-          naslove i putanje, vizuelno ističe podudaranja, briše upit na Esc, fokus na pretragu sa
-          Ctrl/⌘+K ili tasterom <code className="text-violet-400">/</code> (van drugih polja), sinhronizuje upit sa URL parametrom <code className="text-violet-400">q</code>,
-          kopiranje putanje, kopiranje punog linka stranice, kopiranje samo hash fragmenta iz adrese kada postoji (stanje dugmeta prati **hashchange** i **popstate**) i vidljivo dugme za brisanje upita; kada nema pogodaka, panel sa citiranim upitom i dugmetom za brisanje filtera; broj sekcija/putanja u elementu{' '}
+          List source: <code className="text-violet-400">src/app/dev/docs/page.tsx</code> — split by
+          sections; search in <code className="text-violet-400">DevDocsSections.tsx</code> filters
+          titles and paths, visually highlights matches, clears the query on Esc, focuses search with
+          Ctrl/⌘+K or the <code className="text-violet-400">/</code> key (outside other fields), syncs the query with the URL parameter <code className="text-violet-400">q</code>,
+          copies paths, copies the full page link, copies only the hash fragment from the address when present (button state follows **hashchange** and **popstate**), and shows a visible button to clear the query; when there are no matches, a panel with the quoted query and a button to clear the filter; section/path count in the{' '}
           <code className="text-violet-400">&lt;output htmlFor=&quot;dev-docs-filter&quot;&gt;</code> (
           <code className="text-violet-400">aria-live=&quot;polite&quot;</code>,{' '}
           <code className="text-violet-400">aria-relevant=&quot;text&quot;</code>,{' '}
-          <code className="text-violet-400">aria-label</code> za statistiku); pretraga ima{' '}
-          <code className="text-violet-400">role=&quot;search&quot;</code>, vezu ka listi rezultata i{' '}
-          <code className="text-violet-400">aria-describedby</code> ka broju sekcija/putanja; polje ima{' '}
-          <code className="text-violet-400">aria-keyshortcuts</code> (Ctrl/⌘+K i{' '}
-          <code className="text-violet-400">/</code> van drugih polja);{' '}
-          <code className="text-violet-400">aria-controls</code> uključuje{' '}
-          <code className="text-violet-400">dev-docs-empty</code> kad je prikazan prazan rezultat, i{' '}
-          <code className="text-violet-400">dev-docs-quick-jump</code> kad je navigacija{' '}
-          <strong className="font-normal text-gray-400">Brzi skok</strong> u DOM-u.
-          Naslovi sekcija imaju sidra oblika <code className="text-violet-400">#sec-…</code> (npr.{' '}
-          <code className="text-violet-400">#sec-ulaz-i-navigacija</code>); za hash{' '}
-          <code className="text-violet-400">#sec-…</code> stranica skroluje i fokusira naslov ako je u
-          prikazu; za <code className="text-violet-400">#dev-docs-filter</code> fokus na polju pretrage; za{' '}
-          <code className="text-violet-400">#dev-docs-search</code> skrol do cele oblasti pretrage (
-          <code className="text-violet-400">role=&quot;search&quot;</code>). Skrol do sidra je{' '}
-          <code className="text-violet-400">smooth</code> samo ako korisnik nema{' '}
+          <code className="text-violet-400">aria-label</code> for statistics); search has{' '}
+          <code className="text-violet-400">role=&quot;search&quot;</code>, a link to the result list, and{' '}
+          <code className="text-violet-400">aria-describedby</code> pointing to the section/path count; the field has{' '}
+          <code className="text-violet-400">aria-keyshortcuts</code> (Ctrl/⌘+K and{' '}
+          <code className="text-violet-400">/</code> outside other fields);{' '}
+          <code className="text-violet-400">aria-controls</code> includes{' '}
+          <code className="text-violet-400">dev-docs-empty</code> when an empty result is shown, and{' '}
+          <code className="text-violet-400">dev-docs-quick-jump</code> when{' '}
+          <strong className="font-normal text-gray-400">Quick jump</strong> navigation is in the DOM.
+          Section headings have anchors of the form <code className="text-violet-400">#sec-…</code> (e.g.{' '}
+          <code className="text-violet-400">#sec-entry-and-navigation</code>); for hash{' '}
+          <code className="text-violet-400">#sec-…</code> the page scrolls and focuses the heading if it is
+          visible; for <code className="text-violet-400">#dev-docs-filter</code> focus moves to the search field; for{' '}
+          <code className="text-violet-400">#dev-docs-search</code> scroll to the entire search region (
+          <code className="text-violet-400">role=&quot;search&quot;</code>). Scroll to anchor is{' '}
+          <code className="text-violet-400">smooth</code> only if the user does not have{' '}
           <code className="text-violet-400">prefers-reduced-motion: reduce</code>.
-          Ažuriranje{' '}
-          <code className="text-violet-400">?q=</code> zadržava postojeći hash; pored naslova sekcije možeš
-          kopirati pun URL uključujući <code className="text-violet-400">#sec-…</code>. Kartica stranice
-          (tab): naslov <strong className="font-normal text-gray-400">Repo dokovi</strong> i kratak opis
-          preko Next <code className="text-violet-400">metadata</code> (noindex). Uz pretragu u{' '}
-          <code className="text-violet-400">DevDocsSections.tsx</code>: navigacija{' '}
-          <strong className="font-normal text-gray-400">Brzi skok</strong> (
+          Updating{' '}
+          <code className="text-violet-400">?q=</code> preserves the existing hash; next to each section title you can
+          copy the full URL including <code className="text-violet-400">#sec-…</code>. Page tab
+          title: <strong className="font-normal text-gray-400">Repo docs</strong> and short description
+          via Next <code className="text-violet-400">metadata</code> (noindex). Along with search in{' '}
+          <code className="text-violet-400">DevDocsSections.tsx</code>:{' '}
+          <strong className="font-normal text-gray-400">Quick jump</strong> navigation (
           <code className="text-violet-400">#dev-docs-quick-jump</code>,{' '}
-          <code className="text-violet-400">#sec-…</code>) — pri aktivnom filtru samo sekcije koje su u
-          prikazu. Preskok tastaturom u{' '}
+          <code className="text-violet-400">#sec-…</code>) — with an active filter, only sections that are
+          visible. Keyboard skip links in{' '}
           <code className="text-violet-400">DevDocsSections.tsx</code>:{' '}
           <code className="text-violet-400">#dev-docs-filter</code>,{' '}
-          <code className="text-violet-400">#dev-docs-search</code>, opciono{' '}
+          <code className="text-violet-400">#dev-docs-search</code>, optionally{' '}
           <code className="text-violet-400">#dev-docs-quick-jump</code>,{' '}
-          <code className="text-violet-400">#dev-docs-list</code>. Fiksni blok preskoka nema CSS{' '}
-          <code className="text-violet-400">transition</code> pri{' '}
+          <code className="text-violet-400">#dev-docs-list</code>. The fixed skip block has no CSS{' '}
+          <code className="text-violet-400">transition</code> with{' '}
           <code className="text-violet-400">prefers-reduced-motion: reduce</code> (
           <code className="text-violet-400">motion-reduce:transition-none</code>).
         </p>
-        <Suspense fallback={<p className="mt-6 text-sm text-gray-500">Učitavanje pretrage…</p>}>
+        <Suspense fallback={<p className="mt-6 text-sm text-gray-500">Loading search…</p>}>
           <DevDocsSections sections={sections} />
         </Suspense>
         <p className="mt-10 text-gray-400">
-          <code className="text-violet-300">/robots.txt</code> i{' '}
-          <code className="text-violet-300">/sitemap.xml</code> generišu se iz{' '}
-          <code className="text-violet-300">app/robots.ts</code> i{' '}
-          <code className="text-violet-300">app/sitemap.ts</code>. Kanonsku bazu za sitemap u
-          produkciji postavi preko <code className="text-violet-300">NEXT_PUBLIC_SITE_URL</code> (vidi{' '}
-          <code className="text-violet-300">apps/omnigroup-web/README.md</code> i{' '}
+          <code className="text-violet-300">/robots.txt</code> and{' '}
+          <code className="text-violet-300">/sitemap.xml</code> are generated from{' '}
+          <code className="text-violet-300">app/robots.ts</code> and{' '}
+          <code className="text-violet-300">app/sitemap.ts</code>. Set the canonical base for the sitemap in
+          production via <code className="text-violet-300">NEXT_PUBLIC_SITE_URL</code> (see{' '}
+          <code className="text-violet-300">apps/omnigroup-web/README.md</code> and{' '}
           <code className="text-violet-300">.env.example</code>).
         </p>
-        <p className="mt-4 text-gray-400">Repo putanje iz liste — otvori u editoru / GitHubu.</p>
+        <p className="mt-4 text-gray-400">Repo paths from the list — open in your editor or on GitHub.</p>
       </div>
     </div>
   );

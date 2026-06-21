@@ -54,7 +54,7 @@ describe('MeetingNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'client@test.com',
-      expect.stringContaining('zakazan'),
+      expect.stringContaining('scheduled'),
       expect.stringContaining('meet.google.com'),
       expect.stringContaining('Support tim')
     );
@@ -72,7 +72,7 @@ describe('MeetingNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'client@test.com',
-      expect.stringContaining('primljen'),
+      expect.stringContaining('received'),
       expect.stringContaining('Support tim'),
       expect.stringContaining('Deploy pomoć')
     );

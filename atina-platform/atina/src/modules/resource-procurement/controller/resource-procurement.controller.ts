@@ -17,7 +17,7 @@ export class ResourceProcurementController {
 
   setAutoProcurement = async (req: Request, res: Response): Promise<void> => {
     const result = await this.service.setAutoProcurement(req.body.enabled);
-    sendSuccess(res, result, 'Auto-nabavka ažurirana');
+    sendSuccess(res, result, 'Auto-procurement updated');
   };
 
   listOrders = async (req: Request, res: Response): Promise<void> => {
@@ -27,17 +27,17 @@ export class ResourceProcurementController {
 
   checkout = async (req: Request, res: Response): Promise<void> => {
     const result = await this.service.checkout(req.user!.userId, req.body.items);
-    sendCreated(res, result, 'Narudžbina kreirana — pošalji uplatu sa referencom');
+    sendCreated(res, result, 'Order created — send payment with reference');
   };
 
   markPaid = async (req: Request, res: Response): Promise<void> => {
     const result = await this.service.markPaid(req.user!.userId, req.params.id);
-    sendSuccess(res, result, 'Uplata označena — potvrdi kad stigne na račun');
+    sendSuccess(res, result, 'Payment marked — confirm when it lands in the account');
   };
 
   confirmPaid = async (req: Request, res: Response): Promise<void> => {
     const result = await this.service.confirmPaid(req.user!.userId, req.params.id);
-    sendSuccess(res, result, 'Uplata potvrđena — resursi aktivirani u wallet-ima');
+    sendSuccess(res, result, 'Payment confirmed — credits activated in wallets');
   };
 
   runAutoCheck = async (req: Request, res: Response): Promise<void> => {

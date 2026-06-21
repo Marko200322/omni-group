@@ -1,4 +1,4 @@
-// Server-side helper za čitanje javnih Atina endpoint-a iz Next 14 server komponenti.
+// Server-side helper for reading public Atina endpoints from Next 14 server components.
 import { resolveAtinaApiBase } from './atina-api-base';
 
 export type AtinaSnapshotSource = 'live' | 'unreachable' | 'partial' | 'placeholder';

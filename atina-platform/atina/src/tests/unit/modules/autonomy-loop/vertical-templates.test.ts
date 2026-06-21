@@ -16,7 +16,7 @@ describe('vertical-templates', () => {
     coreModules: ['crm', 'outreach', 'billing'],
     outreachHooks: ['Automated follow-up', 'CRM pipeline'],
     recommendedDeliverables: [
-      { id: 'vertical-package', nameSr: 'Vertikalni paket', clientPriceEur: 149, billing: 'monthly' },
+      { id: 'vertical-package', name: 'Vertical solution', nameSr: 'Vertikalni paket', clientPriceEur: 149, billing: 'monthly' },
     ],
   };
 
@@ -32,8 +32,8 @@ describe('vertical-templates', () => {
     expect(out).toContain('Dental (Healthcare)');
     expect(out).toContain('contact?service=vertical-package');
     expect(out).toContain('vertical=healthcare-dental');
-    expect(out).toContain('od €');
-    expect(out).toContain('Preporučene isporuke');
+    expect(out).toContain('from €');
+    expect(out).toContain('Recommended deliverables');
   });
 
   it('renders workflow json from delivery pack', () => {

@@ -66,16 +66,16 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
         ? {
             lane,
             slug,
-            name: 'Custom klijentski portal',
-            clientName: 'Demo Klijent d.o.o.',
-            description: 'Izolovana narudžbina — ne deli kod sa drugim klijentima.',
+            name: 'Custom client portal',
+            clientName: 'Demo Client LLC',
+            description: 'Isolated order — code is not shared with other clients.',
             deliverableId: 'setup-custom',
           }
         : {
             lane,
             slug,
-            name: 'Omni interni SaaS prototip',
-            marketHypothesis: 'Autonomy istražuje nišu za novi SaaS proizvod Omni Group.',
+            name: 'Omni internal SaaS prototype',
+            marketHypothesis: 'Autonomy explores a niche for a new Omni Group SaaS product.',
           };
     try {
       const res = await fetch('/api/atina/product-factory/projects', {
@@ -137,30 +137,30 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
   };
 
   if (disabled) {
-    return <p className="text-sm text-slate-500">Product Factory zahteva pravu Atina sesiju.</p>;
+    return <p className="text-sm text-slate-500">Product Factory requires a valid Atina session.</p>;
   }
 
   return (
     <div className="mt-4 space-y-4">
-      {loading && <p className="text-sm text-slate-500">Učitavam fabriku proizvoda…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading product factory…</p>}
       {error && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">{error}</p>
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-          <p className="text-xs text-slate-500">Klijentske narudžbine</p>
+          <p className="text-xs text-slate-500">Client orders</p>
           <p className="font-medium text-white">
-            {Object.values(stats?.byLane?.client_order ?? {}).reduce((a, b) => a + b, 0)} projekata
+            {Object.values(stats?.byLane?.client_order ?? {}).reduce((a, b) => a + b, 0)} projects
           </p>
-          <p className="text-xs text-slate-500">Svaka ima svoj isolation key i folder</p>
+          <p className="text-xs text-slate-500">Each has its own isolation key and folder</p>
         </div>
         <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-          <p className="text-xs text-slate-500">Interni SaaS (autonomy)</p>
+          <p className="text-xs text-slate-500">Internal SaaS (autonomy)</p>
           <p className="font-medium text-violet-300">
-            {Object.values(stats?.byLane?.internal_saas ?? {}).reduce((a, b) => a + b, 0)} prototipa
+            {Object.values(stats?.byLane?.internal_saas ?? {}).reduce((a, b) => a + b, 0)} prototypes
           </p>
-          <p className="text-xs text-slate-500">Odvojeno od klijentskih narudžbina</p>
+          <p className="text-xs text-slate-500">Separate from client orders</p>
         </div>
       </div>
 
@@ -168,11 +168,11 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={Boolean(busy)} onClick={() => void createDemo('client_order')} className="btn-primary text-sm disabled:opacity-50">
             <Hammer className="mr-1 inline h-4 w-4" />
-            Nova klijentska narudžbina
+            New client order
           </button>
           <button type="button" disabled={Boolean(busy)} onClick={() => void createDemo('internal_saas')} className="btn-glass text-sm disabled:opacity-50">
             <Sparkles className="mr-1 inline h-4 w-4" />
-            Novi interni SaaS
+            New internal SaaS
           </button>
           <button type="button" disabled={Boolean(busy)} onClick={() => void internalTick()} className="btn-glass text-sm disabled:opacity-50">
             <Factory className="mr-1 inline h-4 w-4" />
@@ -188,7 +188,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
               <div>
                 <p className="font-medium text-white">
                   {p.name}
-                  <span className="ml-2 text-xs text-slate-500">{p.lane === 'client_order' ? 'narudžbina' : 'interni SaaS'}</span>
+                  <span className="ml-2 text-xs text-slate-500">{p.lane === 'client_order' ? 'order' : 'internal SaaS'}</span>
                 </p>
                 <p className="text-xs text-slate-500">
                   {p.clientName ? `${p.clientName} · ` : ''}
@@ -210,7 +210,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
           </li>
         ))}
         {!loading && projects.length === 0 && (
-          <li className="text-sm text-slate-500">Nema projekata — kreiraj demo narudžbinu ili interni SaaS.</li>
+          <li className="text-sm text-slate-500">No projects yet — create a demo order or internal SaaS.</li>
         )}
       </ul>
 

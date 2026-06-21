@@ -69,7 +69,7 @@ export class AvatarClientMemoryProvider {
 
     if (snippets.length === 0) return '';
     const unique = [...new Set(snippets)].slice(0, 4);
-    return `Šta znaš o ovom klijentu iz ranijih razgovora:\n- ${unique.join('\n- ')}`;
+    return `What you know about this client from earlier conversations:\n- ${unique.join('\n- ')}`;
   }
 
   rememberTurn(
@@ -83,7 +83,7 @@ export class AvatarClientMemoryProvider {
 
     const namespace = 'avatar-client';
     const key = memoryKey(agentType, agentId);
-    const summary = `Klijent: "${userMessage.slice(0, 160)}" | Agent: "${assistantMessage.slice(0, 160)}"`;
+    const summary = `Client: "${userMessage.slice(0, 160)}" | Agent: "${assistantMessage.slice(0, 160)}"`;
     const value = {
       summary,
       agentType,

@@ -10,9 +10,9 @@ import { leadRolloutPhaseLabel, type LeadRolloutPhase } from '../../integrations
 function leadDbHint(): string {
   const st = getLeadDatabaseService().getStatus();
   if (!st.enabled) {
-    return 'LEAD_DATABASE_ENABLED=false — F0/F1 scrape only. Uključi + faza F3+ kad dodaš API ključeve.';
+    return 'LEAD_DATABASE_ENABLED=false — F0/F1 scrape only. Enable + phase F3+ when you add API keys.';
   }
-  return `Faza ${st.phase} (${leadRolloutPhaseLabel(st.phase as LeadRolloutPhase)}). APOLLO/HUNTER/… ključevi u .env`;
+  return `Phase ${st.phase} (${leadRolloutPhaseLabel(st.phase as LeadRolloutPhase)}). Add APOLLO/HUNTER/… keys in .env`;
 }
 
 export type ReadinessCheck = {
@@ -56,37 +56,37 @@ export class HuntingReadinessService {
     const checks: ReadinessCheck[] = [
       {
         id: 'phase',
-        label: 'PHASE (v2+ za hunting)',
+        label: 'PHASE (v2+ for hunting)',
         status: 'ready',
-        hint: 'Postavi PHASE=v2 u .env i pokreni phase-launch',
+        hint: 'Set PHASE=v2 in .env and run phase-launch',
       },
       {
         id: 'scraper',
-        label: 'Scraper (lov leadova)',
+        label: 'Scraper (lead hunting)',
         status: scraper.isConfigured() ? 'ready' : scraperDirect ? 'partial' : 'missing',
         hint: scraper.isConfigured()
-          ? 'Agregator aktivan'
+          ? 'Aggregator active'
           : scraperDirect
-            ? 'Axios direct fallback (dev) — postavi SCRAPER_URL za produkciju'
-            : 'SCRAPER_URL + SCRAPER_KEY ili ENABLE_SCRAPER=true',
+            ? 'Axios direct fallback (dev) — set SCRAPER_URL for production'
+            : 'SCRAPER_URL + SCRAPER_KEY or ENABLE_SCRAPER=true',
       },
       {
         id: 'outbound',
         label: 'Outbound email',
         status: outboundSendReady ? 'ready' : smtpReady || comms.isConfigured() ? 'partial' : 'missing',
         hint: outboundSendReady
-          ? 'Slanje omogućeno'
-          : 'SMTP_* ili COMMS_* + OUTREACH_DEV_SEND_TO_FALLBACK=true (dev)',
+          ? 'Sending enabled'
+          : 'SMTP_* or COMMS_* + OUTREACH_DEV_SEND_TO_FALLBACK=true (dev)',
       },
       {
         id: 'ai',
         label: 'AI (scoring, copy)',
         status: ai.isConfigured() ? 'ready' : 'partial',
-        hint: ai.isConfigured() ? 'AI_URL + AI_KEY' : 'Opciono — formula scoring radi bez AI',
+        hint: ai.isConfigured() ? 'AI_URL + AI_KEY' : 'Optional — formula scoring works without AI',
       },
       {
         id: 'crm',
-        label: 'CRM modul',
+        label: 'CRM module',
         status: config.features.crm ? 'ready' : 'missing',
         hint: 'ENABLE_CRM=true',
       },
@@ -96,11 +96,11 @@ export class HuntingReadinessService {
         status: outboundStats.warmupComplete ? 'ready' : 'partial',
         hint: outboundStats.warmupComplete
           ? 'OUTREACH_DOMAIN_WARMUP_COMPLETE=true'
-          : 'Dev: OUTREACH_DEV_SEND_TO_FALLBACK=true dok ne završiš warmup',
+          : 'Dev: OUTREACH_DEV_SEND_TO_FALLBACK=true until warmup completes',
       },
       {
         id: 'lead_database',
-        label: 'Lead baze (Apollo/Hunter…)',
+        label: 'Lead databases (Apollo/Hunter…)',
         status: this.leadDbStatus(),
         hint: leadDbHint(),
       },

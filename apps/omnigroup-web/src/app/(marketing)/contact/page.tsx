@@ -15,11 +15,11 @@ export default function ContactPage() {
     <div className="px-4 py-16">
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2">
         <FadeIn>
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Kontakt</p>
-          <h1 className="mt-2 font-display text-4xl font-bold text-gradient">Razgovarajmo o projektu</h1>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Contact</p>
+          <h1 className="mt-2 font-display text-4xl font-bold text-gradient">Let&apos;s talk about your project</h1>
           <p className="mt-4 text-slate-400">
-            Javi se Omni Group timu — odgovaramo u roku od jednog radnog dana. Opisite projekat, rok i budžet;
-            poslaćemo konkretnu ponudu bez obaveze.
+            Reach the Omni Group team — we respond within one business day. Describe your project, timeline, and budget;
+            we will send a concrete quote with no obligation.
           </p>
         </FadeIn>
         <motion.form
@@ -59,9 +59,9 @@ export default function ContactPage() {
                 setStatus('err');
                 const err = data.error || `HTTP ${res.status}`;
                 if (err === 'contact_email_env_incomplete') {
-                  setErrMsg('email konfiguracija nije kompletna (FROM/TO)');
+                  setErrMsg('email configuration incomplete (FROM/TO)');
                 } else if (err === 'email_provider_error' || err === 'email_send_failed') {
-                  setErrMsg('Resend nije uspeo — proveri API ključ');
+                  setErrMsg('Resend failed — check your API key');
                 } else {
                   setErrMsg(err);
                 }
@@ -70,8 +70,8 @@ export default function ContactPage() {
               setStatus('ok');
               setOkMsg(
                 data.message === 'sent_via_resend'
-                  ? 'Poruka je poslata na email. Javićemo vam se uskoro.'
-                  : 'Poruka primljena (dev režim — postavi RESEND_API_KEY za pravi email).',
+                  ? 'Message sent by email. We will get back to you soon.'
+                  : 'Message received (dev mode — set RESEND_API_KEY for live email).',
               );
               e.currentTarget.reset();
             } catch {
@@ -80,10 +80,10 @@ export default function ContactPage() {
             }
           }}
         >
-          <AnimatedInput required name="name" placeholder="Ime i prezime" delay={0.1} />
-          <AnimatedInput required type="email" name="email" placeholder="Email adresa" delay={0.15} />
-          <AnimatedInput name="company" placeholder="Kompanija (opciono)" delay={0.2} />
-          <AnimatedTextarea required name="message" rows={4} placeholder="Kako možemo da pomognemo?" delay={0.25} />
+          <AnimatedInput required name="name" placeholder="Full name" delay={0.1} />
+          <AnimatedInput required type="email" name="email" placeholder="Email address" delay={0.15} />
+          <AnimatedInput name="company" placeholder="Company (optional)" delay={0.2} />
+          <AnimatedTextarea required name="message" rows={4} placeholder="How can we help?" delay={0.25} />
           <AnimatePresence mode="wait">
             {status === 'err' && (
               <motion.p
@@ -94,7 +94,7 @@ export default function ContactPage() {
                 exit="hidden"
                 className="text-sm text-red-400"
               >
-                Slanje nije uspelo ({errMsg}). Pokušaj ponovo.
+                Send failed ({errMsg}). Please try again.
               </motion.p>
             )}
             {status === 'ok' && (
@@ -106,7 +106,7 @@ export default function ContactPage() {
                 exit="hidden"
                 className="text-sm text-emerald-400"
               >
-                {okMsg || 'Poruka je poslata. Javićemo vam se uskoro.'}
+                {okMsg || 'Message sent. We will get back to you soon.'}
               </motion.p>
             )}
           </AnimatePresence>
@@ -117,11 +117,10 @@ export default function ContactPage() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
-            {status === 'loading' ? 'Šaljem…' : status === 'ok' ? 'Poslato ✓' : 'Pošalji'}
+            {status === 'loading' ? 'Sending…' : status === 'ok' ? 'Sent ✓' : 'Send message'}
           </motion.button>
         </motion.form>
       </div>
     </div>
   );
 }
-

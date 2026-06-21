@@ -50,51 +50,51 @@ export function buildAdminMetrics(
 
   return {
     activeUsers: overview?.users?.active
-      ? overview.users.active.toLocaleString('sr')
+      ? overview.users.active.toLocaleString('en-US')
       : demo
         ? '1.2k'
-        : `${(840 + planBoost * 12).toLocaleString('sr')}`,
+        : `${(840 + planBoost * 12).toLocaleString('en-US')}`,
     mrr: overview?.payments?.totalRevenue
-      ? `€${overview.payments.totalRevenue.toLocaleString('sr', { maximumFractionDigits: 0 })}`
+      ? `€${overview.payments.totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
       : demo
         ? '€48.2k'
         : `€${(32 + planBoost * 4.2).toFixed(1)}k`,
     workflowSuccess: successRate,
     openAlerts: String(alerts),
     sparkWorkflow: [
-      { label: 'Pon', value: 92 },
-      { label: 'Uto', value: 94 },
-      { label: 'Sre', value: 91 },
-      { label: 'Čet', value: 96 },
-      { label: 'Pet', value: 98 },
-      { label: 'Sub', value: 97 },
-      { label: 'Ned', value: demo ? 94 : 99 },
+      { label: 'Mon', value: 92 },
+      { label: 'Tue', value: 94 },
+      { label: 'Wed', value: 91 },
+      { label: 'Thu', value: 96 },
+      { label: 'Fri', value: 98 },
+      { label: 'Sat', value: 97 },
+      { label: 'Sun', value: demo ? 94 : 99 },
     ],
     sparkRevenue: [
       { label: 'Jan', value: 28 },
       { label: 'Feb', value: 31 },
       { label: 'Mar', value: 35 },
       { label: 'Apr', value: 38 },
-      { label: 'Maj', value: 42 + planBoost },
+      { label: 'May', value: 42 + planBoost },
     ],
     recentEvents: overview
       ? [
           {
             time: 'live',
             type: 'users',
-            message: `${overview.users?.total ?? 0} korisnika · ${overview.users?.active ?? 0} aktivnih`,
+            message: `${overview.users?.total ?? 0} users · ${overview.users?.active ?? 0} active`,
             severity: 'info' as const,
           },
           {
             time: 'live',
             type: 'billing',
-            message: `${overview.subscriptions?.active ?? 0} aktivnih pretplata · ${overview.payments?.total ?? 0} uplata`,
+            message: `${overview.subscriptions?.active ?? 0} active subscriptions · ${overview.payments?.total ?? 0} payments`,
             severity: 'info' as const,
           },
           {
             time: 'live',
             type: 'tasks',
-            message: `${overview.tasks?.total ?? 0} taskova · ${overview.tasks?.failed ?? 0} neuspešnih`,
+            message: `${overview.tasks?.total ?? 0} tasks · ${overview.tasks?.failed ?? 0} failed`,
             severity: (overview.tasks?.failed ?? 0) > 0 ? ('warn' as const) : ('info' as const),
           },
         ]

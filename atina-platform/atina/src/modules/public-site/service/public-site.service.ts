@@ -11,19 +11,19 @@ const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
     slug: 'home',
     title,
     kind: 'home',
-    body: tagline ?? `Dobrodošli na ${title}. Profesionalna digitalna prisutnost uz Omni Group isporuku.`,
+    body: tagline ?? `Welcome to ${title}. Professional digital presence powered by Omni Group delivery.`,
   },
   {
-    slug: 'usluge',
-    title: 'Usluge',
+    slug: 'services',
+    title: 'Services',
     kind: 'services',
-    body: 'Pregled usluga, paketa i načina saradnje. Kontaktirajte nas za personalizovanu ponudu.',
+    body: 'Overview of services, packages, and how we work together. Contact us for a personalized quote.',
   },
   {
-    slug: 'kontakt',
-    title: 'Kontakt',
+    slug: 'contact',
+    title: 'Contact',
     kind: 'contact',
-    body: 'Pošaljite upit putem forme ili zakazite konsultaciju. Odgovaramo u roku od 24–48h.',
+    body: 'Send an inquiry via the form or schedule a consultation. We respond within 24–48 hours.',
   },
 ];
 
@@ -124,23 +124,23 @@ export class PublicSiteService {
               slug: 'home',
               title: input.title,
               kind: 'home' as const,
-              body: `${input.clientName ?? input.title} — profesionalna landing stranica spremna za kampanju.`,
+              body: `${input.clientName ?? input.title} — professional landing page ready for your campaign.`,
             },
           ]
         : siteType === 'ecommerce'
           ? [
               ...DEFAULT_BUSINESS_PAGES(input.title),
               {
-                slug: 'prodavnica',
-                title: 'Prodavnica',
+                slug: 'shop',
+                title: 'Shop',
                 kind: 'shop' as const,
-                body: 'Katalog proizvoda i checkout tok — integracija sa manual/Stripe plaćanjem.',
+                body: 'Product catalog and checkout flow — integrated with manual/Stripe payment.',
               },
             ]
           : [
               ...DEFAULT_BUSINESS_PAGES(input.title),
-              { slug: 'o-nama', title: 'O nama', kind: 'about' as const, body: `Tim iza ${input.title}.` },
-              { slug: 'cenovnik', title: 'Cenovnik', kind: 'pricing' as const, body: 'Transparentne cene i paketi usluga.' },
+              { slug: 'about', title: 'About us', kind: 'about' as const, body: `The team behind ${input.title}.` },
+              { slug: 'pricing', title: 'Pricing', kind: 'pricing' as const, body: 'Transparent pricing and service packages.' },
             ];
 
     if (pages.length < 3 && siteType === 'business') {
@@ -152,7 +152,7 @@ export class PublicSiteService {
       projectId: input.projectId,
       slug: input.slug,
       title: input.title,
-      tagline: input.clientName ? `Digitalna prisutnost — ${input.clientName}` : null,
+      tagline: input.clientName ? `Digital presence — ${input.clientName}` : null,
       siteType,
       branding: { clientName: input.clientName ?? null },
       pages,

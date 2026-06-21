@@ -24,7 +24,7 @@ function invoiceBrand() {
   return {
     name: config.app.name || 'Omni Group',
     url: config.app.url || 'https://omnigroup.io',
-    tagline: 'Digitalna platforma za rast i automatizaciju',
+    tagline: 'Digital platform for growth and automation',
     supportEmail: config.paymentNotifyEmail.trim() || config.admin.email || undefined,
   };
 }
@@ -125,7 +125,7 @@ export class PaymentNotificationsService {
       const push = new WebPushService();
       if (push.isConfigured()) {
         await push.notifyAdmins({
-          title: 'Nova uplata na čekanju',
+          title: 'New payment pending',
           body: `${input.userName} · ${formatMoney(input.amount, input.currency)} · ${input.planName}`,
           url: '/admin/mobile',
           tag: `payment-pending-${input.paymentId}`,
@@ -191,10 +191,10 @@ export class PaymentNotificationsService {
     periodEnd: string;
   }): string {
     return [
-      `Kupljeno: ${input.planName} (${formatBillingCycleSr(input.billingCycle)}).`,
-      `Iznos: ${formatMoney(input.total, input.currency)}.`,
-      `Faktura: ${input.invoiceNumber}.`,
-      `Plan važi do ${formatDateSr(input.periodEnd)}.`,
+      `Purchased: ${input.planName} (${formatBillingCycleSr(input.billingCycle)}).`,
+      `Amount: ${formatMoney(input.total, input.currency)}.`,
+      `Invoice: ${input.invoiceNumber}.`,
+      `Plan active until ${formatDateSr(input.periodEnd)}.`,
     ].join(' ');
   }
 

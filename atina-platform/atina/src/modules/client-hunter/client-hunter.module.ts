@@ -5,7 +5,7 @@ import { validateBody, validateParams, validateQuery } from '../../api/middlewar
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
 import { ClientHunterController } from './controller/client-hunter.controller';
-import { ClientHunterRunParamsDto, CreateClientHunterDto, RunClientHunterDto, RunHuntingPipelineDto } from './dto/client-hunter.dto';
+import { ClientHunterRunParamsDto, ClientHunterCatalogQueryDto, CreateClientHunterDto, GermanJobPostingPreviewDto, HotClientsListQueryDto, RunClientHunterDto, RunHuntingPipelineDto } from './dto/client-hunter.dto';
 
 export class ClientHunterModule implements IModule {
   name = 'Client Hunter';
@@ -24,6 +24,15 @@ export class ClientHunterModule implements IModule {
     this.router.get('/readiness', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.readiness);
     this.router.post('/bootstrap', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.bootstrap);
     this.router.post('/pipeline/run', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(RunHuntingPipelineDto), this.controller.runPipeline);
+    this.router.post(
+      '/preview/german-job-email',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(GermanJobPostingPreviewDto),
+      this.controller.previewGermanJobEmail,
+    );
+    this.router.get('/job-boards', authenticate, validateQuery(ClientHunterCatalogQueryDto), validateBody(StrictEmptyBodyDto), this.controller.jobBoards);
+    this.router.get('/hot-clients', authenticate, validateQuery(HotClientsListQueryDto), validateBody(StrictEmptyBodyDto), this.controller.hotClients);
     this.router.get('/status', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.status);
     this.router.get('/lead-databases/status', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.leadDatabaseStatus);
     this.router.get('/', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.list);

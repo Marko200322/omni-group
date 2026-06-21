@@ -375,12 +375,12 @@ export class AutonomyOrchestratorService {
 
     const okCount = results.filter((r) => r.success).length;
     await this.notifier.notify({
-      title: 'Autonomy tick završen',
+      title: 'Autonomy tick complete',
       message: [
-        `Vertikala: ${results.length}, uspeh: ${okCount}`,
-        `Potrošeno u tick-u: $${tickTracker.spentUsd.toFixed(2)}`,
-        `Budžet: $${budget.balanceUsd.toFixed(2)} / $${budget.initialUsd.toFixed(2)}`,
-        `Danas potrošeno: $${budget.spentTodayUsd.toFixed(2)} / $${budget.maxSpendPerDayUsd}`,
+        `Verticals: ${results.length}, success: ${okCount}`,
+        `Spent this tick: $${tickTracker.spentUsd.toFixed(2)}`,
+        `Budget: $${budget.balanceUsd.toFixed(2)} / $${budget.initialUsd.toFixed(2)}`,
+        `Spent today: $${budget.spentTodayUsd.toFixed(2)} / $${budget.maxSpendPerDayUsd}`,
       ].join('\n'),
       severity: okCount === results.length ? 'info' : 'warning',
       userId,

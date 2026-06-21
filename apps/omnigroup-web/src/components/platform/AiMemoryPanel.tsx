@@ -29,7 +29,7 @@ export function AiMemoryPanel() {
       value = parsed as Record<string, unknown>;
     } catch {
       setStatus('err');
-      setMessage('Vrednost mora biti validan JSON objekat.');
+      setMessage('Value must be a valid JSON object.');
       return;
     }
 
@@ -44,16 +44,16 @@ export function AiMemoryPanel() {
         setStatus('err');
         setMessage(
           data.error === 'atina_unreachable'
-            ? 'Atina API nije dostupan — pokreni lokalni stack.'
+            ? 'Atina API is unavailable — start the local stack.'
             : data.error ?? `HTTP ${res.status}`,
         );
         return;
       }
       setStatus('ok');
-      setMessage('Sačuvano u ai-memory.');
+      setMessage('Saved to ai-memory.');
     } catch {
       setStatus('err');
-      setMessage('Zahtev nije uspeo.');
+      setMessage('Request failed.');
     }
   }
 
@@ -69,17 +69,17 @@ export function AiMemoryPanel() {
         setStatus('err');
         setMessage(
           data.error === 'atina_unreachable'
-            ? 'Atina API nije dostupan — pokreni lokalni stack.'
+            ? 'Atina API is unavailable — start the local stack.'
             : data.error ?? `HTTP ${res.status}`,
         );
         return;
       }
       setItems(data.items ?? []);
       setStatus('ok');
-      setMessage(data.items?.length ? `Pronađeno ${data.items.length} zapisa.` : 'Nema zapisa za ovaj ključ.');
+      setMessage(data.items?.length ? `Found ${data.items.length} record(s).` : 'No records for this key.');
     } catch {
       setStatus('err');
-      setMessage('Zahtev nije uspeo.');
+      setMessage('Request failed.');
     }
   }
 
@@ -87,7 +87,7 @@ export function AiMemoryPanel() {
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-slate-400">
         <Brain className="h-4 w-4 text-violet-400" />
-        Atina modul <span className="font-mono text-violet-300">ai-memory</span> — remember / recall
+        Atina module <span className="font-mono text-violet-300">ai-memory</span> — remember / recall
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -100,7 +100,7 @@ export function AiMemoryPanel() {
           />
         </label>
         <label className="block text-xs text-slate-500">
-          Ključ
+          Key
           <input
             value={key}
             onChange={(e) => setKey(e.target.value)}
@@ -110,7 +110,7 @@ export function AiMemoryPanel() {
       </div>
 
       <label className="block text-xs text-slate-500">
-        Vrednost (JSON)
+        Value (JSON)
         <textarea
           value={valueText}
           onChange={(e) => setValueText(e.target.value)}
@@ -137,7 +137,7 @@ export function AiMemoryPanel() {
         <ul className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-white/5 bg-black/20 p-3 text-xs">
           {items.map((item) => (
             <li key={item.id ?? item.created_at} className="font-mono text-slate-300">
-              {item.context ?? '(prazan context)'}
+              {item.context ?? '(empty context)'}
             </li>
           ))}
         </ul>

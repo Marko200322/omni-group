@@ -93,7 +93,7 @@ export function ResourceShopPanel({ disabled }: Props) {
       }
       if (ordJson.ok && ordJson.data?.orders) setOrders(ordJson.data.orders);
     } catch {
-      setError('Ne mogu da učitam prodavnicu resursa.');
+      setError('Unable to load the resource shop.');
     } finally {
       setLoading(false);
     }
@@ -115,9 +115,9 @@ export function ResourceShopPanel({ disabled }: Props) {
       const body = (await res.json()) as { ok?: boolean; data?: { autoProcurementEnabled?: boolean } };
       if (!body.ok) throw new Error('toggle_failed');
       setAutoOn(Boolean(body.data?.autoProcurementEnabled));
-      setMessage(!autoOn ? 'Auto-nabavka uključena.' : 'Auto-nabavka isključena.');
+      setMessage(!autoOn ? 'Auto-procurement enabled.' : 'Auto-procurement disabled.');
     } catch {
-      setError('Prekidač auto-nabavke nije uspeo.');
+      setError('Auto-procurement toggle failed.');
     } finally {
       setBusy(null);
     }
@@ -143,10 +143,10 @@ export function ResourceShopPanel({ disabled }: Props) {
       if (!body.ok) throw new Error(body.detail ?? 'checkout_failed');
       setPayment(body.data?.payment ?? null);
       setCart({});
-      setMessage('Narudžbina kreirana. Uplati sa referencom ispod, pa klikni „Potvrdio sam uplatu“.');
+      setMessage('Order created. Pay using the reference below, then click "I have confirmed payment".');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Checkout nije uspeo');
+      setError(err instanceof Error ? err.message : 'Checkout failed');
     } finally {
       setBusy(null);
     }
@@ -162,10 +162,10 @@ export function ResourceShopPanel({ disabled }: Props) {
       const body = (await res.json()) as { ok?: boolean; detail?: string };
       if (!body.ok) throw new Error(body.detail ?? 'mark_paid_failed');
       setPayment(null);
-      setMessage('Resursi aktivirani u sistemu — bez logovanja na sajtove provajdera.');
+      setMessage('Resources activated in the system — no need to log into provider sites.');
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Potvrda uplate nije uspela');
+      setError(err instanceof Error ? err.message : 'Payment confirmation failed');
     } finally {
       setBusy(null);
     }
@@ -178,7 +178,7 @@ export function ResourceShopPanel({ disabled }: Props) {
   if (disabled) {
     return (
       <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
-        Prijavi se admin nalogom da kupuješ API resurse kroz sistem.
+        Sign in with an admin account to purchase API resources through the system.
       </p>
     );
   }
@@ -198,10 +198,10 @@ export function ResourceShopPanel({ disabled }: Props) {
             }`}
           >
             <Power className="h-4 w-4" />
-            Auto-nabavka: {autoOn ? 'ON' : 'OFF'}
+            Auto-procurement: {autoOn ? 'ON' : 'OFF'}
           </button>
           <p className="text-xs text-slate-500">
-            Kad je ON, sistem kreira narudžbinu kad resursi padnu ispod praga.
+            When ON, the system creates an order when resources fall below the threshold.
           </p>
         </div>
         <button type="button" className="btn-ghost text-violet-300" onClick={() => void load()}>
@@ -214,12 +214,12 @@ export function ResourceShopPanel({ disabled }: Props) {
 
       {payment && (
         <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm text-cyan-50">
-          <p className="font-medium">Uputstvo za uplatu</p>
-          <p className="mt-2">Iznos: {payment.amountEur} {payment.currency}</p>
-          <p>Referenca: <span className="font-mono">{payment.reference}</span></p>
-          <p>Primalac: {payment.accountName}</p>
+          <p className="font-medium">Payment instructions</p>
+          <p className="mt-2">Amount: {payment.amountEur} {payment.currency}</p>
+          <p>Reference: <span className="font-mono">{payment.reference}</span></p>
+          <p>Beneficiary: {payment.accountName}</p>
           <p>IBAN: <span className="font-mono">{payment.iban}</span></p>
-          <p>Banka: {payment.bankName}</p>
+          <p>Bank: {payment.bankName}</p>
           <p className="mt-2 text-xs text-cyan-200/80">{payment.note}</p>
         </div>
       )}
@@ -227,7 +227,7 @@ export function ResourceShopPanel({ disabled }: Props) {
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
-            <ShoppingCart className="h-4 w-4 text-violet-400" /> Korpa resursa
+            <ShoppingCart className="h-4 w-4 text-violet-400" /> Resource cart
           </h3>
           <div className="space-y-2">
             {catalog.map((item) => (
@@ -244,27 +244,27 @@ export function ResourceShopPanel({ disabled }: Props) {
                   </p>
                 </div>
                 <button type="button" className="btn-glass text-xs" onClick={() => addToCart(item.sku)}>
-                  Dodaj
+                  Add
                 </button>
               </div>
             ))}
           </div>
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-sm text-slate-300">Ukupno: €{cartTotal.toFixed(2)}</p>
+            <p className="text-sm text-slate-300">Total: €{cartTotal.toFixed(2)}</p>
             <button
               type="button"
               disabled={!cartLines.length || busy === 'checkout'}
               className="btn-primary text-sm disabled:opacity-50"
               onClick={() => void checkout()}
             >
-              {busy === 'checkout' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Naruči i plati'}
+              {busy === 'checkout' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Place order & pay'}
             </button>
           </div>
         </div>
 
         <div>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
-            <Wallet className="h-4 w-4 text-cyan-400" /> Stanje provajdera
+            <Wallet className="h-4 w-4 text-cyan-400" /> Provider balances
           </h3>
           <div className="space-y-2">
             {wallets.map((w) => (
@@ -276,16 +276,16 @@ export function ResourceShopPanel({ disabled }: Props) {
               >
                 <p className="font-medium text-white">{w.providerId}</p>
                 <p className="text-slate-400">
-                  €{w.balanceEur.toFixed(2)} · prag €{w.lowThresholdEur}
-                  {w.low ? ' · nisko' : ''}
+                  €{w.balanceEur.toFixed(2)} · threshold €{w.lowThresholdEur}
+                  {w.low ? ' · low' : ''}
                 </p>
               </div>
             ))}
           </div>
 
-          <h3 className="mb-2 mt-4 text-sm font-semibold text-white">Narudžbine</h3>
+          <h3 className="mb-2 mt-4 text-sm font-semibold text-white">Orders</h3>
           {orders.length === 0 ? (
-            <p className="text-xs text-slate-500">Nema narudžbina.</p>
+            <p className="text-xs text-slate-500">No orders yet.</p>
           ) : (
             <ul className="space-y-2">
               {orders.slice(0, 6).map((o) => (
@@ -302,7 +302,7 @@ export function ResourceShopPanel({ disabled }: Props) {
                       className="mt-2 btn-glass text-xs"
                       onClick={() => void markPaid(o.id)}
                     >
-                      {busy === o.id ? '...' : 'Potvrdio sam uplatu'}
+                      {busy === o.id ? '...' : 'I have confirmed payment'}
                     </button>
                   )}
                 </li>

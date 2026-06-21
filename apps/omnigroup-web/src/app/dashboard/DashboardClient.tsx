@@ -38,9 +38,9 @@ type Props = {
 };
 
 const taskStatus = {
-  running: { label: 'U toku', color: 'text-cyan-400', icon: Play },
-  queued: { label: 'U redu', color: 'text-amber-400', icon: Clock },
-  done: { label: 'Završeno', color: 'text-emerald-400', icon: CheckCircle2 },
+  running: { label: 'In progress', color: 'text-cyan-400', icon: Play },
+  queued: { label: 'Queued', color: 'text-amber-400', icon: Clock },
+  done: { label: 'Completed', color: 'text-emerald-400', icon: CheckCircle2 },
 };
 
 export default function DashboardClient({
@@ -55,8 +55,8 @@ export default function DashboardClient({
   const metrics = buildClientMetrics(snapshot, live, { authenticated: !isDemo && Boolean(sessionUser) });
   const status =
     live?.me || live?.tasks.length ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
-  const firstName = sessionUser?.name?.split(' ')[0] ?? 'klijent';
-  const greeting = `Dobrodošli, ${firstName}`;
+  const firstName = sessionUser?.name?.split(' ')[0] ?? 'there';
+  const greeting = `Welcome, ${firstName}`;
 
   return (
     <PlatformShell
@@ -64,8 +64,8 @@ export default function DashboardClient({
       title={greeting}
       subtitle={
         isDemo
-          ? 'Demo pregled — prijavite se za pravu porudžbinu, podršku i status isporuke.'
-          : 'Vaš klijentski portal — pratite projekte, porudžbine i komunikaciju sa timom.'
+          ? 'Demo preview — sign in to place real orders, get support, and track delivery status.'
+          : 'Your client portal — track projects, orders, and communication with our team.'
       }
       badge={<StatusPill status={status} />}
       sessionUser={sessionUser}
@@ -73,11 +73,11 @@ export default function DashboardClient({
     >
       {isDemo && (
         <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          <p className="font-medium text-amber-200">Demo režim</p>
+          <p className="font-medium text-amber-200">Demo mode</p>
           <p className="mt-1">
-            Za pravu porudžbinu, podršku i video konsultacije{' '}
+            For real orders, support, and video consultations{' '}
             <Link href="/login" className="font-medium text-white underline-offset-2 hover:underline">
-              prijavite se
+              sign in
             </Link>
             .
           </p>
@@ -88,9 +88,9 @@ export default function DashboardClient({
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-500/25 bg-violet-500/10 px-4 py-3 text-sm">
           <p className="flex items-center gap-2 text-violet-100">
             <Shield className="h-4 w-4 text-violet-300" />
-            Imate operatorski pristup — Autonomy i fabrika su u{' '}
+            You have operator access — Autonomy and factory tools are in the{' '}
             <Link href="/admin" className="font-medium text-white underline-offset-2 hover:underline">
-              admin konzoli
+              admin console
             </Link>
             .
           </p>
@@ -99,31 +99,31 @@ export default function DashboardClient({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Aktivni projekti"
+          label="Active projects"
           value={metrics.projectsActive}
-          sub={metrics.projectsActive === '0' ? 'Nema aktivnih' : undefined}
+          sub={metrics.projectsActive === '0' ? 'None active' : undefined}
           icon={FolderKanban}
           accent="emerald"
           delay={0}
         />
         <StatCard
-          label="Automatizacije"
+          label="Automations"
           value={metrics.automationsRun}
-          sub="poslednjih 30 dana"
+          sub="last 30 days"
           icon={ShoppingBag}
           accent="cyan"
           delay={0.05}
         />
         <StatCard
-          label="Obaveštenja"
+          label="Notifications"
           value={unreadCount !== null ? String(unreadCount) : metrics.notifications.length > 0 ? String(metrics.notifications.filter((n) => !n.read).length) : '0'}
-          sub="nepročitanih"
+          sub="unread"
           icon={Headphones}
           accent="violet"
           delay={0.1}
         />
         <StatCard
-          label="Vaš paket"
+          label="Your plan"
           value={metrics.planName}
           icon={Crown}
           accent="rose"
@@ -133,9 +133,9 @@ export default function DashboardClient({
 
       <section id="orders" className="mt-6">
         <GlassCard delay={0.18}>
-          <h2 className="font-display text-lg font-semibold text-white">Vaše porudžbine</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Your orders</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Softver po meri — svaka porudžbina je potpuno izolovana, razvijena od nule i testirana pre isporuke.
+            Custom software — each order is fully isolated, built from scratch, and tested before delivery.
           </p>
           <div className="mt-4">
             <ClientOrdersPanel disabled={isDemo || !sessionUser} />
@@ -146,20 +146,20 @@ export default function DashboardClient({
       <section id="projects" className="mt-6">
         <GlassCard delay={0.22}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-display text-lg font-semibold text-white">Status projekata</h2>
+            <h2 className="font-display text-lg font-semibold text-white">Project status</h2>
             <Link href="/contact" className="btn-ghost flex items-center gap-1 text-emerald-300">
-              Novi zahtev <ArrowUpRight className="h-3.5 w-3.5" />
+              New request <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           {metrics.tasks.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
               <p className="text-sm text-slate-400">
                 {isDemo
-                  ? 'U demo režimu nema aktivnih projekata.'
-                  : 'Nema aktivnih projekata — zakažite konsultaciju ili pošaljite zahtev za novu isporuku.'}
+                  ? 'No active projects in demo mode.'
+                  : 'No active projects — book a consultation or submit a new delivery request.'}
               </p>
               <Link href="/pricing" className="btn-primary mt-4 inline-block text-sm">
-                Pogledajte ponudu
+                View pricing
               </Link>
             </div>
           ) : (
@@ -202,44 +202,44 @@ export default function DashboardClient({
 
       <section id="quote" className="mt-6">
         <GlassCard delay={0.28}>
-          <h2 className="font-display text-lg font-semibold text-white">Nova porudžbina</h2>
+          <h2 className="font-display text-lg font-semibold text-white">New order</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Izaberite isporuku — cena se računa transparentno (tržište, resursi, način plaćanja). Plaćate ono što
-            dobijete, ne pristup platformi.
+            Choose a deliverable — pricing is transparent (market, resources, payment method). You pay for what
+            you receive, not platform access.
           </p>
           {sessionUser && !isDemo ? (
-            <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Učitavam kalkulator…</p>}>
+            <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading calculator…</p>}>
               <DeliverableQuotePanel />
             </Suspense>
           ) : (
             <p className="mt-4 text-sm text-slate-500">
               <Link href="/login?next=/dashboard%23quote" className="text-violet-300 underline">
-                Prijavite se
+                Sign in
               </Link>{' '}
-              da kreirate porudžbinu i uplatite preko banke.
+              to create an order and pay via bank transfer.
             </p>
           )}
           <Link href="/pricing" className="btn-glass mt-6 inline-block text-sm">
-            Kompletan cenovnik isporuka
+            Full deliverable pricing
           </Link>
         </GlassCard>
       </section>
 
       <section id="support" className="mt-6">
         <GlassCard delay={0.32}>
-          <h2 className="font-display text-lg font-semibold text-white">Podrška</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Support</h2>
           <p className="mt-2 text-sm text-slate-400">
-            AI asistent ili live poziv sa članom našeg tima — odgovor u roku vašeg paketa podrške.
+            AI assistant or live call with our team — response within your plan&apos;s support window.
           </p>
           {sessionUser && !isDemo ? (
             <SupportMeetingPanel />
           ) : (
             <div className="mt-4 flex flex-wrap gap-3">
               <Link href="/contact" className="btn-primary text-sm">
-                Kontaktirajte nas
+                Contact us
               </Link>
               <Link href="/login" className="btn-glass text-sm">
-                Prijava za video podršku
+                Sign in for video support
               </Link>
             </div>
           )}
@@ -248,15 +248,15 @@ export default function DashboardClient({
 
       <section id="consultation" className="mt-6">
         <GlassCard delay={0.36}>
-          <h2 className="font-display text-lg font-semibold text-white">Konsultacije i prodaja</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Consultations & sales</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Zakažite razgovor sa prodajnim timom — definisaćemo obim, rokove i paket isporuke za vašu firmu.
+            Book a call with our sales team — we&apos;ll define scope, timelines, and the right delivery package.
           </p>
           {sessionUser && !isDemo ? (
             <SalesMeetingPanel />
           ) : (
             <Link href="/login" className="btn-glass mt-4 inline-block text-sm">
-              Prijava za zakazivanje sastanka
+              Sign in to schedule a meeting
             </Link>
           )}
         </GlassCard>
@@ -264,11 +264,11 @@ export default function DashboardClient({
 
       <section id="account" className="mt-6">
         <GlassCard delay={0.4}>
-          <h2 className="font-display text-lg font-semibold text-white">Vaš nalog</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Your account</h2>
           {sessionUser ? (
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex gap-2">
-                <dt className="text-slate-500">Ime:</dt>
+                <dt className="text-slate-500">Name:</dt>
                 <dd className="text-white">{sessionUser.name}</dd>
               </div>
               <div className="flex gap-2">
@@ -276,22 +276,22 @@ export default function DashboardClient({
                 <dd className="text-white">{sessionUser.email}</dd>
               </div>
               <div className="flex gap-2">
-                <dt className="text-slate-500">Paket:</dt>
+                <dt className="text-slate-500">Plan:</dt>
                 <dd className="text-violet-300">{metrics.planName}</dd>
               </div>
             </dl>
           ) : (
-            <p className="mt-2 text-sm text-slate-400">Niste prijavljeni.</p>
+            <p className="mt-2 text-sm text-slate-400">You are not signed in.</p>
           )}
           {!isDemo && unreadError && (
             <p className="mt-3 text-xs text-slate-500">{unreadError}</p>
           )}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/pricing" className="btn-glass text-sm">
-              Cenovnik
+              Pricing
             </Link>
             <Link href="/contact" className="btn-primary text-sm">
-              Kontakt
+              Contact
             </Link>
           </div>
         </GlassCard>

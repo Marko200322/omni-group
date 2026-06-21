@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Online industrija', value: '25+' },
-  { label: 'Isporuka', value: 'Po meri' },
-  { label: 'Plaćanje', value: 'EUR / banka' },
-  { label: 'Podrška', value: '24/7 AI' },
+  { label: 'Industries online', value: '25+' },
+  { label: 'Delivery', value: 'Custom' },
+  { label: 'Payment', value: 'EUR / bank' },
+  { label: 'Support', value: '24/7 AI' },
 ];
 
 const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
@@ -44,25 +44,25 @@ export default function HomePage() {
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
               <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-200">
-                <Sparkles className="h-3.5 w-3.5" /> Omni Group · Digitalna isporuka
+                <Sparkles className="h-3.5 w-3.5" /> Omni Group · Digital delivery
               </p>
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-                Softver i automatizacija{' '}
-                <span className="text-gradient">po meri za vašu firmu</span>
+                Custom software and automation{' '}
+                <span className="text-gradient">built for your business</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                Ne kupujete platformu — dobijate gotovo rešenje: CRM, AI podršku, lead gen i custom softver,
-                testiran pre isporuke. Transparentan cenovnik, profesionalna podrška.
+                You are not buying a platform — you get a turnkey solution: CRM, AI support, lead gen, and custom
+                software, tested before delivery. Transparent pricing and professional support.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
-                  Zatražite ponudu <ArrowRight className="h-4 w-4" />
+                  Request a quote <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  Rešenja
+                  Solutions
                 </Link>
                 <Link href="/contact" className="btn-glass">
-                  Zakažite poziv
+                  Book a call
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -118,10 +118,10 @@ export default function HomePage() {
             className="mb-12 text-center"
           >
             <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
-              Tri stuba <span className="text-gradient">jedne platforme</span>
+              Three pillars of <span className="text-gradient">one platform</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-              Marketing sajt, klijentski dashboard i admin konzola — jedan brend, tri modula ispod haube.
+              Marketing site, client dashboard, and admin console — one brand, three modules under the hood.
             </p>
           </motion.div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -129,19 +129,19 @@ export default function HomePage() {
               {
                 icon: Server,
                 title: 'Web & API',
-                body: 'Next.js front, Express/Nest backend, TypeORM, integracije.',
+                body: 'Next.js front end, Express/Nest backend, TypeORM, integrations.',
                 href: '/services',
               },
               {
                 icon: Bot,
-                title: 'Klijent workspace',
-                body: 'Dashboard, projekti, automacije i billing — live kad je API dostupan.',
+                title: 'Client workspace',
+                body: 'Dashboard, projects, automations, and billing — live when the API is available.',
                 href: '/dashboard',
               },
               {
                 icon: Zap,
-                title: 'Operator konzola',
-                body: 'Monitoring, workflow statistika, billing katalog i sistemski signali.',
+                title: 'Operator console',
+                body: 'Monitoring, workflow stats, billing catalog, and system signals.',
                 href: '/admin',
               },
             ].map(({ icon: Icon, title, body, href }, i) => (
@@ -173,15 +173,15 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           <div>
             <h2 className="font-display text-3xl font-bold text-white">
-              Platforma za <span className="text-gradient-client">klijente</span> i{' '}
-              <span className="text-gradient-admin">operatore</span>
+              A platform for <span className="text-gradient-client">clients</span> and{' '}
+              <span className="text-gradient-admin">operators</span>
             </h2>
             <ul className="mt-8 space-y-4">
               {[
-                { icon: Layers, text: 'Klijentski dashboard — projekti, automacije, billing.' },
-                { icon: Shield, text: 'Admin konzola — monitoring, planovi, workflow statistika.' },
-                { icon: LineChart, text: 'Live Atina API snapshot — health + javni katalog planova.' },
-                { icon: Globe2, text: 'Spremno za produkciju kad popuniš .env i deploy.' },
+                { icon: Layers, text: 'Client dashboard — projects, automations, billing.' },
+                { icon: Shield, text: 'Admin console — monitoring, plans, workflow stats.' },
+                { icon: LineChart, text: 'Live Atina API snapshot — health + public plan catalog.' },
+                { icon: Globe2, text: 'Production-ready once you configure .env and deploy.' },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-3 text-slate-300">
                   <span className="mt-0.5 rounded-lg bg-white/5 p-2">
@@ -193,10 +193,10 @@ export default function HomePage() {
             </ul>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link href="/dashboard" className="btn-primary">
-                Klijent workspace
+                Client workspace
               </Link>
               <Link href="/admin" className="btn-glass">
-                Admin konzola
+                Admin console
               </Link>
             </div>
           </div>
@@ -207,9 +207,9 @@ export default function HomePage() {
             className="glass-strong relative overflow-hidden p-8"
           >
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
-            <p className="relative text-sm text-slate-400">Proces isporuke</p>
+            <p className="relative text-sm text-slate-400">Delivery process</p>
             <ol className="relative mt-6 space-y-6">
-              {['Discovery & arhitektura', 'Implementacija + test gates', 'Staging mirror & CEO checklist'].map(
+              {['Discovery & architecture', 'Implementation + test gates', 'Staging mirror & CEO checklist'].map(
                 (step, i) => (
                   <li key={step} className="flex gap-4">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 font-display text-sm font-bold">
@@ -217,7 +217,7 @@ export default function HomePage() {
                     </span>
                     <div>
                       <p className="font-medium text-white">{step}</p>
-                      <p className="mt-1 text-xs text-slate-500">Faza {i + 1} · dokumentovano u monorepo</p>
+                      <p className="mt-1 text-xs text-slate-500">Phase {i + 1} · documented in monorepo</p>
                     </div>
                   </li>
                 ),
@@ -235,18 +235,17 @@ export default function HomePage() {
           className="mx-auto max-w-4xl rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-600/20 via-transparent to-cyan-500/10 p-10 text-center shadow-glow md:p-14"
         >
           <h2 className="font-display text-3xl font-bold text-white md:text-4xl">
-            Spremni za sledeći nivo?
+            Ready for the next level?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Zakažite besplatan uvodni poziv ili se prijavite u klijentski portal — pratite porudžbine i status
-            isporuke u realnom vremenu.
+            Book a free intro call or sign in to the client portal — track orders and delivery status in real time.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/contact" className="btn-primary">
-              Zakažite konsultaciju
+              Book a consultation
             </Link>
             <Link href="/login" className="btn-glass">
-              Klijentski portal
+              Client portal
             </Link>
           </div>
         </motion.div>
@@ -254,6 +253,4 @@ export default function HomePage() {
     </div>
   );
 }
-
-
 

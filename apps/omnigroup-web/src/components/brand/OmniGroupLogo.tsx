@@ -30,7 +30,7 @@ export function OmniGroupLogo({ href = '/', size = 'sm', showWordmark = true, cl
 
   return (
     <motion.div whileHover={{ scale: 1.03 }} whileTap={tapScale}>
-      <Link href={href} className="group flex items-center" aria-label="Omni Group — početna">
+      <Link href={href} className="group flex items-center" aria-label="Omni Group — home">
         {inner}
       </Link>
     </motion.div>

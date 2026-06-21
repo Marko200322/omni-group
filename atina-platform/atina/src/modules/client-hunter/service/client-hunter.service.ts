@@ -16,12 +16,11 @@ import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
 import { OutboundQueueService } from '../../autonomy-loop/service/outbound-queue.service';
 import { CrmService } from '../../crm/service/crm.service';
 import { ClientHunterRepository } from '../repository/client-hunter.repository';
+import { listJobBoardPlatforms, countJobBoardPlatforms } from '../data/job-board-catalog';
+import { listHuntLocaleCodes } from '../data/hunt-locales';
+import { HotClientsService } from './hot-clients.service';
 
-const PLATFORM_SEED_URLS: Record<string, string> = {
-  upwork: 'https://www.upwork.com/nx/search/jobs/',
-  fiverr: 'https://www.fiverr.com/search/gigs',
-  linkedin: 'https://www.linkedin.com/jobs/search/',
-};
+const DEFAULT_PLATFORMS_PER_RUN = 12;
 
 export class ClientHunterService {
   private static readonly IDEMPOTENCY_PAYLOAD_MISMATCH_MESSAGE =
@@ -31,6 +30,30 @@ export class ClientHunterService {
   private readonly outbound = new OutboundQueueService();
   private readonly crm = new CrmService();
   private readonly leadDb = getLeadDatabaseService();
+  private readonly hotClients = new HotClientsService();
+
+  async listJobBoards(filter?: { region?: string; locale?: string; kind?: string }) {
+    const platforms = listJobBoardPlatforms({
+      region: filter?.region,
+      locale: filter?.locale,
+      kind: filter?.kind as import('../data/job-board-catalog').JobBoardKind | undefined,
+      enabledOnly: true,
+    });
+    const stats = countJobBoardPlatforms();
+    return {
+      platforms,
+      stats,
+      locales: listHuntLocaleCodes(),
+    };
+  }
+
+  async listHotClients(userId: string, opts?: { limit?: number; minHeat?: number }) {
+    const [items, stats] = await Promise.all([
+      this.hotClients.list(userId, opts),
+      this.hotClients.stats(userId),
+    ]);
+    return { items, stats };
+  }
 
   async list(userId: string) {
     const { rows } = await this.repo.listByUser(userId);
@@ -59,16 +82,40 @@ export class ClientHunterService {
       if (dto.mode === 'hunt') {
         const scraper = getScraperClient();
         if (scraper.isConfigured() || config.features.scraper) {
-          for (const [platform, url] of Object.entries(PLATFORM_SEED_URLS)) {
-            const data = await scraper.scrape({ url, extractLinks: true, javascript: true });
+          const platformList = listJobBoardPlatforms({
+            region: dto.region,
+            locale: dto.locale,
+            slugs: dto.platforms,
+            enabledOnly: true,
+            limit: dto.maxPlatforms ?? DEFAULT_PLATFORMS_PER_RUN,
+          });
+
+          for (const platform of platformList) {
+            const data = await scraper.scrape({ url: platform.seedUrl, extractLinks: true, javascript: true });
             if (data) {
-              scrapeHits.push(platform);
+              scrapeHits.push(platform.slug);
               const links = Array.isArray(data.links) ? data.links : [];
               leadsDiscovered += Math.min(40, Math.floor(links.length / 5));
               for (const link of links.slice(0, 5)) {
                 if (typeof link === 'string' && sampleLinks.length < 15) {
                   sampleLinks.push(link);
                 }
+              }
+              try {
+                await this.hotClients.recordFromHunt({
+                  userId,
+                  platformSlug: platform.slug,
+                  locale: platform.locale,
+                  region: platform.region,
+                  companyName: platform.name,
+                  jobUrl: links[0] && typeof links[0] === 'string' ? links[0] : undefined,
+                  jobPostingExcerpt: `Intercepted listing via ${platform.name}`,
+                  huntIntensity: dto.intensity,
+                  verticalSlug: dto.verticalSlug,
+                  metadata: { sample_links: links.slice(0, 3) },
+                });
+              } catch {
+                /* hot_clients optional when migration pending */
               }
             }
           }
@@ -127,6 +174,7 @@ export class ClientHunterService {
                 sampleLinks,
               });
         outputPayload.outbound = drafts;
+        outputPayload.job_boards_scraped = scrapeHits.length;
         const crmContacts: string[] = [];
         const crmSource = enrichedLeads.length ? enrichedLeads : null;
         const crmCount = crmSource?.length ?? drafts.created;

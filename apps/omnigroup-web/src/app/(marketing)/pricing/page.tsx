@@ -8,7 +8,6 @@ import { IndustryVerticalSelect } from '@/components/marketing/IndustryVerticalS
 import { formatEur } from '@/lib/category-pricing';
 import {
   DELIVERABLE_CATALOG,
-  DELIVERABLE_CATEGORY_LABELS,
   type DeliverableDefinition,
 } from '@/lib/deliverable-catalog';
 import {
@@ -18,14 +17,29 @@ import {
   type PaymentProviderId,
   type QuoteBreakdown,
 } from '@/lib/dynamic-pricing';
-import { formatMarketIndexLabel, getCategoryMarketIndex } from '@/lib/market-pricing';
+import { getCategoryMarketIndex } from '@/lib/market-pricing';
 import { getIndustryCategory } from '@/lib/category-pricing';
 
+const DELIVERABLE_CATEGORY_LABELS_EN: Record<DeliverableDefinition['category'], string> = {
+  implementation: 'Implementation',
+  consulting: 'Consulting',
+  retainer: 'Monthly retainer',
+  growth: 'Growth & marketing',
+  vertical: 'Vertical solutions',
+};
+
+function formatMarketIndexLabelEn(index: number): string {
+  if (index >= 1.25) return 'Premium market';
+  if (index >= 1.05) return 'Above average';
+  if (index >= 0.95) return 'Average market';
+  return 'Budget segment';
+}
+
 const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
-  { id: 'manual', label: 'Banka (bez provizije)' },
-  { id: 'kriptoman', label: 'Kriptoman (~1,5%)' },
-  { id: 'stripe', label: 'Stripe (~2,9% + €0,25)' },
-  { id: 'paypal', label: 'PayPal (~3,4%)' },
+  { id: 'manual', label: 'Bank transfer (no fee)' },
+  { id: 'kriptoman', label: 'Kriptoman (~1.5%)' },
+  { id: 'stripe', label: 'Stripe (~2.9% + €0.25)' },
+  { id: 'paypal', label: 'PayPal (~3.4%)' },
 ];
 
 function QuoteCard({ item, quote }: { item: DeliverableDefinition; quote: QuoteBreakdown }) {
@@ -36,38 +50,38 @@ function QuoteCard({ item, quote }: { item: DeliverableDefinition; quote: QuoteB
       className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6"
     >
       <p className="text-xs uppercase tracking-wider text-violet-300/80">
-        {DELIVERABLE_CATEGORY_LABELS[item.category]}
+        {DELIVERABLE_CATEGORY_LABELS_EN[item.category]}
       </p>
-      <h3 className="mt-1 font-display text-lg font-semibold text-white">{item.nameSr}</h3>
+      <h3 className="mt-1 font-display text-lg font-semibold text-white">{item.name}</h3>
       <p className="mt-2 flex-1 text-sm text-slate-400">{item.description}</p>
       <p className="mt-4">
         <span className="text-3xl font-bold text-gradient">{formatEur(quote.clientPriceEur)}</span>
         <span className="text-sm text-slate-500"> {formatBillingLabel(item.billing)}</span>
       </p>
       {quote.clientPriceYearlyEur && item.billing === 'monthly' && (
-        <p className="text-xs text-slate-500">Godišnje: {formatEur(quote.clientPriceYearlyEur)}</p>
+        <p className="text-xs text-slate-500">Yearly: {formatEur(quote.clientPriceYearlyEur)}</p>
       )}
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="mt-3 text-left text-xs text-violet-300 underline-offset-2 hover:underline"
       >
-        {open ? 'Sakrij kalkulaciju' : 'Kako je izračunato?'}
+        {open ? 'Hide breakdown' : 'How was this calculated?'}
       </button>
       {open && (
         <ul className="mt-3 space-y-1 rounded-lg border border-white/5 bg-black/20 p-3 font-mono text-[11px] text-slate-400">
-          <li>Tržište (TAM/konkurencija): {formatEur(quote.marketValueEur)}</li>
-          <li>Trošak resursa (AI, scraper, infra): {formatEur(quote.resourceCostEur)}</li>
-          <li>Marža: {formatEur(quote.marginEur)}</li>
-          <li>Provizija {quote.paymentProvider}: {formatEur(quote.paymentFeeEur)}</li>
-          <li>Industrija: {quote.pricingTier} · tržište ×{quote.factors.categoryMarketIndex.toFixed(2)}</li>
+          <li>Market (TAM/competition): {formatEur(quote.marketValueEur)}</li>
+          <li>Resource cost (AI, scraper, infra): {formatEur(quote.resourceCostEur)}</li>
+          <li>Margin: {formatEur(quote.marginEur)}</li>
+          <li>Fee {quote.paymentProvider}: {formatEur(quote.paymentFeeEur)}</li>
+          <li>Industry: {quote.pricingTier} · market ×{quote.factors.categoryMarketIndex.toFixed(2)}</li>
         </ul>
       )}
       <Link
         href={`/contact?service=${item.id}`}
         className="btn-glass mt-4 block text-center text-sm"
       >
-        Zatraži ponudu
+        Request a quote
       </Link>
     </motion.div>
   );
@@ -110,13 +124,13 @@ export default function PricingPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Cenovnik isporuka</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Delivery pricing</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Transparentne cene po industriji
+            Transparent pricing by industry
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Cene isporuka prilagođene vašoj branši i tržištu — od brzog podešavanja do kompletnog softvera po meri.
-            Izaberite kategoriju da vidite realne orientacione ponude.
+            Delivery pricing tailored to your vertical and market — from quick setup to full custom software.
+            Select a category to see realistic indicative quotes.
           </p>
         </motion.div>
 
@@ -134,7 +148,7 @@ export default function PricingPage() {
             }}
           />
           <label className="block text-sm">
-            <span className="text-slate-400">Način plaćanja klijenta</span>
+            <span className="text-slate-400">Client payment method</span>
             <select
               className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
               value={paymentProvider}
@@ -149,12 +163,12 @@ export default function PricingPage() {
           </label>
           {categoryMeta && (
             <p className="rounded-xl border border-violet-500/25 bg-violet-500/5 px-4 py-3 text-sm text-slate-300 sm:col-span-2">
-              <strong className="text-white">{categoryMeta.nameSr}</strong> — {formatMarketIndexLabel(marketIndex)}{' '}
-              <span className="text-slate-500">(indeks ×{marketIndex.toFixed(2)})</span>
+              <strong className="text-white">{categoryMeta.name}</strong> — {formatMarketIndexLabelEn(marketIndex)}{' '}
+              <span className="text-slate-500">(index ×{marketIndex.toFixed(2)})</span>
             </p>
           )}
           <label className="block text-sm sm:col-span-2">
-            <span className="text-slate-400">Konkurentnost niše — {intensity}</span>
+            <span className="text-slate-400">Niche competitiveness — {intensity}</span>
             <input
               type="range"
               min={10}
@@ -174,13 +188,13 @@ export default function PricingPage() {
           <div className="flex items-start gap-3">
             <Calculator className="mt-1 h-6 w-6 text-emerald-400" />
             <div>
-              <p className="font-display text-lg font-semibold text-white">Vertikalni paket (mesečno)</p>
+              <p className="font-display text-lg font-semibold text-white">Vertical package (monthly)</p>
               <p className="mt-1 text-sm text-slate-400">
-                Tipična mesečna isporuka po industriji — CRM, automatizacije, AI podrška.
+                Typical monthly delivery by industry — CRM, automations, AI support.
               </p>
               <p className="mt-3 text-3xl font-bold text-emerald-300">
                 {formatEur(verticalQuote.clientPriceEur)}
-                <span className="text-base font-normal text-slate-500"> / mes</span>
+                <span className="text-base font-normal text-slate-500"> / mo</span>
               </p>
             </div>
           </div>
@@ -210,9 +224,9 @@ export default function PricingPage() {
           className="mt-12 text-center text-xs text-slate-500"
         >
           <Sparkles className="mx-auto mb-2 h-3.5 w-3.5 text-violet-400" />
-          Sve cene su orientacione — finalna ponuda nakon kratkog uvida u vaš projekat.
+          All prices are indicative — final quote after a brief review of your project.
           <Link href="/contact" className="mt-2 block text-violet-300 underline-offset-2 hover:underline">
-            Zatraži tačnu ponudu
+            Request an exact quote
           </Link>
         </motion.p>
       </div>

@@ -5,6 +5,13 @@ import { NotificationsService } from '../../notifications/service/notifications.
 import { resolveVerticalDeliveryPack } from '../lib/vertical-delivery-resolver';
 import { renderOutreachEmailMarkdown } from '../templates/vertical-templates';
 import { OutboundQueueRepository, type OutboundMessageRow, type OutboundStatus } from '../repository/outbound-queue.repository';
+import {
+  generateJobHuntEmail,
+  isJobPostingContext,
+  jobHuntToOutboundMarkdown,
+  normalizeJobPostingContext,
+} from '../../client-hunter/lib/job-hunt-copy';
+import { getJobBoardPlatform } from '../../client-hunter/data/job-board-catalog';
 
 export type OutboundQueueStats = {
   warmupComplete: boolean;
@@ -16,8 +23,9 @@ export type OutboundQueueStats = {
 };
 
 function parseOutreachMarkdown(md: string): { subject: string; bodyText: string; bodyHtml: string } {
-  const subjectMatch = md.match(/\*\*Subject A:\*\*\s*(.+)/);
-  const subject = subjectMatch?.[1]?.trim() ?? 'Ponuda — Omni Group isporuka';
+  const subjectMatch =
+    md.match(/\*\*Subject A:\*\*\s*(.+)/) ?? md.match(/\*\*Betreff:\*\*\s*(.+)/);
+  const subject = subjectMatch?.[1]?.trim() ?? 'Angebot — Atina Automatisierung';
   const parts = md.split('---');
   const bodySection = parts.length >= 2 ? parts[1] : md;
   const bodyText = bodySection
@@ -75,7 +83,13 @@ export class OutboundQueueService {
 
     let markdown = renderOutreachEmailMarkdown(pack);
     const ai = getAiClient();
-    if (ai.isConfigured() && input.scrapeContext) {
+    if (input.scrapeContext && isJobPostingContext(input.scrapeContext)) {
+      const jobCtx = normalizeJobPostingContext(input.scrapeContext);
+      const email = await generateJobHuntEmail(jobCtx, {
+        model: process.env.HUNT_GEMINI_MODEL?.trim(),
+      });
+      markdown = jobHuntToOutboundMarkdown(email);
+    } else if (ai.isConfigured() && input.scrapeContext) {
       try {
         const rec = await ai.fetchRecommendations({
           mode: 'outreach-email',
@@ -129,6 +143,8 @@ export class OutboundQueueService {
     const count = Math.min(5, Math.max(1, Math.floor(input.leadsDiscovered / 10) || 1));
     const ids: string[] = [];
     for (let i = 0; i < count; i += 1) {
+      const platformSlug = input.platformsScraped[i % input.platformsScraped.length] ?? 'linkedin_jobs';
+      const platform = getJobBoardPlatform(platformSlug);
       const row = await this.createDraftFromVertical({
         userId: input.userId,
         verticalSlug: input.verticalSlug,
@@ -136,8 +152,12 @@ export class OutboundQueueService {
         name: input.verticalName,
         source: 'client_hunter_scrape',
         leadName: `Lead ${i + 1}`,
-        leadCompany: input.platformsScraped[i % input.platformsScraped.length] ?? 'prospect',
+        leadCompany: platform?.name ?? platformSlug,
         scrapeContext: {
+          hunt_mode: 'job_intercept',
+          platform_slug: platformSlug,
+          locale: platform?.locale ?? 'en',
+          region: platform?.region ?? 'GLOBAL',
           platforms: input.platformsScraped,
           sample_links: input.sampleLinks?.slice(0, 3) ?? [],
           lead_index: i + 1,

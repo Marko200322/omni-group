@@ -1,6 +1,6 @@
 /**
- * Pregled faktura — isti HTML kao Atina email šabloni.
- * Drži sinhronizovano sa atina-platform/atina/src/modules/payments/templates/invoice-email.template.ts
+ * Invoice preview — same HTML as Atina email templates.
+ * Keep in sync with atina-platform/atina/src/modules/payments/templates/invoice-email.template.ts
  */
 import {
   renderAdminPendingEmail,
@@ -11,7 +11,7 @@ import {
 const brand = {
   name: 'Omni Group',
   url: 'https://omnigroup.io',
-  tagline: 'Digitalna platforma za rast i automatizaciju',
+  tagline: 'Digital platform for growth and automation',
   supportEmail: 'billing@omnigroup.io',
 };
 
@@ -31,10 +31,10 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
   const proforma = renderManualCheckoutInvoiceEmail({
     brand,
     toName: 'Marko Kosic',
-    toEmail: 'marko@primer.rs',
-    planName: 'Rast',
+    toEmail: 'marko@example.com',
+    planName: 'Growth',
     planSlug: 'pro',
-    planDescription: 'Napredni moduli, više automatskih zadataka i prioritetna podrška.',
+    planDescription: 'Advanced modules, more automated tasks, and priority support.',
     billingCycle: 'monthly',
     amount: 99,
     currency: 'EUR',
@@ -45,7 +45,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
       iban: 'RS35260000556211337868',
       bankName: 'Raiffeisen banka a.d. Beograd',
       swift: 'RZBSRSBG',
-      note: 'U polje poziv na broj unesite tačno referencu ATINA-MK7F2A9B. Bez reference uplata se ne može automatski povezati.',
+      note: 'Enter reference ATINA-MK7F2A9B exactly in the payment reference field. Payments without a reference cannot be matched automatically.',
     },
     issueDate,
   });
@@ -53,18 +53,18 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
   const paid = renderPaidInvoiceEmail({
     brand,
     toName: 'Marko Kosic',
-    toEmail: 'marko@primer.rs',
+    toEmail: 'marko@example.com',
     invoiceNumber: 'INV-202605-0042',
-    planName: 'Rast',
+    planName: 'Growth',
     planSlug: 'pro',
-    planDescription: 'Napredni moduli, više automatskih zadataka i prioritetna podrška.',
+    planDescription: 'Advanced modules, more automated tasks, and priority support.',
     billingCycle: 'yearly',
     amount: 990,
     total: 990,
     currency: 'EUR',
     lineItems: [
-      { description: 'Rast (pro) — Godišnja pretplata', amount: 990, quantity: 1 },
-      { description: 'Uključeno: CRM, automatizacije, video sastanci', amount: 0, quantity: 1 },
+      { description: 'Growth (pro) — Annual subscription', amount: 990, quantity: 1 },
+      { description: 'Included: CRM, automations, video meetings', amount: 0, quantity: 1 },
     ],
     periodStart: '2026-05-27T00:00:00.000Z',
     periodEnd: '2027-05-27T00:00:00.000Z',
@@ -74,9 +74,9 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
 
   const admin = renderAdminPendingEmail({
     brand,
-    userEmail: 'marko@primer.rs',
+    userEmail: 'marko@example.com',
     userName: 'Marko Kosic',
-    planName: 'Poslovni',
+    planName: 'Business',
     billingCycle: 'monthly',
     amount: 39,
     currency: 'EUR',
@@ -89,22 +89,22 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
   return [
     {
       id: 'proforma',
-      title: 'Proforma faktura',
-      description: 'Šalje se klijentu pri manual checkout-u — IBAN, referenca i stavke.',
+      title: 'Proforma invoice',
+      description: 'Sent to the client during manual checkout — IBAN, reference, and line items.',
       subject: proforma.subject,
       html: proforma.html,
     },
     {
       id: 'paid',
-      title: 'Faktura (plaćeno)',
-      description: 'Potvrda nakon admin potvrde uplate — zvanična faktura sa periodom važenja.',
+      title: 'Invoice (paid)',
+      description: 'Confirmation after admin payment approval — official invoice with service period.',
       subject: paid.subject,
       html: paid.html,
     },
     {
       id: 'admin',
-      title: 'Admin obaveštenje',
-      description: 'Interni email operatoru kada klijent označi da je poslao uplatu.',
+      title: 'Admin notification',
+      description: 'Internal email to the operator when the client marks a payment as sent.',
       subject: admin.subject,
       html: admin.html,
     },

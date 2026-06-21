@@ -97,6 +97,7 @@ describe('Workflow chain core business flow integration', () => {
   });
 
   beforeEach(async () => {
+    (config as { autonomy: { realEcosystemRuns: boolean } }).autonomy.realEcosystemRuns = false;
     await seedUser();
     await resetUserData();
     await setCurrentPhase('v6');

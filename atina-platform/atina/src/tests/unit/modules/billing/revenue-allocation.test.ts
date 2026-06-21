@@ -31,7 +31,7 @@ describe('revenue-allocation.service', () => {
     expect(sum).toBeCloseTo(plan.grossEur, 0);
 
     const ownerLine = plan.lines.find((l) => l.bucket === 'owner_net');
-    expect(ownerLine?.labelSr).toContain('čist');
+    expect(ownerLine?.labelSr).toContain('net');
   });
 
   it('applies stripe fee before resource and profit split', () => {

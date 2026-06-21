@@ -118,7 +118,7 @@ export function buildDemoSession(variant: 'client' | 'admin'): AuthSession {
     user: {
       id: isAdmin ? 'demo-admin' : 'demo-client',
       email: isAdmin ? 'admin.demo@omnigroup.local' : 'client.demo@omnigroup.local',
-      name: isAdmin ? 'Demo Operator' : 'Demo Klijent',
+      name: isAdmin ? 'Demo Operator' : 'Demo Client',
       role: isAdmin ? 'admin' : 'user',
     },
     exp: Date.now() + DEMO_TTL_MS,

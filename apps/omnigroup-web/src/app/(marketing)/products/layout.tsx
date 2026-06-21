@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Proizvodi | Omni Group',
-  description: 'Moduli platforme — CRM, automatizacije, AI podrška, enterprise alati.',
+  title: 'Products | Omni Group',
+  description: 'Platform modules — CRM, automations, AI support, enterprise tools.',
 };
 
 export default function ProductsLayout({ children }: { children: React.ReactNode }) {

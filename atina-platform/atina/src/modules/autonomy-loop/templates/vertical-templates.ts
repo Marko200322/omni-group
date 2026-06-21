@@ -9,7 +9,7 @@ export type VerticalTemplateVars = {
   monthlyPriceEur: number;
   coreModules: string[];
   outreachHooks: string[];
-  recommendedDeliverables: Array<{ id: string; nameSr: string; clientPriceEur: number; billing: string }>;
+  recommendedDeliverables: Array<{ id: string; name: string; nameSr: string; clientPriceEur: number; billing: string }>;
 };
 
 export function deliveryPackToTemplateVars(pack: VerticalDeliveryPack): VerticalTemplateVars {
@@ -74,7 +74,7 @@ ${workflowLines}
 export function renderVerticalPageTsx(v: VerticalTemplateVars): string {
   const fn = classNameFromSlug(v.slug);
   const deliverableLines = v.recommendedDeliverables
-    .map((d) => `        <li>${d.nameSr} — od €${d.clientPriceEur} (${d.billing})</li>`)
+    .map((d) => `        <li>${d.name} — from €${d.clientPriceEur} (${d.billing})</li>`)
     .join('\n');
   const hookLines = v.outreachHooks
     .slice(0, 3)
@@ -91,13 +91,13 @@ export default function ${fn}Page() {
       <h1 className="mt-2 text-3xl font-semibold text-white">${v.name}</h1>
       <p className="mt-4 text-slate-300">{${JSON.stringify(v.valueProp)}}</p>
       <p className="mt-4 text-sm text-emerald-300">
-        Vertikalni paket: od €${v.monthlyPriceEur}/mes (tržište + resursi + provizija)
+        Vertical package: from €${v.monthlyPriceEur}/mo (market + resources + payment fees)
       </p>
-      <h2 className="mt-8 text-lg font-medium text-white">Preporučene isporuke</h2>
+      <h2 className="mt-8 text-lg font-medium text-white">Recommended deliverables</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-400">
 ${deliverableLines}
       </ul>
-      <h2 className="mt-8 text-lg font-medium text-white">Zašto ova niša</h2>
+      <h2 className="mt-8 text-lg font-medium text-white">Why this niche</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-400">
 ${hookLines}
       </ul>
@@ -105,7 +105,7 @@ ${hookLines}
         href="/contact?service=vertical-package&category=${encodeURIComponent(v.category)}&vertical=${v.slug}"
         className="mt-8 inline-block rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white"
       >
-        Zatraži ponudu — ${v.name}
+        Request a quote — ${v.name}
       </a>
     </main>
   );
@@ -133,30 +133,30 @@ export function renderOutreachEmailMarkdown(pack: VerticalDeliveryPack): string 
   const niche = pack.displayName.split('(')[0]?.trim() ?? pack.displayName;
   return `# Outreach — ${niche}
 
-**Subject A:** ${hook} — spremno za ${niche}
-**Subject B:** Kratka ponuda: CRM + automatizacije za ${niche}
+**Subject A:** ${hook} — ready for ${niche}
+**Subject B:** Quick offer: CRM + automations for ${niche}
 
 ---
 
-Zdravo {{first_name}},
+Hi {{first_name}},
 
-Primećujem da radite u niši **${niche}**. Pomažem timovima da dobiju gotovu isporuku (ne SaaS pretplatu):
+I noticed you work in the **${niche}** niche. I help teams get finished delivery (not a SaaS subscription):
 
-- ${pack.outreachHooks[0] ?? 'CRM + automatizacije po vertikali'}
-- ${pack.outreachHooks[1] ?? 'AI podrška i follow-up sekvence'}
-- ${pack.outreachHooks[2] ?? 'Fakturisanje i praćenje uplata'}
+- ${pack.outreachHooks[0] ?? 'CRM + automations for your vertical'}
+- ${pack.outreachHooks[1] ?? 'AI support and follow-up sequences'}
+- ${pack.outreachHooks[2] ?? 'Invoicing and payment tracking'}
 
-Vertikalni paket za ovu nišu kreće od **€${pack.verticalPackageQuoteEur}/mes** — cena uključuje tržišnu vrednost, potrošnju resursa i proviziju platnog kanala.
+The vertical package for this niche starts at **€${pack.verticalPackageQuoteEur}/mo** — pricing includes market value, resource usage, and payment channel fees.
 
-Ako ima smisla, mogu poslati kratku ponudu prilagođenu {{company}}.
+If it makes sense, I can send a short quote tailored to {{company}}.
 
-Pozdrav,
+Best regards,
 {{sender_name}}
 
 ---
 vertical: \`${pack.verticalSlug}\`
 category: \`${pack.category}\`
-status: draft — šalji tek kad je domen zagrejan
+status: draft — send only when domain is warmed up
 `;
 }
 

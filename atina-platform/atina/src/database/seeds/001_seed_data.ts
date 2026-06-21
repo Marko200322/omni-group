@@ -8,9 +8,9 @@ async function seedPlans(): Promise<void> {
 
   const plans = [
     {
-      name: 'Poslovni',
+      name: 'Business',
       slug: 'starter',
-      description: 'Za preduzetnike i solo timove — dashboard, osnovni CRM, email podrška.',
+      description: 'For founders and solo teams — dashboard, basic CRM, email support.',
       price_monthly: 39.00,
       price_yearly: 390.00,
       is_popular: false,
@@ -34,9 +34,9 @@ async function seedPlans(): Promise<void> {
       },
     },
     {
-      name: 'Rast',
+      name: 'Growth',
       slug: 'pro',
-      description: 'Za rastuće timove — automatizacije, CRM, scraper, AI avatar podrška.',
+      description: 'For growing teams — automations, CRM, scraper, AI avatar support.',
       price_monthly: 99.00,
       price_yearly: 990.00,
       is_popular: true,
@@ -64,7 +64,7 @@ async function seedPlans(): Promise<void> {
     {
       name: 'Partner',
       slug: 'enterprise',
-      description: 'Za partnere i veće organizacije — svi moduli, white-label, SLA.',
+      description: 'For partners and larger organizations — all modules, white-label, SLA.',
       price_monthly: 249.00,
       price_yearly: 2490.00,
       is_popular: false,

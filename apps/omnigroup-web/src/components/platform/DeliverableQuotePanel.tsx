@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { deliverableLabel } from '@/lib/display-text';
 import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
 import {
@@ -26,7 +27,7 @@ type Props = {
 };
 
 const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
-  { id: 'manual', label: 'Banka' },
+  { id: 'manual', label: 'Bank transfer' },
   { id: 'kriptoman', label: 'Kriptoman' },
   { id: 'stripe', label: 'Stripe' },
 ];
@@ -91,7 +92,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       }
       setCheckout(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri kreiranju uplate.');
+      setError(err instanceof Error ? err.message : 'Could not create payment.');
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       }
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška.');
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);
     }
@@ -122,11 +123,11 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   return (
     <motion.div className="mt-4 space-y-4">
       <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-        Kupuješ isporuku koju platforma proizvede — ne pristup platformi. Cena = tržište + resursi + provizija.
+        You&apos;re buying a deliverable the platform produces — not platform access. Price = market + resources + fees.
       </p>
 
       <label className="block text-sm">
-        <span className="text-slate-400">Isporuka</span>
+        <span className="text-slate-400">Deliverable</span>
         <select
           className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
           value={deliverableId}
@@ -135,7 +136,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         >
           {DELIVERABLE_CATALOG.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.nameSr}
+              {deliverableLabel(d)}
             </option>
           ))}
         </select>
@@ -148,7 +149,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       />
 
       <label className="block text-sm">
-        <span className="text-slate-400">Plaćanje</span>
+        <span className="text-slate-400">Payment</span>
         <select
           className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
           value={paymentProvider}
@@ -164,11 +165,11 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       </label>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm">
-        <span className="text-slate-400">Kalkulisana cena: </span>
+        <span className="text-slate-400">Quoted price: </span>
         <span className="text-xl font-bold text-white">{formatEur(quote.clientPriceEur)}</span>
         <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
         <span className="mt-1 block text-xs text-slate-500">
-          Resursi {formatEur(quote.resourceCostEur)} · tržište {formatEur(quote.marketValueEur)} · provizija{' '}
+          Resources {formatEur(quote.resourceCostEur)} · market {formatEur(quote.marketValueEur)} · fees{' '}
           {formatEur(quote.paymentFeeEur)}
         </span>
       </p>
@@ -180,16 +181,16 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onClick={startCheckout}
           disabled={disabled || loading}
         >
-          {loading ? 'Generišem…' : 'Generiši uputstvo za uplatu'}
+          {loading ? 'Generating…' : 'Generate payment instructions'}
         </button>
         <Link
           href={`/contact?service=${encodeURIComponent(deliverableId)}${industryCategory ? `&category=${encodeURIComponent(industryCategory)}` : ''}`}
           className="btn-glass text-sm"
         >
-          Pitaj pre kupovine
+          Ask before buying
         </Link>
         <Link href="/pricing" className="btn-glass text-sm">
-          Svi cenovnici
+          All pricing
         </Link>
       </div>
 
@@ -201,11 +202,11 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Uputstvo — {deliverable.nameSr}</p>
+          <p className="font-medium text-white">Instructions — {deliverableLabel(deliverable)}</p>
           <ul className="mt-3 space-y-1 font-mono text-xs">
-            <li>Referenca: {checkout.reference}</li>
+            <li>Reference: {checkout.reference}</li>
             <li>
-              Iznos: {Number(checkout.amount).toFixed(2)} {checkout.currency}
+              Amount: {Number(checkout.amount).toFixed(2)} {checkout.currency}
             </li>
             {Object.entries(checkout.instructions).map(([k, v]) =>
               v ? (
@@ -222,10 +223,10 @@ export function DeliverableQuotePanel({ disabled }: Props) {
               onClick={markSent}
               disabled={loading}
             >
-              Poslao sam uplatu
+              I&apos;ve sent the payment
             </button>
           ) : (
-            <p className="mt-4 text-emerald-300">Hvala — potvrda isporuke nakon admin pregleda uplate.</p>
+            <p className="mt-4 text-emerald-300">Thanks — delivery is confirmed after admin reviews the payment.</p>
           )}
         </motion.div>
       )}

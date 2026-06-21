@@ -94,11 +94,14 @@ describe('Workflow chain template execution integration', () => {
     await closePool();
   });
 
-  it('runs atina-forge-sync-loop template with atina-system and forge steps', async () => {
+  beforeEach(async () => {
+    (config as { autonomy: { realEcosystemRuns: boolean } }).autonomy.realEcosystemRuns = false;
     await seedUser();
     await seedEcosystemSystems();
     await setCurrentPhase('v6');
+  });
 
+  it('runs atina-forge-sync-loop template with atina-system and forge steps', async () => {
     const res = await request(server)
       .post('/api/v1/workflow-chain/templates/atina-forge-sync-loop/create-and-run')
       .set('Authorization', `Bearer ${signAuthToken()}`)
@@ -129,10 +132,6 @@ describe('Workflow chain template execution integration', () => {
   });
 
   it('returns a completed Atina+Forge execution task payload after template run', async () => {
-    await seedUser();
-    await seedEcosystemSystems();
-    await setCurrentPhase('v6');
-
     const res = await request(server)
       .post('/api/v1/workflow-chain/templates/atina-forge-sync-loop/create-and-run')
       .set('Authorization', `Bearer ${signAuthToken()}`)

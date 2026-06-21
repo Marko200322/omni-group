@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Prijava',
+  title: 'Sign in',
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

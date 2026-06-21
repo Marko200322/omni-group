@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Mobilni admin',
-  description: 'Omni Group operator konzola za telefon — uplate, fabrika, autonomy.',
+  title: 'Mobile admin',
+  description: 'Omni Group operator console for mobile — payments, factory, autonomy.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

@@ -4,8 +4,8 @@ import { fetchSolutionsList } from '@/lib/public-site-api';
 import { getGeneratedVerticalsIndex, listOnlineVerticalSlugs } from '@/lib/generated-verticals';
 
 export const metadata: Metadata = {
-  title: 'Vertikalna rešenja | Omni Group',
-  description: 'Autonomy-generisani landingi po industriji — spremni za prodaju i deploy.',
+  title: 'Vertical solutions | Omni Group',
+  description: 'Autonomy-generated industry landings — ready for sales and deploy.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -35,12 +35,12 @@ export default async function SolutionsPage() {
   return (
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Katalog niša</p>
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Niche catalog</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-          Vertikalna rešenja online
+          Vertical solutions online
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
-          {total} generisanih landing stranica — svaka povezana sa delivery pack-om, cenama i workflow koracima.
+          {total} generated landing pages — each linked to a delivery pack, pricing, and workflow steps.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,7 +59,7 @@ export default async function SolutionsPage() {
               {item.valueProp ? (
                 <p className="mt-2 line-clamp-3 text-sm text-slate-400">{item.valueProp}</p>
               ) : (
-                <p className="mt-2 text-sm text-slate-500">Pogledaj delivery pack i ponudu za ovu nišu.</p>
+                <p className="mt-2 text-sm text-slate-500">View the delivery pack and quote for this niche.</p>
               )}
             </Link>
           ))}
@@ -67,10 +67,10 @@ export default async function SolutionsPage() {
 
         <div className="mt-12 flex flex-wrap gap-3">
           <Link href="/products" className="btn-glass text-sm">
-            Paketi isporuke
+            Delivery packages
           </Link>
           <Link href="/pricing" className="btn-primary text-sm">
-            Kalkulator cena
+            Pricing calculator
           </Link>
         </div>
       </div>

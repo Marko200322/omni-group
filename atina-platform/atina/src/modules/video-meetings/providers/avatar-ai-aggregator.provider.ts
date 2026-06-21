@@ -203,7 +203,7 @@ export async function conversationTurnLocal(input: {
   let replySource: 'ai' | 'fallback' = 'fallback';
 
   if (input.mode === 'greeting') {
-    text = input.agent.greeting.trim() || `Zdravo! Ja sam ${input.agent.name}.`;
+    text = input.agent.greeting.trim() || `Hi! I'm ${input.agent.name}.`;
     replySource = 'fallback';
   } else {
     const reply = await generateAgentReply({

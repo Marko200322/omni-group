@@ -266,49 +266,49 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
   return (
     <>
       <nav
-        aria-label="Preskok na sadržaj"
+        aria-label="Skip to content"
         className="fixed left-4 top-4 z-[100] flex -translate-y-[200vh] flex-col gap-2 transition motion-reduce:transition-none focus-within:translate-y-0"
       >
         <a
           href="#dev-docs-filter"
           className="rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-lg outline-none ring-violet-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950"
         >
-          Preskoči na pretragu
+          Skip to search
         </a>
         <a
           href="#dev-docs-search"
           className="rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-lg outline-none ring-violet-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950"
-          title="Skroluje do cele oblasti pretrage (sidro #dev-docs-search)"
+          title="Scrolls to the entire search region (anchor #dev-docs-search)"
         >
-          Preskoči na oblast pretrage
+          Skip to search region
         </a>
         {showQuickJump ? (
           <a
             href="#dev-docs-quick-jump"
             className="rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-lg outline-none ring-violet-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950"
           >
-            Preskoči na Brzi skok
+            Skip to Quick jump
           </a>
         ) : null}
         <a
           href="#dev-docs-list"
           className="rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-lg outline-none ring-violet-300 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-950"
         >
-          Preskoči na listu dokumenata
+          Skip to document list
         </a>
       </nav>
       <div
         id="dev-docs-search"
         className="mt-6 scroll-mt-20"
         role="search"
-        aria-label="Pretraga repo putanja dokumenata"
+        aria-label="Search repo document paths"
       >
         <label htmlFor="dev-docs-filter" className="text-sm text-gray-400">
-          Filtriraj putanje ili naslov sekcije (podudaranje je istaknuto;{' '}
+          Filter paths or section title (matches are highlighted;{' '}
           <kbd className="rounded border border-gray-600 bg-gray-900 px-1 font-mono text-xs text-gray-300">
             Esc
           </kbd>{' '}
-          briše upit;{' '}
+          clears the query;{' '}
           <kbd className="rounded border border-gray-600 bg-gray-900 px-1 font-mono text-xs text-gray-300">
             Ctrl
           </kbd>
@@ -321,12 +321,12 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
             K
           </kbd>
           {' '}
-          ili{' '}
+          or{' '}
           <kbd className="rounded border border-gray-600 bg-gray-900 px-1 font-mono text-xs text-gray-300">
             /
           </kbd>{' '}
-          (van drugih polja) fokusira ovo polje; upit se i u URL-u kao{' '}
-          <code className="text-violet-400">?q=…</code>; dugme <strong className="font-normal text-gray-300">Link</strong> kopira pun URL; dugme <strong className="font-normal text-gray-300">Hash</strong> kopira samo fragment iz adrese (npr. <code className="text-violet-400">#sec-…</code>) kad postoji; kada ima upita, dugme <strong className="font-normal text-gray-300">Obriši</strong> ga skida i iz adrese; pored svakog naslova sekcije: kopiraj URL sa <code className="text-violet-400">#sec-…</code>)
+          (outside other fields) focuses this field; the query is also in the URL as{' '}
+          <code className="text-violet-400">?q=…</code>; the <strong className="font-normal text-gray-300">Link</strong> button copies the full URL; the <strong className="font-normal text-gray-300">Hash</strong> button copies only the fragment from the address (e.g. <code className="text-violet-400">#sec-…</code>) when present; when there is a query, the <strong className="font-normal text-gray-300">Clear</strong> button removes it from the address too; next to each section title: copy the URL with <code className="text-violet-400">#sec-…</code>)
         </label>
         <div className="mt-2 flex max-w-xl flex-wrap items-stretch gap-2">
           <input
@@ -348,7 +348,7 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
                 clearSearch();
               }
             }}
-            placeholder="npr. staging, smoke, NIVO-1…"
+            placeholder="e.g. staging, smoke, NIVO-1…"
             autoComplete="off"
             className="min-w-[12rem] flex-1 rounded-md border border-gray-600 bg-gray-950/80 px-3 py-2 text-gray-200 placeholder:text-gray-600 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
           />
@@ -357,54 +357,54 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
               type="button"
               onClick={() => clearSearch()}
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-gray-600 bg-gray-900/80 px-3 py-2 text-sm text-gray-300 hover:border-rose-500/40 hover:text-rose-200"
-              aria-label="Obriši pretragu i ukloni q iz URL-a"
-              title="Obriši filter"
+              aria-label="Clear search and remove q from URL"
+              title="Clear filter"
             >
               <X className="h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">Obriši</span>
+              <span className="hidden sm:inline">Clear</span>
             </button>
           ) : null}
           <button
             type="button"
             onClick={() => copyPageUrl()}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-gray-600 bg-gray-900/80 px-3 py-2 text-sm text-gray-300 hover:border-violet-500/50 hover:text-violet-200"
-            aria-label="Kopiraj pun URL ove stranice (uključujući filter u adresi)"
-            title="Kopiraj link stranice"
+            aria-label="Copy full URL of this page (including filter in address)"
+            title="Copy page link"
           >
             {pageLinkCopied ? (
               <Check className="h-4 w-4 text-emerald-400" aria-hidden />
             ) : (
               <Link2 className="h-4 w-4 text-gray-400" aria-hidden />
             )}
-            <span className="hidden sm:inline">{pageLinkCopied ? 'Kopirano' : 'Link'}</span>
+            <span className="hidden sm:inline">{pageLinkCopied ? 'Copied' : 'Link'}</span>
           </button>
           <button
             type="button"
             disabled={!urlHash}
             onClick={() => copyHashFragment()}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-gray-600 bg-gray-900/80 px-3 py-2 text-sm text-gray-300 hover:border-violet-500/50 hover:text-violet-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-gray-600 disabled:hover:text-gray-300"
-            aria-label="Kopiraj samo hash iz URL-a (npr. #sec-… ili #dev-docs-list)"
-            title={urlHash ? `Kopiraj: ${urlHash}` : 'U adresi trenutno nema hash-a'}
+            aria-label="Copy only hash from URL (e.g. #sec-… or #dev-docs-list)"
+            title={urlHash ? `Copy: ${urlHash}` : 'No hash in address currently'}
           >
             {hashFragmentCopied ? (
               <Check className="h-4 w-4 text-emerald-400" aria-hidden />
             ) : (
               <Hash className="h-4 w-4 text-gray-400" aria-hidden />
             )}
-            <span className="hidden sm:inline">{hashFragmentCopied ? 'Kopirano' : 'Hash'}</span>
+            <span className="hidden sm:inline">{hashFragmentCopied ? 'Copied' : 'Hash'}</span>
           </button>
         </div>
         <output
           id="dev-docs-search-stats"
           htmlFor="dev-docs-filter"
-          aria-label="Statistika: broj sekcija i putanja (posle filtera)"
+          aria-label="Statistics: section and path count (after filter)"
           className="mt-2 block text-xs text-gray-500"
           aria-live="polite"
           aria-relevant="text"
         >
           {query.trim()
-            ? `Prikaz: ${filtered.length} sekcija · ${visiblePathCount} putanja`
-            : `Ukupno: ${sections.length} sekcija · ${totalPathCount} putanja`}
+            ? `Showing: ${filtered.length} sections · ${visiblePathCount} paths`
+            : `Total: ${sections.length} sections · ${totalPathCount} paths`}
         </output>
       </div>
       {showQuickJump ? (
@@ -412,14 +412,14 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
           id="dev-docs-quick-jump"
           aria-label={
             query.trim()
-              ? 'Brzi skok — trenutno prikazane sekcije (posle filtera)'
-              : 'Brzi skok — sve sekcije'
+              ? 'Quick jump — currently visible sections (after filter)'
+              : 'Quick jump — all sections'
           }
           className="mt-4 rounded-lg border border-gray-700/80 bg-gray-950/40 px-4 py-3"
         >
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Brzi skok</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Quick jump</p>
           {query.trim() ? (
-            <p className="mt-1 text-xs text-gray-600">Samo sekcije koje odgovaraju filteru.</p>
+            <p className="mt-1 text-xs text-gray-600">Only sections matching the filter.</p>
           ) : null}
           <ul className="mt-2 flex list-none flex-wrap gap-x-3 gap-y-1.5 pl-0">
             {(query.trim() ? filtered : sections).map((s) => (
@@ -437,7 +437,7 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
       ) : null}
       <section
         id="dev-docs-list"
-        aria-label="Lista dokumenata u repou po sekcijama"
+        aria-label="List of repo documents by section"
         tabIndex={-1}
         className="scroll-mt-8 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-950"
       >
@@ -449,11 +449,11 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
             className="mt-8 rounded-lg border border-amber-500/20 bg-amber-950/15 px-4 py-5"
           >
             <p className="text-gray-200">
-              Nema pogodaka za{' '}
+              No matches for{' '}
               <q className="font-mono text-sm text-violet-300">{query.trim()}</q>.
             </p>
             <p className="mt-2 text-sm text-gray-500">
-              Proveri pravopis ili skrati upit. Filter brišeš dugmetom <strong className="font-normal text-gray-400">Obriši</strong> pored polja, ili <strong className="font-normal text-gray-400">Esc</strong>.
+              Check spelling or shorten the query. Clear the filter with the <strong className="font-normal text-gray-400">Clear</strong> button beside the field, or <strong className="font-normal text-gray-400">Esc</strong>.
             </p>
             <button
               type="button"
@@ -461,7 +461,7 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
               className="mt-4 inline-flex items-center gap-2 rounded-md border border-gray-600 bg-gray-900/80 px-3 py-2 text-sm text-gray-200 hover:border-violet-500/50 hover:text-violet-200"
             >
               <X className="h-4 w-4 text-gray-400" aria-hidden />
-              Obriši filter
+              Clear filter
             </button>
           </div>
         ) : (
@@ -481,8 +481,8 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
                   type="button"
                   onClick={() => copySectionLink(section.title)}
                   className="inline-flex shrink-0 items-center justify-center rounded border border-gray-600 bg-gray-900/80 p-1.5 text-gray-400 hover:border-violet-500/50 hover:text-violet-300"
-                  aria-label={`Kopiraj link na sekciju: ${section.title}`}
-                  title="Kopiraj link na ovu sekciju (trenutni URL + hash)"
+                  aria-label={`Copy link to section: ${section.title}`}
+                  title="Copy link to this section (current URL + hash)"
                 >
                   {copiedSectionId === headingId ? (
                     <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
@@ -502,8 +502,8 @@ export function DevDocsSections({ sections }: { sections: DocSection[] }) {
                       type="button"
                       onClick={() => copyPath(p)}
                       className="inline-flex shrink-0 items-center justify-center rounded border border-gray-600 bg-gray-900/80 p-1.5 text-gray-400 hover:border-violet-500/50 hover:text-violet-300"
-                      aria-label={`Kopiraj putanju ${p}`}
-                      title="Kopiraj putanju"
+                      aria-label={`Copy path ${p}`}
+                      title="Copy path"
                     >
                       {copiedPath === p ? (
                         <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden />

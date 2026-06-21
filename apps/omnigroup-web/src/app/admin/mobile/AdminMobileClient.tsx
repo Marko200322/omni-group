@@ -52,7 +52,7 @@ function formatAmount(amount: number | string, currency: string): string {
   const n = typeof amount === 'number' ? amount : parseFloat(String(amount));
   if (Number.isNaN(n)) return `${amount} ${currency}`;
   try {
-    return new Intl.NumberFormat('sr-RS', { style: 'currency', currency: currency.toUpperCase() }).format(n);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(n);
   } catch {
     return `${n.toFixed(2)} ${currency}`;
   }
@@ -69,10 +69,10 @@ function parseMetadata(raw: AtinaAdminPayment['metadata']): Record<string, unkno
 }
 
 const TABS: { id: Tab; label: string; icon: typeof Home }[] = [
-  { id: 'pregled', label: 'Pregled', icon: Home },
-  { id: 'uplate', label: 'Uplate', icon: CreditCard },
-  { id: 'fabrika', label: 'Fabrika', icon: Factory },
-  { id: 'akcije', label: 'Akcije', icon: Bot },
+  { id: 'pregled', label: 'Overview', icon: Home },
+  { id: 'uplate', label: 'Payments', icon: CreditCard },
+  { id: 'fabrika', label: 'Factory', icon: Factory },
+  { id: 'akcije', label: 'Actions', icon: Bot },
 ];
 
 export default function AdminMobileClient({ snapshot, sessionEmail, overview, pendingPayments: initialPayments }: Props) {
@@ -104,7 +104,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
       if (rs.ok) setRollout(rs.data as RolloutSummary);
       if (pr.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Greška pri učitavanju');
+      setError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
       setRefreshing(false);
     }
@@ -117,7 +117,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
   const enablePush = async () => {
     const ok = await subscribeAdminPush();
     setPushEnabled(ok);
-    setMessage(ok ? 'Push notifikacije uključene.' : 'Push nije dostupan — proveri VAPID ključeve.');
+    setMessage(ok ? 'Push notifications enabled.' : 'Push unavailable — check VAPID keys.');
   };
 
   const runAction = async (key: string, url: string, init: RequestInit = { method: 'POST' }) => {
@@ -128,10 +128,10 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
       const res = await fetch(url, { method: 'POST', ...init });
       const body = (await res.json()) as { ok?: boolean; error?: string; detail?: string; message?: string };
       if (!res.ok || body.ok === false) throw new Error(body.detail ?? body.error ?? 'action_failed');
-      setMessage(body.message ?? 'Uspelo.');
+      setMessage(body.message ?? 'Success.');
       await loadExtras();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Akcija nije uspela');
+      setError(err instanceof Error ? err.message : 'Action failed');
     } finally {
       setBusy(null);
     }
@@ -146,9 +146,9 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
       const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'confirm_failed');
       setPayments((prev) => prev.filter((p) => p.id !== paymentId));
-      setMessage('Uplata potvrđena.');
+      setMessage('Payment confirmed.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Potvrda nije uspela');
+      setError(err instanceof Error ? err.message : 'Confirmation failed');
     } finally {
       setBusy(null);
     }
@@ -163,7 +163,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-xs text-violet-300">
-              <Smartphone className="h-3.5 w-3.5" /> Mobilni admin
+              <Smartphone className="h-3.5 w-3.5" /> Mobile admin
             </p>
             <h1 className="truncate font-display text-lg font-semibold">Operator</h1>
             <p className="truncate text-xs text-slate-500">{sessionEmail}</p>
@@ -173,7 +173,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
             onClick={() => void loadExtras()}
             disabled={refreshing}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 active:bg-white/10"
-            aria-label="Osveži"
+            aria-label="Refresh"
           >
             <RefreshCw className={`h-5 w-5 text-violet-300 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -190,25 +190,25 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <StatTile label="API" value={snapshot.health?.ok ? 'OK' : '—'} accent="emerald" />
-              <StatTile label="Uplate čekaju" value={String(payments.length)} accent="amber" />
-              <StatTile label="Korisnici" value={metrics.activeUsers} accent="violet" />
+              <StatTile label="Pending payments" value={String(payments.length)} accent="amber" />
+              <StatTile label="Users" value={metrics.activeUsers} accent="violet" />
               <StatTile label="MRR" value={metrics.mrr} accent="cyan" />
             </div>
-            <Card title="Rollout kategorija">
+            <Card title="Category rollout">
               <p className="text-2xl font-bold text-white">
                 {rollout?.overallCompletionPct ?? '—'}%
               </p>
               <p className="mt-1 text-sm text-slate-400">
-                {rollout?.completedCategories ?? 0} / {rollout?.totalCategories ?? 25} kategorija
-                {rollout?.nextCategoryName ? ` · sledeća: ${rollout.nextCategoryName}` : ''}
+                {rollout?.completedCategories ?? 0} / {rollout?.totalCategories ?? 25} categories
+                {rollout?.nextCategoryName ? ` · next: ${rollout.nextCategoryName}` : ''}
               </p>
             </Card>
             <Card title="Autonomy">
               <p className="text-sm text-slate-300">
-                Scheduler: {autonomy?.scheduler?.running ? 'radi' : 'stoji'}
+                Scheduler: {autonomy?.scheduler?.running ? 'running' : 'stopped'}
               </p>
               <p className="text-sm text-slate-400">
-                Budžet: ${autonomy?.budget?.balanceUsd?.toFixed(0) ?? '—'}
+                Budget: ${autonomy?.budget?.balanceUsd?.toFixed(0) ?? '—'}
                 {autonomy?.budget?.hardStop ? ' · HARD STOP' : ''}
               </p>
             </Card>
@@ -218,14 +218,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                 onClick={() => void enablePush()}
                 className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-sm text-emerald-200"
               >
-                Uključi push obaveštenja
+                Enable push notifications
               </button>
             )}
             <Link
               href="/admin"
               className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 text-sm text-violet-200 active:bg-violet-500/20"
             >
-              <LayoutDashboard className="h-4 w-4" /> Puna desktop konzola
+              <LayoutDashboard className="h-4 w-4" /> Full desktop console
             </Link>
           </div>
         )}
@@ -233,8 +233,8 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
         {tab === 'uplate' && (
           <div className="space-y-3">
             {payments.length === 0 ? (
-              <Card title="Nema uplata na čekanju">
-                <p className="text-sm text-slate-400">Sve manual uplate su obrađene.</p>
+              <Card title="No pending payments">
+                <p className="text-sm text-slate-400">All manual payments have been processed.</p>
               </Card>
             ) : (
               payments.map((p) => {
@@ -253,7 +253,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                       className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-medium text-white active:bg-emerald-500 disabled:opacity-50"
                     >
                       {busy === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                      Potvrdi uplatu
+                      Confirm payment
                     </button>
                   </div>
                 );
@@ -264,16 +264,16 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'fabrika' && (
           <div className="space-y-3">
-            <Card title="Klijentske narudžbine">
+            <Card title="Client orders">
               <p className="text-2xl font-bold">{factoryStats?.clientOrders?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
-                U izradi: {factoryStats?.clientOrders?.building ?? 0} · Spremno: {factoryStats?.clientOrders?.ready ?? 0}
+                In progress: {factoryStats?.clientOrders?.building ?? 0} · Ready: {factoryStats?.clientOrders?.ready ?? 0}
               </p>
             </Card>
-            <Card title="Interni SaaS">
+            <Card title="Internal SaaS">
               <p className="text-2xl font-bold">{factoryStats?.internalProducts?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
-                U izradi: {factoryStats?.internalProducts?.building ?? 0} · Spremno: {factoryStats?.internalProducts?.ready ?? 0}
+                In progress: {factoryStats?.internalProducts?.building ?? 0} · Ready: {factoryStats?.internalProducts?.ready ?? 0}
               </p>
             </Card>
             <button
@@ -283,7 +283,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
               className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 text-sm font-medium text-cyan-200 active:bg-cyan-500/20 disabled:opacity-50"
             >
               {busy === 'factory-tick' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-              Pokreni internal SaaS tick
+              Run internal SaaS tick
             </button>
           </div>
         )}
@@ -291,14 +291,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
         {tab === 'akcije' && (
           <div className="space-y-3">
             <ActionButton
-              label="Bootstrap lovacki modul"
-              sub="Workspace-ovi: hunter, outreach, scoring"
+              label="Bootstrap hunting module"
+              sub="Workspaces: hunter, outreach, scoring"
               busy={busy === 'hunting-bootstrap'}
               onClick={() => void runAction('hunting-bootstrap', '/api/atina/hunting/bootstrap')}
             />
             <ActionButton
-              label="Pokreni lov (pipeline)"
-              sub="Nurture-loop za marketing nišu"
+              label="Run hunt (pipeline)"
+              sub="Nurture loop for marketing vertical"
               busy={busy === 'hunting-pipeline'}
               onClick={() =>
                 void runAction('hunting-pipeline', '/api/atina/hunting/pipeline/run', {
@@ -309,36 +309,36 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
               }
             />
             <ActionButton
-              label="Pošalji outbound queue"
-              sub="Draft emailovi iz reda čekanja"
+              label="Send outbound queue"
+              sub="Draft emails from the queue"
               busy={busy === 'outbound-send'}
               onClick={() => void runAction('outbound-send', '/api/atina/autonomy-loop/outbound/process-send')}
             />
             <ActionButton
               label="Autonomy tick"
-              sub="Jedan ciklus istraživanja i deploy-a"
+              sub="One research and deploy cycle"
               busy={busy === 'autonomy-tick'}
               onClick={() => void runAction('autonomy-tick', '/api/atina/autonomy-loop/tick')}
             />
             <ActionButton
               label="Evolution tick"
-              sub="Optimizacija modula i zadataka"
+              sub="Module and task optimization"
               busy={busy === 'evolution-tick'}
               onClick={() => void runAction('evolution-tick', '/api/atina/autonomy-loop/evolution/tick')}
             />
             <ActionButton
-              label="Pokreni scheduler"
-              sub="Automatski autonomy ciklusi"
+              label="Start scheduler"
+              sub="Automatic autonomy cycles"
               busy={busy === 'scheduler-start'}
               onClick={() => void runAction('scheduler-start', '/api/atina/autonomy-loop/scheduler/start')}
             />
             <ActionButton
-              label="Zaustavi scheduler"
-              sub="Pauziraj automatske cikluse"
+              label="Stop scheduler"
+              sub="Pause automatic cycles"
               busy={busy === 'scheduler-stop'}
               onClick={() => void runAction('scheduler-stop', '/api/atina/autonomy-loop/scheduler/stop')}
             />
-            <Card title="Poslednji ciklus">
+            <Card title="Last cycle">
               <p className="text-sm text-white">{autonomy?.latestCycle?.status ?? '—'}</p>
               <p className="text-xs text-slate-500">{autonomy?.latestCycle?.created_at ?? ''}</p>
             </Card>

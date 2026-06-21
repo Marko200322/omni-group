@@ -28,12 +28,12 @@ export type CategoryDeliveryProfile = {
 };
 
 const STANDARD_QUALITY_GATES = [
-  'Research završen (TAM + konkurencija u research_data)',
-  'Artefakti generisani (modul, landing, workflow, outreach, quality pack)',
-  'Dynamic pricing quote validan za verticalSlug',
-  'CRM pipeline i izvor leadova definisani',
-  'Outreach draft pregledan pre slanja (domain warmup)',
-  'Smoke test / owner sign-off pre isporuke klijentu',
+  'Research complete (TAM + competition in research_data)',
+  'Artifacts generated (module, landing, workflow, outreach, quality pack)',
+  'Dynamic pricing quote valid for verticalSlug',
+  'CRM pipeline and lead source defined',
+  'Outreach draft reviewed before send (domain warmup)',
+  'Smoke test / owner sign-off before client delivery',
 ];
 
 function profile(
@@ -54,7 +54,7 @@ function profile(
     qualityGates: partial.qualityGates ?? STANDARD_QUALITY_GATES,
     valuePropTemplate:
       partial.valuePropTemplate ??
-      'Kompletna isporuka za {niche}: CRM, automatizacije, lead gen i AI podrška — bez prodaje platforme, samo gotov output.',
+      'End-to-end delivery for {niche}: CRM, automations, lead gen, and AI support — no platform resale, only finished output.',
     baseKeywords: partial.baseKeywords ?? [slug.replace(/_/g, ' '), 'freelance', 'automation', 'crm'],
     ...partial,
   };
@@ -136,9 +136,9 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
       'API integration opportunities',
     ],
     outreachHooks: [
-      'Automatizuj onboarding klijenata i quoting',
-      'CRM + pipeline za dev projekte',
-      'Manje admina, više billable sati',
+      'Automate client onboarding and quoting',
+      'CRM + pipeline for dev projects',
+      'Less admin, more billable hours',
     ],
     baseKeywords: ['software development', 'web development', 'dev agency', 'freelance developer'],
     workflowSteps: [
@@ -157,7 +157,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['ai-rag', 'craftor', 'client-hunter', 'crm', 'analytics'],
     marketIntensityDefault: 68,
     researchFocus: ['LLM adoption SMB', 'data pipeline demand', 'AI automation ROI', 'RAG use cases'],
-    outreachHooks: ['AI agent za tvoju nišu', 'RAG nad dokumentacijom klijenata', 'Automatizovan research i reporting'],
+    outreachHooks: ['AI agent for your niche', 'RAG over client documentation', 'Automated research and reporting'],
     baseKeywords: ['artificial intelligence', 'machine learning', 'data science', 'LLM'],
     workflowSteps: [
       { step: 'Market discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -174,7 +174,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['craftor', 'template-engine', 'crm', 'deal-offer', 'client-hunter'],
     marketIntensityDefault: 55,
     researchFocus: ['design freelance demand', 'portfolio conversion', 'brand identity market'],
-    outreachHooks: ['Brži proposal i follow-up', 'Landing + CRM za dizajn studio', 'Automatizuj feedback loop sa klijentima'],
+    outreachHooks: ['Faster proposals and follow-up', 'Landing + CRM for design studios', 'Automate the client feedback loop'],
     baseKeywords: ['graphic design', 'UI UX', 'creative agency', 'brand identity'],
     workflowSteps: [
       { step: 'Discover clients', moduleSlug: 'client-hunter', action: 'discover' },
@@ -190,7 +190,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['template-engine', 'craftor', 'crm', 'outreach', 'client-hunter'],
     marketIntensityDefault: 48,
     researchFocus: ['content marketing demand', 'translation market rates', 'SEO writing volume'],
-    outreachHooks: ['Pipeline za content projekte', 'Automatski briefing i follow-up', 'Lead gen za copywriter nišu'],
+    outreachHooks: ['Pipeline for content projects', 'Automated briefing and follow-up', 'Lead gen for the copywriting niche'],
     baseKeywords: ['copywriting', 'content writing', 'translation', 'SEO writing'],
     workflowSteps: [
       { step: 'Hunt content leads', moduleSlug: 'client-hunter', action: 'hunt' },
@@ -207,9 +207,9 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     marketIntensityDefault: 65,
     researchFocus: ['digital marketing spend', 'SEO/PPC competition', 'agency churn', 'lead gen pricing'],
     outreachHooks: [
-      'Lead gen + outreach na autopilot',
-      'CRM za marketing agencije',
-      'Jasan ROI reporting za klijente',
+      'Lead gen + outreach on autopilot',
+      'CRM for marketing agencies',
+      'Clear ROI reporting for clients',
     ],
     baseKeywords: ['digital marketing', 'SEO', 'PPC', 'growth marketing'],
     workflowSteps: [
@@ -227,7 +227,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['titanis', 'client-hunter', 'outreach', 'crm', 'follow-up-automation'],
     marketIntensityDefault: 70,
     researchFocus: ['B2B lead gen', 'SDR outsourcing', 'cold email benchmarks', 'CRM adoption'],
-    outreachHooks: ['Qualified leads + CRM sync', 'Cold email sekvence po niši', 'Pipeline bez ručnog copy-paste'],
+    outreachHooks: ['Qualified leads + CRM sync', 'Cold email sequences by niche', 'Pipeline without manual copy-paste'],
     baseKeywords: ['lead generation', 'sales development', 'BDR', 'appointment setting'],
     workflowSteps: [
       { step: 'Titanis hunt', moduleSlug: 'titanis', action: 'lead-hunt' },
@@ -243,7 +243,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['automation', 'crm', 'tasks', 'notifications', 'client-hunter'],
     marketIntensityDefault: 42,
     researchFocus: ['virtual assistant market', 'SMB admin outsourcing', 'workflow automation'],
-    outreachHooks: ['Automatizuj repetitivne VA taskove', 'CRM + task queue za tim', 'Manje grešaka u data entry'],
+    outreachHooks: ['Automate repetitive VA tasks', 'CRM + task queue for your team', 'Fewer data entry errors'],
     baseKeywords: ['virtual assistant', 'admin support', 'data entry', 'executive assistant'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -259,7 +259,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['support-avatar', 'ai-rag', 'crm', 'follow-up', 'notifications'],
     marketIntensityDefault: 52,
     researchFocus: ['support outsourcing', 'chatbot ROI', 'CSAT benchmarks', 'helpdesk SaaS'],
-    outreachHooks: ['AI support avatar za tvoju nišu', 'RAG nad FAQ i ticket history', '24/7 first response'],
+    outreachHooks: ['AI support avatar for your niche', 'RAG over FAQ and ticket history', '24/7 first response'],
     baseKeywords: ['customer support', 'help desk', 'customer success', 'live chat'],
     workflowSteps: [
       { step: 'CRM contact', moduleSlug: 'crm', action: 'create-contact' },
@@ -274,7 +274,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['craftor', 'analytics', 'crm', 'contracts', 'deal-offer'],
     marketIntensityDefault: 58,
     researchFocus: ['consulting market size', 'SMB digital transformation', 'strategy consulting fees'],
-    outreachHooks: ['Audit + roadmap isporuka', 'CRM za consulting pipeline', 'Automatizovani proposal i ugovori'],
+    outreachHooks: ['Audit + roadmap delivery', 'CRM for consulting pipeline', 'Automated proposals and contracts'],
     baseKeywords: ['business consulting', 'management consulting', 'strategy', 'operations'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -290,7 +290,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['billing', 'sistem-naplate', 'crm', 'compliance', 'notifications'],
     marketIntensityDefault: 60,
     researchFocus: ['accounting SaaS', 'bookkeeping automation', 'tax compliance tools'],
-    outreachHooks: ['Naplata + invoicing workflow', 'Compliance-ready audit trail', 'Manje ručnih follow-up na fakture'],
+    outreachHooks: ['Billing + invoicing workflow', 'Compliance-ready audit trail', 'Less manual invoice follow-up'],
     baseKeywords: ['accounting', 'bookkeeping', 'payroll', 'tax preparation'],
     workflowSteps: [
       { step: 'CRM', moduleSlug: 'crm', action: 'create-contact' },
@@ -305,7 +305,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['contracts', 'digital-signature', 'crm', 'compliance', 'template-engine'],
     marketIntensityDefault: 55,
     researchFocus: ['legal tech adoption', 'contract automation', 'GDPR compliance demand'],
-    outreachHooks: ['Contract automation + e-sign', 'GDPR-ready dokumentacija', 'CRM za law firm pipeline'],
+    outreachHooks: ['Contract automation + e-sign', 'GDPR-ready documentation', 'CRM for law firm pipeline'],
     baseKeywords: ['legal services', 'contract review', 'compliance', 'GDPR'],
     workflowSteps: [
       { step: 'CRM', moduleSlug: 'crm', action: 'create-contact' },
@@ -320,7 +320,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['client-hunter', 'scraper', 'crm', 'billing', 'analytics'],
     marketIntensityDefault: 64,
     researchFocus: ['ecommerce growth', 'marketplace competition', 'conversion optimization', 'DTC trends'],
-    outreachHooks: ['Product research + listing automation', 'CRM za ecommerce brandove', 'Lead gen za agencije'],
+    outreachHooks: ['Product research + listing automation', 'CRM for ecommerce brands', 'Lead gen for agencies'],
     baseKeywords: ['ecommerce', 'shopify', 'amazon FBA', 'dropshipping'],
     workflowSteps: [
       { step: 'Scrape competitors', moduleSlug: 'scraper', action: 'run' },
@@ -336,7 +336,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['crm', 'contracts', 'template-engine', 'client-hunter', 'deal-offer'],
     marketIntensityDefault: 56,
     researchFocus: ['AEC software market', 'BIM adoption', 'engineering services demand'],
-    outreachHooks: ['Proposal + CRM za engineering studio', 'Automatizuj tender follow-up', 'Project pipeline visibility'],
+    outreachHooks: ['Proposal + CRM for engineering studios', 'Automate tender follow-up', 'Project pipeline visibility'],
     baseKeywords: ['architecture', 'CAD', 'engineering', 'BIM'],
     workflowSteps: [
       { step: 'Discover RFP leads', moduleSlug: 'client-hunter', action: 'discover' },
@@ -351,7 +351,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['craftor', 'omnitube', 'crm', 'deal-offer', 'client-hunter'],
     marketIntensityDefault: 54,
     researchFocus: ['video production market', 'short-form content demand', 'YouTube creator economy'],
-    outreachHooks: ['Pipeline za video projekte', 'Landing + booking za studio', 'Automatizovan client onboarding'],
+    outreachHooks: ['Pipeline for video projects', 'Landing + booking for studios', 'Automated client onboarding'],
     baseKeywords: ['video editing', 'motion graphics', 'animation', 'video production'],
     workflowSteps: [
       { step: 'Discover creators', moduleSlug: 'client-hunter', action: 'discover' },
@@ -366,7 +366,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['craftor', 'crm', 'deal-offer', 'template-engine', 'client-hunter'],
     marketIntensityDefault: 50,
     researchFocus: ['podcast production market', 'voice over demand', 'audio freelance rates'],
-    outreachHooks: ['CRM za audio studio', 'Proposal template po projektu', 'Follow-up na pending mixove'],
+    outreachHooks: ['CRM for audio studios', 'Proposal templates by project', 'Follow-up on pending mixes'],
     baseKeywords: ['voice over', 'podcast', 'music production', 'audio editing'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -381,7 +381,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['crm', 'automation', 'ai-rag', 'template-engine', 'notifications'],
     marketIntensityDefault: 52,
     researchFocus: ['EdTech market', 'online tutoring demand', 'corporate training spend'],
-    outreachHooks: ['Student CRM + onboarding', 'AI tutor FAQ za kurs', 'Automatizovan enrollment follow-up'],
+    outreachHooks: ['Student CRM + onboarding', 'AI tutor FAQ for your course', 'Automated enrollment follow-up'],
     baseKeywords: ['online tutoring', 'course creation', 'corporate training', 'EdTech'],
     workflowSteps: [
       { step: 'CRM lead', moduleSlug: 'crm', action: 'create-contact' },
@@ -396,7 +396,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['client-hunter', 'titanis', 'crm', 'outreach', 'lead-scoring'],
     marketIntensityDefault: 58,
     researchFocus: ['recruiting agency market', 'LinkedIn sourcing tools', 'HR tech stack'],
-    outreachHooks: ['Candidate pipeline CRM', 'Outreach za hiring managere', 'Scrape + score talent leads'],
+    outreachHooks: ['Candidate pipeline CRM', 'Outreach to hiring managers', 'Scrape + score talent leads'],
     baseKeywords: ['recruitment', 'talent acquisition', 'HR consulting', 'LinkedIn recruiting'],
     workflowSteps: [
       { step: 'Titanis hunt', moduleSlug: 'titanis', action: 'lead-hunt' },
@@ -411,7 +411,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['crm', 'deal-offer', 'template-engine', 'client-hunter', 'billing'],
     marketIntensityDefault: 45,
     researchFocus: ['photography freelance rates', 'real estate photo market', 'ecommerce product photo'],
-    outreachHooks: ['Booking + CRM za fotografe', 'Automatizovan quote za shoot', 'Follow-up na galerije'],
+    outreachHooks: ['Booking + CRM for photographers', 'Automated shoot quotes', 'Follow-up on galleries'],
     baseKeywords: ['photography', 'photo editing', 'retouching', 'product photography'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -426,7 +426,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['tasks', 'automation', 'crm', 'analytics', 'workflow-chain'],
     marketIntensityDefault: 57,
     researchFocus: ['PM tool market', 'Agile coaching demand', 'product ops trends'],
-    outreachHooks: ['Workflow automation za PM timove', 'CRM + task sync', 'Reporting bez ručnog Excela'],
+    outreachHooks: ['Workflow automation for PM teams', 'CRM + task sync', 'Reporting without manual Excel'],
     baseKeywords: ['project management', 'product management', 'scrum', 'agile'],
     workflowSteps: [
       { step: 'Workflow chain', moduleSlug: 'workflow-chain', action: 'run' },
@@ -441,7 +441,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['validator', 'analytics', 'crm', 'compliance', 'template-engine'],
     marketIntensityDefault: 54,
     researchFocus: ['research services market', 'lab automation', 'scientific SaaS'],
-    outreachHooks: ['Data pipeline + compliance', 'CRM za research consultancies', 'Automatizovan reporting'],
+    outreachHooks: ['Data pipeline + compliance', 'CRM for research consultancies', 'Automated reporting'],
     baseKeywords: ['scientific research', 'biotechnology', 'statistics', 'data analysis'],
     workflowSteps: [
       { step: 'Validate data', moduleSlug: 'validator', action: 'validate' },
@@ -456,7 +456,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['validator', 'craftor', 'crm', 'compliance', 'client-hunter'],
     marketIntensityDefault: 60,
     researchFocus: ['Web3 dev demand', 'smart contract audit market', 'DeFi compliance'],
-    outreachHooks: ['Security-first delivery pack', 'CRM za crypto consultancies', 'Compliance dokumentacija'],
+    outreachHooks: ['Security-first delivery pack', 'CRM for crypto consultancies', 'Compliance documentation'],
     baseKeywords: ['web3', 'smart contracts', 'DeFi', 'NFT'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
@@ -471,7 +471,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['template-engine', 'crm', 'automation', 'client-hunter', 'outreach'],
     marketIntensityDefault: 50,
     researchFocus: ['localization market', 'multilingual SEO demand', 'app localization rates'],
-    outreachHooks: ['TM + workflow za prevodilačke timove', 'CRM za LSP pipeline', 'Automatizovan QA checklist'],
+    outreachHooks: ['TM + workflow for translation teams', 'CRM for LSP pipeline', 'Automated QA checklist'],
     baseKeywords: ['localization', 'translation', 'multilingual SEO', 'i18n'],
     workflowSteps: [
       { step: 'Template glossary', moduleSlug: 'template-engine', action: 'render' },
@@ -486,7 +486,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['notifications', 'crm', 'automation', 'ai-rag', 'analytics'],
     marketIntensityDefault: 48,
     researchFocus: ['community management market', 'Discord/Telegram mod tools', 'creator community growth'],
-    outreachHooks: ['Moderation playbook + AI FAQ', 'CRM za community klijente', 'Alerting na eskalacije'],
+    outreachHooks: ['Moderation playbook + AI FAQ', 'CRM for community clients', 'Escalation alerting'],
     baseKeywords: ['community management', 'Discord', 'Telegram', 'moderation'],
     workflowSteps: [
       { step: 'AI memory rules', moduleSlug: 'ai-memory', action: 'remember' },
@@ -501,7 +501,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['client-hunter', 'craftor', 'crm', 'outreach', 'analytics'],
     marketIntensityDefault: 62,
     researchFocus: ['creator economy', 'YouTube/TikTok management', 'newsletter monetization'],
-    outreachHooks: ['Pipeline za brand deals', 'Landing + media kit automation', 'Outreach na sponsore'],
+    outreachHooks: ['Pipeline for brand deals', 'Landing + media kit automation', 'Outreach to sponsors'],
     baseKeywords: ['YouTube', 'TikTok', 'creator', 'influencer', 'newsletter'],
     workflowSteps: [
       { step: 'Hunt sponsors', moduleSlug: 'client-hunter', action: 'hunt' },
@@ -517,7 +517,7 @@ export const CATEGORY_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfile>
     coreModules: ['client-hunter', 'crm', 'outreach', 'template-engine', 'billing'],
     marketIntensityDefault: 58,
     researchFocus: ['real estate lead gen', 'property tech', 'VA services for agents'],
-    outreachHooks: ['Lead gen za agente', 'CRM + follow-up na buyer/seller', 'Automatizovan listing outreach'],
+    outreachHooks: ['Lead gen for agents', 'CRM + follow-up for buyers and sellers', 'Automated listing outreach'],
     baseKeywords: ['real estate', 'property', 'lead generation', 'real estate CRM'],
     workflowSteps: [
       { step: 'Hunt listings', moduleSlug: 'client-hunter', action: 'hunt' },
@@ -557,9 +557,9 @@ function legacySmbProfile(meta: { slug: string; nameSr: string; tier: PricingTie
       'compliance and onboarding',
     ],
     outreachHooks: [
-      `Gotova isporuka za ${label} — bez platforme`,
-      'CRM + automatizacije prilagođene niši',
-      'Lead gen i follow-up u jednom paketu',
+      `Turnkey delivery for ${label} — no platform resale`,
+      'CRM + automations tailored to your niche',
+      'Lead gen and follow-up in one package',
     ],
     baseKeywords: [label.toLowerCase(), 'SMB', 'local business', 'automation'],
     workflowSteps: [
@@ -586,7 +586,7 @@ export const DEFAULT_DELIVERY_PROFILE: CategoryDeliveryProfile = profile(
     coreModules: ['crm', 'client-hunter', 'outreach', 'automation', 'billing'],
     marketIntensityDefault: 50,
     researchFocus: ['SMB software adoption', 'vertical SaaS trends'],
-    outreachHooks: ['Gotova isporuka bez platforme', 'CRM + automatizacije po niši'],
+    outreachHooks: ['Turnkey delivery — no platform resale', 'CRM + automations by niche'],
     workflowSteps: [
       { step: 'Discover', moduleSlug: 'client-hunter', action: 'discover' },
       { step: 'CRM', moduleSlug: 'crm', action: 'create-contact' },

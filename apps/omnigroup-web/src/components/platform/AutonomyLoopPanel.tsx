@@ -95,11 +95,11 @@ function formatRelative(iso?: string | null) {
   if (Number.isNaN(d.getTime())) return iso;
   const diff = Date.now() - d.getTime();
   const mins = Math.round(diff / 60000);
-  if (mins < 1) return 'upravo';
-  if (mins < 60) return `pre ${mins} min`;
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
   const hrs = Math.round(mins / 60);
-  if (hrs < 48) return `pre ${hrs}h`;
-  return d.toLocaleDateString('sr-RS');
+  if (hrs < 48) return `${hrs}h ago`;
+  return d.toLocaleDateString('en-US');
 }
 
 export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
@@ -309,13 +309,13 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
   const phaseLabel = (phase?: CategoryRolloutRow['phase']) => {
     switch (phase) {
       case 'ready':
-        return 'Spremno';
+        return 'Ready';
       case 'in_progress':
-        return 'U toku';
+        return 'In progress';
       case 'empty':
-        return 'Prazno';
+        return 'Empty';
       default:
-        return 'Čeka';
+        return 'Pending';
     }
   };
 
@@ -355,7 +355,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
   if (disabled) {
     return (
       <p className="mt-4 text-sm text-slate-500">
-        Autonomy Loop zahteva pravu Atina sesiju (admin@atina.io).
+        Autonomy Loop requires a valid Atina session (admin@atina.io).
       </p>
     );
   }
@@ -363,7 +363,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
   return (
     <div className="mt-4 space-y-4">
       {loading && !status && (
-        <p className="text-sm text-slate-500">Učitavam Autonomy Loop status…</p>
+        <p className="text-sm text-slate-500">Loading Autonomy Loop status…</p>
       )}
       {error && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
@@ -374,7 +374,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
       {status && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Budžet (USD)</p>
+            <p className="text-xs text-slate-500">Budget (USD)</p>
             <p className="font-display text-xl font-bold text-white">
               ${(status.budget?.balanceUsd ?? 0).toFixed(2)}
               <span className="ml-1 text-sm font-normal text-slate-500">
@@ -382,11 +382,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
               </span>
             </p>
             {status.budget?.hardStop && (
-              <p className="mt-1 text-xs text-amber-300">Pauza — rezerva dostignuta</p>
+              <p className="mt-1 text-xs text-amber-300">Paused — reserve reached</p>
             )}
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Danas / limit</p>
+            <p className="text-xs text-slate-500">Today / limit</p>
             <p className="font-medium text-white">
               ${(status.budget?.spentTodayUsd ?? 0).toFixed(2)}
               <span className="text-slate-500">
@@ -395,11 +395,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
               </span>
             </p>
             <p className="text-xs text-slate-500">
-              tick max ${(status.budget?.maxSpendPerTickUsd ?? 0).toFixed(2)} · reinvest prihod
+              tick max ${(status.budget?.maxSpendPerTickUsd ?? 0).toFixed(2)} · reinvest revenue
             </p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Vertikale u bazi</p>
+            <p className="text-xs text-slate-500">Verticals in database</p>
             <p className="font-display text-xl font-bold text-white">
               {status.verticalsInDb ?? 0}
               <span className="ml-1 text-sm font-normal text-slate-500">
@@ -410,16 +410,16 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
             <p className="text-xs text-slate-500">Scheduler</p>
             <p className="font-medium text-emerald-300">
-              {status.scheduler?.running ? 'Aktivan' : status.scheduler?.enabled ? 'Spreman' : 'Isključen'}
+              {status.scheduler?.running ? 'Active' : status.scheduler?.enabled ? 'Ready' : 'Disabled'}
             </p>
             <p className="text-xs text-slate-500">
               tick {Math.round((status.scheduler?.intervalMs ?? 300000) / 60000)} min
             </p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Industrije rollout</p>
+            <p className="text-xs text-slate-500">Industry rollout</p>
             <p className="font-medium text-white">
-              {rollout?.completedCategories ?? 0}/{rollout?.totalCategories ?? 50} spremno
+              {rollout?.completedCategories ?? 0}/{rollout?.totalCategories ?? 50} ready
               {typeof rollout?.freelanceReadyCount === 'number' && (
                 <span className="ml-2 text-violet-300/90">
                   · online {rollout.freelanceReadyCount}/{rollout.freelanceCategories ?? 25}
@@ -428,7 +428,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
             </p>
             <p className="text-xs text-slate-500">
               {rollout?.freelanceCategories ?? 25} freelance + {rollout?.legacyCategories ?? 25} legacy ·{' '}
-              {rollout?.overallCompletionPct ?? 0}% vertikala
+              {rollout?.overallCompletionPct ?? 0}% verticals
               {rollout?.nextCategoryName && (
                 <span className="ml-1 text-violet-300">→ {rollout.nextCategoryName}</span>
               )}
@@ -440,17 +440,17 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
               {outbound?.byStatus?.draft ?? 0} draft · {outbound?.byStatus?.queued ?? 0} queued
             </p>
             <p className="text-xs text-slate-500">
-              {outbound?.warmupComplete ? 'Warmup OK' : 'Warmup — samo draft'}
+              {outbound?.warmupComplete ? 'Warmup OK' : 'Warmup — drafts only'}
               {' · '}
-              {outbound?.sentToday ?? 0}/{outbound?.dailyCap ?? 20} danas
+              {outbound?.sentToday ?? 0}/{outbound?.dailyCap ?? 20} today
             </p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Poslednji tick</p>
+            <p className="text-xs text-slate-500">Last tick</p>
             <p className="text-sm text-white">{formatRelative(status.scheduler?.lastTickAt)}</p>
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
-            <p className="text-xs text-slate-500">Poslednji ciklus</p>
+            <p className="text-xs text-slate-500">Last cycle</p>
             <p className="text-sm text-white">{status.latestCycle?.status ?? '—'}</p>
           </div>
         </div>
@@ -464,7 +464,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           className="btn-primary inline-flex items-center gap-2 text-sm disabled:opacity-50"
         >
           <Play className="h-4 w-4" />
-          {busy === 'tick' ? 'Tick u toku…' : 'Pokreni tick (×2)'}
+          {busy === 'tick' ? 'Tick in progress…' : 'Run tick (×2)'}
         </button>
         <button
           type="button"
@@ -473,7 +473,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           className="btn-glass inline-flex items-center gap-2 text-sm disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Osveži
+          Refresh
         </button>
         {isAdmin && (
           <>
@@ -484,7 +484,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
               className="btn-primary inline-flex items-center gap-2 text-sm disabled:opacity-50"
             >
               <Sparkles className="h-4 w-4" />
-              {busy === 'rollout' ? 'Rollout…' : 'Sledeća kategorija (full)'}
+              {busy === 'rollout' ? 'Rollout…' : 'Next category (full)'}
             </button>
             <button
               type="button"
@@ -493,7 +493,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
               className="btn-glass inline-flex items-center gap-2 text-sm disabled:opacity-50"
             >
               <Sparkles className="h-4 w-4" />
-              {busy === 'rollout' ? 'Rollout…' : 'Sve industrije (×50)'}
+              {busy === 'rollout' ? 'Rollout…' : 'All industries (×50)'}
             </button>
             <button
               type="button"
@@ -547,7 +547,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 text-xs text-violet-100"
         >
-          <p className="font-medium text-violet-300">Evolution tick završen</p>
+          <p className="font-medium text-violet-300">Evolution tick complete</p>
           <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
             {JSON.stringify(lastEvolution, null, 2)}
           </pre>
@@ -560,7 +560,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-100"
         >
-          <p className="font-medium text-emerald-300">Tick završen</p>
+          <p className="font-medium text-emerald-300">Tick complete</p>
           <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
             {JSON.stringify(lastTick, null, 2)}
           </pre>
@@ -572,7 +572,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           <div className="mb-2 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-violet-400" />
             <h3 className="text-sm font-semibold text-white">
-              25 online kategorija (primarno) — rollout redom · legacy SMB = dodatak u katalogu
+              25 online categories (primary) — rollout in order · legacy SMB = catalog add-on
             </h3>
           </div>
           <ul className="max-h-96 space-y-1.5 overflow-y-auto pr-1">
@@ -592,7 +592,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-white">{row.categoryName ?? cat}</p>
                     <p className="text-slate-500">
-                      {row.readyCount ?? 0}/{row.total ?? 0} spremno · {row.completionPct ?? 0}%
+                      {row.readyCount ?? 0}/{row.total ?? 0} ready · {row.completionPct ?? 0}%
                       {(row.outboundDrafts ?? 0) > 0 && (
                         <span className="ml-2 text-cyan-300">{row.outboundDrafts} draft</span>
                       )}
@@ -621,11 +621,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
       <div>
         <div className="mb-2 flex items-center gap-2">
           <Bot className="h-4 w-4 text-violet-400" />
-          <h3 className="text-sm font-semibold text-white">Top vertikale</h3>
+          <h3 className="text-sm font-semibold text-white">Top verticals</h3>
         </div>
         <ul className="space-y-2">
           {verticals.length === 0 && !loading && (
-            <li className="text-sm text-slate-500">Nema vertikala — pokreni seed na Atina API-ju.</li>
+            <li className="text-sm text-slate-500">No verticals — run seed on the Atina API.</li>
           )}
           {verticals.map((v) => {
             const slug = String(v.slug ?? '');
@@ -649,7 +649,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
                   <p className="text-xs text-slate-500">
                     {v.category} · {v.status ?? 'pending'}
                     {proPrice != null && (
-                      <span className="ml-2 text-emerald-300">Paket {formatEur(proPrice)}/mes</span>
+                      <span className="ml-2 text-emerald-300">Package {formatEur(proPrice)}/mo</span>
                     )}
                     {aiOk && (
                       <span className="ml-2 inline-flex items-center gap-0.5 text-violet-300">
