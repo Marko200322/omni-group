@@ -49,6 +49,18 @@ jest.mock('../../utils/ecosystem-idempotency', () => {
   };
 });
 
+jest.mock('../../integrations/scrape-direct', () => ({
+  scrapeWithAxiosDirect: jest.fn().mockResolvedValue({ links: [], title: '', delivery: 'mock' }),
+}));
+
+jest.mock('../../modules/client-hunter/service/hunting-stack.service', () => ({
+  HuntingStackService: jest.fn().mockImplementation(() => ({
+    getReadiness: jest.fn().mockResolvedValue({ score: 80, ready: true, checks: [] }),
+    bootstrap: jest.fn().mockResolvedValue({ workspaces: { total: 7, created: 7 } }),
+    runPipeline: jest.fn().mockResolvedValue({ templateKey: 'nurture-loop', execution: { ok: true } }),
+  })),
+}));
+
 let authEnabled = true;
 jest.mock('../../api/middleware/auth.middleware', () => ({
   authenticate: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
@@ -121,6 +133,36 @@ describe('ClientHunterModule HTTP routes', () => {
     expect(res.status).toBe(200);
     expectSuccessSchema(res.body);
     expect(res.body.data).toHaveProperty('strategies');
+  });
+
+  it('GET /status returns shape', async () => {
+    const res = await request(server).get('/client-hunter/status');
+    expect(res.status).toBe(200);
+    expectSuccessSchema(res.body);
+    expect(res.body.data).toHaveProperty('strategies');
+  });
+
+  it('GET /readiness returns hunting readiness', async () => {
+    const res = await request(server).get('/client-hunter/readiness');
+    expect(res.status).toBe(200);
+    expectSuccessSchema(res.body);
+    expect(res.body.data).toMatchObject({ score: 80, ready: true });
+  });
+
+  it('POST /bootstrap provisions hunting workspaces', async () => {
+    const res = await request(server).post('/client-hunter/bootstrap').send({});
+    expect(res.status).toBe(200);
+    expectSuccessSchema(res.body);
+    expect(res.body.data.workspaces).toMatchObject({ total: 7 });
+  });
+
+  it('POST /pipeline/run executes nurture loop', async () => {
+    const res = await request(server)
+      .post('/client-hunter/pipeline/run')
+      .send({ verticalSlug: 'marketing', intensity: 60 });
+    expect(res.status).toBe(200);
+    expectSuccessSchema(res.body);
+    expect(res.body.data).toHaveProperty('templateKey', 'nurture-loop');
   });
 
   it('POST /:id/run', async () => {

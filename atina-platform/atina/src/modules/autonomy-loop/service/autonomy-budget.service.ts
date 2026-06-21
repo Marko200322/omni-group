@@ -127,6 +127,31 @@ export class AutonomyBudgetService {
     return { ok: true, amountUsd: amount, balanceAfter };
   }
 
+  async creditTopup(
+    amountUsd: number,
+    category: string,
+    opts?: { metadata?: Record<string, unknown> }
+  ): Promise<number> {
+    await this.ensureInitialized();
+    const amount = roundUsd(amountUsd);
+    if (amount <= 0) return 0;
+
+    const { rows } = await this.repo.getState();
+    const state = rows[0];
+    if (!state) throw new PaymentError('Autonomy budget state missing');
+
+    const balanceAfter = roundUsd(parseFloat(state.balance_usd) + amount);
+    await this.repo.updateState(balanceAfter, 0, 0);
+    await this.repo.insertLedger({
+      entryType: 'topup',
+      category,
+      amountUsd: amount,
+      balanceAfterUsd: balanceAfter,
+      metadata: opts?.metadata,
+    });
+    return balanceAfter;
+  }
+
   async creditRevenue(
     amountUsd: number,
     category: string,

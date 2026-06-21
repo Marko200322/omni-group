@@ -39,6 +39,7 @@ import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { ScraperModule } from '../modules/scraper/scraper.module';
 import { NotificationsModule } from '../modules/notifications/notifications.module';
 import { AdminModule } from '../modules/admin/admin.module';
+import { ResourceProcurementModule } from '../modules/resource-procurement/resource-procurement.module';
 import { TitanMasterModule } from '../modules/titan-master/titan-master.module';
 import { Dominus360Module } from '../modules/dominus360/dominus360.module';
 import { CraftorModule } from '../modules/craftor/craftor.module';
@@ -72,10 +73,12 @@ import { AlertSystemModule } from '../modules/alert-system/alert-system.module';
 import { ScalingModule } from '../modules/scaling/scaling.module';
 import { AiRagModule } from '../modules/ai-rag/ai-rag.module';
 import { AutonomyLoopModule } from '../modules/autonomy-loop/autonomy-loop.module';
+import { PublicSiteModule } from '../modules/public-site/public-site.module';
 import { ProductFactoryModule } from '../modules/product-factory/product-factory.module';
 import { DealOfferModule } from '../modules/deal-offer/deal-offer.module';
 import { FollowUpModule } from '../modules/follow-up/follow-up.module';
 import { FollowUpAutomationModule } from '../modules/follow-up-automation/follow-up-automation.module';
+import { CursorAgentModule } from '../modules/cursor-agent/cursor-agent.module';
 import { createPhaseActivationGuard } from '../modules/phase-launch/middleware/phase-activation.middleware';
 
 export class CoreEngine {
@@ -138,6 +141,8 @@ export class CoreEngine {
     if (config.features.analytics) moduleRegistry.register(new AnalyticsModule());
     moduleRegistry.register(new NotificationsModule());
     moduleRegistry.register(new AdminModule());
+    moduleRegistry.register(new CursorAgentModule());
+    moduleRegistry.register(new ResourceProcurementModule());
     moduleRegistry.register(new TitanMasterModule());
     moduleRegistry.register(new Dominus360Module());
     moduleRegistry.register(new CraftorModule());
@@ -171,6 +176,7 @@ export class CoreEngine {
     moduleRegistry.register(new ScalingModule());
     moduleRegistry.register(new AiRagModule());
     moduleRegistry.register(new AutonomyLoopModule());
+    moduleRegistry.register(new PublicSiteModule());
     if (config.productFactory.enabled) moduleRegistry.register(new ProductFactoryModule());
 
     if (config.features.automation) moduleRegistry.register(new AutomationModule());

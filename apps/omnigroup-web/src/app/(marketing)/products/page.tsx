@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Package } from 'lucide-react';
+import { Package, Sparkles } from 'lucide-react';
 import { CatalogSection } from '@/components/marketing/CatalogSection';
 import { IndustryVerticalSelect } from '@/components/marketing/IndustryVerticalSelect';
 import { buildDeliverableCatalogCategories } from '@/lib/deliverable-catalog-ui';
-import { getGeneratedVerticalsIndex } from '@/lib/generated-verticals';
+import { getGeneratedVerticalsIndex, listOnlineVerticalEntries } from '@/lib/generated-verticals';
 
 export default function ProductsPage() {
   const [industryCategory, setIndustryCategory] = useState('');
@@ -17,6 +17,7 @@ export default function ProductsPage() {
     [industryCategory, verticalSlug],
   );
   const generatedCount = getGeneratedVerticalsIndex().count;
+  const featuredVerticals = listOnlineVerticalEntries(6);
 
   return (
     <div className="px-4 py-20">
@@ -31,7 +32,11 @@ export default function ProductsPage() {
             Cene su transparentne i automatski izračunate.
             {generatedCount > 0 ? (
               <span className="mt-2 block text-sm text-violet-200/90">
-                {generatedCount} generisanih online niša u katalogu (autonomy sync).
+                {generatedCount} generisanih online niša —{' '}
+                <Link href="/solutions" className="underline underline-offset-2 hover:text-violet-100">
+                  pregled kataloga
+                </Link>
+                .
               </span>
             ) : null}
           </p>
@@ -47,6 +52,29 @@ export default function ProductsPage() {
             }}
           />
         </motion.div>
+
+        {featuredVerticals.length > 0 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-10">
+            <div className="mb-4 flex items-center gap-2 text-violet-200">
+              <Sparkles className="h-4 w-4" />
+              <p className="text-sm font-medium">Istaknuta vertikalna rešenja</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredVerticals.map((v) => (
+                <Link
+                  key={v.slug}
+                  href={v.href ?? `/solutions/${v.slug}`}
+                  className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm transition hover:border-violet-500/30"
+                >
+                  <p className="font-medium text-white">{v.name ?? v.slug}</p>
+                  {v.valueProp ? (
+                    <p className="mt-1 line-clamp-2 text-slate-400">{v.valueProp}</p>
+                  ) : null}
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        ) : null}
 
         <div className="mt-16">
           <CatalogSection categories={categories} />

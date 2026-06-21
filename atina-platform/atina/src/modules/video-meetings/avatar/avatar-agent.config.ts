@@ -8,13 +8,17 @@ import {
   fetchRosterFromAggregator,
   useAiAggregatorForAvatars,
 } from '../providers/avatar-ai-aggregator.provider';
+import { resolveAvatarAssetUrl } from './avatar-asset-url';
+import { AvatarRosterRepository } from '../repository/avatar-roster.repository';
+
+const rosterRepo = new AvatarRosterRepository();
 
 const ROSTER_TTL_MS = 15 * 60 * 1000;
 
 type CachedRoster = {
   expiresAt: number;
   agents: AvatarAgentDefinition[];
-  source: 'aggregator' | 'system' | 'env';
+  source: 'aggregator' | 'system' | 'env' | 'database';
 };
 
 const rosterCache = new Map<AgentType, CachedRoster>();
@@ -37,6 +41,7 @@ function parseAgentsJson(raw: string): AvatarAgentDefinition[] | null {
         name,
         title: String(row.title ?? '').trim(),
         avatarUrl: String(row.avatarUrl ?? row.avatar_url ?? '').trim(),
+        backgroundUrl: String(row.backgroundUrl ?? row.background_url ?? '').trim(),
         voiceId: String(row.voiceId ?? row.voice_id ?? '').trim(),
         persona: String(row.persona ?? '').trim(),
         greeting: String(row.greeting ?? '').trim(),
@@ -72,6 +77,14 @@ function applyLegacySingleAgent(agents: AvatarAgentDefinition[], agentType: Agen
   if (legacy.greeting.trim()) target.greeting = legacy.greeting.trim();
 }
 
+function normalizeAgentUrls(agent: AvatarAgentDefinition): AvatarAgentDefinition {
+  return {
+    ...agent,
+    avatarUrl: resolveAvatarAssetUrl(agent.avatarUrl),
+    backgroundUrl: resolveAvatarAssetUrl(agent.backgroundUrl),
+  };
+}
+
 function systemDefaultRoster(agentType: AgentType): AvatarAgentDefinition[] {
   const agents = defaultAgents(agentType);
   applyLegacySingleAgent(agents, agentType);
@@ -80,7 +93,7 @@ function systemDefaultRoster(agentType: AgentType): AvatarAgentDefinition[] {
 
 export async function listAvatarAgentsAsync(agentType: AgentType): Promise<{
   agents: AvatarAgentDefinition[];
-  source: 'aggregator' | 'system' | 'env';
+  source: 'aggregator' | 'system' | 'env' | 'database';
 }> {
   const jsonRaw =
     agentType === 'support'
@@ -88,27 +101,43 @@ export async function listAvatarAgentsAsync(agentType: AgentType): Promise<{
       : config.videoMeetings.salesAgentsJson;
   const fromEnv = parseAgentsJson(jsonRaw);
   if (fromEnv) {
-    return { agents: fromEnv, source: 'env' };
+    return { agents: fromEnv.map(normalizeAgentUrls), source: 'env' };
   }
 
   const cached = rosterCache.get(agentType);
   if (cached && cached.expiresAt > Date.now()) {
-    return { agents: cached.agents.map((a) => ({ ...a })), source: cached.source };
+    return { agents: cached.agents.map((a) => normalizeAgentUrls({ ...a })), source: cached.source };
+  }
+
+  try {
+    const fromDb = await rosterRepo.listByTeam(agentType);
+    if (fromDb.length > 0) {
+      const normalized = fromDb.map(normalizeAgentUrls);
+      rosterCache.set(agentType, {
+        agents: normalized,
+        expiresAt: Date.now() + ROSTER_TTL_MS,
+        source: 'database',
+      });
+      return { agents: normalized.map((a) => ({ ...a })), source: 'database' };
+    }
+  } catch {
+    // Tabela još nije migrirana — fallback na system default.
   }
 
   if (useAiAggregatorForAvatars()) {
     const fromAgg = await fetchRosterFromAggregator(agentType);
     if (fromAgg?.length) {
+      const normalized = fromAgg.map(normalizeAgentUrls);
       rosterCache.set(agentType, {
-        agents: fromAgg,
+        agents: normalized,
         expiresAt: Date.now() + ROSTER_TTL_MS,
         source: 'aggregator',
       });
-      return { agents: fromAgg.map((a) => ({ ...a })), source: 'aggregator' };
+      return { agents: normalized.map((a) => ({ ...a })), source: 'aggregator' };
     }
   }
 
-  const agents = systemDefaultRoster(agentType);
+  const agents = systemDefaultRoster(agentType).map(normalizeAgentUrls);
   rosterCache.set(agentType, {
     agents,
     expiresAt: Date.now() + ROSTER_TTL_MS,
@@ -123,7 +152,7 @@ export function listAvatarAgents(agentType: AgentType): AvatarAgentDefinition[] 
   if (cached && cached.expiresAt > Date.now()) {
     return cached.agents.map((a) => ({ ...a }));
   }
-  return systemDefaultRoster(agentType);
+  return systemDefaultRoster(agentType).map(normalizeAgentUrls);
 }
 
 export function getAvatarAgent(agentType: AgentType, agentId?: string): AvatarAgentDefinition {

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" fill="none">
+  <rect width="800" height="1000" fill="#0f172a"/>
+  <rect x="0" y="620" width="800" height="380" fill="#1e293b"/>
+  <rect x="80" y="520" width="420" height="24" rx="4" fill="#334155"/>
+  <rect x="80" y="560" width="520" height="140" rx="8" fill="#1e3a5f"/>
+  <rect x="100" y="580" width="200" height="100" rx="4" fill="#0ea5e9" opacity="0.35"/>
+  <rect x="620" y="200" width="120" height="160" rx="6" fill="#334155"/>
+  <rect x="640" y="220" width="80" height="100" rx="4" fill="#475569"/>
+  <path d="M120 200h200v120H120z" fill="#334155" opacity="0.6"/>
+  <circle cx="700" cy="120" r="48" fill="#fbbf24" opacity="0.25"/>
+  <rect x="60" y="700" width="200" height="12" rx="2" fill="#475569"/>
+  <rect x="60" y="730" width="160" height="12" rx="2" fill="#475569" opacity="0.6"/>
+  <text x="80" y="480" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="22">Support � rad od kue</text>
+</svg>

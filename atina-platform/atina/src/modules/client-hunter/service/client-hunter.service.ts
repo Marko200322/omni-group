@@ -10,7 +10,8 @@ import {
   CreateClientHunterDtoType,
   RunClientHunterDtoType,
 } from '../dto/client-hunter.dto';
-import { getScraperClient } from '../../../integrations';
+import { config } from '../../../config';
+import { getScraperClient, getLeadDatabaseService } from '../../../integrations';
 import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
 import { OutboundQueueService } from '../../autonomy-loop/service/outbound-queue.service';
 import { CrmService } from '../../crm/service/crm.service';
@@ -29,6 +30,7 @@ export class ClientHunterService {
   private readonly repo = new ClientHunterRepository();
   private readonly outbound = new OutboundQueueService();
   private readonly crm = new CrmService();
+  private readonly leadDb = getLeadDatabaseService();
 
   async list(userId: string) {
     const { rows } = await this.repo.listByUser(userId);
@@ -56,7 +58,7 @@ export class ClientHunterService {
 
       if (dto.mode === 'hunt') {
         const scraper = getScraperClient();
-        if (scraper.isConfigured()) {
+        if (scraper.isConfigured() || config.features.scraper) {
           for (const [platform, url] of Object.entries(PLATFORM_SEED_URLS)) {
             const data = await scraper.scrape({ url, extractLinks: true, javascript: true });
             if (data) {
@@ -82,7 +84,7 @@ export class ClientHunterService {
         intensity: dto.intensity,
         platforms_scraped: scrapeHits,
         sample_links: sampleLinks.slice(0, 10),
-        scraper_configured: getScraperClient().isConfigured(),
+        scraper_configured: getScraperClient().isConfigured() || config.features.scraper,
         idempotency_key: idempotencyKey || null,
       };
 
@@ -90,28 +92,59 @@ export class ClientHunterService {
         const resolved = resolveVerticalSlug(dto.verticalSlug);
         const category = dto.category ?? resolved?.category ?? 'development_it';
         const verticalName = dto.verticalName ?? resolved?.name ?? dto.verticalSlug;
-        const drafts = await this.outbound.createDraftsFromScrape({
-          userId,
-          verticalSlug: dto.verticalSlug,
-          category,
-          verticalName,
-          leadsDiscovered,
-          platformsScraped: scrapeHits,
-          sampleLinks,
-        });
+
+        let enrichedLeads: Awaited<ReturnType<typeof this.leadDb.enrichFromHuntContext>> = [];
+        if (this.leadDb.isEnrichmentActive()) {
+          enrichedLeads = await this.leadDb.enrichFromHuntContext({
+            verticalSlug: dto.verticalSlug,
+            verticalName,
+            sampleLinks,
+          });
+          outputPayload.lead_database = {
+            phase: this.leadDb.getStatus().phase,
+            enriched: enrichedLeads.length,
+            providers: enrichedLeads.map((l) => l.provider),
+          };
+        }
+
+        const drafts =
+          enrichedLeads.length > 0
+            ? await this.outbound.createDraftsFromLeads({
+                userId,
+                verticalSlug: dto.verticalSlug,
+                category,
+                verticalName,
+                leads: enrichedLeads,
+                source: 'client_hunter_lead_db',
+              })
+            : await this.outbound.createDraftsFromScrape({
+                userId,
+                verticalSlug: dto.verticalSlug,
+                category,
+                verticalName,
+                leadsDiscovered,
+                platformsScraped: scrapeHits,
+                sampleLinks,
+              });
         outputPayload.outbound = drafts;
         const crmContacts: string[] = [];
-        for (let i = 0; i < drafts.created; i += 1) {
+        const crmSource = enrichedLeads.length ? enrichedLeads : null;
+        const crmCount = crmSource?.length ?? drafts.created;
+        for (let i = 0; i < crmCount; i += 1) {
           try {
+            const lead = crmSource?.[i];
             const contact = await this.crm.createContact(userId, {
-              firstName: 'Lead',
-              lastName: String(i + 1),
-              company: scrapeHits[i % scrapeHits.length] ?? dto.verticalSlug,
+              firstName: lead?.firstName ?? 'Lead',
+              lastName: lead?.lastName ?? String(i + 1),
+              email: lead?.email ?? undefined,
+              company: lead?.company ?? scrapeHits[i % scrapeHits.length] ?? dto.verticalSlug,
               status: 'lead',
-              source: 'client_hunter',
-              tags: [dto.verticalSlug, category],
-              notes: `Auto from hunt. Platforms: ${scrapeHits.join(', ')}`,
-              customFields: {},
+              source: enrichedLeads.length ? 'lead_database' : 'client_hunter',
+              tags: [dto.verticalSlug, category, ...(lead?.provider ? [lead.provider] : [])],
+              notes: enrichedLeads.length
+                ? `Lead DB (${lead?.provider}). Verified: ${lead?.verified ? 'yes' : 'no'}`
+                : `Auto from hunt. Platforms: ${scrapeHits.join(', ')}`,
+              customFields: lead?.linkedinUrl ? { linkedin: lead.linkedinUrl } : {},
             });
             const contactId = (contact as { id?: string } | undefined)?.id;
             if (contactId) crmContacts.push(contactId);

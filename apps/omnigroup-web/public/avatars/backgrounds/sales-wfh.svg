@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" fill="none">
+  <rect width="800" height="1000" fill="#0c1222"/>
+  <rect x="0" y="600" width="800" height="400" fill="#1a1f35"/>
+  <rect x="100" y="500" width="600" height="180" rx="10" fill="#252b45"/>
+  <rect x="130" y="530" width="240" height="120" rx="6" fill="#7c3aed" opacity="0.2"/>
+  <rect x="400" y="540" width="260" height="8" rx="2" fill="#6366f1" opacity="0.5"/>
+  <rect x="400" y="570" width="200" height="8" rx="2" fill="#6366f1" opacity="0.35"/>
+  <rect x="400" y="600" width="280" height="8" rx="2" fill="#6366f1" opacity="0.25"/>
+  <circle cx="150" cy="180" r="60" fill="#a78bfa" opacity="0.15"/>
+  <rect x="580" y="120" width="140" height="200" rx="8" fill="#312e81" opacity="0.5"/>
+  <text x="100" y="460" fill="#a5b4fc" font-family="system-ui,sans-serif" font-size="22">Prodaja � home office</text>
+</svg>

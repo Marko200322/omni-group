@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { BillingController } from './controller/billing.controller';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -13,6 +13,7 @@ import {
   BillingPlansQueryDto,
   BillingQuoteCatalogQueryDto,
   BillingQuoteBodyDto,
+  BillingPaymentIdParamsDto,
 } from './dto/billing.dto';
 
 export class BillingModule implements IModule {
@@ -105,6 +106,23 @@ export class BillingModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.checkLimit
+    );
+    this.router.get(
+      '/revenue-allocation/summary',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getRevenueAllocationSummary
+    );
+    this.router.get(
+      '/revenue-allocation/:paymentId',
+      authenticate,
+      requireAdmin,
+      validateParams(BillingPaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getRevenueAllocationByPayment
     );
   }
 }

@@ -29,13 +29,38 @@ Označavaj `[x]` kad je gotovo. **Bez ovoga agent ne može završiti prodaju i n
 - [ ] **Scraper** (za leadove) — `SCRAPER_URL` + `SCRAPER_KEY` ako imaš agregator/Apify
 - [ ] Pokreni: `cd atina-platform/atina && npm run checklist:apply-env` (dopuni prazno, ne briše postojeće)
 
-## A1 — Domen i prodaja (nedelja 1–3)
+## A0b — Premium avatari (Support 5 + Sales 6)
+
+Dok: [`docs/AVATAR-MEDIA-STACK.md`](../../../docs/AVATAR-MEDIA-STACK.md) · Setup: `.\scripts\apply-avatar-premium-env.ps1`
+
+- [ ] `ELEVENLABS_API_KEY` + `ELEVENLABS_DEFAULT_VOICE_ID`
+- [ ] `AVATAR_PUBLIC_BASE_URL` / `WEB_APP_URL` (lokalno `:3010`, prod tvoj domen)
+- [ ] `.\scripts\apply-migration-023.ps1` (11 agenata u bazi)
+- [ ] `.\scripts\apply-avatar-premium-env.ps1`
+- [ ] **Video (bar jedan):** `HEYGEN_API_KEY` **ili** `DID_API_KEY` (ultra-realistično lice)
+- [ ] **Meet:** `SUPPORT_GOOGLE_MEET_URL` + `SALES_GOOGLE_MEET_URL`
+- [ ] (Opciono) Zoom: `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`
+- [ ] (Opciono) Cartesia: `CARTESIA_API_KEY`, `CARTESIA_VOICE_ID`
+- [ ] (Opciono) Live Portrait fallback: `APEX_LIVE_PORTRAIT_*`
+- [ ] Provera: `GET /video-meetings/avatar/media-stack` + dashboard `#support` / `#sales`
+
+## A0c — Prodavnica resursa (admin korpa + auto-nabavka)
+
+Admin → **Prodavnica resursa** (`/admin#resources`)
+
+- [ ] Migracija `024` — `.\scripts\apply-migration-024.ps1`
+- [ ] Migracija `025` — `.\scripts\apply-migration-025.ps1`
+- [ ] Korpa: OpenRouter, ElevenLabs, HeyGen, D-ID, Comms, Scraper
+- [ ] Flow: Dodaj u korpu → Naruči → uplati IBAN sa referencom → **Potvrdio sam uplatu**
+- [ ] **Auto-nabavka ON/OFF** — kad ON, autonomy tick kreira narudžbinu kad resurs padne ispod praga
+- [ ] Ne moraš na sajtove provajdera — sistem kredituje wallet + autonomy budžet
+
 
 - [ ] Kupi **domen** (npr. omnigroup.rs / .com) — ~€10–15/god
 - [ ] Podesi **email** na domenu (`hello@...`) preko Resend / Google Workspace / hosting DNS
 - [ ] **Warmup** 2–3 nedelje (5–20 mejlova/dan) — ili privremeno ostavi `OUTREACH_DEV_SEND_TO_FALLBACK=true` samo za test
 - [ ] Kad domen spreman: `OUTREACH_DOMAIN_WARMUP_COMPLETE=true` (ukloni dev fallback u produkciji)
-- [ ] **Google Meet** link u `.env`: `SALES_GOOGLE_MEET_URL` (besplatno)
+- [ ] **Google Meet** link u `.env`: `SUPPORT_GOOGLE_MEET_URL` + `SALES_GOOGLE_MEET_URL` (besplatno)
 - [ ] `SALES_MEETINGS_ENABLED=true` (već može biti u .env)
 
 ## A2 — Operativa kao admin (ongoing)

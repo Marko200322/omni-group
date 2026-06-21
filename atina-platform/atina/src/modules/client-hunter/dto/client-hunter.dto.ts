@@ -45,6 +45,28 @@ export const ClientHunterStatusDto = z.object({
   }),
 });
 
+export const RunHuntingPipelineDto = z.preprocess(
+  emptyBody,
+  z
+    .object({
+      verticalSlug: z
+        .string()
+        .trim()
+        .min(2)
+        .max(120)
+        .regex(/^[a-z0-9-]+$/)
+        .default('marketing'),
+      category: z.string().trim().max(80).optional(),
+      verticalName: z.string().trim().max(200).optional(),
+      intensity: z.number().int().min(1).max(100).default(60),
+      templateKey: z.enum(['nurture-loop', 'client-acquisition-pipeline', 'lead-proxy-acquisition-pipeline']).default('nurture-loop'),
+      processOutbound: z.boolean().default(true),
+      force: z.boolean().default(false),
+    })
+    .strict()
+);
+
+export type RunHuntingPipelineDtoType = z.infer<typeof RunHuntingPipelineDto>;
 export type CreateClientHunterDtoType = z.infer<typeof CreateClientHunterDto>;
 export type RunClientHunterDtoType = z.infer<typeof RunClientHunterDto>;
 export type ClientHunterStatusDtoType = z.infer<typeof ClientHunterStatusDto>;

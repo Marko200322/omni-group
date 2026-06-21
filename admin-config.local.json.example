@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy to admin-config.local.json (gitignored), fill values, then run: .\\scripts\\apply-admin-config.ps1",
+  "manualPaymentAccountName": "Marko Kosic",
+  "manualPaymentSwift": "",
+  "manualPaymentNote": "Include the payment reference in the bank transfer description. Subscription activates after admin confirmation (within 24h).",
+  "paymentNotifyEmail": "your@email.com",
+  "outreachFallbackEmail": "your@email.com",
+  "supportGoogleMeetUrl": "https://meet.google.com/xxx-xxxx-xxx",
+  "salesGoogleMeetUrl": "https://meet.google.com/yyy-yyyy-yyy",
+  "cursorApiKey": "",
+  "cursorRepoPath": "C:/Users/Marko Kosic/OneDrive/Desktop/omni group",
+  "telegramBotToken": "",
+  "telegramChatId": "",
+  "contactEmailTo": "your@email.com",
+  "heygenApiKey": "",
+  "didApiKey": "",
+  "regenerateSecrets": true,
+  "allowManualPaymentsInProduction": true
+}

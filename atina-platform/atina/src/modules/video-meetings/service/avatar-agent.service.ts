@@ -14,7 +14,9 @@ import {
   avatarMediaCapabilities,
   runConversationTurn,
   useAiAggregatorForAvatars,
+  listAvatarMediaStackStatus,
 } from '../providers/avatar-ai-aggregator.provider';
+import { AvatarClientMemoryProvider } from '../providers/avatar-client-memory.provider';
 import { getAiClient } from '../../../integrations';
 
 export type AvatarCapabilities = {
@@ -79,6 +81,7 @@ function presentAgent(
     name: agent.name,
     title: agent.title,
     avatarUrl: agent.avatarUrl || null,
+    backgroundUrl: agent.backgroundUrl || null,
     avatarType,
     capabilities: {
       chat: true,
@@ -94,6 +97,11 @@ function presentAgent(
 
 export class AvatarAgentService {
   private readonly repo = new AvatarSessionsRepository();
+  private readonly clientMemory = new AvatarClientMemoryProvider();
+
+  mediaStack() {
+    return listAvatarMediaStackStatus();
+  }
 
   async listAgents(agentType: AgentType) {
     assertAvatarEnabled(agentType);
@@ -216,6 +224,8 @@ export class AvatarAgentService {
       .filter((h) => h.role === 'user' || h.role === 'assistant')
       .map((h) => ({ role: h.role as 'user' | 'assistant', content: h.text }));
 
+    const clientMemoryContext = await this.clientMemory.loadContext(userId, agentType, agent.id);
+
   const persona =
       agent.persona.trim() ||
       (agentType === 'support' ? DEFAULT_SUPPORT_PERSONA : DEFAULT_SALES_PERSONA);
@@ -228,6 +238,7 @@ export class AvatarAgentService {
       agent: { ...agent, persona },
       history,
       userMessage: trimmed,
+      clientMemoryContext,
     });
 
     if (turn.avatarUrl?.trim()) {
@@ -249,6 +260,7 @@ export class AvatarAgentService {
     });
 
     const caps = avatarMediaCapabilities(agent);
+    this.clientMemory.rememberTurn(userId, agentType, agent.id, trimmed, turn.text);
     return {
       sessionId,
       message: this.mapMessage(assistantRows[0]),

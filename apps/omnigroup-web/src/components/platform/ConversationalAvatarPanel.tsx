@@ -12,6 +12,7 @@ type AgentInfo = {
   name: string;
   title: string;
   avatarUrl: string | null;
+  backgroundUrl?: string | null;
   avatarType: 'conversational' | 'image' | 'initials';
           capabilities?: {
     chat: boolean;
@@ -36,6 +37,74 @@ type Props = {
   disabled?: boolean;
 };
 
+function AvatarScene({
+  agent,
+  activeVideo,
+  speaking,
+  videoRef,
+  large,
+  onVideoEnded,
+}: {
+  agent: AgentInfo | null;
+  activeVideo: string | null;
+  speaking: boolean;
+  videoRef: React.RefObject<HTMLVideoElement>;
+  large?: boolean;
+  onVideoEnded?: () => void;
+}) {
+  const sizeClass = large ? 'aspect-[3/4] max-w-xs' : 'aspect-[4/5]';
+  return (
+    <div
+      className={`relative mx-auto w-full overflow-hidden rounded-2xl border border-violet-500/25 ${sizeClass}`}
+    >
+      {agent?.backgroundUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={agent.backgroundUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          aria-hidden
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-500/10 to-cyan-500/5" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+      {activeVideo ? (
+        <video
+          ref={videoRef}
+          src={activeVideo}
+          className="relative z-10 h-full w-full object-cover"
+          playsInline
+          onEnded={onVideoEnded}
+        />
+      ) : agent?.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={agent.avatarUrl}
+          alt={agent.name}
+          className="relative z-10 mx-auto mt-[12%] h-[68%] w-[68%] object-contain drop-shadow-lg"
+        />
+      ) : (
+        <div className="relative z-10 flex h-full flex-col items-center justify-center text-violet-300">
+          <UserCircle2 className="h-24 w-24 opacity-80" />
+        </div>
+      )}
+      {speaking && !activeVideo && (
+        <motion.div
+          className="absolute inset-x-0 bottom-0 z-20 h-1 bg-violet-400/60"
+          animate={{ scaleX: [0.2, 1, 0.2] }}
+          transition={{ repeat: Infinity, duration: 1.2 }}
+          style={{ transformOrigin: 'center' }}
+        />
+      )}
+      <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 to-transparent p-4">
+        <p className="font-medium text-white">{agent?.name ?? 'Agent'}</p>
+        <p className="text-xs text-slate-300">{agent?.title ?? ''}</p>
+      </div>
+    </div>
+  );
+}
+
 function apiBase(agentType: AgentType) {
   return `/api/atina/video-meetings/${agentType}/avatar`;
 }
@@ -53,7 +122,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [pickerMode, setPickerMode] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const playResponse = useCallback(async (msg: ChatMessage) => {
@@ -212,18 +281,31 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
                 type="button"
                 disabled={disabled || booting}
                 onClick={() => void startSession(a.id)}
-                className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-violet-500/40 hover:bg-violet-500/5 disabled:opacity-50"
+                className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] text-left transition hover:border-violet-500/40 hover:bg-violet-500/5 disabled:opacity-50"
               >
-                <motion.div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-violet-500/15 ring-2 ring-violet-500/20">
+                <div className="relative aspect-[4/3] w-full">
+                  {a.backgroundUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={a.backgroundUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-violet-500/10" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   {a.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.avatarUrl} alt={a.name} className="h-full w-full object-cover" />
+                    <img
+                      src={a.avatarUrl}
+                      alt={a.name}
+                      className="absolute bottom-0 left-1/2 h-[75%] w-[55%] -translate-x-1/2 object-contain"
+                    />
                   ) : (
-                    <UserCircle2 className="h-10 w-10 text-violet-300" />
+                    <UserCircle2 className="absolute bottom-2 left-1/2 h-12 w-12 -translate-x-1/2 text-violet-300" />
                   )}
-                </motion.div>
-                <p className="font-medium text-white">{a.name}</p>
-                <p className="mt-1 text-xs text-slate-400">{a.title}</p>
+                </div>
+                <div className="p-3">
+                  <p className="font-medium text-white">{a.name}</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{a.title}</p>
+                </div>
               </button>
             ))}
           </div>
@@ -241,39 +323,14 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
         </button>
       </div>
       <div className="flex flex-col gap-4 lg:flex-row">
-        <motion.div
-          className="relative mx-auto aspect-[3/4] w-full max-w-xs overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-b from-violet-500/10 to-cyan-500/5"
-          animate={speaking ? { boxShadow: '0 0 32px rgba(139,92,246,0.35)' } : { boxShadow: '0 0 0 rgba(0,0,0,0)' }}
-        >
-          {activeVideo ? (
-            <video
-              ref={videoRef}
-              src={activeVideo}
-              className="h-full w-full object-cover"
-              playsInline
-              onEnded={() => setActiveVideo(null)}
-            />
-          ) : agent?.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={agent.avatarUrl} alt={agent.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center text-violet-300">
-              <UserCircle2 className="h-24 w-24 opacity-80" />
-            </div>
-          )}
-          {speaking && !activeVideo && (
-            <motion.div
-              className="absolute inset-x-0 bottom-0 h-1 bg-violet-400/60"
-              animate={{ scaleX: [0.2, 1, 0.2] }}
-              transition={{ repeat: Infinity, duration: 1.2 }}
-              style={{ transformOrigin: 'center' }}
-            />
-          )}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <p className="font-medium text-white">{agent?.name ?? 'Agent'}</p>
-            <p className="text-xs text-slate-300">{agent?.title ?? label}</p>
-          </div>
-        </motion.div>
+        <AvatarScene
+          agent={agent}
+          activeVideo={activeVideo}
+          speaking={speaking}
+          videoRef={videoRef}
+          large
+          onVideoEnded={() => setActiveVideo(null)}
+        />
 
         <div className="flex min-h-[320px] flex-1 flex-col rounded-2xl border border-white/10 bg-white/[0.02]">
           <div className="border-b border-white/5 px-4 py-3 text-sm text-slate-400">

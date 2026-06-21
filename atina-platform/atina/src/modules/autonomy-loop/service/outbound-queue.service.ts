@@ -1,5 +1,6 @@
 import { config } from '../../../config';
 import { getAiClient } from '../../../integrations';
+import type { LeadRecord } from '../../../integrations/lead-databases/types';
 import { NotificationsService } from '../../notifications/service/notifications.service';
 import { resolveVerticalDeliveryPack } from '../lib/vertical-delivery-resolver';
 import { renderOutreachEmailMarkdown } from '../templates/vertical-templates';
@@ -145,6 +146,37 @@ export class OutboundQueueService {
       ids.push(row.id);
     }
     return { created: count, ids };
+  }
+
+  async createDraftsFromLeads(input: {
+    userId: string;
+    verticalSlug: string;
+    category: string;
+    verticalName: string;
+    leads: LeadRecord[];
+    source?: string;
+  }): Promise<{ created: number; ids: string[] }> {
+    const ids: string[] = [];
+    for (const lead of input.leads.slice(0, 5)) {
+      const row = await this.createDraftFromVertical({
+        userId: input.userId,
+        verticalSlug: input.verticalSlug,
+        category: input.category,
+        name: input.verticalName,
+        source: input.source ?? 'lead_database',
+        leadEmail: lead.email,
+        leadName: [lead.firstName, lead.lastName].filter(Boolean).join(' ') || null,
+        leadCompany: lead.company,
+        scrapeContext: {
+          provider: lead.provider,
+          title: lead.title,
+          company_domain: lead.companyDomain,
+          verified: lead.verified,
+        },
+      });
+      ids.push(row.id);
+    }
+    return { created: ids.length, ids };
   }
 
   async processSendQueue(): Promise<{ processed: number; sent: number; blocked: number; failed: number }> {

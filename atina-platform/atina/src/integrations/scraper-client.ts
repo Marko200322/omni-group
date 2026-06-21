@@ -5,6 +5,15 @@ import { isAggregatorGatewayProvider, isApifyProvider } from './provider-detect'
 import type { ScraperJobPayload } from './scrape-types';
 import { scrapeWithAxiosDirect } from './scrape-direct';
 
+async function scrapeDirectFallback(payload: ScraperJobPayload): Promise<Record<string, unknown> | null> {
+  if (!config.features.scraper) return null;
+  try {
+    return await scrapeWithAxiosDirect(payload);
+  } catch {
+    return null;
+  }
+}
+
 export type { ScraperJobPayload } from './scrape-types';
 
 function scraperCreds(): { url: string; key: string } {
@@ -17,7 +26,9 @@ export class ScraperClient extends AggregatorHttpClient {
   }
 
   async scrape(payload: ScraperJobPayload): Promise<Record<string, unknown> | null> {
-    if (!this.isConfigured()) return null;
+    if (!this.isConfigured()) {
+      return scrapeDirectFallback(payload);
+    }
 
     const creds = this.getCredentials();
 

@@ -3,8 +3,11 @@ import { getAiClient } from '../../../integrations';
 import type { AgentType } from '../avatar/avatar-agent.personas';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
 import { generateAgentReply } from '../providers/avatar-ai-chat.provider';
-import { animateAvatarSpeech, isLivePortraitConfigured } from '../providers/avatar-live-portrait.provider';
-import { isElevenLabsConfigured, synthesizeSpeech } from '../providers/elevenlabs-tts.provider';
+import {
+  avatarVideoCapable,
+  renderAvatarVideo,
+} from '../providers/avatar-video-render.provider';
+import { listConfiguredTtsProviders, renderAvatarTts } from '../providers/avatar-tts-render.provider';
 
 export type AggregatorSpeechResult = {
   audioMime: string | null;
@@ -36,6 +39,7 @@ function mapAggregatorAgent(row: {
   persona?: string;
   greeting?: string;
   avatarUrl?: string;
+  backgroundUrl?: string;
   voiceId?: string;
 }): AvatarAgentDefinition {
   return {
@@ -45,6 +49,7 @@ function mapAggregatorAgent(row: {
     persona: row.persona ?? '',
     greeting: row.greeting ?? '',
     avatarUrl: row.avatarUrl ?? '',
+    backgroundUrl: row.backgroundUrl ?? '',
     voiceId: row.voiceId ?? '',
   };
 }
@@ -57,7 +62,7 @@ export async function fetchRosterFromAggregator(
   const ai = getAiClient();
   const result = await ai.generateAvatarRoster({
     team: agentType,
-    count: count ?? (agentType === 'support' ? 3 : 4),
+    count: count ?? (agentType === 'support' ? 5 : 6),
     brand: config.app.name,
   });
   if (!result?.agents?.length) return null;
@@ -104,19 +109,21 @@ export async function localSpeechRender(input: {
   let audioBase64: string | null = null;
   let videoUrl: string | null = null;
 
-  const tts = await synthesizeSpeech(input.text, input.voiceId);
+  const tts = await renderAvatarTts(input.text, input.voiceId);
   if (tts) {
     audioMime = tts.mimeType;
     audioBase64 = tts.audioBase64;
-    if (input.avatarUrl.trim() && isLivePortraitConfigured()) {
-      const animated = await animateAvatarSpeech({
-        sourceImageUrl: input.avatarUrl,
+    if (avatarVideoCapable(input.avatarUrl)) {
+      const video = await renderAvatarVideo({
+        imageUrl: input.avatarUrl,
+        text: input.text,
+        voiceId: input.voiceId,
         audioBase64: tts.audioBase64,
         audioMimeType: tts.mimeType,
         sessionId: input.sessionId,
         agentType: `${input.agentType}:${input.agentId}`,
       });
-      videoUrl = animated.videoUrl;
+      videoUrl = video?.videoUrl ?? null;
     }
   }
 
@@ -190,6 +197,7 @@ export async function conversationTurnLocal(input: {
   agent: AvatarAgentDefinition;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
+  clientMemoryContext?: string;
 }): Promise<AggregatorTurnResult> {
   let text: string;
   let replySource: 'ai' | 'fallback' = 'fallback';
@@ -203,6 +211,7 @@ export async function conversationTurnLocal(input: {
       systemPersona: input.agent.persona,
       history: input.history,
       userMessage: input.userMessage ?? '',
+      clientMemoryContext: input.clientMemoryContext,
     });
     text = reply.content;
     replySource = reply.source;
@@ -236,6 +245,7 @@ export async function runConversationTurn(input: {
   agent: AvatarAgentDefinition;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
+  clientMemoryContext?: string;
 }): Promise<AggregatorTurnResult> {
   const fromAgg = await conversationTurnViaAggregator(input);
   if (fromAgg) {
@@ -269,10 +279,9 @@ export function avatarMediaCapabilities(agent: AvatarAgentDefinition): {
   aggregator: boolean;
 } {
   const agg = useAiAggregatorForAvatars();
-  const voice = agg || (isElevenLabsConfigured() && Boolean(agent.voiceId.trim()));
-  const video =
-    agg ||
-    (isLivePortraitConfigured() && Boolean(agent.avatarUrl.trim()) && isElevenLabsConfigured());
+  const hasTts = listConfiguredTtsProviders().length > 0;
+  const voice = agg || hasTts;
+  const video = agg || avatarVideoCapable(agent.avatarUrl);
   return {
     voice,
     video: Boolean(video && agent.avatarUrl.trim()),
@@ -280,3 +289,5 @@ export function avatarMediaCapabilities(agent: AvatarAgentDefinition): {
     aggregator: agg,
   };
 }
+
+export { listAvatarMediaStackStatus } from '../providers/avatar-video-render.provider';

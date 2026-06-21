@@ -13,6 +13,7 @@ import {
   type PaymentProviderId,
 } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
+import { RevenueAllocationService } from '../../billing/service/revenue-allocation.service';
 import logger from '../../../utils/logger';
 
 let stripeClient: Stripe | null = null;
@@ -102,6 +103,7 @@ function buildTransferInstructions(
 }
 const billingService = new BillingService();
 const paymentNotifications = new PaymentNotificationsService();
+const revenueAllocation = new RevenueAllocationService();
 
 function parsePaymentMetadata(raw: Record<string, unknown> | string): Record<string, unknown> {
   if (typeof raw === 'string') {
@@ -116,6 +118,34 @@ function dispatchPaymentSideEffect(task: Promise<void>, label: string): void {
       error: err instanceof Error ? err.message : String(err),
     });
   });
+}
+
+function dispatchRevenueAllocation(input: {
+  paymentId: string;
+  userId: string;
+  amount: number;
+  currency: string;
+  provider: PaymentProviderId;
+  metadata: Record<string, unknown>;
+}): void {
+  const purchaseType = String(input.metadata.purchaseType ?? 'platform_plan');
+  dispatchPaymentSideEffect(
+    revenueAllocation.allocateConfirmedPayment({
+      paymentId: input.paymentId,
+      userId: input.userId,
+      grossEur: toMoneyNumber(input.amount),
+      currency: input.currency,
+      paymentProvider: input.provider,
+      purchaseType: purchaseType === 'deliverable' ? 'deliverable' : 'platform_plan',
+      deliverableId: purchaseType === 'deliverable' ? String(input.metadata.deliverableId ?? '') : null,
+      planSlug: String(input.metadata.planSlug ?? '') || null,
+      billingCycle: String(input.metadata.billingCycle ?? 'monthly') as 'monthly' | 'yearly' | 'one_time',
+      industryCategory:
+        typeof input.metadata.industryCategory === 'string' ? input.metadata.industryCategory : null,
+      verticalSlug: typeof input.metadata.verticalSlug === 'string' ? input.metadata.verticalSlug : null,
+    }).then(() => undefined),
+    'revenue_allocation',
+  );
 }
 
 /** N3-E1: Stripe may send `subscription` as an id string or an expanded object; DB queries need the id. */
@@ -298,6 +328,19 @@ export class PaymentsService {
       currency: invoice.currency.toUpperCase(),
       lineItems,
       stripeInvoiceId: invoice.id,
+    });
+
+    dispatchRevenueAllocation({
+      paymentId: paymentRows[0].id,
+      userId: subRows[0].user_id,
+      amount: invoice.amount_paid / 100,
+      currency: invoice.currency.toUpperCase(),
+      provider: 'stripe',
+      metadata: {
+        purchaseType: 'platform_plan',
+        planSlug: '',
+        billingCycle: (subRows[0] as { billing_cycle?: string }).billing_cycle ?? 'monthly',
+      },
     });
   }
 
@@ -659,6 +702,15 @@ export class PaymentsService {
       }
 
       logger.info('Deliverable payment confirmed', { paymentId, deliverableId, adminId });
+
+      dispatchRevenueAllocation({
+        paymentId,
+        userId: rows[0].user_id,
+        amount: paymentAmount,
+        currency: rows[0].currency,
+        provider,
+        metadata,
+      });
       return;
     }
 
@@ -716,6 +768,15 @@ export class PaymentsService {
     };
 
     logger.info('Pending payment confirmed', { paymentId, adminId, provider });
+
+    dispatchRevenueAllocation({
+      paymentId,
+      userId: rows[0].user_id,
+      amount: paymentAmount,
+      currency: rows[0].currency,
+      provider,
+      metadata: { ...metadata, planSlug, billingCycle, purchaseType: 'platform_plan' },
+    });
 
     if (!invoiceRecord?.invoice?.invoice_number) return;
 

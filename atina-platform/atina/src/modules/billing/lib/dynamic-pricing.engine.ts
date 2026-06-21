@@ -9,7 +9,7 @@ import { type PricingTier } from './category-pricing';
 import { getDeliverable, listDeliverables, type DeliverableBilling, type DeliverableDefinition } from './deliverable-catalog';
 import { getCategoryMarketIndex } from './market-pricing';
 
-export type PaymentProviderId = 'manual' | 'kriptoman' | 'stripe' | 'paypal';
+export type PaymentProviderId = 'manual' | 'kriptoman' | 'stripe' | 'paypal' | 'wise';
 
 export type QuoteInput = {
   deliverableId: string;

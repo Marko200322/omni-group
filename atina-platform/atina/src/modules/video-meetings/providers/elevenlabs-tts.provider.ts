@@ -12,7 +12,8 @@ export type TtsResult = {
 
 export async function synthesizeSpeech(text: string, voiceId: string): Promise<TtsResult | null> {
   const apiKey = config.pipelines.elevenLabsKey.trim();
-  const voice = voiceId.trim();
+  const voice =
+    voiceId.trim() || config.pipelines.elevenLabsDefaultVoiceId.trim();
   if (!apiKey || !voice || !text.trim()) return null;
 
   try {

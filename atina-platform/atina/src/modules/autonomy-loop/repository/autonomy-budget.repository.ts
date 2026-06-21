@@ -49,7 +49,7 @@ export class AutonomyBudgetRepository {
   }
 
   insertLedger(entry: {
-    entryType: 'seed' | 'spend' | 'revenue' | 'adjust';
+    entryType: 'seed' | 'spend' | 'revenue' | 'adjust' | 'topup';
     category: string;
     amountUsd: number;
     balanceAfterUsd: number;

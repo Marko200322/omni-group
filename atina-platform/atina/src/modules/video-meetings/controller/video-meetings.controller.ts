@@ -7,6 +7,10 @@ export class VideoMeetingsController {
   private readonly service = new VideoMeetingsService();
   private readonly avatarService = new AvatarAgentService();
 
+  getAvatarMediaStack = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, this.avatarService.mediaStack());
+  };
+
   getSupportAgents = async (_req: Request, res: Response): Promise<void> => {
     sendSuccess(res, await this.service.getAgents('support'));
   };

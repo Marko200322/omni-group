@@ -14,7 +14,7 @@ param(
   [string]$WebBase = 'http://127.0.0.1:3010',
   [string]$AtinaBase = 'http://127.0.0.1:3000',
   [string]$Email = 'admin@atina.io',
-  [string]$Password = 'Admin@123456',
+  [string]$Password = '',
   [switch]$SkipEnsureWeb
 )
 
@@ -22,6 +22,14 @@ $ErrorActionPreference = 'Stop'
 $web = $WebBase.TrimEnd('/')
 $atina = $AtinaBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Split-Path $scriptsDir -Parent
+. (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
+
+if (-not $Password) {
+  $creds = Get-AdminCredentials -RepoRoot $repoRoot
+  $Email = $creds.Email
+  $Password = $creds.Password
+}
 $BffTimeoutSec = 45
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
 
@@ -29,6 +37,9 @@ if (-not $SkipEnsureWeb) {
   & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
+
+& (Join-Path $scriptsDir 'ensure-atina-api.ps1')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 function Invoke-BffLogin {
   param(
@@ -151,6 +162,16 @@ $plj = Invoke-WithRateLimitRetry -Label 'admin/payments' -Action {
   return $parsed
 }
 Write-Host "  OK processing=$($plj.data.Count)" -ForegroundColor Green
+
+Write-Host "== Web BFF hunting (readiness) ==" -ForegroundColor Cyan
+try {
+  $hr = Invoke-WebRequest -Uri "$web/api/atina/hunting/readiness" -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  $hj = $hr.Content | ConvertFrom-Json
+  if (-not $hj.ok) { throw "hunting/readiness failed: $($hr.Content)" }
+  Write-Host "  OK score=$($hj.data.score)" -ForegroundColor Green
+} catch {
+  Write-Host "  WARN hunting readiness: $($_.Exception.Message)" -ForegroundColor Yellow
+}
 
 Write-Host ''
 Write-Host 'smoke-web-integration: all checks passed.' -ForegroundColor Green

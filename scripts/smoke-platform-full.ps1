@@ -3,13 +3,21 @@
 param(
   [string]$WebBase = 'http://127.0.0.1:3010',
   [string]$Email = 'admin@atina.io',
-  [string]$Password = 'Admin@123456'
+  [string]$Password = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $web = $WebBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = Split-Path $scriptsDir -Parent
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
+
+if (-not $Password) {
+  $creds = Get-AdminCredentials -RepoRoot $repoRoot
+  $Email = $creds.Email
+  $Password = $creds.Password
+}
 
 & (Join-Path $scriptsDir 'ensure-web-dev.ps1') | Out-Null
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -45,6 +53,41 @@ function Test-Route {
       Write-Host "  FAIL $Label - $($_.Exception.Message)" -ForegroundColor Red
       $script:failed++
     }
+  }
+}
+
+function Test-BffPostJson {
+  param(
+    [string]$Label,
+    [string]$Uri,
+    [object]$Body,
+    [Microsoft.PowerShell.Commands.WebRequestSession]$Session,
+    [int]$TimeoutSec = 45
+  )
+  try {
+    $json = $Body | ConvertTo-Json -Compress
+    $params = @{
+      Uri = $Uri
+      Method = 'POST'
+      ContentType = 'application/json'
+      Body = $json
+      UseBasicParsing = $true
+      TimeoutSec = $TimeoutSec
+    }
+    if ($Session) { $params.WebSession = $Session }
+    $r = Invoke-WebRequest @params
+    $j = $r.Content | ConvertFrom-Json
+    if (-not $j.ok) {
+      $snippet = $r.Content.Substring(0, [Math]::Min(200, $r.Content.Length))
+      throw "ok=false: $snippet"
+    }
+    Write-Host "  PASS $Label" -ForegroundColor Green
+    $script:passed++
+    return $j
+  } catch {
+    Write-Host "  FAIL $Label - $($_.Exception.Message)" -ForegroundColor Red
+    $script:failed++
+    return $null
   }
 }
 
@@ -111,7 +154,6 @@ $bffRoutes = @(
   '/api/atina/billing/summary'
   '/api/atina/billing/category-pricing?category=web-development'
   '/api/atina/billing/industry-catalog'
-  '/api/atina/billing/quote?deliverableSlug=setup-quick&industryCategory=web-development'
   '/api/atina/payments/methods'
   '/api/atina/admin/overview'
   '/api/atina/admin/payments?status=processing&limit=5'
@@ -125,6 +167,10 @@ $bffRoutes = @(
 foreach ($route in $bffRoutes) {
   Test-BffJson -Label $route -Uri "$web$route" -Session $session | Out-Null
 }
+Test-BffPostJson -Label '/api/atina/billing/quote (POST)' -Uri "$web/api/atina/billing/quote" -Session $session -Body @{
+  deliverableId = 'setup-quick'
+  industryCategory = 'marketing'
+} | Out-Null
 
 Write-Host '== Public BFF ==' -ForegroundColor Cyan
 Test-BffJson -Label '/api/atina/video-meetings/support/agents' -Uri "$web/api/atina/video-meetings/support/agents" | Out-Null

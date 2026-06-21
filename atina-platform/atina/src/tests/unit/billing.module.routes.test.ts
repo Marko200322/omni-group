@@ -43,6 +43,13 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     };
     next();
   },
+  requireAdmin: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const role = (req as express.Request & { user?: { role: string } }).user?.role;
+    if (role !== 'admin' && role !== 'superadmin' && role !== 'operator') {
+      throw new AuthenticationError('Admin access required');
+    }
+    next();
+  },
 }));
 
 const SAMPLE_INVOICE_UUID = '123e4567-e89b-12d3-a456-426614174000';

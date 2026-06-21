@@ -24,6 +24,7 @@ import {
   Shield,
   Factory,
   Package,
+  ShoppingCart,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -39,6 +40,7 @@ const adminNav: NavItem[] = [
   { href: '/admin', label: 'Pregled', icon: LayoutDashboard },
   { href: '/dashboard', label: 'Klijentski portal', icon: FolderKanban },
   { href: '/admin#factory', label: 'Product Factory', icon: Factory },
+  { href: '/admin#resources', label: 'Resursi', icon: ShoppingCart },
   { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
   { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin#users', label: 'Korisnici', icon: Users },

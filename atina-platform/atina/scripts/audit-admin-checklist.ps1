@@ -43,6 +43,15 @@ $rows = @(
   @{ id='A0-5'; item='PAYMENT_NOTIFY_EMAIL'; s=(Status $a 'PAYMENT_NOTIFY_EMAIL') }
   @{ id='A0-6'; item='SCRAPER_URL'; s=(Status $a 'SCRAPER_URL') }
   @{ id='A0-6'; item='SCRAPER_KEY'; s=(Status $a 'SCRAPER_KEY') }
+  @{ id='A0b'; item='ELEVENLABS_API_KEY'; s=(Status $a 'ELEVENLABS_API_KEY') }
+  @{ id='A0b'; item='AVATAR_PUBLIC_BASE_URL'; s=(Status $a 'AVATAR_PUBLIC_BASE_URL') }
+  @{ id='A0b'; item='HEYGEN_API_KEY'; s=(Status $a 'HEYGEN_API_KEY') }
+  @{ id='A0b'; item='DID_API_KEY'; s=(Status $a 'DID_API_KEY') }
+  @{ id='A0b'; item='SUPPORT_GOOGLE_MEET_URL'; s=(Status $a 'SUPPORT_GOOGLE_MEET_URL') }
+  @{ id='A0b'; item='SALES_GOOGLE_MEET_URL'; s=(Status $a 'SALES_GOOGLE_MEET_URL') }
+  @{ id='A0b'; item='ZOOM_ACCOUNT_ID'; s=(Status $a 'ZOOM_ACCOUNT_ID') }
+  @{ id='A0b'; item='CARTESIA_API_KEY'; s=(Status $a 'CARTESIA_API_KEY') }
+  @{ id='A0b'; item='AVATAR_CLIENT_MEMORY_ENABLED'; s=if($a['AVATAR_CLIENT_MEMORY_ENABLED'] -eq 'true'){'SET'}else{'MISSING'} }
   @{ id='A0-7'; item='AUTONOMY_ROLLOUT_SEGMENT=freelance'; s=if($a['AUTONOMY_ROLLOUT_SEGMENT'] -in @('freelance','online','')){'SET'}elseif($a['AUTONOMY_ROLLOUT_SEGMENT'] -eq 'freelance'){'SET'}else{$a['AUTONOMY_ROLLOUT_SEGMENT']} }
   @{ id='A1-11'; item='OUTREACH_DOMAIN_WARMUP_COMPLETE'; s=if($a['OUTREACH_DOMAIN_WARMUP_COMPLETE'] -eq 'true'){'SET'}elseif($a['OUTREACH_DEV_SEND_TO_FALLBACK'] -eq 'true'){'DEV_FALLBACK'}else{'MISSING'} }
   @{ id='A1-12'; item='SALES_MEETINGS_ENABLED'; s=if($a['SALES_MEETINGS_ENABLED'] -eq 'true'){'SET'}else{'MISSING'} }

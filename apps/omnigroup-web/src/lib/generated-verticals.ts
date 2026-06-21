@@ -1,8 +1,12 @@
 export type GeneratedVerticalIndexEntry = {
   slug: string;
+  name?: string;
+  category?: string;
+  valueProp?: string | null;
   hasPage: boolean;
   hasOutreach: boolean;
   updatedAt: string;
+  href?: string;
 };
 
 export type GeneratedVerticalsIndex = {
@@ -28,6 +32,13 @@ export function getGeneratedVerticalsIndex(): GeneratedVerticalsIndex {
 
 export function listOnlineVerticalSlugs(limit = 50): string[] {
   return getGeneratedVerticalsIndex()
-    .verticals.slice(0, limit)
+    .verticals.filter((v) => v.hasPage)
+    .slice(0, limit)
     .map((v) => v.slug);
+}
+
+export function listOnlineVerticalEntries(limit = 50): GeneratedVerticalIndexEntry[] {
+  return getGeneratedVerticalsIndex()
+    .verticals.filter((v) => v.hasPage)
+    .slice(0, limit);
 }

@@ -57,9 +57,12 @@ Dashboard → **Podrška** (`/dashboard#support`): klijent zakazuje poziv; ti ka
 | Glas (TTS) | `SUPPORT_AGENT_VOICE_ID` + `ELEVENLABS_API_KEY` | ElevenLabs voice ID |
 | AI razumevanje | `AI_URL` + `AI_KEY` | Bez toga radi fallback odgovori |
 | **Avatar tim + govor + animacija** | **`AI_URL` + `AI_KEY`** + `AVATAR_USE_AI_AGGREGATOR=true` | Agregator generiše tim i renderuje speech/video — vidi `atina-platform/atina/docs/operations/ai-aggregator-avatars-api.md` |
-| Animacija lica (fallback) | `APEX_LIVE_PORTRAIT_*` | Samo ako agregator ne radi render |
-| Glas (fallback) | `ELEVENLABS_API_KEY` | Samo ako agregator ne radi TTS |
-| Google Meet soba (instant) | `SUPPORT_GOOGLE_MEET_URL` | npr. `https://meet.google.com/xxx-yyyy-zzz` |
+| Animacija lica (lanac) | `AVATAR_VIDEO_PROVIDER_CHAIN` + `HEYGEN_API_KEY` / `DID_API_KEY` / `APEX_LIVE_PORTRAIT_*` | Redosled: HeyGen → D-ID → Live Portrait — vidi [`AVATAR-MEDIA-STACK.md`](../../../docs/AVATAR-MEDIA-STACK.md) |
+| Glas (lanac) | `AVATAR_TTS_PROVIDER_CHAIN` + `ELEVENLABS_*` / `CARTESIA_*` | ElevenLabs → Cartesia |
+| Memorija klijenta | `AVATAR_CLIENT_MEMORY_ENABLED=true` | Lokalno + AI agregator (Pinecone/Qdrant na gateway-u kasnije) |
+| Javni URL portreta | `AVATAR_PUBLIC_BASE_URL`, `WEB_APP_URL` | Servira `/avatars/portraits/*.svg` sa web app-a |
+| Setup skripta | `.\scripts\apply-avatar-premium-env.ps1` | + `config/avatar-premium.local.json` |
+| Google Meet soba (instant) | `SUPPORT_GOOGLE_MEET_URL`, `SALES_GOOGLE_MEET_URL` | Dve sobe: support + sales |
 | Zoom Server-to-Server | `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET` | Automatski kreira Zoom sobu |
 | Trajanje poziva | `MEETING_DEFAULT_DURATION_MIN` | Default `30` |
 | Prodaja (faza 2) | `SALES_MEETINGS_ENABLED=true` | Dok je `false`, prodajni endpointi vraćaju grešku |
@@ -75,11 +78,11 @@ Bez Zoom/Meet URL-a radi **ručno zakazivanje** (kao plaćanje bez firme).
 
 **Prodajni avatar (Nikola):** `SALES_AVATAR_ENABLED=true` (default) — razgovor na dashboardu `#sales`. Booking live poziva: `SALES_MEETINGS_ENABLED=true`.
 
-**Više avatara po timu (default u kodu):**
+**Više avatara po timu (default u kodu + DB migracija 023):**
 | Tim | Članovi |
 |-----|---------|
-| Support | Mila (tehnika), Stefan (billing), Jelena (onboarding) |
-| Prodaja | Nikola (planovi), Ana (enterprise), Marko (demo), Ivana (partneri) |
+| Support | Mila, Stefan, Jelena, Nemanja, Sara (5) — WFH pozadina |
+| Prodaja | Nikola, Ana, Marko, Ivana, Luka, Teodora (6) — WFH pozadina |
 
 Override celog tima: `SUPPORT_AGENTS_JSON` / `SALES_AGENTS_JSON` (JSON niz sa `id`, `name`, `title`, `avatarUrl`, `voiceId`, `persona`, `greeting`).
 

@@ -47,6 +47,11 @@ $groups = @(
 
 $platformExtras = @(
   @{ Key = 'PHASE'; Hint = 'v1-v6 (boot sync + gating)' },
+  @{ Key = 'LEAD_DATABASE_ENABLED'; Hint = 'Apollo/Hunter enrich F3+' },
+  @{ Key = 'LEAD_DATABASE_ROLLOUT_PHASE'; Hint = 'F0-F5 fazno paljenje' },
+  @{ Key = 'APOLLO_API_KEY'; Hint = 'Apollo.io lead DB' },
+  @{ Key = 'HUNTER_API_KEY'; Hint = 'Hunter.io domain emails' },
+  @{ Key = 'NEVERBOUNCE_API_KEY'; Hint = 'Email verify F2+' },
   @{ Key = 'YOUTUBE_PIPELINE_URL'; Hint = 'tools/youtube-pipeline HTTP /run' },
   @{ Key = 'PIPELINE_HTTP_PORT'; Hint = 'youtube-pipeline port (default 8090)' },
   @{ Key = 'ELEVENLABS_API_KEY'; Hint = 'voice (optional)' },

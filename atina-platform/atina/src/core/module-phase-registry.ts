@@ -59,5 +59,6 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   scaling: 'v2',
   'ai-rag': 'v3',
   'autonomy-loop': 'v2',
+  'public-site': 'v2',
   'product-factory': 'v2',
 };

@@ -9,9 +9,13 @@ export type GeneratedVerticalsIndex = {
   source: string;
   verticals: Array<{
     slug: string;
+    name?: string;
+    category?: string;
+    valueProp?: string | null;
     hasPage: boolean;
     hasOutreach: boolean;
     updatedAt: string;
+    href?: string;
   }>;
 };
 
@@ -32,29 +36,45 @@ export async function syncGeneratedVerticalsIndexFromDb(): Promise<{
 }> {
   const { rows } = await query<{
     slug: string;
+    name: string | null;
+    category: string | null;
+    research_data: Record<string, unknown> | null;
     has_page: boolean;
     has_outreach: boolean;
     updated_at: Date;
   }>(
-    `SELECT vertical_slug AS slug,
-            BOOL_OR(artifact_type = 'page_tsx') AS has_page,
-            BOOL_OR(artifact_type = 'outreach_md') AS has_outreach,
-            MAX(created_at) AS updated_at
-     FROM generated_artifacts
-     GROUP BY vertical_slug
-     ORDER BY vertical_slug`
+    `SELECT ga.vertical_slug AS slug,
+            iv.name,
+            iv.category,
+            iv.research_data,
+            BOOL_OR(ga.artifact_type = 'page_tsx') AS has_page,
+            BOOL_OR(ga.artifact_type = 'outreach_md') AS has_outreach,
+            MAX(ga.created_at) AS updated_at
+     FROM generated_artifacts ga
+     LEFT JOIN industry_verticals iv ON iv.slug = ga.vertical_slug
+     GROUP BY ga.vertical_slug, iv.name, iv.category, iv.research_data
+     ORDER BY ga.vertical_slug`
   );
 
   const payload: GeneratedVerticalsIndex = {
     generatedAt: new Date().toISOString(),
     count: rows.length,
     source: 'postgres:generated_artifacts',
-    verticals: rows.map((r) => ({
-      slug: r.slug,
-      hasPage: Boolean(r.has_page),
-      hasOutreach: Boolean(r.has_outreach),
-      updatedAt: new Date(r.updated_at).toISOString(),
-    })),
+    verticals: rows.map((r) => {
+      const research = r.research_data ?? {};
+      const valueProp =
+        typeof research.value_proposition === 'string' ? research.value_proposition : null;
+      return {
+        slug: r.slug,
+        name: r.name ?? r.slug,
+        category: r.category ?? undefined,
+        valueProp,
+        hasPage: Boolean(r.has_page),
+        hasOutreach: Boolean(r.has_outreach),
+        updatedAt: new Date(r.updated_at).toISOString(),
+        href: `/solutions/${r.slug}`,
+      };
+    }),
   };
 
   const outFile = resolveWebIndexPath();

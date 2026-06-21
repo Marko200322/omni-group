@@ -62,8 +62,14 @@ export async function generateAgentReply(input: {
   systemPersona: string;
   history: ChatTurn[];
   userMessage: string;
+  clientMemoryContext?: string;
 }): Promise<{ content: string; source: 'ai' | 'fallback' }> {
-  const system = input.systemPersona.trim() || (input.agentType === 'support' ? DEFAULT_SUPPORT_PERSONA : DEFAULT_SALES_PERSONA);
+  const basePersona =
+    input.systemPersona.trim() ||
+    (input.agentType === 'support' ? DEFAULT_SUPPORT_PERSONA : DEFAULT_SALES_PERSONA);
+  const system = input.clientMemoryContext?.trim()
+    ? `${basePersona}\n\n${input.clientMemoryContext.trim()}`
+    : basePersona;
 
   const ai = getAiClient();
   if (ai.isConfigured()) {

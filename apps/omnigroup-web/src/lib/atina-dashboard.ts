@@ -50,17 +50,24 @@ export async function fetchAtinaDashboardLive(session: AuthSession): Promise<Ati
     return out;
   }
 
-  const meRes = await fetchAtinaForBff<AtinaMeUser>('/api/v1/auth/me', session);
+  const [meRes, tasksRes, notifRes, wfRes] = await Promise.all([
+    fetchAtinaForBff<AtinaMeUser>('/api/v1/auth/me', session),
+    fetchAtinaForBff<Record<string, unknown>[]>('/api/v1/tasks?limit=5&page=1', session),
+    fetchAtinaForBff<Record<string, unknown>[]>('/api/v1/notifications?limit=5&page=1', session),
+    fetchAtinaForBff<{
+      total?: number;
+      completed?: number;
+      failed?: number;
+      running?: number;
+    }>('/api/v1/workflow-chain/executions/stats', session),
+  ]);
+
   if (meRes.ok && meRes.data) {
     out.me = meRes.data;
   } else {
     out.errors.push(meRes.message ?? `me_http_${meRes.status}`);
   }
 
-  const tasksRes = await fetchAtinaForBff<Record<string, unknown>[]>(
-    '/api/v1/tasks?limit=5&page=1',
-    session,
-  );
   if (tasksRes.ok && tasksRes.data) {
     const { items, total } = unwrapList(
       tasksRes.data as unknown as Record<string, unknown>[] | AtinaListEnvelope<Record<string, unknown>>,
@@ -77,10 +84,6 @@ export async function fetchAtinaDashboardLive(session: AuthSession): Promise<Ati
     out.errors.push(tasksRes.message ?? `tasks_http_${tasksRes.status}`);
   }
 
-  const notifRes = await fetchAtinaForBff<Record<string, unknown>[]>(
-    '/api/v1/notifications?limit=5&page=1',
-    session,
-  );
   if (notifRes.ok && notifRes.data) {
     const { items } = unwrapList(
       notifRes.data as unknown as Record<string, unknown>[] | AtinaListEnvelope<Record<string, unknown>>,
@@ -94,12 +97,6 @@ export async function fetchAtinaDashboardLive(session: AuthSession): Promise<Ati
     }));
   }
 
-  const wfRes = await fetchAtinaForBff<{
-    total?: number;
-    completed?: number;
-    failed?: number;
-    running?: number;
-  }>('/api/v1/workflow-chain/executions/stats', session);
   if (wfRes.ok && wfRes.data) {
     out.workflowStats = {
       total: Number(wfRes.data.total ?? 0),

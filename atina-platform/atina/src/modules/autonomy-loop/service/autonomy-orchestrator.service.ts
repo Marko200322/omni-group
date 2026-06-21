@@ -25,6 +25,7 @@ import { ModuleGeneratorService } from './module-generator.service';
 import { RevenueFeedbackService } from './revenue-feedback.service';
 import { PlatformEvolutionTickService } from './platform-evolution-tick.service';
 import { ProductFactoryInternalService } from '../../product-factory/service/product-factory-internal.service';
+import logger from '../../../utils/logger';
 
 export type ClosedLoopResult = {
   cycleId: string;
@@ -388,6 +389,10 @@ export class AutonomyOrchestratorService {
 
     const platformEvolution = await this.runEvolutionSafe(userId);
     const productFactoryInternal = await this.runProductFactoryInternalSafe(userId);
+
+    void import('../../resource-procurement/service/resource-procurement.service')
+      .then(({ ResourceProcurementService }) => new ResourceProcurementService().runAutoProcurement(userId))
+      .catch((err) => logger.warn('Auto resource procurement check failed', { error: String(err) }));
 
     return {
       processed: results.length,

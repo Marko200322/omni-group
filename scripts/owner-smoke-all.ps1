@@ -30,6 +30,9 @@ if ($SkipAtinaSmoke) {
   exit 0
 }
 
+& (Join-Path $scriptsDir 'ensure-atina-api.ps1')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 & (Join-Path $scriptsDir 'smoke-web-integration.ps1')
 & (Join-Path $scriptsDir 'test-contact-resend.ps1')
 & (Join-Path $scriptsDir 'test-upload-spike.ps1')

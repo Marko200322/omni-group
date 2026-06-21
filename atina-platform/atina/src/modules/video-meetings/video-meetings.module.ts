@@ -31,6 +31,7 @@ export class VideoMeetingsModule implements IModule {
     const auth = [authenticate, authSessionLimiter];
 
     // Support (prioritet)
+    this.router.get('/avatar/media-stack', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getAvatarMediaStack);
     this.router.get('/support/agents', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getSupportAgents);
     this.router.get('/support/methods', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getSupportMethods);
     this.router.post(

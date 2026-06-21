@@ -9,6 +9,10 @@ import { GreenfieldBuilderService } from './greenfield-builder.service';
 import { ProductFactoryTestService } from './product-factory-test.service';
 import { config } from '../../../config';
 import { ProductFactoryInternalService } from './product-factory-internal.service';
+import { PublicSiteRepository } from '../../public-site/repository/public-site.repository';
+import { PublicSiteService } from '../../public-site/service/public-site.service';
+
+const WEBSITE_DELIVERABLES = new Set(['landing', 'website-business', 'website-ecommerce']);
 
 function mapRow(row: NonNullable<Awaited<ReturnType<ProductFactoryRepository['getById']>>>) {
   return {
@@ -42,6 +46,8 @@ export class ProductFactoryService {
   private readonly builder = new GreenfieldBuilderService();
   private readonly tester = new ProductFactoryTestService();
   private readonly internal = new ProductFactoryInternalService();
+  private readonly publicSites = new PublicSiteService();
+  private readonly publicSiteRepo = new PublicSiteRepository();
 
   async create(userId: string, dto: CreateProductFactoryProjectDtoType) {
     const isolationKey = makeIsolationKey(dto.lane);
@@ -115,7 +121,8 @@ export class ProductFactoryService {
         deploy_status: 'pending',
       });
       await this.repo.completeBuildRun(runId, 'completed', result as unknown as Record<string, unknown>);
-      return { project: mapRow(updated!), build: result };
+      const publicSite = await this.maybeScaffoldPublicSite(userId, row);
+      return { project: mapRow(updated!), build: result, publicSite };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await this.repo.updateProject(id, { status: 'failed', last_error: message });
@@ -174,6 +181,28 @@ export class ProductFactoryService {
 
   async internalTick(userId: string) {
     return this.internal.tick(userId, config.productFactory.maxInternalPerTick);
+  }
+
+  private async maybeScaffoldPublicSite(
+    userId: string,
+    row: NonNullable<Awaited<ReturnType<ProductFactoryRepository['getById']>>>,
+  ) {
+    const deliverableId = row.deliverable_id?.trim();
+    if (!deliverableId || !WEBSITE_DELIVERABLES.has(deliverableId)) return null;
+    const existing = await this.publicSiteRepo.getClientSiteByProject(row.id);
+    if (existing) {
+      return { slug: existing.slug, publicUrl: `/sites/${existing.slug}`, existing: true };
+    }
+    const site = await this.publicSites.scaffoldFromProject({
+      userId,
+      projectId: row.id,
+      slug: row.slug,
+      title: row.name,
+      clientName: row.client_name,
+      deliverableId,
+      publish: false,
+    });
+    return { slug: site.slug, publicUrl: site.publicUrl, existing: false };
   }
 
   private async assertNoCrossLaneLeak(

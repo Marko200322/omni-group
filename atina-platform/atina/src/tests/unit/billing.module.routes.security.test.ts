@@ -14,6 +14,13 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     req.user = { userId: 'user-1', role: 'user', email: 'user@atina.io' };
     return next();
   },
+  requireAdmin: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const role = req.user?.role;
+    if (role !== 'admin' && role !== 'superadmin' && role !== 'operator') {
+      return next(new AppError('Admin access required', 403, 'AUTHORIZATION_ERROR'));
+    }
+    return next();
+  },
 }));
 
 jest.mock('../../modules/billing/service/billing.service', () => ({

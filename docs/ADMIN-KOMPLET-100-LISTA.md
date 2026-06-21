@@ -70,12 +70,73 @@ Detalj po modulu: [`VLASNIK-SAKUPLJANJE-KLJUCEVA.md`](./VLASNIK-SAKUPLJANJE-KLJU
 
 - [ ] `YOUTUBE_PIPELINE_URL` (ako vrtiš pipeline servis) + `YOUTUBE_*` po potrebi
 - [ ] `ELEVENLABS_API_KEY` (support avatar / TTS)
-- [ ] `APEX_FLUX_*` + `APEX_LIVE_PORTRAIT_*` (ako koristiš Apex mediju)
+- [ ] **Premium avatari** — vidi **§1.1 F** ispod i [`AVATAR-MEDIA-STACK.md`](./AVATAR-MEDIA-STACK.md)
+- [ ] `APEX_FLUX_*` + `APEX_LIVE_PORTRAIT_*` (fallback video u lancu)
 - [ ] `STEAM_WEB_API_KEY` (OmniGame)
 - [ ] `CRAFTOR_*` po `.env.example` ako koristiš live deploy
 - [ ] `CAPTCHA_*`, `DOMAIN_*`, `WEB3_*` ako su u tvom planu
 - [ ] `PAYPAL_*`, `WISE_*` ako uključuješ alternativna plaćanja
-- [ ] Support/video: `SUPPORT_*`, `ZOOM_*`, `SUPPORT_GOOGLE_MEET_URL` po [`VLASNIK-SAKUPLJANJE-KLJUCEVA.md`](./VLASNIK-SAKUPLJANJE-KLJUCEVA.md) §2b
+- [ ] Support/video: `SUPPORT_*`, `ZOOM_*`, `SUPPORT_GOOGLE_MEET_URL`, `SALES_GOOGLE_MEET_URL` po [`VLASNIK-SAKUPLJANJE-KLJUCEVA.md`](./VLASNIK-SAKUPLJANJE-KLJUCEVA.md) §2b
+
+#### F) Premium avatari — Support (5) + Sales (6), WFH pozadine, skalabilni stack
+
+Šablon tajni: `atina-platform/atina/config/avatar-premium.local.json` (kopija iz `.example`)  
+Setup skripta: `atina-platform/atina/scripts/apply-avatar-premium-env.ps1`  
+Dok: [`AVATAR-MEDIA-STACK.md`](./AVATAR-MEDIA-STACK.md)
+
+**Osnova (lokalno već može):**
+
+- [ ] `AVATAR_PUBLIC_BASE_URL` + `WEB_APP_URL` = `http://localhost:3010` (lokalno) / `https://tvoj-domen` (prod)
+- [ ] `SUPPORT_AVATAR_ENABLED=true`, `SALES_AVATAR_ENABLED=true`
+- [ ] `SALES_MEETINGS_ENABLED=true`
+- [ ] `ELEVENLABS_API_KEY` + `ELEVENLABS_DEFAULT_VOICE_ID`
+- [ ] `AVATAR_TTS_PROVIDER_CHAIN=elevenlabs,cartesia`
+- [ ] `AVATAR_VIDEO_PROVIDER_CHAIN=heygen,d-id,live_portrait`
+- [ ] `AVATAR_CLIENT_MEMORY_ENABLED=true` (avatar pamti klijente)
+- [ ] Migracija `023_avatar_agent_roster` — `.\scripts\apply-migration-023.ps1`
+- [ ] Portreti na webu: `http://localhost:3010/avatars/portraits/mila.svg` (11 SVG)
+
+**Ultra-realističan video (bar jedan — prioritet):**
+
+- [ ] **HeyGen** — `HEYGEN_API_KEY` ([heygen.com](https://heygen.com)) — najbolji talking photo
+- [ ] **D-ID** — `DID_API_KEY` ([d-id.com](https://d-id.com)) — brži start sa slikom URL-a
+- [ ] **Live Portrait** (fallback) — `APEX_LIVE_PORTRAIT_API_URL` + `APEX_LIVE_PORTRAIT_API_KEY`
+
+**Alternativni glas (opciono):**
+
+- [ ] **Cartesia** — `CARTESIA_API_KEY` + `CARTESIA_VOICE_ID` ([cartesia.ai](https://cartesia.ai))
+
+**Video pozivi (instant soba):**
+
+- [ ] `SUPPORT_GOOGLE_MEET_URL` — Google Calendar → novi događaj → Dodaj Meet
+- [ ] `SALES_GOOGLE_MEET_URL` — druga Meet soba za prodaju
+- [ ] **Zoom** (opciono) — `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`
+
+**AI mozak (OpenRouter ≠ avatar render):**
+
+- [ ] `AI_URL` + `AI_KEY` (OpenRouter za tekst)
+- [ ] `AVATAR_USE_AI_AGGREGATOR=false` dok nemaš custom AI gateway sa `/v1/avatars/*`
+- [ ] Kasnije: custom gateway + **Pinecone/Qdrant** na agregatoru za dugoročnu memoriju
+
+**Provera:**
+
+```powershell
+cd atina-platform\atina
+.\scripts\apply-avatar-premium-env.ps1
+# GET /video-meetings/avatar/media-stack — koji provajderi su aktivni
+```
+
+- [ ] Dashboard → Support / Sales avatar — lice + WFH pozadina + glas (video kad HeyGen/D-ID)
+
+#### G) Prodavnica resursa — admin korpa + auto-nabavka (ON/OFF)
+
+Admin panel → **Prodavnica resursa** (`/admin#resources`)
+
+- [ ] Migracija `024` — `.\scripts\apply-migration-024.ps1`
+- [ ] Migracija `025` — `.\scripts\apply-migration-025.ps1` (topup u budžetu)
+- [ ] Korpa: OpenRouter, ElevenLabs, HeyGen, D-ID, Comms, Scraper — bez logovanja na sajtove
+- [ ] Flow: Dodaj → Naruči → uplati IBAN sa referencom → **Potvrdio sam uplatu**
+- [ ] **Auto-nabavka OFF** po defaultu — uključi ON kad želiš da sistem sam kreira narudžbinu kad resurs padne
 
 #### E) Forge / Python vault (ako zajednički deploy)
 
@@ -236,7 +297,7 @@ Kad su **svi** `[x]` u DEO 1–3 i agent završi DEO 4:
 ## Jedna strana — štikliraj redom
 
 ```
-□ 1.1  atina .env — komplet (A+B+C+D+E)
+□ 1.1  atina .env — komplet (A+B+C+D+E+F avatari)
 □      check-atina-aggregators + check-stripe-env PASS
 □ 1.2  omnigroup-web .env.local
 □ 1.3  atina-system .env (TYPEORM_SYNC=false na prod)
@@ -264,5 +325,7 @@ Kad su **svi** `[x]` u DEO 1–3 i agent završi DEO 4:
 | [`SECRETS-MATRIX.md`](./SECRETS-MATRIX.md) | Prod env matrica |
 | [`PUT-NA-100-PLAN.md`](./PUT-NA-100-PLAN.md) | Agent faze posle tebe |
 | [`ADMIN-DOSTAVA-PRE-AGENT.md`](./ADMIN-DOSTAVA-PRE-AGENT.md) | Kraća verzija (samo pre-agent) |
+| [`AVATAR-MEDIA-STACK.md`](./AVATAR-MEDIA-STACK.md) | HeyGen, D-ID, Cartesia, lanac provajdera |
+| [`RESOURCE-PROCUREMENT.md`](./RESOURCE-PROCUREMENT.md) | Admin korpa + auto-nabavka ON/OFF |
 
 *Ovo je **jedina** kompletna admin lista za 100% celog projekta (A+B).*

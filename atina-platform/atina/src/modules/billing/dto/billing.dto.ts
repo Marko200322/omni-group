@@ -19,6 +19,12 @@ export const BillingInvoiceIdParamsDto = z
   })
   .strict();
 
+export const BillingPaymentIdParamsDto = z
+  .object({
+    paymentId: z.string().uuid(),
+  })
+  .strict();
+
 export const BillingLimitKeyParamsDto = z
   .object({
     key: z

@@ -78,10 +78,17 @@ $defaults = @{
   'AUTONOMY_GIT_REPO_PATH'             = $repoRoot.Replace('\', '/')
   'SALES_MEETINGS_ENABLED'             = 'true'
   'PAYMENTS_MODE'                      = 'manual'
+  'PHASE'                              = 'v2'
+  'ENABLE_SCRAPER'                     = 'true'
+  'ENABLE_CRM'                         = 'true'
+  'AUTONOMY_REAL_ECOSYSTEM_RUNS'       = 'true'
 }
 
 if ($ForceDevOutbound) {
   $defaults['OUTREACH_DEV_SEND_TO_FALLBACK'] = 'true'
+  if (-not $m.ContainsKey('OUTREACH_FALLBACK_EMAIL') -or [string]::IsNullOrWhiteSpace($m['OUTREACH_FALLBACK_EMAIL'])) {
+    $defaults['OUTREACH_FALLBACK_EMAIL'] = 'admin@atina.io'
+  }
 }
 
 foreach ($kv in $defaults.GetEnumerator()) {

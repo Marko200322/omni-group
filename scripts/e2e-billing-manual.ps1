@@ -21,6 +21,12 @@ $ErrorActionPreference = 'Stop'
 $web = $WebBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
+if (-not $PSBoundParameters.ContainsKey('Email') -or -not $PSBoundParameters.ContainsKey('Password')) {
+  $creds = Get-AdminCredentials -RepoRoot (Split-Path $scriptsDir -Parent)
+  if (-not $PSBoundParameters.ContainsKey('Email')) { $Email = $creds.Email }
+  if (-not $PSBoundParameters.ContainsKey('Password')) { $Password = $creds.Password }
+}
 
 & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

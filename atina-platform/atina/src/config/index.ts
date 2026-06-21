@@ -48,6 +48,14 @@ function resolvePaymentsMode(): PaymentsMode {
   return optional('NODE_ENV', 'development') === 'production' ? 'sandbox' : 'manual';
 }
 
+function parseCsvList(raw: string, fallback: string[]): string[] {
+  const items = raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return items.length ? items : fallback;
+}
+
 export function resolveForgeVaultPath(rawPath?: string): string {
   if (typeof rawPath === 'undefined') {
     return defaultForgeVaultPath;
@@ -162,6 +170,7 @@ export const config = {
   pipelines: {
     youtubeWorkerUrl: optional('YOUTUBE_PIPELINE_URL', ''),
     elevenLabsKey: optional('ELEVENLABS_API_KEY', ''),
+    elevenLabsDefaultVoiceId: optional('ELEVENLABS_DEFAULT_VOICE_ID', 'pNInz6obpgDQGcFmaJgB'),
     youtubeClientId: optional('YOUTUBE_CLIENT_ID', ''),
     youtubeClientSecret: optional('YOUTUBE_CLIENT_SECRET', ''),
     youtubeRefreshToken: optional('YOUTUBE_REFRESH_TOKEN', ''),
@@ -206,6 +215,15 @@ export const config = {
   wise: {
     apiKey: optional('WISE_API_KEY', ''),
     profileId: optional('WISE_PROFILE_ID', ''),
+  },
+  cursor: {
+    apiKey: optional('CURSOR_API_KEY', ''),
+    model: optional('CURSOR_MODEL', 'composer-2.5'),
+    runtime: optional('CURSOR_RUNTIME', 'local') as 'local' | 'cloud',
+    repoPath: optional('CURSOR_REPO_PATH', ''),
+    cloudRepo: optional('CURSOR_CLOUD_REPO_URL', ''),
+    evolutionEnabled: optionalBool('CURSOR_EVOLUTION_ENABLED', false),
+    agentEnabled: optionalBool('CURSOR_AGENT_ENABLED', false),
   },
   kriptoman: {
     enabled: optionalBool('KRIPTOMAN_ENABLED', false),
@@ -282,6 +300,18 @@ export const config = {
       supportRoomUrl: optional('SUPPORT_GOOGLE_MEET_URL', ''),
       salesRoomUrl: optional('SALES_GOOGLE_MEET_URL', ''),
     },
+    avatarMedia: {
+      /** Redosled TTS provajdera: elevenlabs,cartesia */
+      ttsChain: optional('AVATAR_TTS_PROVIDER_CHAIN', 'elevenlabs,cartesia'),
+      /** Redosled video provajdera: heygen,d-id,live_portrait */
+      videoChain: optional('AVATAR_VIDEO_PROVIDER_CHAIN', 'heygen,d-id,live_portrait'),
+      clientMemoryEnabled: optionalBool('AVATAR_CLIENT_MEMORY_ENABLED', true),
+      heygenApiKey: optional('HEYGEN_API_KEY', ''),
+      didApiKey: optional('DID_API_KEY', ''),
+      cartesiaApiKey: optional('CARTESIA_API_KEY', ''),
+      cartesiaVoiceId: optional('CARTESIA_VOICE_ID', ''),
+      cartesiaModelId: optional('CARTESIA_MODEL_ID', 'sonic-2'),
+    },
   },
   rateLimit: {
     windowMs: optionalNumber('RATE_LIMIT_WINDOW_MS', 900000),
@@ -338,6 +368,10 @@ export const config = {
         feeRate: optionalNumber('PRICING_FEE_PAYPAL_RATE', 0.034),
         fixedEur: optionalNumber('PRICING_FEE_PAYPAL_FIXED_EUR', 0.35),
       },
+      wise: {
+        feeRate: optionalNumber('PRICING_FEE_WISE_RATE', 0),
+        fixedEur: optionalNumber('PRICING_FEE_WISE_FIXED_EUR', 0),
+      },
     },
     tierMultipliers: {
       budget: optionalNumber('PRICING_TIER_BUDGET', 0.75),
@@ -346,6 +380,12 @@ export const config = {
       regulated: optionalNumber('PRICING_TIER_REGULATED', 1.65),
       nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.6),
     },
+  },
+  /** Split client payments: resources, tax reserve, fees, owner net, system reinvest. */
+  revenueAllocation: {
+    ownerTaxReserveRate: optionalNumber('OWNER_TAX_RESERVE_RATE', 0),
+    systemReinvestRate: optionalNumber('REVENUE_SYSTEM_REINVEST_RATE', 0.2),
+    planResourceReservePct: optionalNumber('REVENUE_PLAN_RESOURCE_RESERVE_PCT', 0.18),
   },
   autonomy: {
     enabled: optionalBool('AUTONOMY_ENABLED', false),
@@ -394,6 +434,30 @@ export const config = {
     fallbackNotifyEmail: optional('OUTREACH_FALLBACK_EMAIL', optional('ADMIN_EMAIL', '')),
     /** Dev: šalji draftove na fallback email bez domain warmup (ne za produkciju). */
     devSendToFallback: optionalBool('OUTREACH_DEV_SEND_TO_FALLBACK', false),
+  },
+  /** B2B lead baze (Apollo, Hunter, …) + email verify — fazno paljenje LEAD_DATABASE_ROLLOUT_PHASE F0–F5 */
+  leadDatabases: {
+    enabled: optionalBool('LEAD_DATABASE_ENABLED', false),
+    rolloutPhase: optional('LEAD_DATABASE_ROLLOUT_PHASE', 'F0'),
+    enrichOnHuntOverride: optionalBool('LEAD_ENRICH_ON_HUNT', false),
+    maxPerRun: optionalNumber('LEAD_ENRICH_MAX_PER_RUN', 10),
+    providerChain: parseCsvList(
+      optional('LEAD_DATABASE_PROVIDER_CHAIN', 'apollo,hunter,lusha,snov'),
+      ['apollo', 'hunter', 'lusha', 'snov']
+    ),
+    emailVerifyChain: parseCsvList(
+      optional('EMAIL_VERIFICATION_PROVIDER_CHAIN', 'neverbounce,zerobounce'),
+      ['neverbounce', 'zerobounce']
+    ),
+    apolloApiKey: optional('APOLLO_API_KEY', ''),
+    hunterApiKey: optional('HUNTER_API_KEY', ''),
+    lushaApiKey: optional('LUSHA_API_KEY', ''),
+    snovApiKey: optional('SNOV_API_KEY', ''),
+    snovUserId: optional('SNOV_USER_ID', ''),
+    zoominfoApiKey: optional('ZOOMINFO_API_KEY', ''),
+    zoominfoApiUrl: optional('ZOOMINFO_API_URL', ''),
+    neverbounceApiKey: optional('NEVERBOUNCE_API_KEY', ''),
+    zerobounceApiKey: optional('ZEROBOUNCE_API_KEY', ''),
   },
 };
 

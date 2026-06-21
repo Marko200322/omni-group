@@ -120,12 +120,12 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     setMessage(ok ? 'Push notifikacije uključene.' : 'Push nije dostupan — proveri VAPID ključeve.');
   };
 
-  const runAction = async (key: string, url: string, method = 'POST') => {
+  const runAction = async (key: string, url: string, init: RequestInit = { method: 'POST' }) => {
     setBusy(key);
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(url, { method });
+      const res = await fetch(url, { method: 'POST', ...init });
       const body = (await res.json()) as { ok?: boolean; error?: string; detail?: string; message?: string };
       if (!res.ok || body.ok === false) throw new Error(body.detail ?? body.error ?? 'action_failed');
       setMessage(body.message ?? 'Uspelo.');
@@ -290,6 +290,30 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'akcije' && (
           <div className="space-y-3">
+            <ActionButton
+              label="Bootstrap lovacki modul"
+              sub="Workspace-ovi: hunter, outreach, scoring"
+              busy={busy === 'hunting-bootstrap'}
+              onClick={() => void runAction('hunting-bootstrap', '/api/atina/hunting/bootstrap')}
+            />
+            <ActionButton
+              label="Pokreni lov (pipeline)"
+              sub="Nurture-loop za marketing nišu"
+              busy={busy === 'hunting-pipeline'}
+              onClick={() =>
+                void runAction('hunting-pipeline', '/api/atina/hunting/pipeline/run', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ verticalSlug: 'marketing', intensity: 60 }),
+                })
+              }
+            />
+            <ActionButton
+              label="Pošalji outbound queue"
+              sub="Draft emailovi iz reda čekanja"
+              busy={busy === 'outbound-send'}
+              onClick={() => void runAction('outbound-send', '/api/atina/autonomy-loop/outbound/process-send')}
+            />
             <ActionButton
               label="Autonomy tick"
               sub="Jedan ciklus istraživanja i deploy-a"

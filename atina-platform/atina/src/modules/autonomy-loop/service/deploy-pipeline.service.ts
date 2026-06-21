@@ -7,6 +7,7 @@ import { NotFoundError } from '../../../utils/errors';
 import type { DeployVerticalDtoType } from '../dto/autonomy-loop.dto';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
 import { LocalInfrastructureService } from './local-infrastructure.service';
+import { syncGeneratedVerticalsIndexFromDb } from './platform-evolution-catalog-sync.service';
 
 export class DeployPipelineService {
   private readonly repo = new AutonomyLoopRepository();
@@ -77,12 +78,23 @@ export class DeployPipelineService {
       deploy_result: deployResult,
     });
 
+    let catalogSync: { count: number; written: boolean } | null = null;
+    if (status !== 'failed') {
+      try {
+        const sync = await syncGeneratedVerticalsIndexFromDb();
+        catalogSync = { count: sync.count, written: sync.written };
+      } catch {
+        errors.push('catalog_sync_failed');
+      }
+    }
+
     return {
       jobId,
       verticalSlug: slug,
       status,
       gitCommitSha,
       deployResult,
+      catalogSync,
       errors,
     };
   }

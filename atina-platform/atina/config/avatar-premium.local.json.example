@@ -1,0 +1,13 @@
+{
+  "supportGoogleMeetUrl": "https://meet.google.com/xxx-support-yyyy",
+  "salesGoogleMeetUrl": "https://meet.google.com/xxx-sales-yyyy",
+  "zoomAccountId": "",
+  "zoomClientId": "",
+  "zoomClientSecret": "",
+  "heygenApiKey": "",
+  "didApiKey": "",
+  "cartesiaApiKey": "",
+  "cartesiaVoiceId": "",
+  "apexLivePortraitApiUrl": "https://your-live-portrait-gateway.example",
+  "apexLivePortraitApiKey": ""
+}

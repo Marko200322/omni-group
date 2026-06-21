@@ -14,6 +14,7 @@ import { ApiGatewayService } from '../../api-gateway/service/api-gateway.service
 import { assertValidQueueScrapeUrl } from '../../scraper/queue-scrape-url';
 import { config } from '../../../config';
 import { getEcosystemRunExecutor } from '../../shared/ecosystem-run.executor';
+import { ensureEcosystemWorkspace, mergeWorkflowHuntingInput } from '../../shared/ecosystem-workspace.util';
 
 export class WorkflowChainService {
   private readonly repo = new WorkflowChainRepository();
@@ -1255,7 +1256,7 @@ export class WorkflowChainService {
       const moduleSlug = String(step.moduleSlug ?? '');
       const action = String(step.action ?? 'noop');
       const stepName = String(step.step ?? `${moduleSlug}:${action}`);
-      const cfg = (step.config ?? {}) as Record<string, unknown>;
+      const cfg = mergeWorkflowHuntingInput((step.config ?? {}) as Record<string, unknown>, input);
       let status: 'ok' | 'failed' = 'ok';
       const retryAttempts = this.resolveRetryAttempts(cfg);
       const retryDelayMs = this.resolveRetryDelayMs(cfg);
@@ -1313,11 +1314,14 @@ export class WorkflowChainService {
              LIMIT 1`,
             [userId, moduleSlug]
           );
-          if (!ecoRows[0]) {
+          let ecosystemId = ecoRows[0]?.id;
+          if (!ecosystemId) {
+            ecosystemId = await ensureEcosystemWorkspace(userId, moduleSlug);
+          }
+          if (!ecosystemId) {
             output = { skipped: true, reason: `No ecosystem system found for ${moduleSlug}` };
           } else {
             const estRevenue = Number(cfg.revenueEstimate ?? 50);
-            const ecosystemId = ecoRows[0].id;
             const executor = getEcosystemRunExecutor();
             if (executor.isRealExecutionEnabled() && executor.supports(moduleSlug)) {
               try {

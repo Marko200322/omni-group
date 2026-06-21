@@ -1,14 +1,18 @@
 import { Request, Response } from 'express';
 import { BillingService } from '../service/billing.service';
+import { RevenueAllocationService } from '../service/revenue-allocation.service';
 import { sendSuccess, paginate } from '../../../utils/response';
+import { NotFoundError } from '../../../utils/errors';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
 import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engine';
 
 export class BillingController {
   private service: BillingService;
+  private revenueAllocation: RevenueAllocationService;
 
   constructor() {
     this.service = new BillingService();
+    this.revenueAllocation = new RevenueAllocationService();
   }
 
   getPlans = async (req: Request, res: Response): Promise<void> => {
@@ -82,5 +86,16 @@ export class BillingController {
   checkLimit = async (req: Request, res: Response): Promise<void> => {
     const ok = await this.service.checkPlanLimit(req.user!.userId, req.params.key);
     sendSuccess(res, { allowed: ok });
+  };
+
+  getRevenueAllocationSummary = async (_req: Request, res: Response): Promise<void> => {
+    const summary = await this.revenueAllocation.getSummary();
+    sendSuccess(res, summary);
+  };
+
+  getRevenueAllocationByPayment = async (req: Request, res: Response): Promise<void> => {
+    const row = await this.revenueAllocation.getByPaymentId(req.params.paymentId);
+    if (!row) throw new NotFoundError('Revenue allocation');
+    sendSuccess(res, row);
   };
 }

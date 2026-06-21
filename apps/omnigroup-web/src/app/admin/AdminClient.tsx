@@ -27,6 +27,8 @@ import { SparkChart } from '@/components/ui/SparkChart';
 import { FormatLocalDateTime } from '@/components/ui/FormatLocalDateTime';
 import { formatEur, getCategoryPricingMatrix } from '@/lib/category-pricing';
 import { AutonomyLoopPanel } from '@/components/platform/AutonomyLoopPanel';
+import { ResourceShopPanel } from '@/components/platform/ResourceShopPanel';
+import { HuntingStackPanel } from '@/components/platform/HuntingStackPanel';
 import { ProductFactoryPanel } from '@/components/platform/ProductFactoryPanel';
 type Props = {
   snapshot: AtinaPublicSnapshot;
@@ -269,6 +271,34 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
             isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
             disabled={isDemo || !sessionUser}
           />
+        </GlassCard>
+      </section>
+
+      <section id="hunting" className="mt-6">
+        <GlassCard delay={0.385}>
+          <h2 className="font-display text-lg font-semibold text-white">Lovacki modul</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Client Hunter → Lead Scoring → Outreach → CRM. Jedan klik za bootstrap i nurture-loop pipeline.
+          </p>
+          <div className="mt-4">
+            <HuntingStackPanel
+              isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+              disabled={isDemo || !sessionUser}
+            />
+          </div>
+        </GlassCard>
+      </section>
+
+      <section id="resources" className="mt-6">
+        <GlassCard delay={0.395}>
+          <h2 className="font-display text-lg font-semibold text-white">Prodavnica resursa</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Kupi API kredite kroz sistem — uplata na IBAN, bez logovanja na HeyGen/OpenRouter sajtove.
+            Auto-nabavka kreira narudžbinu kad resursi padnu (ON/OFF).
+          </p>
+          <div className="mt-4">
+            <ResourceShopPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
+          </div>
         </GlassCard>
       </section>
 
