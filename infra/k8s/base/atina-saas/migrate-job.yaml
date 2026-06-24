@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: atina-saas-migrate
+  labels:
+    app: atina-saas-migrate
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: atina-saas-migrate
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: ghcr.io/omni-group/atina-saas:latest
+          imagePullPolicy: IfNotPresent
+          command: ["npm", "run", "migrate"]
+          envFrom:
+            - secretRef:
+                name: atina-saas-env
+                optional: false
+          env:
+            - name: NODE_ENV
+              value: production

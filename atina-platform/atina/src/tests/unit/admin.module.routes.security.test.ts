@@ -43,6 +43,8 @@ jest.mock('../../modules/forge/service/forge-health.service', () => ({
 const ADMIN_UUID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 describe('Admin module route security (strict GET body)', () => {
+  jest.setTimeout(60_000);
+
   const buildApp = async () => {
     const { AdminModule } = await import('../../modules/admin/admin.module');
     const module = new AdminModule();

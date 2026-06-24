@@ -143,6 +143,12 @@ if (Test-Path $atinaEnv) {
 }
 
 Write-Host ''
+Write-Host 'URLs:' -ForegroundColor Cyan
+Write-Host '  Platform:  http://localhost:3010' -ForegroundColor Green
+Write-Host '  Dashboard: http://localhost:3010/dashboard' -ForegroundColor Green
+Write-Host '  API:       http://localhost:3000/health (backend only)' -ForegroundColor DarkGray
+Write-Host '  Fix stack: .\scripts\ensure-dev-stack.ps1' -ForegroundColor DarkGray
+Write-Host ''
 Write-Host 'Sledece (vlasnik):' -ForegroundColor Cyan
 if (-not $origin) {
   Write-Host '  1. git-push-first-time.ps1 -RepoUrl https://github.com/USER/REPO.git' -ForegroundColor DarkGray

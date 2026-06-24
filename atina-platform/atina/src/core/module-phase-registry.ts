@@ -56,9 +56,13 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   payments: 'v2',
   'video-meetings': 'v2',
   'alert-system': 'v1',
-  scaling: 'v2',
+  scaling: 'v5',
   'ai-rag': 'v3',
   'autonomy-loop': 'v2',
   'public-site': 'v2',
   'product-factory': 'v2',
+  /** F6 v6 — 125k edge swarm koordinator (task dominus_swarm_batch) */
+  'edge-swarm': 'v6',
+  /** F6 v6 — stranični PDF aligned legal sign-off */
+  'pdf-legal-alignment': 'v6',
 };

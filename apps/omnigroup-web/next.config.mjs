@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** OneDrive kvari `.next` symlink-e — keš u node_modules (obično lokalno). */
+/** OneDrive corrupts `.next` symlinks — keep dist inside app but under node_modules. */
 const distDir = 'node_modules/.cache/omnigroup-next';
 
 function loadOmnigroupEnvFromAggregator() {
@@ -35,6 +35,13 @@ function loadOmnigroupEnvFromAggregator() {
 const nextConfig = {
   distDir,
   env: loadOmnigroupEnvFromAggregator(),
+  webpack(config, { dev }) {
+    // Filesystem webpack cache on OneDrive causes stale/missing chunk errors.
+    if (dev) {
+      config.cache = { type: 'memory' };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

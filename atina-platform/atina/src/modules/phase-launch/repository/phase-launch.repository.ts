@@ -16,10 +16,30 @@ export class PhaseLaunchRepository {
     );
   }
 
+  async getFullConfig(): Promise<Record<string, unknown>> {
+    const { rows } = await this.getFlag();
+    return (rows[0]?.config ?? {}) as Record<string, unknown>;
+  }
+
+  mergeConfig(partial: Record<string, unknown>) {
+    return query(
+      `UPDATE modules
+       SET config = COALESCE(config, '{}'::jsonb) || $1::jsonb,
+           updated_at = NOW()
+       WHERE slug = 'phase-launch-control'`,
+      [JSON.stringify(partial)]
+    );
+  }
+
   setFlag(phase: string, notes: string) {
     return query(
       `UPDATE modules
-       SET config = jsonb_build_object('current_phase', $1::text, 'notes', $2::text, 'updated_at', NOW()::text),
+       SET config = COALESCE(config, '{}'::jsonb)
+         || jsonb_build_object(
+           'current_phase', $1::text,
+           'notes', $2::text,
+           'updated_at', to_jsonb(NOW()::text)
+         ),
            updated_at = NOW()
        WHERE slug = 'phase-launch-control'`,
       [phase, notes]

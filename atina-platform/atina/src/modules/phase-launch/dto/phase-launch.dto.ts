@@ -8,3 +8,12 @@ export const SetPhaseDto = z
   .strict();
 
 export type SetPhaseDtoType = z.infer<typeof SetPhaseDto>;
+
+export const PdfLegalSignoffDto = z
+  .object({
+    trackerVersion: z.string().min(3).max(200),
+    notes: z.string().max(1000).optional(),
+  })
+  .strict();
+
+export type PdfLegalSignoffDtoType = z.infer<typeof PdfLegalSignoffDto>;

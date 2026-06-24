@@ -2,12 +2,19 @@ import * as db from '../../database/connection';
 import { executeTaskByType } from '../../modules/tasks/execute-task-by-type';
 
 jest.mock('../../database/connection');
+jest.mock('../../modules/phase-launch/middleware/phase-activation.middleware', () => ({
+  getCurrentPhase: jest.fn().mockResolvedValue('v2'),
+}));
 
 const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
+const { getCurrentPhase } = jest.requireMock(
+  '../../modules/phase-launch/middleware/phase-activation.middleware'
+) as { getCurrentPhase: jest.Mock };
 
 describe('executeTaskByType', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getCurrentPhase.mockResolvedValue('v2');
     mockQuery.mockResolvedValue({ rows: [], rowCount: 0 } as never);
   });
 

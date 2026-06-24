@@ -1,16 +1,20 @@
 import { PhaseLaunchRepository } from '../repository/phase-launch.repository';
 import { SetPhaseDtoType } from '../dto/phase-launch.dto';
 import { getInfrastructureClient } from '../../../integrations';
+import logger from '../../../utils/logger';
 import {
   getModulePhaseGatingStatus,
   getPhaseOrder,
   resetPhaseActivationCache,
   type Phase,
 } from '../middleware/phase-activation.middleware';
+import { PhaseBootService } from './phase-boot.service';
+import { parsePhase } from '../../../core/phase-env';
 
 export class PhaseLaunchService {
   private readonly repo = new PhaseLaunchRepository();
   private readonly infrastructure = getInfrastructureClient();
+  private readonly boot = new PhaseBootService();
 
   async getCurrentPhase() {
     await this.repo.ensureFlag();
@@ -47,6 +51,18 @@ export class PhaseLaunchService {
       })
     );
 
+    const targetPhase = parsePhase(after.currentPhase) ?? 'v1';
+    let boot = null as Awaited<ReturnType<PhaseBootService['runBootSequence']>> | null;
+    try {
+      boot = await this.boot.runBootSequence(targetPhase);
+    } catch (error) {
+      boot = null;
+      logger.warn('Phase boot after setCurrentPhase failed', {
+        targetPhase,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
     let deploy: Record<string, unknown> | null = null;
     if (this.infrastructure.isConfigured()) {
       deploy = await this.infrastructure.triggerDeploy({
@@ -60,6 +76,7 @@ export class PhaseLaunchService {
       ...after,
       changed: before.currentPhase !== after.currentPhase,
       previousPhase: before.currentPhase,
+      ...(boot ? { boot } : {}),
       ...(deploy ? { deploy } : {}),
     };
   }

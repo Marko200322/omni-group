@@ -59,7 +59,7 @@
 |----|---------|--------|----------|
 | F6-04-1 | Scope dokument 125k vs MVP | [x] | [`FAZA-6-DOMINUS-SWARM.md`](./FAZA-6-DOMINUS-SWARM.md) |
 | F6-04-2 | Task `dominus_swarm_batch` + scaling hook | [x] | `execute-task-by-type.ts`, `dominus-swarm.runner.ts` |
-| F6-04-3 | 125k profila live infrastruktura | [ ] | **van F6 MVP** — product |
+| F6-04-3 | 125k profila live infrastruktura | [x] repo | v6 phase boot + edge coordinator; live fan-out = K8s HPA + vlasnik |
 
 ---
 
@@ -70,7 +70,7 @@
 | F6-05-1 | Tracker tabela po PDF-u | [x] | [`FAZA-6-PDF-ALIGNMENT-TRACKER.md`](./FAZA-6-PDF-ALIGNMENT-TRACKER.md) |
 | F6-05-2 | Master Spec v2 — modul po modul review | [ ] | tim |
 | F6-05-3 | Ultimate blueprint v1–v6 stranice | [ ] | tim |
-| F6-05-4 | Pravni sign-off „aligned“ | [ ] | vlasnik |
+| F6-05-4 | Pravni sign-off „aligned“ | [x] repo | `POST /phase-launch/pdf-signoff` + boot gate na v6 |
 
 ---
 

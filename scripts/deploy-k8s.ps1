@@ -32,4 +32,9 @@ if ($DryRun) {
 
 kubectl apply -k $kustomizePath
 Write-Host "Done. Check: kubectl get pods -n omni-group-$Overlay"
-Write-Host "Smoke: curl https://<your-ingress-host>/health"
+Write-Host ""
+Write-Host "Post-deploy:"
+Write-Host "  1. kubectl -n omni-group-$Overlay get pods"
+Write-Host "  2. Run migrate job: kubectl -n omni-group-$Overlay create job atina-migrate-manual --from=job/${Overlay}-atina-saas-migrate"
+Write-Host "  3. Smoke: .\scripts\staging-smoke-remote.ps1 (set STAGING_ATINA_NODE_BASE)"
+Write-Host "  4. Avatar check: .\scripts\check-avatar-premium.ps1 -AtinaBase https://<host> -Strict"

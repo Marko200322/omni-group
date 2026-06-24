@@ -230,6 +230,25 @@ export class CoreEngine {
     });
     this.app.use(limiter);
 
+    // Root — browsers hitting :3000 directly get pointers, not a 404.
+    this.app.get(
+      '/',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      (_req: Request, res: Response) => {
+        res.json({
+          success: true,
+          name: config.app.name,
+          message: 'ATINA API backend. Open the web app in your browser or call API routes below.',
+          links: {
+            health: '/health',
+            api: '/api/v1',
+            web: process.env.WEB_APP_URL ?? 'http://localhost:3010',
+          },
+        });
+      },
+    );
+
     // Health check
     this.app.get(
       '/health',

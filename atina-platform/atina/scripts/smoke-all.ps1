@@ -17,6 +17,13 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = (Resolve-Path (Join-Path $here '..\..\..')).Path
+. (Join-Path $repoRoot 'scripts\resolve-admin-credentials.ps1')
+. (Join-Path $repoRoot 'scripts\rate-limit-retry.ps1')
+$creds = Get-AdminCredentials -RepoRoot $repoRoot
+if ($Email -eq 'admin@atina.io') { $Email = $creds.Email }
+if ($Password -eq 'Admin@123456') { $Password = $creds.Password }
+
 $base = $BaseUrl.Trim().TrimEnd('/')
 $t30 = @{}
 if ($PSVersionTable.PSVersion.Major -ge 6) { $t30.TimeoutSec = 30 }
@@ -26,7 +33,10 @@ Write-Host '==> smoke: health'
 
 Write-Host '==> smoke: login once'
 $loginBody = @{ email = $Email; password = $Password } | ConvertTo-Json -Compress
-$login = Invoke-RestMethod @t30 -Method POST -Uri "$base/api/v1/auth/login" -ContentType 'application/json' -Body $loginBody
+$login = $null
+Invoke-WithRateLimitRetry -Label 'smoke-all login' -Action {
+  $script:login = Invoke-RestMethod @t30 -Method POST -Uri "$base/api/v1/auth/login" -ContentType 'application/json' -Body $loginBody
+} | Out-Null
 $token = $login.data.accessToken
 if (-not $token) {
   throw 'smoke:all: login returned no access token'

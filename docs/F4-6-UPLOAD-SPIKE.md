@@ -1,7 +1,7 @@
 # F4-6 — Upload spike (dizajn + dev stub)
 
 **Datum:** 2026-06-03  
-**Status:** spike implementiran u repou (dev stub); produkcija zahteva bucket/env van gita.
+**Status:** implementirano u repou (dev stub + local + auth); produkcija zahteva `UPLOAD_STORAGE=local` + `UPLOAD_DIR` na serveru.
 
 **Povezano:** [`FAZA-4-F4-6-NEXT.md`](./FAZA-4-F4-6-NEXT.md) · [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md)
 

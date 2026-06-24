@@ -10,7 +10,7 @@ import {
   renderPaidInvoiceEmail,
   type InvoiceLineItem,
 } from '../templates/invoice-email.template';
-import { generateInvoicePdfBuffer } from './invoice-pdf.service';
+import { generateInvoicePdfBuffer, generateProformaPdfBuffer } from './invoice-pdf.service';
 
 export { formatBillingCycleSr, formatDateSr, type InvoiceLineItem };
 
@@ -98,7 +98,27 @@ export class PaymentNotificationsService {
       issueDate,
     });
 
-    await this.notifications.sendEmail(input.toEmail, subject, html, text);
+    const pdf = await generateProformaPdfBuffer({
+      proformaNumber,
+      brandName: invoiceBrand().name,
+      toName: input.toName,
+      toEmail: input.toEmail,
+      planName: input.planName,
+      billingCycle: input.billingCycle,
+      amount: input.amount,
+      currency: input.currency,
+      reference: input.reference,
+      instructions: input.instructions,
+      issueDate,
+    });
+
+    await this.notifications.sendEmail(input.toEmail, subject, html, text, [
+      {
+        filename: `${proformaNumber}.pdf`,
+        content: pdf,
+        contentType: 'application/pdf',
+      },
+    ]);
   }
 
   async notifyAdminPaymentPending(input: PaymentPendingAdminInput): Promise<void> {

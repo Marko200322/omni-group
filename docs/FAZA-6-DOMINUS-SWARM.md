@@ -10,9 +10,15 @@
 |------|------|----------------|
 | **MVP** | Batch koordinacija kroz `scaling` + Bull task `dominus_swarm_batch` | **Implementirano** (F6) |
 | **Scale** | 10³–10⁴ profila — više worker čvorova, Redis queue | Zahteva K8s HPA + vlasnik infra |
-| **Vision** | 125k profila, edge swarm | **Van repoa** — dedicirani klaster, storage, compliance |
+| **Vision** | 125k profila, edge swarm | **v6 phase boot** — koordinator u kodu; live edge = K8s + vlasnik infra |
 
 ---
+
+## v6 phase boot (deploy gate)
+
+- **`PHASE=v6`** + PDF legal sign-off → `PhaseLaunchModule` pali edge swarm (`edgeSwarmMaxProfiles: 125000`).
+- Task cap: `dominus_swarm_batch` do **125k** samo na fazi **v6+** (pre v6 max 10k).
+- Ritual: [`scripts/phase-boot-deploy.ps1`](../../scripts/phase-boot-deploy.ps1) · manifest: `src/core/phase-boot-manifest.ts`
 
 ## MVP u kodu (F6)
 

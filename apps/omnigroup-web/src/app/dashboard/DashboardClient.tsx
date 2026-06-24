@@ -19,6 +19,7 @@ import type { AtinaDashboardLive } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
 import { isAdminRole } from '@/lib/auth-roles';
 import { buildClientMetrics } from '@/lib/platform-metrics';
+import { describeAtinaError } from '@/lib/atina-errors';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -26,6 +27,7 @@ import { DeliverableQuotePanel } from '@/components/platform/DeliverableQuotePan
 import { ClientOrdersPanel } from '@/components/platform/ClientOrdersPanel';
 import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
 import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
+import { FileUploadPanel } from '@/components/platform/FileUploadPanel';
 import { StatusPill } from '@/components/ui/StatusPill';
 
 type Props = {
@@ -97,6 +99,24 @@ export default function DashboardClient({
         </div>
       )}
 
+      {!isDemo && (live?.errors?.length || unreadError) ? (
+        <div className="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <p className="font-medium">Live data is partially unavailable</p>
+          {live?.errors?.length ? (
+            <ul className="mt-2 list-inside list-disc text-rose-300/90">
+              {live.errors.map((e, i) => (
+                <li key={i}>{describeAtinaError(e)}</li>
+              ))}
+            </ul>
+          ) : null}
+          {unreadError ? <p className="mt-2 text-rose-300/90">{unreadError}</p> : null}
+          <p className="mt-2 text-xs text-rose-300/80">
+            Use the web app at <strong>http://localhost:3010</strong> and ensure the API is running on port{' '}
+            <strong>3000</strong> (<code className="text-rose-200">.\scripts\ensure-dev-stack.ps1</code>).
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active projects"
@@ -139,6 +159,18 @@ export default function DashboardClient({
           </p>
           <div className="mt-4">
             <ClientOrdersPanel disabled={isDemo || !sessionUser} />
+          </div>
+        </GlassCard>
+      </section>
+
+      <section id="documents" className="mt-6">
+        <GlassCard delay={0.2}>
+          <h2 className="font-display text-lg font-semibold text-white">Documents</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Upload briefs, contracts, or reference files for your project team.
+          </p>
+          <div className="mt-4">
+            <FileUploadPanel disabled={isDemo || !sessionUser} />
           </div>
         </GlassCard>
       </section>

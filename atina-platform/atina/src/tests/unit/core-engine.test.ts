@@ -119,6 +119,17 @@ describe('CoreEngine', () => {
       expect(Array.isArray(res.body.modules)).toBe(true);
     });
 
+    it('getApp exposes root pointer JSON for browsers', async () => {
+      const res = await request(engine.getApp()).get('/');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.links).toMatchObject({
+        health: '/health',
+        api: '/api/v1',
+      });
+      expect(res.body.message).toContain('ATINA API backend');
+    });
+
     it('GET /health returns 400 when JSON body is not strictly empty', async () => {
       const res = await request(engine.getApp()).get('/health').send({ x: 1 });
       expect(res.status).toBe(400);

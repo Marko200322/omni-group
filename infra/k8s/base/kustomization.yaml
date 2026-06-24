@@ -11,6 +11,7 @@ resources:
   - redis/service.yaml
   - atina-saas/deployment.yaml
   - atina-saas/service.yaml
+  - atina-saas/migrate-job.yaml
   - nest-api/deployment.yaml
   - nest-api/service.yaml
   - omnigroup-web/deployment.yaml

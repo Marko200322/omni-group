@@ -1,5 +1,8 @@
 import { config } from '../../config';
-import { PaymentNotificationsService } from '../../modules/payments/service/payment-notifications.service';
+import {
+  buildProformaNumber,
+  PaymentNotificationsService,
+} from '../../modules/payments/service/payment-notifications.service';
 
 const sendEmail = jest.fn().mockResolvedValue(undefined);
 const createNotification = jest.fn().mockResolvedValue({ id: 'n1' });
@@ -19,6 +22,8 @@ describe('PaymentNotificationsService', () => {
     service = new PaymentNotificationsService();
     (config as { paymentNotifyEmail: string }).paymentNotifyEmail = '';
     (config as { admin: { email: string } }).admin.email = 'owner@test.com';
+    (config as { app: { name: string; url: string } }).app.name = 'Omni Group';
+    (config as { app: { name: string; url: string } }).app.url = 'https://omnigroup.io';
   });
 
   it('sendManualCheckoutInstructions emails client with IBAN details', async () => {
@@ -27,6 +32,7 @@ describe('PaymentNotificationsService', () => {
       toName: 'Marko',
       planName: 'Pro',
       planSlug: 'pro',
+      planDescription: 'Premium tier',
       billingCycle: 'monthly',
       amount: 49.99,
       currency: 'EUR',
@@ -44,7 +50,10 @@ describe('PaymentNotificationsService', () => {
       'client@test.com',
       expect.stringContaining('Proforma invoice'),
       expect.stringContaining('RS123'),
-      expect.stringContaining('ATINA-REF-1')
+      expect.stringContaining('ATINA-REF-1'),
+      expect.arrayContaining([
+        expect.objectContaining({ filename: expect.stringMatching(/\.pdf$/i), content: expect.any(Buffer) }),
+      ]),
     );
   });
 
@@ -95,6 +104,111 @@ describe('PaymentNotificationsService', () => {
       expect.arrayContaining([
         expect.objectContaining({ filename: expect.stringMatching(/\.pdf$/i), content: expect.any(Buffer) }),
       ]),
+    );
+  });
+
+  it('buildProformaNumber strips ATINA prefix and uses YYYYMM suffix', () => {
+    expect(buildProformaNumber('ATINA-REF-12345678', new Date('2026-06-15T00:00:00.000Z'))).toBe(
+      'PRO-202606-12345678',
+    );
+    expect(buildProformaNumber('XY', new Date('2026-01-02T00:00:00.000Z'))).toBe('PRO-202601-XY');
+    expect(buildProformaNumber('ATINA-', new Date('2026-03-01T00:00:00.000Z'))).toBe('PRO-202603-ATINA-');
+    expect(buildProformaNumber('ATINA-LIVE')).toMatch(/^PRO-\d{6}-/);
+  });
+
+  it('buildPurchaseConfirmedMessage formats purchase summary', () => {
+    const message = service.buildPurchaseConfirmedMessage({
+      planName: 'Pro',
+      billingCycle: 'monthly',
+      total: 49.99,
+      currency: 'EUR',
+      invoiceNumber: 'INV-202606-0001',
+      periodEnd: '2026-07-01T00:00:00.000Z',
+    });
+
+    expect(message).toContain('Pro');
+    expect(message).toContain('INV-202606-0001');
+    expect(message).toContain('49.99');
+  });
+
+  it('createInAppPaymentNotification persists in-app alert', async () => {
+    await service.createInAppPaymentNotification(
+      'user-1',
+      'payment_confirmed',
+      'Payment confirmed',
+      'Your plan is active.',
+      { paymentId: 'pay-1' },
+    );
+
+    expect(createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        type: 'payment_confirmed',
+        channel: 'in_app',
+        actionUrl: '/dashboard#billing',
+        metadata: { paymentId: 'pay-1' },
+      }),
+    );
+  });
+
+  it('createInAppPaymentNotification swallows notification errors', async () => {
+    createNotification.mockRejectedValueOnce(new Error('db down'));
+
+    await expect(
+      service.createInAppPaymentNotification('user-1', 'payment_pending', 'Pending', 'Awaiting transfer'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('createInAppPaymentNotification logs non-Error failures', async () => {
+    createNotification.mockRejectedValueOnce('offline');
+
+    await expect(
+      service.createInAppPaymentNotification('user-1', 'payment_pending', 'Pending', 'Awaiting transfer'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('notifyAdminPaymentPending uses admin email when payment notify is blank', async () => {
+    (config as { app: { name: string; url: string } }).app.name = '';
+    (config as { app: { name: string; url: string } }).app.url = '';
+
+    await service.notifyAdminPaymentPending({
+      userEmail: 'client@test.com',
+      userName: 'Marko',
+      planName: 'Pro',
+      billingCycle: 'monthly',
+      amount: 49.99,
+      currency: 'EUR',
+      reference: 'ATINA-REF-1',
+      paymentId: 'pay-1',
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'owner@test.com',
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+    );
+  });
+
+  it('notifyAdminPaymentPending prefers paymentNotifyEmail when configured', async () => {
+    (config as { paymentNotifyEmail: string }).paymentNotifyEmail = 'billing@test.com';
+
+    await service.notifyAdminPaymentPending({
+      userEmail: 'client@test.com',
+      userName: 'Marko',
+      planName: 'Pro',
+      billingCycle: 'monthly',
+      amount: 49.99,
+      currency: 'EUR',
+      reference: 'ATINA-REF-1',
+      paymentId: 'pay-2',
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'billing@test.com',
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
     );
   });
 });
