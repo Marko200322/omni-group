@@ -14,6 +14,8 @@ import {
 } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
 import { RevenueAllocationService } from '../../billing/service/revenue-allocation.service';
+import { DeliverableFulfillmentService } from '../../billing/service/deliverable-fulfillment.service';
+import { getSlackNotifier } from '../../../utils/slack-notifier.service';
 import logger from '../../../utils/logger';
 
 let stripeClient: Stripe | null = null;
@@ -104,6 +106,7 @@ function buildTransferInstructions(
 const billingService = new BillingService();
 const paymentNotifications = new PaymentNotificationsService();
 const revenueAllocation = new RevenueAllocationService();
+const deliverableFulfillment = new DeliverableFulfillmentService();
 
 function parsePaymentMetadata(raw: Record<string, unknown> | string): Record<string, unknown> {
   if (typeof raw === 'string') {
@@ -146,6 +149,19 @@ function dispatchRevenueAllocation(input: {
     }).then(() => undefined),
     'revenue_allocation',
   );
+}
+
+function dispatchAutoFulfillment(input: {
+  paymentId: string;
+  userId: string;
+  purchaseType: 'deliverable' | 'platform_plan';
+  deliverableId?: string | null;
+  planSlug?: string | null;
+  industryCategory?: string | null;
+  clientName?: string | null;
+  clientEmail?: string | null;
+}): void {
+  deliverableFulfillment.dispatchAfterPaymentConfirm(input);
 }
 
 /** N3-E1: Stripe may send `subscription` as an id string or an expanded object; DB queries need the id. */
@@ -223,6 +239,45 @@ export class PaymentsService {
     return { sessionId: session.id, url: session.url };
   }
 
+  async createShopCheckoutSession(input: {
+    orderId: string;
+    siteSlug: string;
+    siteTitle: string;
+    ownerUserId: string;
+    buyerEmail: string;
+    buyerName: string;
+    items: Array<{ name: string; priceEur: number; quantity: number }>;
+    totalEur: number;
+  }): Promise<{ sessionId: string; url: string | null }> {
+    const webBase = config.app.webUrl.replace(/\/$/, '');
+    const session = await requireStripe().checkout.sessions.create({
+      customer_email: input.buyerEmail,
+      payment_method_types: ['card'],
+      line_items: input.items.map((item) => ({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: item.name,
+            description: `${input.siteTitle} — shop order`,
+          },
+          unit_amount: Math.round(item.priceEur * 100),
+        },
+        quantity: Math.max(1, item.quantity),
+      })),
+      mode: 'payment',
+      success_url: `${webBase}/sites/${encodeURIComponent(input.siteSlug)}?order=success`,
+      cancel_url: `${webBase}/sites/${encodeURIComponent(input.siteSlug)}?order=cancel`,
+      metadata: {
+        purchaseType: 'shop_order',
+        orderId: input.orderId,
+        siteSlug: input.siteSlug,
+        ownerUserId: input.ownerUserId,
+        buyerName: input.buyerName,
+      },
+    });
+    return { sessionId: session.id, url: session.url };
+  }
+
   async handleStripeWebhook(payload: Buffer, signature: string): Promise<void> {
     let event: Stripe.Event;
 
@@ -256,6 +311,11 @@ export class PaymentsService {
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    if (session.metadata?.purchaseType === 'shop_order') {
+      await this.handleShopOrderCheckoutCompleted(session);
+      return;
+    }
+
     const { userId, planSlug, billingCycle } = session.metadata || {};
     if (!userId || !planSlug) return;
 
@@ -279,6 +339,18 @@ export class PaymentsService {
     });
 
     logger.info('Stripe checkout completed', { userId, planSlug });
+  }
+
+  private async handleShopOrderCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    const orderId = session.metadata?.orderId;
+    if (!orderId) return;
+    const { PublicSiteRepository } = await import('../../public-site/repository/public-site.repository');
+    const repo = new PublicSiteRepository();
+    await repo.confirmShopOrder(orderId);
+    await getSlackNotifier().notify({
+      text: `Shop order paid: ${orderId.slice(0, 8)} (${session.metadata?.siteSlug ?? 'site'}) — €${((session.amount_total ?? 0) / 100).toFixed(2)}`,
+    });
+    logger.info('Shop order confirmed via Stripe', { orderId, sessionId: session.id });
   }
 
   private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
@@ -711,6 +783,16 @@ export class PaymentsService {
         provider,
         metadata,
       });
+
+      dispatchAutoFulfillment({
+        paymentId,
+        userId: rows[0].user_id,
+        purchaseType: 'deliverable',
+        deliverableId,
+        industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+        clientName: client?.name ?? null,
+        clientEmail: client?.email ?? null,
+      });
       return;
     }
 
@@ -831,6 +913,16 @@ export class PaymentsService {
       ),
       'payment_confirmed_notification'
     );
+
+    dispatchAutoFulfillment({
+      paymentId,
+      userId: rows[0].user_id,
+      purchaseType: 'platform_plan',
+      planSlug,
+      industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+      clientName: client?.name ?? null,
+      clientEmail: client?.email ?? null,
+    });
   }
 
   // ========================

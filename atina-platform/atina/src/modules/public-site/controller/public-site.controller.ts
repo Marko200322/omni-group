@@ -28,4 +28,12 @@ export class PublicSiteController {
       'Client site updated',
     );
   };
+
+  listMyClientSites = async (req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, await this.service.listMyClientSites(req.user!.userId), 'Client sites');
+  };
+
+  placeShopOrder = async (req: Request, res: Response): Promise<void> => {
+    sendCreated(res, await this.service.placeShopOrder(req.params.slug, req.body), 'Order placed');
+  };
 }

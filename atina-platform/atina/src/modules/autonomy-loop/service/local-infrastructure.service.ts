@@ -18,7 +18,7 @@ export class LocalInfrastructureService {
 
     const steps: Array<Record<string, unknown>> = [];
 
-    if (config.autonomy.evolutionRunTestsOnDeploy) {
+    if (config.autonomy.evolutionRunTestsOnDeploy && !payload.skipBlockingSteps) {
       try {
         execSync('npm run test:unit -- --testPathPatterns=autonomy-loop', {
           cwd: path.resolve(process.cwd()),

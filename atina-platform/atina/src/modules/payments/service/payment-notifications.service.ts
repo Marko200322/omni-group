@@ -243,4 +243,77 @@ export class PaymentNotificationsService {
       });
     }
   }
+
+  async sendDeliverableQaPendingToAdmin(input: {
+    toEmail: string;
+    clientName: string;
+    deliverableName: string;
+    paymentId: string;
+    artifactCount: number;
+    publicUrl?: string;
+  }): Promise<void> {
+    const adminUrl = webAppUrl('/admin');
+    const body = [
+      'Fulfillment QA review required',
+      '',
+      `Client: ${input.clientName}`,
+      `Deliverable: ${input.deliverableName}`,
+      `Payment: ${input.paymentId}`,
+      `Artifacts: ${input.artifactCount}`,
+      input.publicUrl ? `Site: ${webAppUrl(input.publicUrl)}` : '',
+      '',
+      `Review and approve in admin: ${adminUrl}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    await this.notifications.sendEmail(
+      input.toEmail,
+      `QA pending: ${input.deliverableName}`,
+      body.replace(/\n/g, '<br/>'),
+      body,
+    );
+  }
+
+  async sendDeliverableReadyToClient(input: {
+    toEmail: string;
+    toName: string;
+    deliverableName: string;
+    deliverableId: string;
+    publicUrl?: string;
+    paymentId: string;
+    artifactLabels?: string[];
+    attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>;
+  }): Promise<void> {
+    const siteLine = input.publicUrl
+      ? `\n\nYour deliverable is live: ${webAppUrl(input.publicUrl)}`
+      : '';
+    const artifactLine =
+      input.artifactLabels?.length ?
+        `\n\nIncluded documents:\n${input.artifactLabels.map((l) => `• ${l}`).join('\n')}`
+      : '\n\nCheck your dashboard for full delivery details.';
+    const body = [
+      `Hi ${input.toName || 'there'},`,
+      '',
+      `Your order **${input.deliverableName}** has been delivered automatically.`,
+      siteLine,
+      artifactLine,
+      '',
+      'Thank you for your business.',
+    ].join('\n');
+
+    await this.notifications.sendEmail(
+      input.toEmail,
+      `Delivered: ${input.deliverableName}`,
+      body.replace(/\n/g, '<br/>'),
+      body,
+      input.attachments,
+    );
+  }
+}
+
+function webAppUrl(path: string): string {
+  const base = (config.app.webUrl || config.app.url).replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`;
 }

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { paginate, sendSuccess } from '../../../utils/response';
+import { paginate, sendCreated, sendSuccess } from '../../../utils/response';
 import type {
   AdminOnboardingRetryAllBodyDtoType,
   AdminOnboardingRetryBodyDtoType,
@@ -10,6 +10,7 @@ import type {
   AdminLogsListQueryDtoType,
   AdminPatchModuleBodyDtoType,
   AdminPatchPlanBodyDtoType,
+  AdminInviteUserBodyDtoType,
   AdminPatchUserBodyDtoType,
   AdminPostLogBodyDtoType,
   AdminUsersListQueryDtoType,
@@ -47,6 +48,14 @@ export class AdminController {
   patchUser = async (req: Request, res: Response): Promise<void> => {
     const result = await this.service.patchUser(req.params.id, req.body as AdminPatchUserBodyDtoType);
     sendSuccess(res, result.data, result.message);
+  };
+
+  inviteUser = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.service.inviteUser(
+      req.user!.userId,
+      req.body as AdminInviteUserBodyDtoType
+    );
+    sendCreated(res, result.data, result.message);
   };
 
   listPayments = async (req: Request, res: Response): Promise<void> => {

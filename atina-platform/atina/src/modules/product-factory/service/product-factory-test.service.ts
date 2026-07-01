@@ -17,13 +17,25 @@ export class ProductFactoryTestService {
 
   runStructuralChecks(row: ProductFactoryProjectRow): string[] {
     const root = row.output_dir ?? this.builder.projectDir(row);
-    const required = [
-      'package.json',
-      'src/index.js',
-      'src/config.js',
-      'tests/smoke.test.js',
-      '.factory-meta.json',
-    ];
+    const enhanced =
+      row.deliverable_id === 'custom-software' ||
+      (row.metadata as Record<string, unknown> | null)?.enhancedGreenfield === true;
+    const required = enhanced
+      ? [
+          'package.json',
+          'src/server.js',
+          'src/routes/api.js',
+          'public/index.html',
+          'tests/enhanced.test.js',
+          '.factory-meta.json',
+        ]
+      : [
+          'package.json',
+          'src/index.js',
+          'src/config.js',
+          'tests/smoke.test.js',
+          '.factory-meta.json',
+        ];
     const missing = required.filter((rel) => !fs.existsSync(path.join(root, rel)));
     if (missing.length) {
       throw new Error(`Missing scaffold files: ${missing.join(', ')}`);
@@ -45,6 +57,9 @@ export class ProductFactoryTestService {
 
   runTests(row: ProductFactoryProjectRow): ProductFactoryTestResult {
     const root = row.output_dir ?? this.builder.projectDir(row);
+    const enhanced =
+      row.deliverable_id === 'custom-software' ||
+      (row.metadata as Record<string, unknown> | null)?.enhancedGreenfield === true;
     const checks = this.runStructuralChecks(row);
 
     if (!config.productFactory.runTestsOnBuild) {
@@ -52,7 +67,8 @@ export class ProductFactoryTestService {
     }
 
     try {
-      const out = execSync('node --test tests/smoke.test.js', {
+      const testFile = enhanced ? 'tests/enhanced.test.js' : 'tests/smoke.test.js';
+      const out = execSync(`node --test ${testFile}`, {
         cwd: root,
         encoding: 'utf8',
         stdio: 'pipe',

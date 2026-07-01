@@ -1,4 +1,4 @@
-﻿import { moduleRegistry } from '../../../core/ModuleRegistry';
+import { moduleRegistry } from '../../../core/ModuleRegistry';
 import { config } from '../../../config';
 import logger from '../../../utils/logger';
 import {
@@ -34,6 +34,11 @@ import {
 } from '../admin.helpers';
 import { AdminRepository } from '../repository/admin.repository';
 import { AdminOnboardingService } from './admin-onboarding.service';
+import { AuthService } from '../../auth/service/auth.service';
+import { createWorkflowChainAuthBootstrapAdapter } from '../../auth/service/workflow-chain-auth-bootstrap.adapter';
+import { generateInvitePassword } from '../lib/invite-password';
+import { ValidationError } from '../../../utils/errors';
+import type { AdminInviteUserBodyDtoType } from '../dto/admin.dto';
 
 export class AdminService {
   private readonly repo = new AdminRepository();
@@ -381,6 +386,70 @@ export class AdminService {
       
       const { rows } = await this.repo.updateUser(fields.join(', '), [...values, id]);
       return { data: rows[0], message: 'User updated' };
+  }
+
+  async inviteUser(actorUserId: string, body: AdminInviteUserBodyDtoType) {
+    const generatedPassword = !body.password;
+    const password = body.password ?? generateInvitePassword();
+
+    const authService = new AuthService({
+      postLoginBootstrap: createWorkflowChainAuthBootstrapAdapter(),
+    });
+
+    const registered = await authService.register({
+      name: body.name,
+      email: body.email,
+      password,
+      company: body.company,
+      timezone: body.timezone,
+    });
+
+    const userId = registered.user.id;
+    await this.repo.updateUser('is_email_verified = $1', [true, userId]);
+
+    let planSlug = registered.user.planSlug ?? 'starter';
+    if (body.planSlug && body.planSlug !== planSlug) {
+      const { rows: planRows } = await this.repo.getPlanIdBySlug(body.planSlug);
+      if (!planRows[0]) {
+        throw new ValidationError(`Unknown or inactive plan slug: ${body.planSlug}`);
+      }
+      await this.repo.updateUser('plan_id = $1', [planRows[0].id, userId]);
+      planSlug = planRows[0].slug;
+    }
+
+    await this.repo.insertAuditEvent(
+      actorUserId,
+      'admin_client_invited',
+      'user',
+      userId,
+      'info',
+      JSON.stringify({
+        email: registered.user.email,
+        generatedPassword,
+        planSlug,
+        sendWelcomeEmail: body.sendWelcomeEmail,
+      })
+    );
+
+    logger.info('Admin invited client user', {
+      actorUserId,
+      userId,
+      email: registered.user.email,
+      generatedPassword,
+    });
+
+    return {
+      data: {
+        id: userId,
+        email: registered.user.email,
+        name: registered.user.name,
+        role: registered.user.role,
+        planSlug,
+        loginUrl: `${String(config.app.webUrl).replace(/\/+$/, '')}/login`,
+        temporaryPassword: generatedPassword ? password : null,
+      },
+      message: 'Client invited — share login credentials securely.',
+    };
   }
 
   async listPayments(query: AdminPaymentsListQueryDtoType) {

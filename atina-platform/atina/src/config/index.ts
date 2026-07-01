@@ -186,6 +186,18 @@ export const config = {
     internalLaneEnabled: optionalBool('PRODUCT_FACTORY_INTERNAL_LANE', true),
     maxInternalPerTick: optionalNumber('PRODUCT_FACTORY_MAX_INTERNAL_PER_TICK', 1),
   },
+  deliverableFulfillment: {
+    enabled: optionalBool('DELIVERABLE_FULFILLMENT_ENABLED', true),
+    /** false = fully automatic client delivery (no admin QA gate). */
+    requireQaBeforeRelease: optionalBool('DELIVERABLE_FULFILLMENT_REQUIRE_QA', false),
+    learningLoopEnabled: optionalBool('DELIVERABLE_FULFILLMENT_LEARNING_LOOP', true),
+    autoChecklistEnabled: optionalBool('DELIVERABLE_FULFILLMENT_AUTO_CHECKLIST', true),
+    /** Block client email until automated checklist passes. */
+    blockReleaseUntilChecklistPasses: optionalBool('DELIVERABLE_FULFILLMENT_BLOCK_UNTIL_CHECKLIST', true),
+    maxRetryAttempts: optionalNumber('DELIVERABLE_FULFILLMENT_MAX_RETRY_ATTEMPTS', 3),
+    maxChecklistRetries: optionalNumber('DELIVERABLE_FULFILLMENT_MAX_CHECKLIST_RETRIES', 3),
+    memoryNamespace: optional('DELIVERABLE_FULFILLMENT_MEMORY_NAMESPACE', 'fulfillment'),
+  },
   apex: {
     maxSimBatchProfiles: optionalNumber('APEX_MAX_SIM_BATCH_PROFILES', 1000),
     suicideSwitchArmed: optionalBool('APEX_SUICIDE_SWITCH_ARMED', false),
@@ -458,6 +470,14 @@ export const config = {
     zoominfoApiUrl: optional('ZOOMINFO_API_URL', ''),
     neverbounceApiKey: optional('NEVERBOUNCE_API_KEY', ''),
     zerobounceApiKey: optional('ZEROBOUNCE_API_KEY', ''),
+  },
+  slack: {
+    webhookUrl: optional('SLACK_WEBHOOK_URL', ''),
+  },
+  retainerScheduler: {
+    enabled: optionalBool('RETAINER_SCHEDULER_ENABLED', true),
+    /** Daily check for monthly lead-gen retainer runs */
+    intervalMs: optionalNumber('RETAINER_SCHEDULER_INTERVAL_MS', 86_400_000),
   },
 };
 

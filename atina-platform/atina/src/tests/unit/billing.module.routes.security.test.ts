@@ -61,6 +61,9 @@ describe('Billing module route security', () => {
     ['GET', '/billing/invoices'],
     ['GET', '/billing/invoices/123e4567-e89b-12d3-a456-426614174000'],
     ['GET', '/billing/limit/tasks_per_month'],
+    ['GET', '/billing/fulfillment/jobs'],
+    ['GET', '/billing/fulfillment/jobs/123e4567-e89b-12d3-a456-426614174000'],
+    ['GET', '/billing/fulfillment/jobs/admin'],
   ] as const)('returns 401 for unauthenticated %s %s', async (method, path) => {
     authEnabled = false;
     const app = await buildApp();

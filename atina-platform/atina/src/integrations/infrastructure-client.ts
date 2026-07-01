@@ -5,6 +5,8 @@ export type DeployTriggerPayload = {
   phase: string;
   notes?: string;
   actorUserId?: string;
+  /** Skip execSync test runs — fulfillment must not block the API event loop. */
+  skipBlockingSteps?: boolean;
 };
 
 function infrastructureCreds(): { url: string; key: string } {

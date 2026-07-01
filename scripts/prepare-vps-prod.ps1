@@ -4,9 +4,10 @@ param(
   [Parameter(Mandatory)]
   [string]$SiteDomain,
   [string]$ApiDomain = '',
-  [ValidateSet('v2', 'v3')]
-  [string]$Phase = 'v2',
-  [switch]$DryRun
+  [ValidateSet('v2', 'v3', 'v4', 'v5', 'v6')]
+  [string]$Phase = 'v6',
+  [switch]$DryRun,
+  [switch]$RotateSecrets
 )
 
 $ErrorActionPreference = 'Stop'
@@ -35,11 +36,26 @@ function New-RandomSecret([int]$Length = 40) {
 
 $siteUrl = "https://$SiteDomain"
 $apiUrl = "https://$ApiDomain"
-$dbPass = New-RandomSecret 32
-$jwt = New-RandomSecret 48
-$jwtRefresh = New-RandomSecret 48
-$sessionSecret = New-RandomSecret 48
-$adminPass = New-RandomSecret 20
+
+$outCompose = Join-Path $repoRoot '.env.vps.prod'
+$outAtina = Join-Path $atinaRoot '.env.vps.prod'
+$outWeb = Join-Path $webRoot '.env.vps.production'
+
+function Resolve-Secret([string]$Key, [int]$Length, [string[]]$Sources) {
+  if (-not $RotateSecrets) {
+    foreach ($src in $Sources) {
+      $existing = Read-EnvValue $src $Key
+      if ($existing) { return $existing }
+    }
+  }
+  return New-RandomSecret $Length
+}
+
+$dbPass = Resolve-Secret 'DB_PASSWORD' 32 @($outCompose, $outAtina)
+$jwt = Resolve-Secret 'JWT_SECRET' 48 @($outAtina)
+$jwtRefresh = Resolve-Secret 'JWT_REFRESH_SECRET' 48 @($outAtina)
+$sessionSecret = Resolve-Secret 'SESSION_SECRET' 48 @($outWeb)
+$adminPass = Resolve-Secret 'ADMIN_PASSWORD' 20 @($outAtina)
 
 $composeEnv = @"
 DB_NAME=atina_saas_db
@@ -89,6 +105,7 @@ $atinaEnv = @(
   'AUTONOMY_REAL_ECOSYSTEM_RUNS=true',
   'AUTONOMY_EVOLUTION_CODE_EDIT=false',
   'AUTONOMY_ROLLOUT_SEGMENT=freelance',
+  'RETAINER_SCHEDULER_ENABLED=true',
   'AUTONOMY_GIT_REPO_PATH=/opt/omni-group',
   'AUTONOMY_INITIAL_BUDGET_USD=40',
   'AUTONOMY_MAX_SPEND_PER_DAY_USD=4',
@@ -112,7 +129,8 @@ $copyKeys = @(
   'BUSINESS_AND_DEV_URL', 'BUSINESS_AND_DEV_KEY', 'PAYMENT_NOTIFY_EMAIL', 'OUTREACH_FALLBACK_EMAIL',
   'MANUAL_PAYMENT_ACCOUNT_NAME', 'MANUAL_PAYMENT_IBAN', 'MANUAL_PAYMENT_BANK', 'MANUAL_PAYMENT_SWIFT',
   'MANUAL_PAYMENT_CURRENCY', 'MANUAL_PAYMENT_NOTE', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID',
-  'ELEVENLABS_API_KEY', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT',
+  'ELEVENLABS_API_KEY', 'HEYGEN_API_KEY', 'DID_API_KEY', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET',
+  'STRIPE_PUBLISHABLE_KEY', 'SLACK_WEBHOOK_URL', 'VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT',
   'SALES_MEETINGS_ENABLED', 'CURSOR_API_KEY', 'CURSOR_MODEL'
 )
 
@@ -146,11 +164,12 @@ $webEnv = @(
   "CONTACT_EMAIL_TO=$resendTo"
 ) -join "`n"
 
-$outCompose = Join-Path $repoRoot '.env.vps.prod'
-$outAtina = Join-Path $atinaRoot '.env.vps.prod'
-$outWeb = Join-Path $webRoot '.env.vps.production'
-
 Write-Host '=== VPS produkcija — env šabloni ===' -ForegroundColor Cyan
+if ($RotateSecrets) {
+  Write-Host '  Secrets: ROTATE (nova lozinka za DB/admin/JWT)' -ForegroundColor Yellow
+} else {
+  Write-Host '  Secrets: reuse postojećih (incremental deploy safe)' -ForegroundColor DarkGray
+}
 Write-Host "  Site: $siteUrl"
 Write-Host "  API:  $apiUrl"
 Write-Host "  Phase: $Phase"

@@ -5,6 +5,9 @@ import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
+import { config } from '../../config';
+import logger from '../../utils/logger';
+import { getRetainerScheduler, stopRetainerScheduler } from './service/retainer-scheduler.service';
 import {
   BillingInvoicesListQueryDto,
   BillingInvoiceIdParamsDto,
@@ -14,6 +17,9 @@ import {
   BillingQuoteCatalogQueryDto,
   BillingQuoteBodyDto,
   BillingPaymentIdParamsDto,
+  BillingFulfillmentJobsQueryDto,
+  BillingFulfillmentArtifactParamsDto,
+  BillingFulfillmentRejectBodyDto,
 } from './dto/billing.dto';
 
 export class BillingModule implements IModule {
@@ -31,6 +37,14 @@ export class BillingModule implements IModule {
 
   async initialize(): Promise<void> {
     this.setupRoutes();
+    if (config.retainerScheduler.enabled) {
+      logger.info('Billing: starting retainer scheduler');
+      getRetainerScheduler().start();
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    stopRetainerScheduler();
   }
 
   private setupRoutes(): void {
@@ -123,6 +137,55 @@ export class BillingModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getRevenueAllocationByPayment
+    );
+    this.router.get(
+      '/fulfillment/jobs/admin',
+      authenticate,
+      requireAdmin,
+      validateQuery(BillingFulfillmentJobsQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listFulfillmentJobsAdmin
+    );
+    this.router.get(
+      '/fulfillment/jobs',
+      authenticate,
+      validateQuery(BillingFulfillmentJobsQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listFulfillmentJobs
+    );
+    this.router.get(
+      '/fulfillment/jobs/:paymentId',
+      authenticate,
+      validateParams(BillingPaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getFulfillmentJob
+    );
+    this.router.get(
+      '/fulfillment/jobs/:paymentId/artifacts/:filename',
+      authenticate,
+      validateParams(BillingFulfillmentArtifactParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.downloadFulfillmentArtifact
+    );
+    this.router.post(
+      '/fulfillment/jobs/:paymentId/approve',
+      authenticate,
+      requireAdmin,
+      validateParams(BillingPaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.approveFulfillmentJob
+    );
+    this.router.post(
+      '/fulfillment/jobs/:paymentId/reject',
+      authenticate,
+      requireAdmin,
+      validateParams(BillingPaymentIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(BillingFulfillmentRejectBodyDto),
+      this.controller.rejectFulfillmentJob
     );
   }
 }

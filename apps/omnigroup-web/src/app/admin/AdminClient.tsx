@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
 import { AdminPendingPaymentsPanel } from '@/components/platform/AdminPendingPaymentsPanel';
+import { AdminFulfillmentPanel } from '@/components/platform/AdminFulfillmentPanel';
+import { InviteClientPanel } from '@/components/platform/InviteClientPanel';
 import type { AtinaAdminOverview, AtinaAdminPayment } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
 import { isAdminRole } from '@/lib/auth-roles';
@@ -103,6 +105,13 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
               : undefined
           }
           delay={0.15}
+        />
+      </div>
+
+      <div className="mt-6">
+        <InviteClientPanel
+          disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
+          plans={snapshot.plans}
         />
       </div>
 
@@ -224,6 +233,10 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
             initialPayments={pendingPayments}
             disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
           />
+        </div>
+
+        <div className="mt-4">
+          <AdminFulfillmentPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
         </div>
 
         <div className="mt-6">

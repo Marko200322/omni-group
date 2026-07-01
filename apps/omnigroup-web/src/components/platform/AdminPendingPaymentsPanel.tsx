@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 import type { AtinaAdminPayment } from '@/lib/atina-live-types';
+import { getDeliverable } from '@/lib/deliverable-catalog';
 import { GlassCard } from '@/components/ui/GlassCard';
 
 function parseMetadata(raw: AtinaAdminPayment['metadata']): Record<string, unknown> {
@@ -61,7 +62,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
       const body = (await res.json()) as { ok: boolean; detail?: string; error?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'confirm_failed');
       setPayments((prev) => prev.filter((p) => p.id !== paymentId));
-      setMessage('Payment confirmed — the client receives an invoice and an activated plan.');
+      setMessage('Payment confirmed — fulfillment starts automatically (site, PDF, or software build).');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Confirmation failed');
     } finally {
@@ -104,8 +105,17 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
           {payments.map((payment) => {
             const meta = parseMetadata(payment.metadata);
             const reference = String(meta.reference ?? '—');
-            const planSlug = String(meta.planSlug ?? '—');
+            const deliverableId = typeof meta.deliverableId === 'string' ? meta.deliverableId : null;
+            const planSlug = typeof meta.planSlug === 'string' ? meta.planSlug : null;
+            const industryCategory =
+              typeof meta.industryCategory === 'string' ? meta.industryCategory : null;
             const billingCycle = String(meta.billingCycle ?? '—');
+            const deliverableName = deliverableId ? getDeliverable(deliverableId)?.name : null;
+            const productLine = deliverableName
+              ? `deliverable · ${deliverableName}`
+              : planSlug
+                ? `plan · ${planSlug}`
+                : payment.description ?? '—';
             return (
               <li
                 key={payment.id}
@@ -118,9 +128,13 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
                     </p>
                     <p className="text-xs text-slate-500">{payment.email}</p>
                     <p className="mt-2 text-sm text-slate-300">
-                      {formatAmount(payment.amount, payment.currency)} · plan{' '}
-                      <span className="text-violet-300">{planSlug}</span> · {billingCycle}
+                      {formatAmount(payment.amount, payment.currency)} ·{' '}
+                      <span className="text-violet-300">{productLine}</span>
+                      {!deliverableId && planSlug ? ` · ${billingCycle}` : null}
                     </p>
+                    {industryCategory && (
+                      <p className="mt-1 text-xs text-cyan-300/80">Industry: {industryCategory}</p>
+                    )}
                     <p className="mt-1 font-mono text-xs text-cyan-300/90">Ref: {reference}</p>
                     <p className="mt-1 text-xs text-slate-500">{payment.description}</p>
                   </div>

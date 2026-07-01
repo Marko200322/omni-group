@@ -30,4 +30,8 @@ scripts/.cache/
 .npm-cache/
 .tmp/
 .local-workspace/
+deploy-secrets.local/deploy.config.json
+deploy-secrets.local/*.pem
+deploy-secrets.local/*.key
+deploy-secrets.local/id_*
 .docker-wsl/

@@ -1,8 +1,11 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
+import { config } from '../../../config';
 import { resolveVerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
+import { CrmService } from '../../crm/service/crm.service';
 import type {
   CreateClientSiteDtoType,
   ListSolutionsQueryDtoType,
+  ClientSiteShopOrderDtoType,
 } from '../dto/public-site.dto';
 import { PublicSiteRepository } from '../repository/public-site.repository';
 
@@ -29,6 +32,7 @@ const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
 
 export class PublicSiteService {
   private readonly repo = new PublicSiteRepository();
+  private readonly crm = new CrmService();
 
   async listSolutions(query: ListSolutionsQueryDtoType) {
     const { rows, total, page, limit } = await this.repo.listPublishedSolutions(query);
@@ -159,6 +163,101 @@ export class PublicSiteService {
       publish: input.publish ?? false,
     });
     return this.mapClientSite(site);
+  }
+
+  async listMyClientSites(userId: string, limit = 20) {
+    const rows = await this.repo.listByOwner(userId, limit);
+    return { sites: rows.map((r) => this.mapClientSite(r)) };
+  }
+
+  async placeShopOrder(slug: string, body: ClientSiteShopOrderDtoType) {
+    const site = await this.repo.getPublishedClientSite(slug);
+    if (!site || site.site_type !== 'ecommerce') {
+      throw new NotFoundError('E-commerce site');
+    }
+
+    const total = body.items.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
+    if (total <= 0) throw new ValidationError('Order total must be positive');
+
+    const paymentReference = `SHOP-${slug.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    const order = await this.repo.createShopOrder({
+      siteId: site.id,
+      ownerUserId: site.owner_user_id,
+      buyerName: body.buyerName,
+      buyerEmail: body.buyerEmail,
+      buyerPhone: body.buyerPhone ?? null,
+      items: body.items,
+      totalEur: Math.round(total * 100) / 100,
+      paymentReference,
+      notes: body.notes ?? null,
+    });
+
+    const nameParts = body.buyerName.trim().split(/\s+/);
+    try {
+      await this.crm.createContact(site.owner_user_id, {
+        firstName: nameParts[0] ?? 'Shop',
+        lastName: nameParts.slice(1).join(' ') || 'Customer',
+        email: body.buyerEmail,
+        phone: body.buyerPhone,
+        status: 'prospect',
+        source: `shop:${slug}`,
+        tags: ['shop-order', slug],
+        notes: `Order ${paymentReference} — €${total.toFixed(2)}`,
+        customFields: { orderId: order.id, paymentReference },
+      });
+    } catch {
+      /* non-fatal */
+    }
+
+    const stripeReady =
+      Boolean(config.stripe.secretKey.trim()) && config.payments.mode !== 'manual';
+
+    if (stripeReady) {
+      try {
+        const { PaymentsService } = await import('../../payments/service/payments.service');
+        const payments = new PaymentsService();
+        const checkout = await payments.createShopCheckoutSession({
+          orderId: order.id,
+          siteSlug: slug,
+          siteTitle: site.title,
+          ownerUserId: site.owner_user_id,
+          buyerEmail: body.buyerEmail,
+          buyerName: body.buyerName,
+          items: body.items.map((i) => ({
+            name: i.name,
+            priceEur: i.priceEur,
+            quantity: i.quantity,
+          })),
+          totalEur: Math.round(total * 100) / 100,
+        });
+        if (checkout.sessionId) {
+          await this.repo.updateShopOrderStripe(order.id, checkout.sessionId);
+        }
+        return {
+          orderId: order.id,
+          paymentReference: order.payment_reference,
+          totalEur: Number(order.total_eur),
+          currency: 'EUR',
+          status: order.status,
+          paymentMethod: 'stripe',
+          checkoutUrl: checkout.url,
+          instructions: 'Redirecting to secure card checkout.',
+        };
+      } catch {
+        /* fall through to manual bank transfer */
+      }
+    }
+
+    return {
+      orderId: order.id,
+      paymentReference: order.payment_reference,
+      totalEur: Number(order.total_eur),
+      currency: 'EUR',
+      status: order.status,
+      paymentMethod: 'manual',
+      instructions:
+        'Complete payment via bank transfer using the reference above. The store owner will confirm your order.',
+    };
   }
 
   private mapClientSite(row: import('../repository/public-site.repository').ClientPublicSiteRow) {

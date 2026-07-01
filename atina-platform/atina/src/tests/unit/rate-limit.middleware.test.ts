@@ -28,6 +28,7 @@ describe('rate-limit middleware security hardening', () => {
     delete process.env.WEBHOOK_RATE_LIMIT_MAX;
     delete process.env.PASSWORD_RESET_WINDOW_MS;
     delete process.env.PASSWORD_RESET_MAX;
+    delete process.env.RATE_LIMIT_DISABLED;
     jest.resetModules();
   });
 
@@ -200,5 +201,19 @@ describe('rate-limit middleware security hardening', () => {
 
     await request(app).post('/reset').send({ email: 'u@x.com' }).expect(200);
     await request(app).post('/reset').send({ email: 'u@x.com' }).expect(429);
+  });
+
+  it('paymentsLimiter skips when RATE_LIMIT_DISABLED=true', async () => {
+    process.env.RATE_LIMIT_DISABLED = 'true';
+    process.env.PAYMENTS_RATE_LIMIT_WINDOW_MS = '60000';
+    process.env.PAYMENTS_RATE_LIMIT_MAX = '1';
+    const { paymentsLimiter } = await import('../../api/middleware/rate-limit.middleware');
+
+    const app = express();
+    app.use(express.json());
+    app.post('/pay', paymentsLimiter, (_req, res) => res.status(200).json({ ok: true }));
+
+    await request(app).post('/pay').send({}).expect(200);
+    await request(app).post('/pay').send({}).expect(200);
   });
 });

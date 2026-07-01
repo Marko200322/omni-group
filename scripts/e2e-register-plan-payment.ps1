@@ -20,6 +20,14 @@ $web = $WebBase.TrimEnd('/')
 $atina = $AtinaBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
+
+$repoRoot = Split-Path -Parent $scriptsDir
+if ($AdminEmail -eq 'admin@atina.io' -and $AdminPassword -eq 'Admin@123456') {
+  $adminCreds = Get-AdminCredentials -RepoRoot $repoRoot
+  $AdminEmail = $adminCreds.Email
+  $AdminPassword = $adminCreds.Password
+}
 
 & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

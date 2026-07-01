@@ -95,3 +95,28 @@ export const BillingQuoteBodyDto = z
     marketIntensity: z.number().min(0).max(100).optional(),
   })
   .strict();
+
+export const BillingFulfillmentJobsQueryDto = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(200).optional(),
+    status: z.enum(['pending', 'running', 'completed', 'failed']).optional(),
+  })
+  .strict();
+
+export const BillingFulfillmentRejectBodyDto = z
+  .object({
+    notes: z.string().trim().max(2000).optional(),
+  })
+  .strict();
+
+export const BillingFulfillmentArtifactParamsDto = z
+  .object({
+    paymentId: z.string().uuid(),
+    filename: z
+      .string()
+      .trim()
+      .min(1)
+      .max(255)
+      .regex(/^[a-zA-Z0-9._-]+$/, 'Invalid artifact filename'),
+  })
+  .strict();

@@ -136,4 +136,82 @@ export class PublicSiteRepository {
     );
     return rows[0] ?? null;
   }
+
+  async listByOwner(ownerUserId: string, limit = 20): Promise<ClientPublicSiteRow[]> {
+    const { rows } = await query<ClientPublicSiteRow>(
+      `SELECT id, owner_user_id, project_id, slug, title, tagline, site_type, status, published_at, created_at, updated_at
+       FROM client_public_sites
+       WHERE owner_user_id = $1
+       ORDER BY updated_at DESC
+       LIMIT $2`,
+      [ownerUserId, limit],
+    );
+    return rows;
+  }
+
+  async createShopOrder(input: {
+    siteId: string;
+    ownerUserId: string;
+    buyerName: string;
+    buyerEmail: string;
+    buyerPhone?: string | null;
+    items: unknown[];
+    totalEur: number;
+    paymentReference: string;
+    notes?: string | null;
+  }) {
+    const { rows } = await query<{
+      id: string;
+      payment_reference: string;
+      total_eur: string;
+      status: string;
+    }>(
+      `INSERT INTO client_site_orders
+         (site_id, owner_user_id, buyer_name, buyer_email, buyer_phone, items, total_eur, payment_reference, notes)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
+       RETURNING id, payment_reference, total_eur, status`,
+      [
+        input.siteId,
+        input.ownerUserId,
+        input.buyerName,
+        input.buyerEmail,
+        input.buyerPhone ?? null,
+        JSON.stringify(input.items),
+        input.totalEur,
+        input.paymentReference,
+        input.notes ?? null,
+      ],
+    );
+    return rows[0];
+  }
+
+  async updateShopOrderStripe(orderId: string, sessionId: string): Promise<void> {
+    await query(
+      `UPDATE client_site_orders
+       SET payment_method = 'stripe', stripe_checkout_session_id = $2, updated_at = NOW()
+       WHERE id = $1`,
+      [orderId, sessionId],
+    );
+  }
+
+  async confirmShopOrder(orderId: string): Promise<void> {
+    await query(
+      `UPDATE client_site_orders SET status = 'confirmed', updated_at = NOW() WHERE id = $1`,
+      [orderId],
+    );
+  }
+
+  async getShopOrderById(orderId: string) {
+    const { rows } = await query<{
+      id: string;
+      site_id: string;
+      owner_user_id: string;
+      buyer_email: string;
+      total_eur: string;
+      status: string;
+    }>(`SELECT id, site_id, owner_user_id, buyer_email, total_eur, status FROM client_site_orders WHERE id = $1`, [
+      orderId,
+    ]);
+    return rows[0] ?? null;
+  }
 }

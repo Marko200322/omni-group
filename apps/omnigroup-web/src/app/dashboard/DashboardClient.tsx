@@ -24,6 +24,7 @@ import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { DeliverableQuotePanel } from '@/components/platform/DeliverableQuotePanel';
+import { DeliveriesPanel } from '@/components/platform/DeliveriesPanel';
 import { ClientOrdersPanel } from '@/components/platform/ClientOrdersPanel';
 import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
 import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
@@ -150,6 +151,18 @@ export default function DashboardClient({
           delay={0.15}
         />
       </div>
+
+      <section id="deliveries" className="mt-6">
+        <GlassCard delay={0.16}>
+          <h2 className="font-display text-lg font-semibold text-white">Your deliveries</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Real output after payment — PDF documents, live websites, and software builds from the fulfillment engine.
+          </p>
+          <div className="mt-4">
+            <DeliveriesPanel disabled={isDemo || !sessionUser} />
+          </div>
+        </GlassCard>
+      </section>
 
       <section id="orders" className="mt-6">
         <GlassCard delay={0.18}>

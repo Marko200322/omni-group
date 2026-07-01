@@ -11,6 +11,15 @@ import {
   renderSmokeTestJs,
   type GreenfieldSpec,
 } from '../lib/greenfield-templates';
+import {
+  renderEnhancedPackageJson,
+  renderEnhancedServerJs,
+  renderApiRoutesJs,
+  renderDbSchemaSql,
+  renderPublicIndexHtml,
+  renderEnhancedReadme,
+  renderEnhancedSmokeTestJs,
+} from '../lib/greenfield-enhanced-templates';
 
 export type GreenfieldBuildResult = {
   outputDir: string;
@@ -38,7 +47,15 @@ export class GreenfieldBuilderService {
       clientName: row.client_name,
     };
 
+    const enhanced =
+      row.deliverable_id === 'custom-software' ||
+      (row.metadata as Record<string, unknown> | null)?.enhancedGreenfield === true;
+
     const root = this.projectDir(row);
+    if (enhanced) {
+      return this.buildEnhanced(root, spec);
+    }
+
     const srcDir = path.join(root, 'src');
     const testsDir = path.join(root, 'tests');
     fs.mkdirSync(srcDir, { recursive: true });
@@ -64,6 +81,42 @@ export class GreenfieldBuilderService {
       filesWritten: written,
       isolationKey: row.isolation_key,
       lane: row.lane,
+    };
+  }
+
+  private buildEnhanced(root: string, spec: GreenfieldSpec): GreenfieldBuildResult {
+    const srcDir = path.join(root, 'src');
+    const routesDir = path.join(srcDir, 'routes');
+    const dbDir = path.join(srcDir, 'db');
+    const publicDir = path.join(root, 'public');
+    const testsDir = path.join(root, 'tests');
+    for (const d of [srcDir, routesDir, dbDir, publicDir, testsDir]) {
+      fs.mkdirSync(d, { recursive: true });
+    }
+
+    const files: Array<[string, string]> = [
+      [path.join(root, 'package.json'), renderEnhancedPackageJson(spec)],
+      [path.join(srcDir, 'server.js'), renderEnhancedServerJs(spec)],
+      [path.join(srcDir, 'config.js'), renderConfigJs(spec)],
+      [path.join(routesDir, 'api.js'), renderApiRoutesJs(spec)],
+      [path.join(dbDir, 'schema.sql'), renderDbSchemaSql(spec)],
+      [path.join(publicDir, 'index.html'), renderPublicIndexHtml(spec)],
+      [path.join(testsDir, 'enhanced.test.js'), renderEnhancedSmokeTestJs(spec)],
+      [path.join(root, 'README.md'), renderEnhancedReadme(spec)],
+      [path.join(root, '.factory-meta.json'), renderFactoryMeta({ ...spec, lane: spec.lane })],
+    ];
+
+    const written: string[] = [];
+    for (const [file, content] of files) {
+      fs.writeFileSync(file, content, 'utf8');
+      written.push(file);
+    }
+
+    return {
+      outputDir: root,
+      filesWritten: written,
+      isolationKey: spec.isolationKey,
+      lane: spec.lane,
     };
   }
 

@@ -196,6 +196,13 @@ export class AdminRepository {
     );
   }
 
+  getPlanIdBySlug(slug: string) {
+    return query<{ id: string; slug: string }>(
+      `SELECT id, slug FROM plans WHERE slug = $1 AND is_active = true LIMIT 1`,
+      [slug]
+    );
+  }
+
   countPayments(where: string, values: unknown[]) {
     return query<{ count: string }>(`SELECT COUNT(*) FROM payments p ${where}`, values);
   }

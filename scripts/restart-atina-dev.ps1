@@ -8,7 +8,8 @@
 #>
 #Requires -Version 5.1
 param(
-  [int]$Port = 0
+  [int]$Port = 0,
+  [switch]$RelaxRateLimit
 )
 
 $ErrorActionPreference = 'Continue'
@@ -62,7 +63,14 @@ if (-not $Port) {
 
 Stop-DockerAtinaWithTimeout | Out-Null
 
-if (-not (Test-PortHealthy $Port)) {
+if ($RelaxRateLimit) {
+  $listener = Get-ListenerPid $Port
+  if ($listener) {
+    Write-Host ('RelaxRateLimit: stopping PID ' + $listener + ' on port ' + $Port) -ForegroundColor Yellow
+    Stop-Process -Id $listener -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+  }
+} elseif (-not (Test-PortHealthy $Port)) {
   $listener = Get-ListenerPid $Port
   if ($listener -and -not (Test-PortHealthy $Port)) {
     Write-Host ('Port ' + $Port + ' slusa PID ' + $listener + ' ali health ne radi - Docker freeze?') -ForegroundColor Yellow
@@ -82,7 +90,8 @@ if (-not (Test-PortHealthy $Port)) {
 
 Write-Host ('Starting Atina npm run dev on port ' + $Port + ' ...') -ForegroundColor Cyan
 Push-Location $atina
-$devCmd = '$env:PORT=''' + $Port + '''; $env:NODE_OPTIONS=''--max-old-space-size=4096''; npm run dev'
+$relaxPrefix = if ($RelaxRateLimit) { '$env:RATE_LIMIT_DISABLED=''true''; ' } else { '' }
+$devCmd = $relaxPrefix + '$env:PORT=''' + $Port + '''; $env:NODE_OPTIONS=''--max-old-space-size=4096''; npm run dev'
 Start-Process powershell -ArgumentList '-NoProfile', '-Command', $devCmd -WindowStyle Minimized
 Pop-Location
 

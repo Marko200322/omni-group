@@ -16,6 +16,7 @@ import {
   AdminPhaseGatingTimelineQueryDto,
   AdminOnboardingStatusListQueryDto,
   AdminOnboardingUserDetailQueryDto,
+  AdminInviteUserBodyDto,
   AdminPatchUserBodyDto,
   AdminPatchModuleBodyDto,
   AdminPostLogBodyDto,
@@ -65,6 +66,15 @@ export class AdminModule implements IModule {
       validateQuery(AdminUsersListQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listUsers
+    );
+
+    this.router.post(
+      '/users/invite',
+      ...auth,
+      adminMutationLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AdminInviteUserBodyDto),
+      this.controller.inviteUser
     );
 
     this.router.patch(

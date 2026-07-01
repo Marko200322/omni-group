@@ -69,3 +69,43 @@ export type AtinaAdminPayment = {
   created_at?: string;
   updated_at?: string;
 };
+
+export type AtinaInviteClientResult = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  planSlug: string;
+  loginUrl: string;
+  temporaryPassword: string | null;
+};
+
+export type AtinaFulfillmentJob = {
+  id: string;
+  paymentId: string;
+  deliverableId: string | null;
+  planSlug: string | null;
+  purchaseType: 'deliverable' | 'platform_plan';
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  reviewStatus: 'pending_review' | 'approved' | 'rejected';
+  reviewNotes?: string | null;
+  clientVisible: boolean;
+  error: string | null;
+  publicUrl: string | null;
+  projectId: string | null;
+  artifacts: Array<{ type: string; filename: string; downloadLabel?: string }>;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+};
+
+export type AtinaClientSite = {
+  id: string;
+  slug: string;
+  title: string;
+  tagline?: string | null;
+  siteType?: string;
+  status: string;
+  publicUrl?: string;
+  publishedAt?: string | null;
+};

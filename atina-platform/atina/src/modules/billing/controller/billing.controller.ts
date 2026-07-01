@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
 import { BillingService } from '../service/billing.service';
 import { RevenueAllocationService } from '../service/revenue-allocation.service';
+import { DeliverableFulfillmentReadService } from '../service/deliverable-fulfillment-read.service';
+import { DeliverableFulfillmentService } from '../service/deliverable-fulfillment.service';
 import { sendSuccess, paginate } from '../../../utils/response';
 import { NotFoundError } from '../../../utils/errors';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
@@ -9,10 +12,14 @@ import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engin
 export class BillingController {
   private service: BillingService;
   private revenueAllocation: RevenueAllocationService;
+  private fulfillmentRead: DeliverableFulfillmentReadService;
+  private fulfillmentWrite: DeliverableFulfillmentService;
 
   constructor() {
     this.service = new BillingService();
     this.revenueAllocation = new RevenueAllocationService();
+    this.fulfillmentRead = new DeliverableFulfillmentReadService();
+    this.fulfillmentWrite = new DeliverableFulfillmentService();
   }
 
   getPlans = async (req: Request, res: Response): Promise<void> => {
@@ -97,5 +104,51 @@ export class BillingController {
     const row = await this.revenueAllocation.getByPaymentId(req.params.paymentId);
     if (!row) throw new NotFoundError('Revenue allocation');
     sendSuccess(res, row);
+  };
+
+  listFulfillmentJobs = async (req: Request, res: Response): Promise<void> => {
+    const q = req.query as { limit?: number; status?: 'pending' | 'running' | 'completed' | 'failed' };
+    const jobs = await this.fulfillmentRead.listForUser(req.user!.userId, q.limit ?? 50);
+    sendSuccess(res, { jobs });
+  };
+
+  listFulfillmentJobsAdmin = async (req: Request, res: Response): Promise<void> => {
+    const q = req.query as { limit?: number; status?: 'pending' | 'running' | 'completed' | 'failed' };
+    const jobs = await this.fulfillmentRead.listForAdmin({ limit: q.limit, status: q.status });
+    sendSuccess(res, { jobs });
+  };
+
+  getFulfillmentJob = async (req: Request, res: Response): Promise<void> => {
+    const job = await this.fulfillmentRead.getJob(
+      req.params.paymentId,
+      req.user!.userId,
+      req.user!.role,
+    );
+    sendSuccess(res, job);
+  };
+
+  downloadFulfillmentArtifact = async (req: Request, res: Response): Promise<void> => {
+    const file = await this.fulfillmentRead.getArtifactFile({
+      paymentId: req.params.paymentId,
+      filename: req.params.filename,
+      userId: req.user!.userId,
+      role: req.user!.role,
+    });
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.downloadName.replace(/"/g, '')}"`);
+    fs.createReadStream(file.filePath).pipe(res);
+  };
+
+  approveFulfillmentJob = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.fulfillmentWrite.approveRelease(req.params.paymentId);
+    if (!result) throw new NotFoundError('Fulfillment job');
+    sendSuccess(res, result);
+  };
+
+  rejectFulfillmentJob = async (req: Request, res: Response): Promise<void> => {
+    const notes = typeof req.body?.notes === 'string' ? req.body.notes : undefined;
+    const ok = await this.fulfillmentWrite.rejectRelease(req.params.paymentId, notes);
+    if (!ok) throw new NotFoundError('Fulfillment job');
+    sendSuccess(res, { rejected: true });
   };
 }

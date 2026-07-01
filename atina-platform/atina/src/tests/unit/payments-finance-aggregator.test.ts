@@ -32,6 +32,13 @@ const mockFinance = {
 
 jest.mock('../../integrations', () => ({
   getFinanceClient: () => mockFinance,
+  getAiClient: jest.fn().mockReturnValue({ chat: jest.fn().mockResolvedValue({ content: '' }) }),
+}));
+
+jest.mock('../../modules/billing/service/deliverable-fulfillment.service', () => ({
+  DeliverableFulfillmentService: jest.fn().mockImplementation(() => ({
+    dispatchAfterPaymentConfirm: jest.fn(),
+  })),
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

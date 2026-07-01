@@ -3,11 +3,13 @@ import { IModule } from '../../core/ModuleRegistry';
 import { authenticate } from '../../api/middleware/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
+import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
 import {
   ClientSiteSlugParamDto,
   CreateClientSiteDto,
   ListSolutionsQueryDto,
   PublishClientSiteDto,
+  ClientSiteShopOrderDto,
   VerticalSlugParamDto,
 } from './dto/public-site.dto';
 import { PublicSiteController } from './controller/public-site.controller';
@@ -45,11 +47,25 @@ export class PublicSiteModule implements IModule {
       this.controller.getSolution,
     );
     this.router.get(
+      '/client-sites/mine',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listMyClientSites,
+    );
+    this.router.get(
       '/client-sites/:slug',
       validateParams(ClientSiteSlugParamDto),
       validateQuery(StrictEmptyBodyDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getClientSite,
+    );
+    this.router.post(
+      '/client-sites/:slug/orders',
+      validateParams(ClientSiteSlugParamDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(ClientSiteShopOrderDto),
+      this.controller.placeShopOrder,
     );
 
     // Autentifikovano — kreiranje klijentskog sajta

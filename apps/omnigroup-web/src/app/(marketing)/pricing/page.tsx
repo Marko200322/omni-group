@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Calculator, Sparkles } from 'lucide-react';
 import { IndustryVerticalSelect } from '@/components/marketing/IndustryVerticalSelect';
 import { formatEur } from '@/lib/category-pricing';
@@ -42,8 +42,21 @@ const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
   { id: 'paypal', label: 'PayPal (~3.4%)' },
 ];
 
-function QuoteCard({ item, quote }: { item: DeliverableDefinition; quote: QuoteBreakdown }) {
+function QuoteCard({
+  item,
+  quote,
+  industryCategory,
+  verticalSlug,
+}: {
+  item: DeliverableDefinition;
+  quote: QuoteBreakdown;
+  industryCategory: string;
+  verticalSlug: string;
+}) {
   const [open, setOpen] = useState(false);
+  const buyHref = `/login?next=${encodeURIComponent(
+    `/dashboard#quote?service=${item.id}${industryCategory ? `&category=${industryCategory}` : ''}${verticalSlug ? `&vertical=${verticalSlug}` : ''}`,
+  )}`;
   return (
     <motion.div
       layout
@@ -77,12 +90,17 @@ function QuoteCard({ item, quote }: { item: DeliverableDefinition; quote: QuoteB
           <li>Industry: {quote.pricingTier} · market ×{quote.factors.categoryMarketIndex.toFixed(2)}</li>
         </ul>
       )}
-      <Link
-        href={`/contact?service=${item.id}`}
-        className="btn-glass mt-4 block text-center text-sm"
-      >
-        Request a quote
-      </Link>
+      <div className="mt-4 flex flex-col gap-2">
+        <Link href={buyHref} className="btn-primary block text-center text-sm">
+          Buy now
+        </Link>
+        <Link
+          href={`/contact?service=${item.id}${industryCategory ? `&category=${industryCategory}` : ''}`}
+          className="btn-glass block text-center text-sm"
+        >
+          Ask before buying
+        </Link>
+      </div>
     </motion.div>
   );
 }
@@ -92,8 +110,9 @@ export default function PricingPage() {
   const [verticalSlug, setVerticalSlug] = useState('');
   const [paymentProvider, setPaymentProvider] = useState<PaymentProviderId>('manual');
   const [intensity, setIntensity] = useState(55);
+  const [liveQuotes, setLiveQuotes] = useState<QuoteBreakdown[] | null>(null);
 
-  const quotes = useMemo(
+  const localQuotes = useMemo(
     () =>
       quoteAllDeliverables({
         industryCategory: industryCategory || null,
@@ -105,6 +124,32 @@ export default function PricingPage() {
       }),
     [industryCategory, verticalSlug, paymentProvider, intensity],
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (industryCategory) params.set('industryCategory', industryCategory);
+    if (verticalSlug) params.set('verticalSlug', verticalSlug);
+    params.set('paymentProvider', paymentProvider);
+    params.set('marketIntensity', String(intensity));
+    params.set('tamEstimateUsd', String(50_000 + intensity * 1200));
+    params.set('competitionScore', String(Math.min(100, 30 + Math.round(intensity / 2))));
+    let cancelled = false;
+    void fetch(`/api/atina/billing/quotes?${params}`)
+      .then((r) => r.json())
+      .then((json: { ok?: boolean; data?: { quotes?: QuoteBreakdown[] } }) => {
+        if (!cancelled && json.ok && json.data?.quotes?.length) {
+          setLiveQuotes(json.data.quotes);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLiveQuotes(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [industryCategory, verticalSlug, paymentProvider, intensity]);
+
+  const quotes = liveQuotes ?? localQuotes;
 
   const quoteById = useMemo(() => new Map(quotes.map((q) => [q.deliverableId, q])), [quotes]);
   const marketIndex = industryCategory ? getCategoryMarketIndex(industryCategory) : 1;
@@ -211,7 +256,12 @@ export default function PricingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
               >
-                <QuoteCard item={item} quote={quote} />
+                <QuoteCard
+                  item={item}
+                  quote={quote}
+                  industryCategory={industryCategory}
+                  verticalSlug={verticalSlug}
+                />
               </motion.div>
             );
           })}
@@ -224,9 +274,9 @@ export default function PricingPage() {
           className="mt-12 text-center text-xs text-slate-500"
         >
           <Sparkles className="mx-auto mb-2 h-3.5 w-3.5 text-violet-400" />
-          All prices are indicative — final quote after a brief review of your project.
-          <Link href="/contact" className="mt-2 block text-violet-300 underline-offset-2 hover:underline">
-            Request an exact quote
+          All prices are indicative — synced with the live billing engine when API is available.
+          <Link href="/dashboard#quote" className="mt-2 block text-violet-300 underline-offset-2 hover:underline">
+            Open checkout in dashboard
           </Link>
         </motion.p>
       </div>

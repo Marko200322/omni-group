@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { config } from '../../../config';
+import { emailSchema } from '../../auth/dto/auth.dto';
 
 /** Optional query string (Express may send `string[]`). */
 const queryParamToOptionalString = z.preprocess((val: unknown): unknown => {
@@ -144,6 +145,24 @@ export type { UserQueryDtoType as AdminUsersListQueryDtoType } from '../../users
 
 const bodyToObject = (v: unknown): unknown => (v === undefined || v === null ? {} : v);
 
+/** POST `/users/invite` — operator creates a client account (optional temp password). */
+export const AdminInviteUserBodyDto = z
+  .object({
+    name: z.string().trim().min(2).max(100),
+    email: emailSchema,
+    password: z
+      .string()
+      .min(8)
+      .max(100)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain uppercase, lowercase, and number')
+      .optional(),
+    company: z.string().trim().max(255).optional(),
+    timezone: z.string().trim().max(100).default('UTC'),
+    planSlug: z.string().trim().min(1).max(50).optional(),
+    sendWelcomeEmail: z.boolean().default(false),
+  })
+  .strict();
+
 /** PATCH `/users/:id` — optional fields; unknown keys rejected. */
 export const AdminPatchUserBodyDto = z.preprocess(
   bodyToObject,
@@ -235,6 +254,7 @@ export const AdminOnboardingRetryAllBodyDto = z.preprocess(
     .strict()
 );
 
+export type AdminInviteUserBodyDtoType = z.infer<typeof AdminInviteUserBodyDto>;
 export type AdminPatchUserBodyDtoType = z.infer<typeof AdminPatchUserBodyDto>;
 export type AdminPatchModuleBodyDtoType = z.infer<typeof AdminPatchModuleBodyDto>;
 export type AdminPostLogBodyDtoType = z.infer<typeof AdminPostLogBodyDto>;

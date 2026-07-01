@@ -182,4 +182,14 @@ describe('Admin module route security (strict GET body)', () => {
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('returns 400 VALIDATION_ERROR when POST /users/invite has query params', async () => {
+    const app = await buildApp();
+    const res = await request(app)
+      .post('/api/v1/admin/users/invite')
+      .query({ notify: '1' })
+      .send({ name: 'Test Client', email: 'invite@test.local' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
 });

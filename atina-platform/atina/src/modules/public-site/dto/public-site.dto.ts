@@ -39,5 +39,26 @@ export const PublishClientSiteDto = z.object({
   publish: z.boolean(),
 });
 
+export const ClientSiteShopOrderDto = z
+  .object({
+    buyerName: z.string().trim().min(2).max(255),
+    buyerEmail: z.string().email(),
+    buyerPhone: z.string().trim().max(64).optional(),
+    items: z
+      .array(
+        z.object({
+          id: z.string().trim().min(1).max(64),
+          name: z.string().trim().min(1).max(255),
+          priceEur: z.coerce.number().finite().min(0),
+          quantity: z.coerce.number().int().min(1).max(99),
+        }),
+      )
+      .min(1)
+      .max(20),
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .strict();
+
 export type ListSolutionsQueryDtoType = z.infer<typeof ListSolutionsQueryDto>;
 export type CreateClientSiteDtoType = z.infer<typeof CreateClientSiteDto>;
+export type ClientSiteShopOrderDtoType = z.infer<typeof ClientSiteShopOrderDto>;

@@ -9,90 +9,83 @@ param(
   [string]$ApiDomain = '',
   [string]$RemotePath = '/opt/omni-group',
   [string]$SshKey = '',
+  [string]$SshPassword = '',
   [switch]$SkipBuild,
+  [switch]$SkipPrepare,
+  [switch]$FreshWipe,
   [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $atinaRoot = Join-Path $repoRoot 'atina-platform\atina'
+. (Join-Path $PSScriptRoot 'vps-remote.ps1')
 
 if (-not $ApiDomain) {
   if ($SiteDomain -match '^api\.') { $ApiDomain = $SiteDomain }
   else { $ApiDomain = "api.$SiteDomain" }
 }
 
-function Invoke-Ssh([string]$Cmd) {
-  $sshArgs = @()
-  if ($SshKey) { $sshArgs += @('-i', $SshKey) }
-  $sshArgs += @("${VpsUser}@${VpsHost}", $Cmd)
-  if ($DryRun) {
-    Write-Host "[dry-run] ssh $($sshArgs -join ' ')" -ForegroundColor Yellow
-    return
-  }
-  & ssh @sshArgs
-  if ($LASTEXITCODE -ne 0) { throw "SSH failed: $Cmd" }
+if (-not $SshKey -and -not $SshPassword) {
+  Write-Host 'Napomena: bez sshKeyPath i sshPassword — SSH ce traziti lozinku interaktivno.' -ForegroundColor Yellow
 }
 
-function Invoke-Rsync() {
-  $rsync = Get-Command rsync -ErrorAction SilentlyContinue
-  if (-not $rsync) {
-    throw 'rsync nije instaliran. Instaliraj Git for Windows / WSL rsync ili kopiraj repo rucno na VPS.'
+$session = $null
+
+try {
+  Write-Host '=== Deploy to VPS ===' -ForegroundColor Cyan
+  Write-Host "  Host: $VpsUser@$VpsHost"
+  Write-Host "  Auth: $(if ($SshKey) { 'SSH kljuc' } elseif ($SshPassword) { 'lozinka (Posh-SSH)' } else { 'interaktivno' })"
+  Write-Host "  Site: https://$SiteDomain"
+  Write-Host "  API:  https://$ApiDomain"
+  Write-Host ''
+
+  if (-not $SkipPrepare) {
+    & (Join-Path $PSScriptRoot 'prepare-vps-prod.ps1') -SiteDomain $SiteDomain -ApiDomain $ApiDomain -Phase v6
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
-  $excludes = @(
-    '--exclude', 'node_modules',
-    '--exclude', '.git',
-    '--exclude', '.tmp',
-    '--exclude', 'TMP~1',
-    '--exclude', '.npm-cache',
-    '--exclude', 'dist',
-    '--exclude', '.next'
-  )
-  $sshOpt = if ($SshKey) { "ssh -i $SshKey" } else { 'ssh' }
-  $args = @('-avz', '--delete', '-e', $sshOpt) + $excludes + @(
-    "$repoRoot/",
-    "${VpsUser}@${VpsHost}:${RemotePath}/"
-  )
-  if ($DryRun) {
-    Write-Host "[dry-run] rsync $($args -join ' ')" -ForegroundColor Yellow
-    return
+
+  $adminPass = $null
+  foreach ($line in Get-Content (Join-Path $atinaRoot '.env.vps.prod')) {
+    if ($line -match '^ADMIN_PASSWORD=(.*)$') { $adminPass = $Matches[1].Trim(); break }
   }
-  & rsync @args
-  if ($LASTEXITCODE -ne 0) { throw 'rsync failed' }
-}
 
-Write-Host '=== Deploy to VPS ===' -ForegroundColor Cyan
-Write-Host "  Host: $VpsUser@$VpsHost"
-Write-Host "  Site: https://$SiteDomain"
-Write-Host "  API:  https://$ApiDomain"
-Write-Host ''
+  if ($FreshWipe) {
+    Write-Host '== Fresh wipe (stop stack, remove images/volumes, delete remote dir) ==' -ForegroundColor Yellow
+    $wipeCmd = @"
+set -e
+if [ -d '$RemotePath' ] && [ -f '$RemotePath/docker-compose.prod.yml' ]; then
+  cd '$RemotePath'
+  if [ -f .env.docker.prod ]; then
+    docker compose -f docker-compose.prod.yml --env-file .env.docker.prod down --rmi all -v --remove-orphans || true
+  else
+    docker compose -f docker-compose.prod.yml down --rmi all -v --remove-orphans || true
+  fi
+fi
+rm -rf '$RemotePath'
+mkdir -p '$RemotePath'
+echo 'Fresh wipe done: $RemotePath'
+"@
+    $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+      -SshPassword $SshPassword -Command $wipeCmd -TimeOutSeconds 600 -DryRun:$DryRun -Session $session
+  }
 
-# 1) Generisi prod env sa lokalnim kljucevima
-& (Join-Path $PSScriptRoot 'prepare-vps-prod.ps1') -SiteDomain $SiteDomain -ApiDomain $ApiDomain
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command "mkdir -p $RemotePath" -DryRun:$DryRun -Session $session
 
-$adminPass = $null
-foreach ($line in Get-Content (Join-Path $atinaRoot '.env.vps.prod')) {
-  if ($line -match '^ADMIN_PASSWORD=(.*)$') { $adminPass = $Matches[1].Trim(); break }
-}
+  $session = Sync-VpsRemoteDirectory -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -LocalRoot $repoRoot -RemotePath $RemotePath -DryRun:$DryRun -Session $session
 
-# 2) Priprema remote dir
-Invoke-Ssh "mkdir -p $RemotePath"
-
-# 3) Sync repo
-Invoke-Rsync
-
-# 4) Kopiraj env na VPS
-$envCopy = @"
+  $envCopy = @"
 cd $RemotePath
 cp -f .env.vps.prod .env.docker.prod
 cp -f atina-platform/atina/.env.vps.prod atina-platform/atina/.env.docker.prod
 cp -f apps/omnigroup-web/.env.vps.production apps/omnigroup-web/.env.production
 "@
-Invoke-Ssh $envCopy
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command $envCopy -DryRun:$DryRun -Session $session
 
-# 5) Docker deploy
-$deployCmd = @"
+  $deployCmd = @"
 cd $RemotePath
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod build atina-api web
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm migrate
@@ -101,17 +94,21 @@ docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d post
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile tls up -d caddy
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod ps
 "@
-if ($SkipBuild) {
-  $deployCmd = $deployCmd -replace 'docker compose -f docker-compose.prod.yml --env-file .env.docker.prod build atina-api web\r?\n', ''
-}
-Invoke-Ssh $deployCmd
+  if ($SkipBuild) {
+    $deployCmd = $deployCmd -replace 'docker compose -f docker-compose.prod.yml --env-file .env.docker.prod build atina-api web\r?\n', ''
+  }
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command $deployCmd -TimeOutSeconds 7200 -DryRun:$DryRun -Session $session
 
-Write-Host ''
-Write-Host '=== VPS deploy zavrsen ===' -ForegroundColor Green
-Write-Host "  Web:  https://$SiteDomain"
-Write-Host "  API:  https://$ApiDomain/health"
-Write-Host "  Admin: admin@atina.io / $adminPass"
-Write-Host ''
-Write-Host 'Smoke (lokalno posle DNS propagacije):' -ForegroundColor Cyan
-Write-Host "  .\scripts\staging-smoke-remote.ps1 -AtinaNodeBase https://$ApiDomain"
-Write-Host "  .\scripts\smoke-platform-full.ps1 -WebBase https://$SiteDomain -Password <admin-pass>"
+  Write-Host ''
+  Write-Host '=== VPS deploy zavrsen ===' -ForegroundColor Green
+  Write-Host "  Web:  https://$SiteDomain"
+  Write-Host "  API:  https://$ApiDomain/health"
+  if ($adminPass) { Write-Host "  Admin: admin@atina.io / $adminPass" }
+  Write-Host ''
+  Write-Host 'Smoke (posle DNS propagacije, TTL 1800 = do ~30 min):' -ForegroundColor Cyan
+  Write-Host "  .\scripts\staging-smoke-remote.ps1 -AtinaNodeBase https://$ApiDomain"
+  Write-Host "  .\scripts\smoke-platform-full.ps1 -WebBase https://$SiteDomain -Password <admin-pass>"
+} finally {
+  Close-VpsSession -Session $session
+}

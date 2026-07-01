@@ -11,6 +11,8 @@ const clientKey = (req: Request): string => {
   return req.ip || req.socket.remoteAddress || 'unknown';
 };
 
+const skipRateLimit = (): boolean => process.env.RATE_LIMIT_DISABLED === 'true';
+
 const authIdentityKey = (req: Request): string => {
   const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : 'no-email';
   return `${clientKey(req)}:${email}`;
@@ -42,6 +44,7 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: authIdentityKey,
+  skip: skipRateLimit,
 });
 
 export const passwordResetLimiter = rateLimit({
@@ -51,6 +54,7 @@ export const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: authIdentityKey,
+  skip: skipRateLimit,
 });
 
 export const paymentsLimiter = rateLimit({
@@ -60,6 +64,7 @@ export const paymentsLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: clientKey,
+  skip: skipRateLimit,
 });
 
 export const webhookLimiter = rateLimit({
@@ -69,6 +74,7 @@ export const webhookLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: clientKey,
+  skip: skipRateLimit,
 });
 
 export const adminMutationLimiter = rateLimit({
@@ -78,6 +84,7 @@ export const adminMutationLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: (req) => `${clientKey(req)}:${req.user?.userId || 'anonymous'}`,
+  skip: skipRateLimit,
 });
 
 export const authSessionLimiter = rateLimit({
@@ -87,4 +94,5 @@ export const authSessionLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   keyGenerator: (req) => `${clientKey(req)}:${req.user?.userId || 'anonymous'}`,
+  skip: skipRateLimit,
 });
