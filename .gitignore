@@ -34,4 +34,5 @@ deploy-secrets.local/deploy.config.json
 deploy-secrets.local/*.pem
 deploy-secrets.local/*.key
 deploy-secrets.local/id_*
+atina-platform/atina/KLJUCEVI-POPUNI.local.txt
 .docker-wsl/
