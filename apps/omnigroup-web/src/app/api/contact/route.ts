@@ -109,7 +109,24 @@ export async function POST(req: Request) {
   }
 
   if (!res.ok) {
-    return NextResponse.json({ ok: false, error: 'email_provider_error' }, { status: 502 });
+    if (crm.ok) {
+      return NextResponse.json({
+        ok: true,
+        message: 'crm_ok_email_failed',
+        error: 'email_provider_error',
+        crm: 'ok',
+        slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+      });
+    }
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'email_provider_error',
+        crm: crm.skipped ? 'skipped' : crm.ok ? 'ok' : 'failed',
+        slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+      },
+      { status: 502 },
+    );
   }
 
   let providerId: string | undefined;
