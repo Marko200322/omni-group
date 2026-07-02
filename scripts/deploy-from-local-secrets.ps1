@@ -144,6 +144,32 @@ function Patch-ProdEnvFiles {
     }
   }
 
+  $crmEmail = if ($config.contactCrmIngressEmail) {
+    $config.contactCrmIngressEmail.Trim()
+  } elseif ($config.adminEmail) {
+    $config.adminEmail.Trim()
+  } else {
+    ''
+  }
+  $crmPassword = if ($config.contactCrmIngressPassword) {
+    $config.contactCrmIngressPassword
+  } elseif ($config.adminPassword) {
+    $config.adminPassword
+  } else {
+    ''
+  }
+  if ($crmEmail) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_EMAIL' $crmEmail }
+  if ($crmPassword) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_PASSWORD' $crmPassword.Trim() }
+
+  if ($config.contactSlackWebhookUrl) {
+    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.contactSlackWebhookUrl.Trim()
+  } elseif ($config.slackWebhookUrl) {
+    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.slackWebhookUrl.Trim()
+  }
+
+  Set-EnvLine $webEnv 'NEXT_PUBLIC_ATINA_API_BASE' "https://$apiDomain"
+  Set-EnvLine $webEnv 'NEXT_PUBLIC_SITE_URL' "https://$siteDomain"
+
   Set-EnvLine $atinaEnv 'PHASE' $phase
   Set-EnvLine $rootEnv 'PHASE' $phase
 }

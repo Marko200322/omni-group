@@ -60,6 +60,7 @@ function QuoteCard({
   return (
     <motion.div
       layout
+      id={`deliverable-${item.id}`}
       className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6"
     >
       <p className="text-xs uppercase tracking-wider text-violet-300/80">
@@ -164,6 +165,20 @@ export default function PricingPage() {
     tamEstimateUsd: 50_000 + intensity * 1200,
     competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
   });
+
+  useEffect(() => {
+    const highlightService = new URLSearchParams(window.location.search).get('service') ?? '';
+    if (!highlightService) return;
+    const el = document.getElementById(`deliverable-${highlightService}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-violet-400/60');
+      const timer = window.setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-violet-400/60');
+      }, 2500);
+      return () => window.clearTimeout(timer);
+    }
+  }, [quotes.length]);
 
   return (
     <div className="px-4 py-20">

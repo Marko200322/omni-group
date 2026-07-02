@@ -19,6 +19,15 @@ import {
   getPlanPriceForCategory,
   type PlanSlug,
 } from './category-pricing';
+import { getDeliverable } from './deliverable-catalog';
+
+/** Services with a deliverable go to /pricing checkout; others stay on /contact. */
+export function serviceCatalogHref(serviceId: string): string {
+  if (getDeliverable(serviceId)) {
+    return `/pricing?service=${encodeURIComponent(serviceId)}`;
+  }
+  return `/contact?service=${encodeURIComponent(serviceId)}`;
+}
 
 export type CatalogItem = {
   id: string;
@@ -112,7 +121,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Create, track, and digital signature workflows.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/contact',
+        href: '/dashboard#sales',
       },
       {
         id: 'sales-avatar',
@@ -262,7 +271,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Env, Docker, login, manual billing, contact form, smoke test.',
         priceLabel: '€290',
         priceOnce: 290,
-        href: '/contact?service=setup-quick',
+        href: serviceCatalogHref('setup-quick'),
       },
       {
         id: 'setup-full',
@@ -270,7 +279,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'CRM, automations, data migration, team training, 30 days of support.',
         priceLabel: '€890',
         priceOnce: 890,
-        href: '/contact?service=setup-full',
+        href: serviceCatalogHref('setup-full'),
         badge: 'Popular',
       },
       {
@@ -279,7 +288,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Your domain, SSL, backup, monitoring, and SLA agreement.',
         priceLabel: 'from €2,490',
         priceOnce: 2490,
-        href: '/contact?service=setup-custom',
+        href: serviceCatalogHref('setup-custom'),
       },
     ],
   },
@@ -295,7 +304,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Stack review, security, env check, and production migration plan.',
         priceLabel: '€490',
         priceOnce: 490,
-        href: '/contact?service=audit',
+        href: serviceCatalogHref('audit'),
       },
       {
         id: 'integration',
@@ -303,7 +312,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Nango, OpenRouter, scraper, email — connect your existing tools.',
         priceLabel: 'from €790',
         priceOnce: 790,
-        href: '/contact?service=integration',
+        href: serviceCatalogHref('integration'),
       },
       {
         id: 'workflow-design',
@@ -311,7 +320,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Map business processes into automations and task templates.',
         priceLabel: '€590',
         priceOnce: 590,
-        href: '/contact?service=workflow-design',
+        href: serviceCatalogHref('workflow-design'),
       },
     ],
   },
@@ -335,7 +344,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Response within 24h, help with env and minor changes.',
         priceLabel: '€149/mo',
         priceMonthly: 149,
-        href: '/contact?service=support-priority',
+        href: serviceCatalogHref('support-priority'),
       },
       {
         id: 'support-dedicated',
@@ -343,7 +352,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Slack channel, 8h response, monthly health check.',
         priceLabel: '€390/mo',
         priceMonthly: 390,
-        href: '/contact?service=support-dedicated',
+        href: serviceCatalogHref('support-dedicated'),
         badge: 'Partner',
       },
     ],
@@ -360,7 +369,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Custom homepage and copy for your niche.',
         priceLabel: '€690',
         priceOnce: 690,
-        href: '/contact?service=landing',
+        href: serviceCatalogHref('landing'),
       },
       {
         id: 'white-label-setup',
@@ -368,7 +377,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Branding, domain, pricing, and materials for partner sales.',
         priceLabel: '€1,490',
         priceOnce: 1490,
-        href: '/contact?service=white-label-setup',
+        href: serviceCatalogHref('white-label-setup'),
       },
       {
         id: 'sales-enablement',
@@ -376,7 +385,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         description: 'Demo script, FAQ, onboarding materials for your sales team.',
         priceLabel: '€990',
         priceOnce: 990,
-        href: '/contact?service=sales-enablement',
+        href: serviceCatalogHref('sales-enablement'),
       },
     ],
   },

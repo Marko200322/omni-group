@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   FolderKanban,
+  Workflow,
   Crown,
   Play,
   CheckCircle2,
@@ -23,6 +24,9 @@ import { describeAtinaError } from '@/lib/atina-errors';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { CrmContactsPanel } from '@/components/platform/CrmContactsPanel';
+import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
+import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel';
 import { DeliverableQuotePanel } from '@/components/platform/DeliverableQuotePanel';
 import { DeliveriesPanel } from '@/components/platform/DeliveriesPanel';
 import { ClientOrdersPanel } from '@/components/platform/ClientOrdersPanel';
@@ -188,7 +192,41 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="projects" className="mt-6">
+      <section id="automations" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.21}>
+          <h2 className="font-display text-lg font-semibold text-white">Automations &amp; tasks</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Workflow runs and queued jobs from your workspace — {metrics.automationsRun} in the last 30 days.
+          </p>
+          {metrics.tasks.length === 0 ? (
+            <p className="mt-4 rounded-lg border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
+              No active automations — order a vertical package or book onboarding to activate workflows.
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {metrics.tasks.slice(0, 5).map((task) => (
+                <li
+                  key={task.id}
+                  className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-2 text-sm"
+                >
+                  <span className="flex items-center gap-2 text-white">
+                    <Workflow className="h-3.5 w-3.5 text-cyan-400" />
+                    {task.title}
+                  </span>
+                  <span className="text-xs capitalize text-slate-500">{task.status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {isAdmin && !isDemo && (
+            <Link href="/admin#workflows" className="btn-glass mt-4 inline-block text-sm">
+              Open workflow console
+            </Link>
+          )}
+        </GlassCard>
+      </section>
+
+      <section id="projects" className="mt-6 scroll-mt-24">
         <GlassCard delay={0.22}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-white">Project status</h2>
@@ -242,6 +280,37 @@ export default function DashboardClient({
               })}
             </div>
           )}
+          {sessionUser && !isDemo && (
+            <div className="mt-8 border-t border-white/5 pt-6">
+              <h3 className="font-display text-base font-semibold text-white">CRM contacts</h3>
+              <p className="mt-1 text-sm text-slate-500">Leads and clients linked to your account.</p>
+              <div className="mt-4">
+                <CrmContactsPanel />
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      </section>
+
+      <section id="billing" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.26}>
+          <h2 className="font-display text-lg font-semibold text-white">Subscription &amp; billing</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Starter, Pro, or Enterprise — pay by card, PayPal, crypto, Wise, or bank transfer. Price adjusts by
+            industry category.
+          </p>
+          {sessionUser && !isDemo ? (
+            <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading billing…</p>}>
+              <BillingCheckoutPanel plans={snapshot.plans} />
+            </Suspense>
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">
+              <Link href="/login?next=/dashboard%23billing" className="text-violet-300 underline">
+                Sign in
+              </Link>{' '}
+              to subscribe or renew your plan.
+            </p>
+          )}
         </GlassCard>
       </section>
 
@@ -291,9 +360,10 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="consultation" className="mt-6">
+      <section id="sales" className="mt-6 scroll-mt-24">
+        <span id="consultation" className="sr-only" aria-hidden />
         <GlassCard delay={0.36}>
-          <h2 className="font-display text-lg font-semibold text-white">Consultations & sales</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Sales &amp; consultations</h2>
           <p className="mt-2 text-sm text-slate-400">
             Book a call with our sales team — we&apos;ll define scope, timelines, and the right delivery package.
           </p>
@@ -330,6 +400,15 @@ export default function DashboardClient({
           )}
           {!isDemo && unreadError && (
             <p className="mt-3 text-xs text-slate-500">{unreadError}</p>
+          )}
+          {sessionUser && !isDemo && (
+            <div className="mt-6 border-t border-white/5 pt-6">
+              <h3 className="font-display text-base font-semibold text-white">AI memory</h3>
+              <p className="mt-1 text-sm text-slate-500">Remember context for your team and AI assistants.</p>
+              <div className="mt-4">
+                <AiMemoryPanel />
+              </div>
+            </div>
           )}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/pricing" className="btn-glass text-sm">

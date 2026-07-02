@@ -54,8 +54,10 @@ const clientNav: NavItem[] = [
   { href: '/dashboard#orders', label: 'Orders', icon: Package },
   { href: '/dashboard#projects', label: 'Projects', icon: FolderKanban },
   { href: '/dashboard#quote', label: 'New order', icon: CreditCard },
+  { href: '/dashboard#billing', label: 'Billing', icon: CreditCard },
+  { href: '/dashboard#automations', label: 'Automations', icon: Workflow },
   { href: '/dashboard#support', label: 'Support', icon: LifeBuoy },
-  { href: '/dashboard#consultation', label: 'Consultations', icon: MessageCircle },
+  { href: '/dashboard#sales', label: 'Sales', icon: MessageCircle },
   { href: '/dashboard#account', label: 'Account', icon: UserCircle },
 ];
 

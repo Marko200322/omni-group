@@ -14,13 +14,16 @@
 #>
 #Requires -Version 5.1
 param(
-  [string]$WebBase = 'http://127.0.0.1:3010'
+  [string]$WebBase = 'http://127.0.0.1:3010',
+  [switch]$Prod
 )
 
 $ErrorActionPreference = 'Stop'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 $envLocal = Join-Path $repoRoot 'apps\omnigroup-web\.env.local'
+$envProd = Join-Path $repoRoot 'apps\omnigroup-web\.env.vps.production'
+$envFile = if ($Prod -or ($WebBase -match 'omnigrouptech\.com')) { $envProd } else { $envLocal }
 $web = $WebBase.TrimEnd('/')
 
 function Read-DotEnvValue {
@@ -36,18 +39,18 @@ function Read-DotEnvValue {
   return ''
 }
 
-$resendKey = Read-DotEnvValue -Path $envLocal -Key 'RESEND_API_KEY'
-$from = Read-DotEnvValue -Path $envLocal -Key 'CONTACT_EMAIL_FROM'
-$to = Read-DotEnvValue -Path $envLocal -Key 'CONTACT_EMAIL_TO'
+$resendKey = Read-DotEnvValue -Path $envFile -Key 'RESEND_API_KEY'
+$from = Read-DotEnvValue -Path $envFile -Key 'CONTACT_EMAIL_FROM'
+$to = Read-DotEnvValue -Path $envFile -Key 'CONTACT_EMAIL_TO'
 $expectResend = -not [string]::IsNullOrWhiteSpace($resendKey)
 
-Write-Host "== Contact env ==" -ForegroundColor Cyan
+Write-Host "== Contact env ($envFile) ==" -ForegroundColor Cyan
 Write-Host "  RESEND_API_KEY: $(if ($expectResend) { 'set' } else { 'missing (stub mode)' })"
 Write-Host "  CONTACT_EMAIL_FROM: $(if ($from) { $from } else { '(empty)' })"
 Write-Host "  CONTACT_EMAIL_TO: $(if ($to) { $to } else { '(empty)' })"
 
 if ($expectResend -and (-not $from -or -not $to)) {
-  throw 'RESEND_API_KEY je set ali CONTACT_EMAIL_FROM ili CONTACT_EMAIL_TO nedostaju u .env.local'
+  throw 'RESEND_API_KEY je set ali CONTACT_EMAIL_FROM ili CONTACT_EMAIL_TO nedostaju u env fajlu'
 }
 
 $body = @{
@@ -66,6 +69,8 @@ if ($res.StatusCode -ne 200 -or -not $json.ok) {
 }
 
 Write-Host "  message=$($json.message)" -ForegroundColor Green
+if ($json.crm) { Write-Host "  crm=$($json.crm)" -ForegroundColor $(if ($json.crm -eq 'ok') { 'Green' } else { 'Yellow' }) }
+if ($json.slack) { Write-Host "  slack=$($json.slack)" -ForegroundColor DarkGray }
 
 if ($expectResend) {
   if ($json.message -ne 'sent_via_resend') {
