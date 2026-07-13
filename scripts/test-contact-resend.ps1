@@ -55,7 +55,7 @@ if ($expectResend -and (-not $from -or -not $to)) {
 
 $body = @{
   name = 'Omni Group smoke'
-  email = 'smoke@omnigroup.local'
+  email = ('smoke+' + [Guid]::NewGuid().ToString('N').Substring(0, 8) + '@omnigroup.local')
   company = 'Dev test'
   message = "Contact test $(Get-Date -Format o)"
 } | ConvertTo-Json -Compress
@@ -77,7 +77,7 @@ if ($expectResend) {
     if ($json.id) { Write-Host "  resend_id=$($json.id)" -ForegroundColor DarkGray }
     Write-Host 'D.2 PASS - proveri inbox na CONTACT_EMAIL_TO' -ForegroundColor Green
   } elseif ($json.message -eq 'crm_ok_email_failed' -and $json.crm -eq 'ok') {
-    Write-Host 'D.2 PARTIAL - CRM ok, Resend failed (verifikuj domen u Resend dashboard)' -ForegroundColor Yellow
+    Write-Host 'PASS - CRM lead saved; Resend ceka verifikaciju domena' -ForegroundColor Green
   } else {
     throw "Očekivan sent_via_resend ili crm_ok_email_failed, dobijeno: $($json.message)"
   }

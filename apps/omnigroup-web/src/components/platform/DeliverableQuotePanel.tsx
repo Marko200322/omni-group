@@ -9,6 +9,12 @@ import { deliverableLabel } from '@/lib/display-text';
 import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
 import {
+  canCheckoutPackage,
+  getPackageDeliverySpec,
+  listCheckoutPackages,
+} from '@/lib/package-delivery-spec';
+import { isLeanProdMode } from '@/lib/prod-mode';
+import {
   calculateDeliverableQuote,
   formatBillingLabel,
   type PaymentProviderId,
@@ -35,12 +41,17 @@ const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
 export function DeliverableQuotePanel({ disabled }: Props) {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') ?? '';
-  const initialService = searchParams.get('service') ?? 'vertical-package';
+  const initialVertical = searchParams.get('vertical') ?? '';
+  const initialService = searchParams.get('service') ?? '';
+  const leanDefault = listCheckoutPackages()[0] ?? 'setup-quick';
+  const resolvedInitial =
+    initialService && DELIVERABLE_CATALOG.some((d) => d.id === initialService)
+      ? initialService
+      : leanDefault;
 
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
-  const [deliverableId, setDeliverableId] = useState(
-    DELIVERABLE_CATALOG.some((d) => d.id === initialService) ? initialService : 'vertical-package',
-  );
+  const verticalSlug = initialVertical;
+  const [deliverableId, setDeliverableId] = useState(resolvedInitial);
   const [paymentProvider, setPaymentProvider] = useState<PaymentProviderId>('manual');
   const [intensity] = useState(55);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
@@ -49,25 +60,32 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [sent, setSent] = useState(false);
 
   const deliverable = DELIVERABLE_CATALOG.find((d) => d.id === deliverableId);
+  const deliverySpec = getPackageDeliverySpec(deliverableId);
+  const checkoutAllowed = canCheckoutPackage(deliverableId);
 
   const quote = useMemo(() => {
     if (!deliverable) return null;
     return calculateDeliverableQuote({
       deliverableId,
       industryCategory: industryCategory || null,
+      verticalSlug: verticalSlug || null,
       paymentProvider,
       marketIntensity: intensity,
       tamEstimateUsd: 50_000 + intensity * 1200,
       competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
     });
-  }, [deliverable, deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverable, deliverableId, industryCategory, verticalSlug, paymentProvider, intensity]);
 
   useEffect(() => {
     setCheckout(null);
     setSent(false);
-  }, [deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug, paymentProvider, intensity]);
 
   const startCheckout = useCallback(async () => {
+    if (!checkoutAllowed) {
+      setError('This package requires full production mode. Use Contact or ask admin.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -96,7 +114,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug, paymentProvider, intensity, checkoutAllowed]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -123,7 +141,12 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   return (
     <motion.div className="mt-4 space-y-4">
       <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-        You&apos;re buying a deliverable the platform produces — not platform access. Price = market + resources + fees.
+        You&apos;re buying a deliverable the platform produces — scope is listed below. Not platform access.
+        {isLeanProdMode() && (
+          <span className="mt-1 block text-amber-200/90">
+            Lean mode: some packages are contact-only until full prod is enabled.
+          </span>
+        )}
       </p>
 
       <label className="block text-sm">
@@ -134,13 +157,38 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onChange={(e) => setDeliverableId(e.target.value)}
           disabled={disabled || loading}
         >
-          {DELIVERABLE_CATALOG.map((d) => (
-            <option key={d.id} value={d.id}>
-              {deliverableLabel(d)}
-            </option>
-          ))}
+          {DELIVERABLE_CATALOG.map((d) => {
+            const ok = canCheckoutPackage(d.id);
+            return (
+              <option key={d.id} value={d.id}>
+                {deliverableLabel(d)}
+                {!ok ? ' (contact only)' : ''}
+              </option>
+            );
+          })}
         </select>
       </label>
+
+      {deliverySpec && (
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-400">
+          <p className="font-medium text-emerald-300">Automated delivery</p>
+          <ul className="mt-1 list-inside list-disc">
+            {deliverySpec.includes.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          {deliverySpec.excludes.length > 0 && (
+            <>
+              <p className="mt-2 font-medium text-amber-300/90">Not included</p>
+              <ul className="list-inside list-disc text-slate-500">
+                {deliverySpec.excludes.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
 
       <IndustryCategorySelect
         value={industryCategory}
@@ -179,9 +227,9 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           type="button"
           className="btn-primary text-sm disabled:opacity-50"
           onClick={startCheckout}
-          disabled={disabled || loading}
+          disabled={disabled || loading || !checkoutAllowed}
         >
-          {loading ? 'Generating…' : 'Generate payment instructions'}
+          {loading ? 'Generating…' : checkoutAllowed ? 'Generate payment instructions' : 'Checkout disabled (lean)'}
         </button>
         <Link
           href={`/contact?service=${encodeURIComponent(deliverableId)}${industryCategory ? `&category=${encodeURIComponent(industryCategory)}` : ''}`}

@@ -30,6 +30,7 @@ export async function renderHeygenTalkingVideo(input: {
   imageUrl: string;
   text: string;
   voiceId?: string;
+  heygenVoiceId?: string;
   heygenAvatarId?: string;
 }): Promise<AvatarVideoResult | null> {
   const apiKey = config.videoMeetings.avatarMedia.heygenApiKey.trim();
@@ -55,8 +56,9 @@ export async function renderHeygenTalkingVideo(input: {
       type: 'text',
       input_text: input.text.slice(0, 2500),
     };
-    if (input.voiceId?.trim()) {
-      voice.voice_id = input.voiceId.trim();
+    const heygenVoice = input.heygenVoiceId?.trim();
+    if (heygenVoice) {
+      voice.voice_id = heygenVoice;
     }
 
     const create = await axios.post<{ data?: { video_id?: string } }>(

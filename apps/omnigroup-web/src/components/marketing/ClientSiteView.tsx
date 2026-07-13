@@ -227,8 +227,8 @@ export function ClientSiteView({ site }: Props) {
               <EcommerceCatalog site={site} catalog={catalog} />
             ) : null}
             {activePage.kind === 'contact' ? (
-              <Link href="/contact" className="btn-primary mt-8 inline-flex text-sm">
-                Contact us
+              <Link href={`/contact?service=${encodeURIComponent(site.slug)}`} className="btn-primary mt-8 inline-flex text-sm">
+                Send inquiry
               </Link>
             ) : null}
           </>

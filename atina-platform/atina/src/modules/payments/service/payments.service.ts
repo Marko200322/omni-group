@@ -8,6 +8,7 @@ import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
 import { getIndustryCategory, getPlanPriceForCategory, type PlanSlug } from '../../billing/lib/category-pricing';
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
+import { canCheckoutPackage } from '../../billing/lib/package-delivery-spec';
 import {
   calculateDeliverableQuote,
   type PaymentProviderId,
@@ -1081,6 +1082,11 @@ export class PaymentsService {
 
     const deliverable = getDeliverable(input.deliverableId);
     if (!deliverable) throw new PaymentError('Unknown deliverable');
+    if (!canCheckoutPackage(input.deliverableId)) {
+      throw new PaymentError(
+        'This package is not available for self-serve checkout at the current budget/production profile. Contact sales.',
+      );
+    }
 
     const quote = calculateDeliverableQuote({
       deliverableId: input.deliverableId,

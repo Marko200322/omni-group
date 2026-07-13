@@ -14,6 +14,7 @@ import {
   type FulfillmentJobRow,
 } from '../repository/deliverable-fulfillment.repository';
 import { PaymentNotificationsService } from '../../payments/service/payment-notifications.service';
+import { adminOpsNotifier } from '../../admin/service/admin-ops-notifier.service';
 import { TasksService } from '../../tasks/service/tasks.service';
 import { FulfillmentMemoryService } from './fulfillment-memory.service';
 import { resolvePlanDeliverableId } from '../lib/plan-deliverable-map';
@@ -247,6 +248,11 @@ export class DeliverableFulfillmentService {
           deliverableId,
           fulfillmentMeta: { attemptNumber, checklist: outcome.checklist },
         });
+        void adminOpsNotifier.notify('fulfillment_failed', [
+          `Payment: ${input.paymentId}`,
+          `Deliverable: ${deliverableId}`,
+          failMsg,
+        ]);
         throw new Error(failMsg);
       }
 
@@ -297,6 +303,11 @@ export class DeliverableFulfillmentService {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await this.repo.markFailed(job.id, message);
+      void adminOpsNotifier.notify('fulfillment_failed', [
+        `Payment: ${ctx.paymentId}`,
+        `Deliverable: ${deliverableId}`,
+        message,
+      ]);
       throw err;
     }
   }

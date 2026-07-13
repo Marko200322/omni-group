@@ -56,7 +56,7 @@ M6  Pun gas         Stripe live, LEAD F5, avatar premium, OmniTube
 | **Autonomy loop** | `autonomy-loop`, `autonomy-marketing`, `platform-evolution` | M5 |
 | **Media** | `omnitube`, `apex-predator`, video-meetings | M6 |
 | **Avatar premium** | HeyGen/D-ID chain, `client-deliverable-bootstrap` | M6 (ili ranije za ai-support paket) |
-| **marketing-growth** (orchestrator) | prazni fajlovi — **nije implementiran** | M5+ backlog (K) |
+| **marketing-growth** (orchestrator) | status-only modul + BFF `/status` (M5+ run API backlog) | M5+ backlog (K) |
 
 ---
 
@@ -327,7 +327,7 @@ ENABLE_ANALYTICS=true
 - [ ] CRM: ≥ 50 kontakata sa emailom
 - [ ] ≥ 1 outbound konverzija → manual checkout
 - [ ] ROI: prihod od hunt kanala > trošak API (Apollo/Hunter/verify)
-- [ ] **Seed redovi:** `titan-score`, `deal-offer` u `001_seed_data.ts`
+- [x] **Seed redovi:** `titan-score`, `deal-offer` u `001_seed_data.ts`
 - [ ] **BFF + UI:** titanis, deal-offer, outreach na dashboardu/adminu
 - [ ] **Mount `AiMemoryPanel`** ili ukloni iz kataloga
 
@@ -515,11 +515,11 @@ flowchart LR
 | # | Stavka | Faza | Fajl |
 |---|--------|------|------|
 | 1 | Bootstrap public-site page body posle fulfillment | M3 | `public-site.service.ts`, `ClientSiteView.tsx` |
-| 2 | Wire `send_email` task + automation na SMTP/COMMS | M2 | `execute-task-by-type.ts`, `automation-workflow.runner.ts` |
+| 2 | Wire `send_email` task + automation na SMTP/COMMS | M2 | `[x]` wired — treba COMMS/SMTP env |
 | 3 | Wire `export_data` / `generate_report` task types | Backlog-K | `execute-task-by-type.ts` |
 | 4 | Implementirati `marketing-growth-orchestrator` ili obrisati prazne fajlove | M5 | `modules/marketing-growth/` |
 | 5 | Sync generisanih landings u products katalog | M5 | `KOMPLETNA-LISTA-ADMIN-I-AGENT.md` §B |
-| 6 | Seed `titan-score` + `deal-offer` u DB | M4 | `001_seed_data.ts` |
+| 6 | Seed `titan-score` + `deal-offer` u DB | M4 | `[x]` `001_seed_data.ts` |
 | 7 | Platform search (ukloni "coming soon") | M3 | `PlatformShell.tsx` |
 | 8 | Demo metrics → live KPI kad API dostupan | M1 | `platform-metrics.ts` |
 | 9 | Python `sistem_naplate/` ↔ Node modul bridge | Backlog-K | `sistem-naplate.service.ts` |

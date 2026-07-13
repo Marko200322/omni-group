@@ -88,6 +88,7 @@ cp -f apps/omnigroup-web/.env.vps.production apps/omnigroup-web/.env.production
   $deployCmd = @"
 cd $RemotePath
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod build atina-api web
+docker compose -f docker-compose.prod.yml --env-file .env.docker.prod run --rm --user root --no-deps atina-api sh -c "mkdir -p /var/omni/forge && chown -R atina:atina /var/omni/forge"
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm migrate
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod --profile setup run --rm seed
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod up -d postgres redis atina-api web

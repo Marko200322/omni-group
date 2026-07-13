@@ -9,7 +9,7 @@ import { getIndustryCategory } from '@/lib/category-pricing';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 import { deliverableLabel } from '@/lib/display-text';
 
-function buildDefaultMessage(serviceId: string, categorySlug: string): string {
+function buildDefaultMessage(serviceId: string, categorySlug: string, verticalSlug: string): string {
   const lines: string[] = [];
   const deliverable = serviceId ? getDeliverable(serviceId) : null;
   if (deliverable) {
@@ -21,6 +21,9 @@ function buildDefaultMessage(serviceId: string, categorySlug: string): string {
   if (categoryMeta) {
     lines.push(`Industry: ${categoryMeta.name}.`);
   }
+  if (verticalSlug) {
+    lines.push(`Vertical niche: ${verticalSlug.replace(/-/g, ' ')}.`);
+  }
   lines.push('', 'Project details / timeline:');
   return lines.join('\n');
 }
@@ -29,13 +32,14 @@ export function ContactForm() {
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('service') ?? '';
   const categorySlug = searchParams.get('category') ?? '';
+  const verticalSlug = searchParams.get('vertical') ?? '';
 
   const deliverable = serviceId ? getDeliverable(serviceId) : null;
   const categoryMeta = categorySlug ? getIndustryCategory(categorySlug) : null;
 
   const defaultMessage = useMemo(
-    () => buildDefaultMessage(serviceId, categorySlug),
-    [serviceId, categorySlug],
+    () => buildDefaultMessage(serviceId, categorySlug, verticalSlug),
+    [serviceId, categorySlug, verticalSlug],
   );
 
   const [message, setMessage] = useState(defaultMessage);
@@ -73,6 +77,7 @@ export function ContactForm() {
           message: String(fd.get('message') || message),
           ...(serviceId ? { service: serviceId } : {}),
           ...(categorySlug ? { category: categorySlug } : {}),
+          ...(verticalSlug ? { vertical: verticalSlug } : {}),
         };
         try {
           const res = await fetch('/api/contact', {
@@ -94,6 +99,8 @@ export function ContactForm() {
             const err = data.error || `HTTP ${res.status}`;
             if (err === 'contact_email_env_incomplete') {
               setErrMsg('email configuration incomplete (FROM/TO)');
+            } else if (err === 'contact_delivery_unconfigured') {
+              setErrMsg('Contact delivery is not configured on the server. Try again later or email us directly.');
             } else if (err === 'email_provider_error' || err === 'email_send_failed') {
               setErrMsg('Resend failed — check your API key');
             } else {
@@ -115,17 +122,23 @@ export function ContactForm() {
         }
       }}
     >
-      {(serviceLabel || categoryMeta) && (
+      {(serviceLabel || categoryMeta || verticalSlug) && (
         <p className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm text-violet-100">
           {serviceLabel && (
             <>
               <span className="text-slate-400">Service:</span> {serviceLabel}
             </>
           )}
-          {serviceLabel && categoryMeta && ' · '}
+          {serviceLabel && (categoryMeta || verticalSlug) && ' · '}
           {categoryMeta && (
             <>
               <span className="text-slate-400">Industry:</span> {categoryMeta.name}
+            </>
+          )}
+          {categoryMeta && verticalSlug && ' · '}
+          {verticalSlug && (
+            <>
+              <span className="text-slate-400">Vertical:</span> {verticalSlug.replace(/-/g, ' ')}
             </>
           )}
         </p>

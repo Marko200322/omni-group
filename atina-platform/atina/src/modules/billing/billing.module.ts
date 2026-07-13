@@ -187,5 +187,13 @@ export class BillingModule implements IModule {
       validateBody(BillingFulfillmentRejectBodyDto),
       this.controller.rejectFulfillmentJob
     );
+    this.router.get(
+      '/factory-phase/status',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getFactoryPhaseStatus
+    );
   }
 }

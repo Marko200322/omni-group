@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { assertFactoryModule } from '../../billing/lib/factory-phase-guard';
 import { getAiClient } from '../../../integrations';
 import type { LeadRecord } from '../../../integrations/lead-databases/types';
 import { NotificationsService } from '../../notifications/service/notifications.service';
@@ -200,6 +201,9 @@ export class OutboundQueueService {
   }
 
   async processSendQueue(): Promise<{ processed: number; sent: number; blocked: number; failed: number }> {
+    if (!config.outreach.devSendToFallback) {
+      assertFactoryModule('outbound_send', 'Outbound send requires factory phase M4+ and domain warmup.');
+    }
     const devFallback =
       config.outreach.devSendToFallback && Boolean(config.outreach.fallbackNotifyEmail?.trim());
 

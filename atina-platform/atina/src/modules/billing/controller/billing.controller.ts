@@ -8,6 +8,8 @@ import { sendSuccess, paginate } from '../../../utils/response';
 import { NotFoundError } from '../../../utils/errors';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
 import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engine';
+import { buildFactoryPhaseStatus } from '../lib/factory-phase-modules';
+import { getFactoryRuntimeSnapshot } from '../lib/factory-phase-runtime';
 
 export class BillingController {
   private service: BillingService;
@@ -150,5 +152,12 @@ export class BillingController {
     const ok = await this.fulfillmentWrite.rejectRelease(req.params.paymentId, notes);
     if (!ok) throw new NotFoundError('Fulfillment job');
     sendSuccess(res, { rejected: true });
+  };
+
+  getFactoryPhaseStatus = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, {
+      ...buildFactoryPhaseStatus(),
+      runtime: getFactoryRuntimeSnapshot(),
+    });
   };
 }

@@ -13,6 +13,13 @@ const CheckoutDto = z
   .object({
     planSlug: z.enum(['starter', 'pro', 'enterprise']),
     billingCycle: z.enum(['monthly', 'yearly']).default('monthly'),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
+      .optional(),
   })
   .strict();
 

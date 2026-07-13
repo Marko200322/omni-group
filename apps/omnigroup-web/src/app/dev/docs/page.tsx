@@ -41,6 +41,8 @@ const sections: DocSection[] = [
       'docs/NIVO-3-AUDIT-ROADMAP.md',
       'docs/NIVO-3-PLAN-RADA-OSTALO.md',
       'docs/VLASNIK-ZAVRSAVA.md',
+      'docs/DANAS-URADI-M0-M1.md',
+      'docs/MARKETING-REVENUE-PHASED-CHECKLIST.md',
       'docs/VAULT-B-INTEGRATED-RUNBOOK.md',
       'docs/VAULT-B-EVIDENCE-LATEST.md',
       'docs/VAULT-ALIGNMENT-NOTES.md',

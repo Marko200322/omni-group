@@ -8,7 +8,7 @@ import {
   fetchRosterFromAggregator,
   useAiAggregatorForAvatars,
 } from '../providers/avatar-ai-aggregator.provider';
-import { resolveAvatarAssetUrl } from './avatar-asset-url';
+import { resolveAvatarAssetUrl, resolveAvatarPhotoUrl } from '../avatar/avatar-asset-url';
 import { AvatarRosterRepository } from '../repository/avatar-roster.repository';
 
 const rosterRepo = new AvatarRosterRepository();
@@ -41,8 +41,11 @@ function parseAgentsJson(raw: string): AvatarAgentDefinition[] | null {
         name,
         title: String(row.title ?? '').trim(),
         avatarUrl: String(row.avatarUrl ?? row.avatar_url ?? '').trim(),
+        photoUrl: String(row.photoUrl ?? row.photo_url ?? '').trim() || undefined,
         backgroundUrl: String(row.backgroundUrl ?? row.background_url ?? '').trim(),
         voiceId: String(row.voiceId ?? row.voice_id ?? '').trim(),
+        heygenAvatarId: String(row.heygenAvatarId ?? row.heygen_avatar_id ?? '').trim() || undefined,
+        heygenVoiceId: String(row.heygenVoiceId ?? row.heygen_voice_id ?? '').trim() || undefined,
         persona: String(row.persona ?? '').trim(),
         greeting: String(row.greeting ?? '').trim(),
       });
@@ -78,9 +81,14 @@ function applyLegacySingleAgent(agents: AvatarAgentDefinition[], agentType: Agen
 }
 
 function normalizeAgentUrls(agent: AvatarAgentDefinition): AvatarAgentDefinition {
+  const avatarUrl = resolveAvatarAssetUrl(agent.avatarUrl);
+  const photoUrl = agent.photoUrl?.trim()
+    ? resolveAvatarAssetUrl(agent.photoUrl)
+    : resolveAvatarPhotoUrl(avatarUrl);
   return {
     ...agent,
-    avatarUrl: resolveAvatarAssetUrl(agent.avatarUrl),
+    avatarUrl,
+    photoUrl,
     backgroundUrl: resolveAvatarAssetUrl(agent.backgroundUrl),
   };
 }
@@ -157,6 +165,19 @@ export function listAvatarAgents(agentType: AgentType): AvatarAgentDefinition[] 
 
 export function getAvatarAgent(agentType: AgentType, agentId?: string): AvatarAgentDefinition {
   const agents = listAvatarAgents(agentType);
+  const id = agentId?.trim();
+  if (id) {
+    const found = agents.find((a) => a.id === id);
+    if (found) return found;
+  }
+  return agents[0];
+}
+
+export async function getAvatarAgentAsync(
+  agentType: AgentType,
+  agentId?: string,
+): Promise<AvatarAgentDefinition> {
+  const { agents } = await listAvatarAgentsAsync(agentType);
   const id = agentId?.trim();
   if (id) {
     const found = agents.find((a) => a.id === id);

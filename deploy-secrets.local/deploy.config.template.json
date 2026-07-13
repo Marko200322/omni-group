@@ -1,0 +1,76 @@
+{
+  "_comment": "Kopiraj u deploy.config.json i popuni. Ne commit-uj deploy.config.json. factoryPhase M0-M6 pali module preko prod-factory-phase.ps1.",
+
+  "vpsHost": "123.456.789.0",
+  "vpsUser": "root",
+  "sshKeyPath": "",
+  "sshPassword": "root-lozinka-servera",
+  "remotePath": "/opt/omni-group",
+
+  "siteDomain": "tvojdomen.com",
+  "apiDomain": "api.tvojdomen.com",
+
+  "phase": "v6",
+  "prodMode": "lean",
+  "factoryPhase": "M0",
+  "monthlyBudgetEur": 200,
+  "runPhaseBootAfterDeploy": false,
+
+  "adminEmail": "admin@atina.io",
+  "adminPassword": "jaka-lozinka-min-16",
+  "paymentNotifyEmail": "ti@tvojdomen.com",
+  "contactCrmIngressEmail": "",
+  "contactCrmIngressPassword": "",
+
+  "manualPayment": {
+    "accountName": "Omni Group DOO",
+    "iban": "RS00...",
+    "bank": "Naziv banke",
+    "swift": "XXXXRSBG",
+    "currency": "EUR",
+    "note": "U uplati navedite referencu iz proforme."
+  },
+
+  "smtp": {
+    "enabled": false,
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "user": "",
+    "password": "",
+    "from": "noreply@tvojdomen.com"
+  },
+
+  "resend": {
+    "apiKey": "re_...",
+    "contactFrom": "noreply@tvojdomen.com",
+    "contactTo": "ti@tvojdomen.com"
+  },
+
+  "openRouterApiKey": "sk-or-v1-...",
+  "elevenLabsApiKey": "",
+
+  "scraperUrl": "",
+  "scraperKey": "",
+
+  "heygenApiKey": "",
+  "didApiKey": "",
+
+  "hunterApiKey": "",
+  "neverbounceApiKey": "",
+  "zerobounceApiKey": "",
+
+  "stripeSecretKey": "",
+  "stripePublishableKey": "",
+  "stripeWebhookSecret": "",
+  "starterPriceId": "",
+  "proPriceId": "",
+  "enterprisePriceId": "",
+
+  "slackWebhookUrl": "",
+  "contactSlackWebhookUrl": "",
+
+  "telegramBotToken": "",
+  "telegramChatId": "",
+  "adminTelegramNotify": true
+}

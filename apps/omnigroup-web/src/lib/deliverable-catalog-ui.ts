@@ -9,6 +9,8 @@ import {
 } from './deliverable-catalog';
 import { calculateDeliverableQuote, formatBillingLabel, type PaymentProviderId } from './dynamic-pricing';
 import { formatEur } from './category-pricing';
+import { buildPricingHref } from './checkout-navigation';
+import { getPackageAvailability, getPackageDeliverySpec } from './package-delivery-spec';
 
 const CATEGORY_ICONS: Record<DeliverableDefinition['category'], CatalogCategory['icon']> = {
   implementation: Wrench,
@@ -59,17 +61,22 @@ export function buildDeliverableCatalogCategories(
           tamEstimateUsd,
           competitionScore,
         });
-        const query = new URLSearchParams({ service: d.id });
-        if (industryCategory) query.set('category', industryCategory);
-        if (verticalSlug) query.set('vertical', verticalSlug);
+        const spec = getPackageDeliverySpec(d.id);
+        const availability = getPackageAvailability(d.id);
         return {
           id: d.id,
           name: d.name,
-          description: d.description,
+          description: spec?.description ?? d.description,
           priceLabel: `${formatEur(quote.clientPriceEur)} ${formatBillingLabel(d.billing)}`,
           priceMonthly: d.billing === 'monthly' ? quote.clientPriceEur : undefined,
           priceOnce: d.billing === 'one_time' ? quote.clientPriceEur : undefined,
-          href: `/contact?${query.toString()}`,
+          badge: availability.badge,
+          badgeVariant: availability.badgeTone,
+          href: buildPricingHref({
+            service: d.id,
+            category: industryCategory ?? undefined,
+            vertical: verticalSlug ?? undefined,
+          }),
         };
       }),
     }));

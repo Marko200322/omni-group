@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
-import { getServerSession } from '@/lib/auth-session';
+import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
 type ContactRow = {
   id?: string;
@@ -27,6 +27,9 @@ export async function GET(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+  if (!isAdminRole(session.user.role)) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -62,6 +65,9 @@ export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+  if (!isAdminRole(session.user.role)) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
   let body: Record<string, unknown> = {};

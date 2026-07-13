@@ -121,7 +121,7 @@ export default function HomePage() {
               Three pillars of <span className="text-gradient">one platform</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-              Marketing site, client dashboard, and admin console — one brand, three modules under the hood.
+              Marketing site, client portal, and professional delivery — one brand, built around your business.
             </p>
           </motion.div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -140,9 +140,9 @@ export default function HomePage() {
               },
               {
                 icon: Zap,
-                title: 'Operator console',
-                body: 'Monitoring, workflow stats, billing catalog, and system signals.',
-                href: '/admin',
+                title: 'Support & delivery',
+                body: 'Track orders, documents, billing, and live support from your client portal.',
+                href: '/login',
               },
             ].map(({ icon: Icon, title, body, href }, i) => (
               <motion.div
@@ -173,15 +173,14 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           <div>
             <h2 className="font-display text-3xl font-bold text-white">
-              A platform for <span className="text-gradient-client">clients</span> and{' '}
-              <span className="text-gradient-admin">operators</span>
+              Everything you need in <span className="text-gradient-client">one client portal</span>
             </h2>
             <ul className="mt-8 space-y-4">
               {[
-                { icon: Layers, text: 'Client dashboard — projects, automations, billing.' },
-                { icon: Shield, text: 'Admin console — monitoring, plans, workflow stats.' },
-                { icon: LineChart, text: 'Live Atina API snapshot — health + public plan catalog.' },
-                { icon: Globe2, text: 'Production-ready once you configure .env and deploy.' },
+                { icon: Layers, text: 'Projects, orders, and delivery status in real time.' },
+                { icon: Shield, text: 'Secure sign-in — billing, documents, and support behind your account.' },
+                { icon: LineChart, text: 'Transparent pricing and industry-specific packages.' },
+                { icon: Globe2, text: 'Video consultations, AI support, and professional onboarding.' },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-3 text-slate-300">
                   <span className="mt-0.5 rounded-lg bg-white/5 p-2">
@@ -192,11 +191,11 @@ export default function HomePage() {
               ))}
             </ul>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/dashboard" className="btn-primary">
-                Client workspace
+              <Link href="/login" className="btn-primary">
+                Client portal
               </Link>
-              <Link href="/admin" className="btn-glass">
-                Admin console
+              <Link href="/pricing" className="btn-glass">
+                View pricing
               </Link>
             </div>
           </div>

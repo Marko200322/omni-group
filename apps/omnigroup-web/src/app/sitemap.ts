@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getGeneratedVerticalsIndex, listOnlineVerticalSlugs } from '@/lib/generated-verticals';
 
-const PUBLIC_ROUTES = ['', '/services', '/products', '/pricing', '/contact', '/login', '/solutions'] as const;
+const PUBLIC_ROUTES = ['', '/services', '/products', '/pricing', '/contact', '/login', '/register', '/solutions'] as const;
 const SOLUTION_SITEMAP_CAP = 500;
 
 export default function sitemap(): MetadataRoute.Sitemap {

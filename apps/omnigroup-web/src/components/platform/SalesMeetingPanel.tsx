@@ -12,8 +12,7 @@ export function SalesMeetingPanel({ disabled }: Props) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
       <ConversationalAvatarPanel agentType="sales" disabled={disabled} />
       <p className="mt-4 text-xs text-slate-500">
-        Sales team — 4 avatars. Live sales meetings when{' '}
-        <code className="text-violet-300">SALES_MEETINGS_ENABLED=true</code>.
+        Book a video consultation with our sales team to discuss scope and pricing.
       </p>
     </motion.div>
   );

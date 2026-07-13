@@ -6,12 +6,12 @@ import { useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CatalogSection } from '@/components/marketing/CatalogSection';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
-import { SERVICE_CATEGORIES, withCatalogPricing } from '@/lib/marketing-catalog';
+import { SERVICE_CATEGORIES, withCatalogPricing, withPhaseServiceCatalog } from '@/lib/marketing-catalog';
 
 export default function ServicesPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const categories = useMemo(
-    () => withCatalogPricing(SERVICE_CATEGORIES, industryCategory || null),
+    () => withCatalogPricing(withPhaseServiceCatalog(SERVICE_CATEGORIES), industryCategory || null),
     [industryCategory],
   );
 
@@ -24,8 +24,7 @@ export default function ServicesPage() {
             Services for your business
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Implementation, consulting, support, and marketing — pricing tailored to your industry and market.
-            Select a category to see indicative prices.
+            Each service lists exactly what the system delivers after payment — no vague agency promises.
           </p>
         </motion.div>
 

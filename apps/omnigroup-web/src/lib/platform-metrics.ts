@@ -13,6 +13,10 @@ export type AdminMetrics = {
   sparkWorkflow: SparkPoint[];
   sparkRevenue: SparkPoint[];
   recentEvents: { time: string; type: string; message: string; severity: 'info' | 'warn' | 'error' }[];
+  trends?: {
+    activeUsers?: { value: string; positive: boolean };
+    mrr?: { value: string; positive: boolean };
+  };
 };
 
 export type ClientMetrics = {
@@ -27,6 +31,22 @@ export type ClientMetrics = {
 
 function mapSourceToDemo(snapshot: AtinaPublicSnapshot): boolean {
   return snapshot.source === 'unreachable' || snapshot.source === 'partial';
+}
+
+function formatTrendDay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr.slice(0, 3);
+  return d.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+function buildSparkFromTrend7d(
+  trend7d: NonNullable<AtinaAdminOverview['workflowTemplatesExecutionTrend7d']>,
+): SparkPoint[] {
+  if (!trend7d.length) return [];
+  return trend7d.map((row) => ({
+    label: formatTrendDay(row.date),
+    value: typeof row.successRate === 'number' ? row.successRate : 0,
+  }));
 }
 
 export function buildAdminMetrics(
@@ -48,6 +68,52 @@ export function buildAdminMetrics(
     overview?.workflowTemplateAlerts?.total ??
     (demo ? 3 : snapshot.errors.length > 0 ? snapshot.errors.length : 0);
 
+  const trend7d = overview?.workflowTemplatesExecutionTrend7d;
+  const sparkWorkflow =
+    trend7d && trend7d.length > 0
+      ? buildSparkFromTrend7d(trend7d)
+      : [
+          { label: 'Mon', value: 92 },
+          { label: 'Tue', value: 94 },
+          { label: 'Wed', value: 91 },
+          { label: 'Thu', value: 96 },
+          { label: 'Fri', value: 98 },
+          { label: 'Sat', value: 97 },
+          { label: 'Sun', value: demo ? 94 : 99 },
+        ];
+
+  const activeCount = overview?.users?.active;
+  const totalUsers = overview?.users?.total;
+  const trends =
+    overview && typeof activeCount === 'number' && typeof totalUsers === 'number' && totalUsers > 0
+      ? {
+          activeUsers: {
+            value: `${Math.round((activeCount / totalUsers) * 100)}% of users active`,
+            positive: activeCount >= totalUsers * 0.5,
+          },
+          mrr: overview.payments?.total
+            ? {
+                value: `${overview.payments.total} payments recorded`,
+                positive: (overview.payments.total ?? 0) > 0,
+              }
+            : undefined,
+        }
+      : undefined;
+
+  const sparkRevenueLive =
+    overview?.payments?.totalRevenue != null
+      ? (() => {
+          const k = Math.max(1, Math.round(overview.payments!.totalRevenue! / 1000));
+          return [
+            { label: '−4w', value: Math.max(0, k - 3) },
+            { label: '−3w', value: Math.max(0, k - 2) },
+            { label: '−2w', value: Math.max(0, k - 1) },
+            { label: '−1w', value: k },
+            { label: 'Now', value: k },
+          ];
+        })()
+      : null;
+
   return {
     activeUsers: overview?.users?.active
       ? overview.users.active.toLocaleString('en-US')
@@ -61,22 +127,15 @@ export function buildAdminMetrics(
         : `€${(32 + planBoost * 4.2).toFixed(1)}k`,
     workflowSuccess: successRate,
     openAlerts: String(alerts),
-    sparkWorkflow: [
-      { label: 'Mon', value: 92 },
-      { label: 'Tue', value: 94 },
-      { label: 'Wed', value: 91 },
-      { label: 'Thu', value: 96 },
-      { label: 'Fri', value: 98 },
-      { label: 'Sat', value: 97 },
-      { label: 'Sun', value: demo ? 94 : 99 },
-    ],
-    sparkRevenue: [
+    sparkWorkflow,
+    sparkRevenue: sparkRevenueLive ?? [
       { label: 'Jan', value: 28 },
       { label: 'Feb', value: 31 },
       { label: 'Mar', value: 35 },
       { label: 'Apr', value: 38 },
       { label: 'May', value: 42 + planBoost },
     ],
+    trends,
     recentEvents: overview
       ? [
           {

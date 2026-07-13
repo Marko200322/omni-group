@@ -101,7 +101,7 @@ export function DeliveriesPanel({ disabled }: Props) {
         <Package className="mx-auto h-8 w-8 text-slate-500" />
         <p className="mt-3 font-medium text-white">No deliveries yet</p>
         <p className="mt-1 text-sm text-slate-500">
-          After admin confirms your payment, deliverables appear here — documents, live sites, and software builds.
+          After we confirm your payment, deliverables appear here — documents, live sites, and software builds.
         </p>
       </div>
     );
@@ -144,7 +144,7 @@ export function DeliveriesPanel({ disabled }: Props) {
                     </p>
                     {job.error && <p className="mt-2 text-xs text-rose-300/90">{job.error}</p>}
                     {!job.clientVisible && job.reviewStatus === 'pending_review' && (
-                      <p className="mt-2 text-xs text-violet-300">Quality review in progress — downloads unlock after admin approval.</p>
+                      <p className="mt-2 text-xs text-violet-300">Quality review in progress — downloads unlock when ready.</p>
                     )}
                   </div>
                   {job.completedAt && (

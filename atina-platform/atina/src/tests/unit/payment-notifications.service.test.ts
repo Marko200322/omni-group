@@ -14,6 +14,10 @@ jest.mock('../../modules/notifications/service/notifications.service', () => ({
   })),
 }));
 
+jest.mock('../../modules/admin/service/admin-ops-notifier.service', () => ({
+  adminOpsNotifier: { notify: jest.fn().mockResolvedValue(true) },
+}));
+
 describe('PaymentNotificationsService', () => {
   let service: PaymentNotificationsService;
 

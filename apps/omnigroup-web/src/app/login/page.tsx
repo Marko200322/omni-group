@@ -14,6 +14,10 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
+  const registerHref = nextPath
+    ? `/register?next=${encodeURIComponent(nextPath)}`
+    : '/register';
+  const demoEnabled = process.env.NODE_ENV !== 'production';
   const [status, setStatus] = useState<'idle' | 'loading' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
@@ -32,7 +36,7 @@ function LoginForm() {
         setErrMsg(data.error ?? `HTTP ${res.status}`);
         return;
       }
-      router.push(data.redirectTo ?? '/dashboard');
+      router.push(nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard');
       router.refresh();
     } catch {
       setStatus('err');
@@ -128,18 +132,33 @@ function LoginForm() {
         {status === 'loading' ? 'Signing in…' : 'Sign in'}
       </motion.button>
       <p className="text-center text-xs text-slate-500">
-        No account? <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">Contact us</Link> for access.
+        <Link href="/forgot-password" className="text-violet-300 underline-offset-2 hover:underline">
+          Forgot password?
+        </Link>
       </p>
-      <motion.button
-        type="button"
-        disabled={status === 'loading'}
-        className="btn-glass w-full text-center text-sm disabled:opacity-60"
-        whileHover={{ scale: 1.02 }}
-        whileTap={tapScale}
-        onClick={() => startDemo('client')}
-      >
-        Preview demo portal
-      </motion.button>
+      <p className="text-center text-xs text-slate-500">
+        No account?{' '}
+        <Link href={registerHref} className="text-violet-300 underline-offset-2 hover:underline">
+          Create one
+        </Link>{' '}
+        or{' '}
+        <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
+          contact us
+        </Link>{' '}
+        for enterprise access.
+      </p>
+      {demoEnabled && (
+        <motion.button
+          type="button"
+          disabled={status === 'loading'}
+          className="btn-glass w-full text-center text-sm disabled:opacity-60"
+          whileHover={{ scale: 1.02 }}
+          whileTap={tapScale}
+          onClick={() => startDemo('client')}
+        >
+          Preview demo portal
+        </motion.button>
+      )}
     </motion.form>
   );
 }

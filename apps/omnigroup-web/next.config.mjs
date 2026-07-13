@@ -34,6 +34,9 @@ function loadOmnigroupEnvFromAggregator() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir,
+  experimental: {
+    instrumentationHook: true,
+  },
   env: loadOmnigroupEnvFromAggregator(),
   webpack(config, { dev }) {
     // Filesystem webpack cache on OneDrive causes stale/missing chunk errors.

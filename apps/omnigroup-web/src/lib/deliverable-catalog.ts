@@ -1,4 +1,5 @@
 /** Client-side mirror of Atina deliverable catalog (keep in sync). */
+import { getPackageAnchorEur, getPackageDeliverySpec } from './package-delivery-spec';
 
 export type DeliverableBilling = 'one_time' | 'monthly' | 'yearly';
 
@@ -23,7 +24,7 @@ export type DeliverableDefinition = {
   modules?: string[];
 };
 
-export const DELIVERABLE_CATALOG: DeliverableDefinition[] = [
+const DELIVERABLE_CATALOG_RAW: DeliverableDefinition[] = [
   { id: 'setup-quick', name: 'Quick setup', nameSr: 'Brzo podešavanje', description: 'Portal, login, payments, contact — live in 5–7 days.', billing: 'one_time', category: 'implementation', anchorEur: 390, resources: { aiTokensK: 8, scraperRuns: 0, infraHours: 3, supportHours: 2, storageGbMonth: 0, deployComplexity: 2 } },
   { id: 'setup-full', name: 'Full onboarding', nameSr: 'Pun onboarding', description: 'CRM, automations, migration, training, 30 days of support.', billing: 'one_time', category: 'implementation', anchorEur: 1290, resources: { aiTokensK: 45, scraperRuns: 2, infraHours: 12, supportHours: 8, storageGbMonth: 2, deployComplexity: 3 } },
   { id: 'setup-custom', name: 'Custom deploy', nameSr: 'Custom deploy', description: 'Production: domain, SSL, backup, monitoring, SLA.', billing: 'one_time', category: 'implementation', anchorEur: 3900, resources: { aiTokensK: 20, scraperRuns: 0, infraHours: 24, supportHours: 12, storageGbMonth: 10, deployComplexity: 5 } },
@@ -42,6 +43,18 @@ export const DELIVERABLE_CATALOG: DeliverableDefinition[] = [
   { id: 'ai-support-retainer', name: 'AI support retainer', nameSr: 'AI podrška retainer', description: 'AI avatar + video meetings for your clients.', billing: 'monthly', category: 'vertical', anchorEur: 249, resources: { aiTokensK: 120, scraperRuns: 0, infraHours: 2, supportHours: 2, storageGbMonth: 2, deployComplexity: 2 }, modules: ['support-avatar', 'video-meetings'] },
   { id: 'custom-software', name: 'Custom software', nameSr: 'Softver po meri', description: 'Greenfield application, isolated order, tested before delivery.', billing: 'one_time', category: 'implementation', anchorEur: 4900, resources: { aiTokensK: 120, scraperRuns: 5, infraHours: 40, supportHours: 16, storageGbMonth: 5, deployComplexity: 5 } },
 ];
+
+function withPhaseAwareCatalog(d: DeliverableDefinition): DeliverableDefinition {
+  const spec = getPackageDeliverySpec(d.id);
+  const anchor = getPackageAnchorEur(d.id);
+  let item = d;
+  if (spec) item = { ...item, description: spec.description };
+  if (anchor > 0) item = { ...item, anchorEur: anchor };
+  return item;
+}
+
+export const DELIVERABLE_CATALOG: DeliverableDefinition[] =
+  DELIVERABLE_CATALOG_RAW.map(withPhaseAwareCatalog);
 
 export function getDeliverable(id: string) {
   return DELIVERABLE_CATALOG.find((d) => d.id === id) ?? null;

@@ -29,7 +29,9 @@ export default function ProductsPage() {
           </h1>
           <p className="mt-4 text-lg text-slate-400">
             Turnkey packages, setup, retainers, and vertical solutions — including custom software, tested before delivery.
-            Pricing is transparent and calculated automatically.
+            Pricing is transparent and calculated automatically. Cards show{' '}
+            <span className="text-emerald-300">Available now</span> vs{' '}
+            <span className="text-amber-300">From Mx</span> / contact-only packages.
             {generatedCount > 0 ? (
               <span className="mt-2 block text-sm text-violet-200/90">
                 {generatedCount} generated online niches —{' '}

@@ -1,9 +1,12 @@
-# Env: SITE_DOMAIN (web), API_DOMAIN (API) — postavi u .env.docker.prod ili VPS env
+# Env: SITE_DOMAIN (web + API paths on one TLS cert)
 
 {$SITE_DOMAIN} {
+	# Public API (works without separate api.* DNS)
+	handle /api/v1/* {
+		reverse_proxy atina-api:3000
+	}
+	handle /health {
+		reverse_proxy atina-api:3000
+	}
 	reverse_proxy web:3000
-}
-
-{$API_DOMAIN} {
-	reverse_proxy atina-api:3000
 }

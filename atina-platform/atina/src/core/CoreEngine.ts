@@ -34,6 +34,7 @@ import { ClientHunterModule } from '../modules/client-hunter/client-hunter.modul
 import { LeadScoringModule } from '../modules/lead-scoring/lead-scoring.module';
 import { ProxyRotationModule } from '../modules/proxy-rotation/proxy-rotation.module';
 import { OutreachModule } from '../modules/outreach/outreach.module';
+import { MarketingGrowthModule } from '../modules/marketing-growth/marketing-growth.module';
 import { ContractsModule } from '../modules/contracts/contracts.module';
 import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { ScraperModule } from '../modules/scraper/scraper.module';
@@ -137,6 +138,7 @@ export class CoreEngine {
     moduleRegistry.register(new LeadScoringModule());
     moduleRegistry.register(new ProxyRotationModule());
     moduleRegistry.register(new OutreachModule());
+    moduleRegistry.register(new MarketingGrowthModule());
     moduleRegistry.register(new ContractsModule());
     if (config.features.analytics) moduleRegistry.register(new AnalyticsModule());
     moduleRegistry.register(new NotificationsModule());

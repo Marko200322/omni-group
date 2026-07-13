@@ -12,6 +12,9 @@ export function describeAtinaError(code: string | undefined): string {
     chat_failed: 'Avatar chat is currently unavailable.',
     checkout_failed: 'Error creating payment instructions.',
     login_failed: 'Sign-in failed.',
+    register_failed: 'Registration failed.',
+    email_already_registered: 'This email is already registered.',
+    plan_required: 'This feature requires a higher plan.',
   };
   if (map[code]) return map[code];
   if (code.startsWith('http_')) return 'Atina API did not respond. Check the backend.';

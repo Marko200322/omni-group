@@ -52,6 +52,13 @@ export type AtinaAdminOverview = {
     total?: number;
     critical?: number;
   };
+  workflowTemplatesExecutionTrend7d?: Array<{
+    date: string;
+    totalRuns?: number;
+    completedRuns?: number;
+    failedRuns?: number;
+    successRate?: number;
+  }>;
   modules?: Array<{ name: string; slug: string; version?: string; isCore?: boolean }>;
 };
 

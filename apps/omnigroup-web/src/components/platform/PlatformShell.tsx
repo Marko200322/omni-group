@@ -25,6 +25,10 @@ import {
   Factory,
   Package,
   ShoppingCart,
+  FileText,
+  Crosshair,
+  Truck,
+  Briefcase,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -40,10 +44,12 @@ const adminNav: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard', label: 'Client portal', icon: FolderKanban },
   { href: '/admin#factory', label: 'Product Factory', icon: Factory },
+  { href: '/admin#hunting', label: 'Hunting', icon: Crosshair },
   { href: '/admin#resources', label: 'Resources', icon: ShoppingCart },
   { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
   { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
   { href: '/admin#users', label: 'Users', icon: Users },
+  { href: '/admin#crm', label: 'CRM', icon: Briefcase },
   { href: '/admin#billing', label: 'Billing', icon: CreditCard },
   { href: '/admin#system', label: 'System', icon: Activity },
   { href: '/admin#settings', label: 'Settings', icon: Settings },
@@ -52,12 +58,13 @@ const adminNav: NavItem[] = [
 const clientNav: NavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard#orders', label: 'Orders', icon: Package },
+  { href: '/dashboard#deliveries', label: 'Deliveries', icon: Truck },
   { href: '/dashboard#projects', label: 'Projects', icon: FolderKanban },
   { href: '/dashboard#quote', label: 'New order', icon: CreditCard },
   { href: '/dashboard#billing', label: 'Billing', icon: CreditCard },
-  { href: '/dashboard#automations', label: 'Automations', icon: Workflow },
+  { href: '/dashboard#documents', label: 'Documents', icon: FileText },
   { href: '/dashboard#support', label: 'Support', icon: LifeBuoy },
-  { href: '/dashboard#sales', label: 'Sales', icon: MessageCircle },
+  { href: '/dashboard#consultation', label: 'Consultations', icon: MessageCircle },
   { href: '/dashboard#account', label: 'Account', icon: UserCircle },
 ];
 

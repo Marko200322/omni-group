@@ -1,4 +1,5 @@
 /** Sellable outputs — NOT platform access. Platform is internal; clients buy deliverables. */
+import { getPackageAnchorEur, honestDescriptionFor } from './package-delivery-spec';
 
 export type DeliverableBilling = 'one_time' | 'monthly' | 'yearly';
 
@@ -43,13 +44,22 @@ export const DELIVERABLE_CATALOG: DeliverableDefinition[] = [
   { id: 'custom-software', name: 'Custom software', nameSr: 'Softver po meri', description: 'Greenfield application, isolated order, tested before delivery.', billing: 'one_time', category: 'implementation', anchorEur: 4900, resources: { aiTokensK: 120, scraperRuns: 5, infraHours: 40, supportHours: 16, storageGbMonth: 5, deployComplexity: 5 } },
 ];
 
-const BY_ID = new Map(DELIVERABLE_CATALOG.map((d) => [d.id, d]));
+function withPhaseAwareCatalog(d: DeliverableDefinition): DeliverableDefinition {
+  const honest = honestDescriptionFor(d.id);
+  const anchor = getPackageAnchorEur(d.id);
+  let item = honest ? { ...d, description: honest } : d;
+  if (anchor > 0) item = { ...item, anchorEur: anchor };
+  return item;
+}
+
+const CATALOG_HONEST = DELIVERABLE_CATALOG.map(withPhaseAwareCatalog);
+const BY_ID = new Map(CATALOG_HONEST.map((d) => [d.id, d]));
 
 export function getDeliverable(id: string): DeliverableDefinition | null {
   return BY_ID.get(id.trim()) ?? null;
 }
 
 export function listDeliverables(category?: DeliverableDefinition['category']): DeliverableDefinition[] {
-  if (!category) return [...DELIVERABLE_CATALOG];
-  return DELIVERABLE_CATALOG.filter((d) => d.category === category);
+  if (!category) return [...CATALOG_HONEST];
+  return CATALOG_HONEST.filter((d) => d.category === category);
 }

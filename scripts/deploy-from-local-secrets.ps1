@@ -54,11 +54,23 @@ $apiDomain = if ($config.apiDomain -and $config.apiDomain.Trim()) {
 }
 
 $phase = if ($config.phase) { $config.phase } else { 'v6' }
+$prodMode = if ($config.prodMode -and $config.prodMode.Trim()) { $config.prodMode.Trim().ToLower() } else { 'lean' }
 $sshKey = if ($config.sshKeyPath) { $config.sshKeyPath.Trim() } else { '' }
 $sshPassword = if ($config.sshPassword) { $config.sshPassword } else { '' }
 $remotePath = if ($config.remotePath) { $config.remotePath.Trim() } else { '/opt/omni-group' }
 
 . (Join-Path $scriptsDir 'vps-remote.ps1')
+. (Join-Path $scriptsDir 'prod-lean-profile.ps1')
+. (Join-Path $scriptsDir 'prod-budget-profile.ps1')
+. (Join-Path $scriptsDir 'prod-factory-phase.ps1')
+. (Join-Path $scriptsDir 'deploy-config-env.ps1')
+
+$monthlyBudgetEur = Resolve-MonthlyBudgetEur $config.monthlyBudgetEur
+$factoryPhase = Resolve-FactoryPhase $(if ($config.factoryPhase) { $config.factoryPhase } else { 'M0' })
+if ($factoryPhase -eq 'M6' -and $prodMode -eq 'lean') {
+  Write-Host 'M6 factory: auto-switch prodMode lean -> full (Stripe + premium modules)' -ForegroundColor Yellow
+  $prodMode = 'full'
+}
 
 function Set-EnvLine([string]$FilePath, [string]$Key, [string]$Value) {
   if (-not (Test-Path $FilePath)) { return }
@@ -89,27 +101,9 @@ function Patch-ProdEnvFiles {
   if ($config.paymentNotifyEmail) {
     Set-EnvLine $atinaEnv 'PAYMENT_NOTIFY_EMAIL' $config.paymentNotifyEmail.Trim()
   }
-  if ($config.openRouterApiKey) {
-    Set-EnvLine $atinaEnv 'OPENROUTER_API_KEY' $config.openRouterApiKey.Trim()
-    Set-EnvLine $atinaEnv 'AI_KEY' $config.openRouterApiKey.Trim()
-  }
-  if ($config.elevenLabsApiKey) {
-    Set-EnvLine $atinaEnv 'ELEVENLABS_API_KEY' $config.elevenLabsApiKey.Trim()
-  }
-  if ($config.heygenApiKey) {
-    Set-EnvLine $atinaEnv 'HEYGEN_API_KEY' $config.heygenApiKey.Trim()
-  }
-  if ($config.didApiKey) {
-    Set-EnvLine $atinaEnv 'DID_API_KEY' $config.didApiKey.Trim()
-  }
-  if ($config.slackWebhookUrl) {
-    Set-EnvLine $atinaEnv 'SLACK_WEBHOOK_URL' $config.slackWebhookUrl.Trim()
-  }
-  if ($config.stripeSecretKey) {
-    Set-EnvLine $atinaEnv 'STRIPE_SECRET_KEY' $config.stripeSecretKey.Trim()
-  }
-  if ($config.stripeWebhookSecret) {
-    Set-EnvLine $atinaEnv 'STRIPE_WEBHOOK_SECRET' $config.stripeWebhookSecret.Trim()
+
+  foreach ($entry in (Get-DeployConfigAtinaEnvPatches $config).GetEnumerator()) {
+    Set-EnvLine $atinaEnv $entry.Key $entry.Value
   }
 
   if ($config.manualPayment) {
@@ -134,41 +128,13 @@ function Patch-ProdEnvFiles {
 
   if ($config.resend) {
     if ($config.resend.apiKey) {
-      Set-EnvLine $webEnv 'RESEND_API_KEY' $config.resend.apiKey
-    }
-    if ($config.resend.contactFrom) {
-      Set-EnvLine $webEnv 'CONTACT_EMAIL_FROM' $config.resend.contactFrom
-    }
-    if ($config.resend.contactTo) {
-      Set-EnvLine $webEnv 'CONTACT_EMAIL_TO' $config.resend.contactTo
+      Set-EnvLine $atinaEnv 'RESEND_API_KEY' $config.resend.apiKey.Trim()
     }
   }
 
-  $crmEmail = if ($config.contactCrmIngressEmail) {
-    $config.contactCrmIngressEmail.Trim()
-  } elseif ($config.adminEmail) {
-    $config.adminEmail.Trim()
-  } else {
-    ''
+  foreach ($entry in (Get-DeployConfigWebEnvPatches $config $siteDomain).GetEnumerator()) {
+    Set-EnvLine $webEnv $entry.Key $entry.Value
   }
-  $crmPassword = if ($config.contactCrmIngressPassword) {
-    $config.contactCrmIngressPassword
-  } elseif ($config.adminPassword) {
-    $config.adminPassword
-  } else {
-    ''
-  }
-  if ($crmEmail) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_EMAIL' $crmEmail }
-  if ($crmPassword) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_PASSWORD' $crmPassword.Trim() }
-
-  if ($config.contactSlackWebhookUrl) {
-    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.contactSlackWebhookUrl.Trim()
-  } elseif ($config.slackWebhookUrl) {
-    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.slackWebhookUrl.Trim()
-  }
-
-  Set-EnvLine $webEnv 'NEXT_PUBLIC_ATINA_API_BASE' "https://$apiDomain"
-  Set-EnvLine $webEnv 'NEXT_PUBLIC_SITE_URL' "https://$siteDomain"
 
   Set-EnvLine $atinaEnv 'PHASE' $phase
   Set-EnvLine $rootEnv 'PHASE' $phase
@@ -179,7 +145,10 @@ Write-Host "  Config: $ConfigPath"
 Write-Host "  Host:   $($config.vpsUser)@$($config.vpsHost)"
 Write-Host "  Site:   https://$siteDomain"
 Write-Host "  API:    https://$apiDomain"
-if ($FreshWipe) { Write-Host '  Mode:   FRESH WIPE (brise postojeci stack pre upload-a)' -ForegroundColor Yellow }
+Write-Host "  Mode:   $prodMode$(if (Test-IsLeanProdMode $prodMode) { ' (minimal spend)' } else { '' })"
+Write-FactoryPhaseSummary $factoryPhase $monthlyBudgetEur
+Write-BudgetPlanSummary $monthlyBudgetEur
+if ($FreshWipe) { Write-Host '  Wipe:   FRESH WIPE (brise postojeci stack pre upload-a)' -ForegroundColor Yellow }
 Write-Host ''
 
 if ($Bootstrap) {
@@ -200,9 +169,12 @@ if ($Bootstrap) {
 
 Write-Host '== prepare-vps-prod ==' -ForegroundColor Cyan
 $prepArgs = @{
-  SiteDomain = $siteDomain
-  ApiDomain  = $apiDomain
-  Phase      = $phase
+  SiteDomain        = $siteDomain
+  ApiDomain         = $apiDomain
+  Phase             = $phase
+  ProdMode          = $prodMode
+  FactoryPhase      = $factoryPhase
+  MonthlyBudgetEur  = $monthlyBudgetEur
 }
 if ($DryRun) { $prepArgs.DryRun = $true }
 if ($FreshWipe -or $RotateSecrets) { $prepArgs.RotateSecrets = $true }
@@ -211,6 +183,15 @@ if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $DryRun) {
   Patch-ProdEnvFiles
+  if (Test-IsLeanProdMode $prodMode) {
+    Apply-LeanProdEnvFiles $repoRoot
+    Write-Host 'Lean prod env applied (base safety flags)' -ForegroundColor DarkGray
+  }
+  Apply-BudgetProdEnvFiles $repoRoot $monthlyBudgetEur
+  Write-Host "Budget profile EUR $monthlyBudgetEur/mo applied (AI caps + retries)" -ForegroundColor DarkGray
+  $deployCfg = Build-DeployConfigHashtable $config
+  Apply-FactoryPhaseEnvFiles $repoRoot $factoryPhase $monthlyBudgetEur $prodMode $deployCfg
+  Write-Host "Factory phase $factoryPhase module profile applied" -ForegroundColor Green
   Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
 }
 

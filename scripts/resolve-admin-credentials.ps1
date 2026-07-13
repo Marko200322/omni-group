@@ -3,8 +3,12 @@ function Get-AdminCredentials {
   param([string]$RepoRoot = (Split-Path $PSScriptRoot -Parent))
   $email = 'admin@atina.io'
   $password = 'Admin@123456'
-  $path = Join-Path $RepoRoot 'atina-platform\atina\ADMIN-CREDENTIALS.local.txt'
-  if (Test-Path $path) {
+  $paths = @(
+    (Join-Path $RepoRoot 'atina-platform\atina\ADMIN-CREDENTIALS.local.txt'),
+    (Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod')
+  )
+  foreach ($path in $paths) {
+    if (-not (Test-Path $path)) { continue }
     foreach ($line in Get-Content $path) {
       if ($line -match '^ADMIN_EMAIL=(.+)$') { $email = $Matches[1].Trim() }
       if ($line -match '^ADMIN_PASSWORD=(.+)$') { $password = $Matches[1].Trim() }

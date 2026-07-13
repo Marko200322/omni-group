@@ -19,6 +19,18 @@ import {
 } from '@/lib/dynamic-pricing';
 import { getCategoryMarketIndex } from '@/lib/market-pricing';
 import { getIndustryCategory } from '@/lib/category-pricing';
+import { buildLoginNextForQuote } from '@/lib/checkout-navigation';
+import {
+  canCheckoutPackage,
+  getPackageAvailability,
+  getPackageDeliverySpec,
+  resolvePackageOffer,
+  listCheckoutPackages,
+} from '@/lib/package-delivery-spec';
+import { getFactoryPhase, getFactoryPhaseLabel, usesFixedPhasePricing } from '@/lib/factory-phase';
+import { isLeanProdMode } from '@/lib/prod-mode';
+import { getMonthlyBudgetEur } from '@/lib/prod-budget';
+import { getSellablePackageHint } from '@/lib/sellable-packages';
 
 const DELIVERABLE_CATEGORY_LABELS_EN: Record<DeliverableDefinition['category'], string> = {
   implementation: 'Implementation',
@@ -42,6 +54,28 @@ const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
   { id: 'paypal', label: 'PayPal (~3.4%)' },
 ];
 
+function availabilityBadgeClass(tone: ReturnType<typeof getPackageAvailability>['badgeTone']): string {
+  switch (tone) {
+    case 'available':
+      return 'bg-emerald-500/20 text-emerald-200';
+    case 'upcoming':
+      return 'bg-amber-500/20 text-amber-200';
+    default:
+      return 'bg-slate-500/25 text-slate-300';
+  }
+}
+
+function availabilityCardBorder(tone: ReturnType<typeof getPackageAvailability>['badgeTone']): string {
+  switch (tone) {
+    case 'available':
+      return 'border-emerald-500/25';
+    case 'upcoming':
+      return 'border-amber-500/20';
+    default:
+      return 'border-white/10';
+  }
+}
+
 function QuoteCard({
   item,
   quote,
@@ -54,20 +88,65 @@ function QuoteCard({
   verticalSlug: string;
 }) {
   const [open, setOpen] = useState(false);
-  const buyHref = `/login?next=${encodeURIComponent(
-    `/dashboard#quote?service=${item.id}${industryCategory ? `&category=${industryCategory}` : ''}${verticalSlug ? `&vertical=${verticalSlug}` : ''}`,
-  )}`;
+  const buyHref = buildLoginNextForQuote({
+    service: item.id,
+    category: industryCategory || undefined,
+    vertical: verticalSlug || undefined,
+  });
+  const spec = getPackageDeliverySpec(item.id);
+  const offer = resolvePackageOffer(item.id);
+  const availability = getPackageAvailability(item.id);
+  const checkoutOk = availability.checkoutAllowed;
   return (
     <motion.div
       layout
       id={`deliverable-${item.id}`}
-      className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+      className={`flex flex-col rounded-2xl border bg-white/[0.03] p-6 ${availabilityCardBorder(availability.badgeTone)}`}
     >
-      <p className="text-xs uppercase tracking-wider text-violet-300/80">
-        {DELIVERABLE_CATEGORY_LABELS_EN[item.category]}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="text-xs uppercase tracking-wider text-violet-300/80">
+          {DELIVERABLE_CATEGORY_LABELS_EN[item.category]}
+        </p>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${availabilityBadgeClass(availability.badgeTone)}`}
+        >
+          {availability.badge}
+        </span>
+      </div>
       <h3 className="mt-1 font-display text-lg font-semibold text-white">{item.name}</h3>
       <p className="mt-2 flex-1 text-sm text-slate-400">{item.description}</p>
+      {spec && (
+        <div className="mt-3 space-y-2 text-xs">
+          <p className="font-medium text-emerald-300/90">You receive (automated)</p>
+          <ul className="list-inside list-disc text-slate-500">
+            {offer.includes.slice(0, 5).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          {offer.upcomingUnlocks.length > 0 && (
+            <>
+              <p className="font-medium text-violet-300/80">Auto-added as factory grows</p>
+              <ul className="list-inside list-disc text-slate-600">
+                {offer.upcomingUnlocks.slice(0, 3).map((u) => (
+                  <li key={u.fromPhase + u.includes[0]}>
+                    {u.fromPhase}: {u.includes[0]}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {spec.excludes.length > 0 && (
+            <>
+              <p className="font-medium text-amber-300/80">Not included</p>
+              <ul className="list-inside list-disc text-slate-600">
+                {spec.excludes.slice(0, 2).map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
       <p className="mt-4">
         <span className="text-3xl font-bold text-gradient">{formatEur(quote.clientPriceEur)}</span>
         <span className="text-sm text-slate-500"> {formatBillingLabel(item.billing)}</span>
@@ -92,14 +171,20 @@ function QuoteCard({
         </ul>
       )}
       <div className="mt-4 flex flex-col gap-2">
-        <Link href={buyHref} className="btn-primary block text-center text-sm">
-          Buy now
-        </Link>
+        {checkoutOk ? (
+          <Link href={buyHref} className="btn-primary block text-center text-sm">
+            Buy now
+          </Link>
+        ) : (
+          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-200">
+            {availability.statusLabel}
+          </p>
+        )}
         <Link
           href={`/contact?service=${item.id}${industryCategory ? `&category=${industryCategory}` : ''}`}
           className="btn-glass block text-center text-sm"
         >
-          Ask before buying
+          {checkoutOk ? 'Ask before buying' : 'Request quote'}
         </Link>
       </div>
     </motion.div>
@@ -165,6 +250,22 @@ export default function PricingPage() {
     tamEstimateUsd: 50_000 + intensity * 1200,
     competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
   });
+  const verticalAvailability = getPackageAvailability('vertical-package');
+
+  const catalogItems = useMemo(
+    () => DELIVERABLE_CATALOG.filter((d) => d.id !== 'vertical-package'),
+    [],
+  );
+  const { availableNow, comingSoon } = useMemo(() => {
+    const available: DeliverableDefinition[] = [];
+    const upcoming: DeliverableDefinition[] = [];
+    for (const item of catalogItems) {
+      if (canCheckoutPackage(item.id)) available.push(item);
+      else upcoming.push(item);
+    }
+    return { availableNow: available, comingSoon: upcoming };
+  }, [catalogItems]);
+  const checkoutPackageIds = useMemo(() => listCheckoutPackages(), []);
 
   useEffect(() => {
     const highlightService = new URLSearchParams(window.location.search).get('service') ?? '';
@@ -189,8 +290,16 @@ export default function PricingPage() {
             Transparent pricing by industry
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Delivery pricing tailored to your vertical and market — from quick setup to full custom software.
-            Select a category to see realistic indicative quotes.
+            Honest delivery scope per package — automated outputs listed on each card.
+            <span className="mt-2 block text-violet-200/90">
+              Factory {getFactoryPhase()}: {getFactoryPhaseLabel()}
+              {usesFixedPhasePricing() && ' · Fixed launch prices until M6.'}
+            </span>
+            {isLeanProdMode() && (
+              <span className="mt-2 block text-amber-200/90">
+                €{getMonthlyBudgetEur()}/mo budget (excl. VPS/domain): {getSellablePackageHint()}
+              </span>
+            )}
           </p>
         </motion.div>
 
@@ -243,44 +352,120 @@ export default function PricingPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-10 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6"
+          className={`mt-10 rounded-2xl border p-6 ${
+            verticalAvailability.checkoutAllowed
+              ? 'border-emerald-500/30 bg-emerald-500/5'
+              : 'border-amber-500/25 bg-amber-500/5'
+          }`}
         >
-          <div className="flex items-start gap-3">
-            <Calculator className="mt-1 h-6 w-6 text-emerald-400" />
-            <div>
-              <p className="font-display text-lg font-semibold text-white">Vertical package (monthly)</p>
-              <p className="mt-1 text-sm text-slate-400">
-                Typical monthly delivery by industry — CRM, automations, AI support.
-              </p>
-              <p className="mt-3 text-3xl font-bold text-emerald-300">
-                {formatEur(verticalQuote.clientPriceEur)}
-                <span className="text-base font-normal text-slate-500"> / mo</span>
-              </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Calculator className="mt-1 h-6 w-6 text-emerald-400" />
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-display text-lg font-semibold text-white">Vertical package (monthly)</p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${availabilityBadgeClass(verticalAvailability.badgeTone)}`}
+                  >
+                    {verticalAvailability.badge}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-slate-400">
+                  Typical monthly delivery by industry — CRM, automations, AI support.
+                </p>
+                {!verticalAvailability.checkoutAllowed && (
+                  <p className="mt-2 text-xs text-amber-200/90">{verticalAvailability.statusLabel}</p>
+                )}
+                <p className="mt-3 text-3xl font-bold text-emerald-300">
+                  {formatEur(verticalQuote.clientPriceEur)}
+                  <span className="text-base font-normal text-slate-500"> / mo</span>
+                </p>
+              </div>
             </div>
+            {verticalAvailability.checkoutAllowed ? (
+              <Link
+                href={buildLoginNextForQuote({
+                  service: 'vertical-package',
+                  category: industryCategory || undefined,
+                  vertical: verticalSlug || undefined,
+                })}
+                className="btn-primary text-sm"
+              >
+                Buy now
+              </Link>
+            ) : (
+              <Link
+                href={`/contact?service=vertical-package${industryCategory ? `&category=${industryCategory}` : ''}`}
+                className="btn-glass text-sm"
+              >
+                Request quote
+              </Link>
+            )}
           </div>
         </motion.div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {DELIVERABLE_CATALOG.filter((d) => d.id !== 'vertical-package').map((item, i) => {
-            const quote = quoteById.get(item.id);
-            if (!quote) return null;
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-              >
-                <QuoteCard
-                  item={item}
-                  quote={quote}
-                  industryCategory={industryCategory}
-                  verticalSlug={verticalSlug}
-                />
-              </motion.div>
-            );
-          })}
-        </div>
+        <section className="mt-14">
+          <div className="mb-6">
+            <h2 className="font-display text-2xl font-bold text-white">Available now</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Self-serve checkout — automated delivery after payment ({checkoutPackageIds.length} packages at factory{' '}
+              {getFactoryPhase()}).
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {availableNow.map((item, i) => {
+              const quote = quoteById.get(item.id);
+              if (!quote) return null;
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <QuoteCard
+                    item={item}
+                    quote={quote}
+                    industryCategory={industryCategory}
+                    verticalSlug={verticalSlug}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+
+        {comingSoon.length > 0 && (
+          <section className="mt-16">
+            <div className="mb-6">
+              <h2 className="font-display text-2xl font-bold text-white">Coming with factory growth</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Listed for transparency — opens as factory phase advances. Request a quote if you need it early.
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {comingSoon.map((item, i) => {
+                const quote = quoteById.get(item.id);
+                if (!quote) return null;
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <QuoteCard
+                      item={item}
+                      quote={quote}
+                      industryCategory={industryCategory}
+                      verticalSlug={verticalSlug}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <motion.p
           initial={{ opacity: 0 }}

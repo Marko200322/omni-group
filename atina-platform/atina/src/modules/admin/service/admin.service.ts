@@ -38,6 +38,8 @@ import { AuthService } from '../../auth/service/auth.service';
 import { createWorkflowChainAuthBootstrapAdapter } from '../../auth/service/workflow-chain-auth-bootstrap.adapter';
 import { generateInvitePassword } from '../lib/invite-password';
 import { ValidationError } from '../../../utils/errors';
+import { buildFactoryPhaseStatus } from '../../billing/lib/factory-phase-modules';
+import { getFactoryRuntimeSnapshot } from '../../billing/lib/factory-phase-runtime';
 import type { AdminInviteUserBodyDtoType } from '../dto/admin.dto';
 
 export class AdminService {
@@ -346,6 +348,10 @@ export class AdminService {
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage(),
         nodeVersion: process.version,
+        factory: {
+          ...buildFactoryPhaseStatus(),
+          runtime: getFactoryRuntimeSnapshot(),
+        },
       };
   }
 

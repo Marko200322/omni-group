@@ -8,7 +8,7 @@ import {
   DEFAULT_SUPPORT_GREETING,
   DEFAULT_SUPPORT_PERSONA,
 } from '../avatar/avatar-agent.personas';
-import { getAvatarAgent, listAvatarAgentsAsync } from '../avatar/avatar-agent.config';
+import { getAvatarAgent, getAvatarAgentAsync, listAvatarAgentsAsync } from '../avatar/avatar-agent.config';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
 import {
   avatarMediaCapabilities,
@@ -104,11 +104,19 @@ export class AvatarAgentService {
   }
 
   async listAgents(agentType: AgentType) {
-    assertAvatarEnabled(agentType);
+    if (!avatarEnabled(agentType)) {
+      return {
+        agentType,
+        rosterSource: 'disabled',
+        enabled: false,
+        agents: [],
+      };
+    }
     const { agents, source } = await listAvatarAgentsAsync(agentType);
     return {
       agentType,
       rosterSource: source,
+      enabled: true,
       agents: agents.map((a) => presentAgent(agentType, a, source)),
     };
   }
@@ -209,7 +217,7 @@ export class AvatarAgentService {
     if (session.status !== 'active') throw new ValidationError('Session is closed');
 
     const boundAgentId = sessionAgentId(session.metadata);
-    const agent = getAvatarAgent(agentType, boundAgentId);
+    const agent = await getAvatarAgentAsync(agentType, boundAgentId);
 
     await this.repo.insertMessage({
       sessionId,
@@ -281,7 +289,7 @@ export class AvatarAgentService {
     const session = sessions[0];
     if (!session || session.agent_type !== agentType) throw new NotFoundError('Avatar session');
 
-    const agent = getAvatarAgent(agentType, sessionAgentId(session.metadata));
+    const agent = await getAvatarAgentAsync(agentType, sessionAgentId(session.metadata));
     const { rows } = await this.repo.listMessages(sessionId);
     return {
       sessionId,

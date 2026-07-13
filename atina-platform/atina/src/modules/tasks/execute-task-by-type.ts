@@ -1,9 +1,12 @@
 import logger from '../../utils/logger';
 import { runDominusSwarmBatch } from '../dominus-swarm/dominus-swarm.runner';
 import {
+  executeExportData,
+  executeGenerateReport,
   executeOmnigameValidate,
   executeOmnitubePipeline,
   executeScrapeUrl,
+  executeSendEmail,
   executeTitanixPipeline,
 } from './task-executors';
 
@@ -13,7 +16,7 @@ export async function executeTaskByType(
 ): Promise<unknown> {
   switch (type) {
     case 'send_email':
-      return { sent: true, to: payload.to, subject: payload.subject };
+      return executeSendEmail(payload);
     case 'scrape_url':
       return executeScrapeUrl(payload);
     case 'titanix_pipeline':
@@ -23,9 +26,9 @@ export async function executeTaskByType(
     case 'omnigame_validate':
       return executeOmnigameValidate(payload);
     case 'export_data':
-      return { format: payload.format, rows: 0 };
+      return executeExportData(payload);
     case 'generate_report':
-      return { reportId: `report_${Date.now()}`, generatedAt: new Date() };
+      return executeGenerateReport(payload);
     case 'dominus_swarm_batch':
       return runDominusSwarmBatch(payload as Parameters<typeof runDominusSwarmBatch>[0]);
     default:

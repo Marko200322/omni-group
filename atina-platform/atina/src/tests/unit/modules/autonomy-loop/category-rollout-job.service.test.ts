@@ -24,12 +24,12 @@ describe('category-rollout-job.service', () => {
       processAllVerticals: false,
     });
     expect(job.status).toBe('running');
-    expect(svc.getActiveJob()?.id).toBe(job.id);
+    expect((await svc.getActiveJob())?.id).toBe(job.id);
 
     await new Promise((r) => setTimeout(r, 50));
-    const last = svc.getLastJob();
+    const last = await svc.getLastJob();
     expect(last?.status).toBe('completed');
-    expect(svc.getActiveJob()).toBeNull();
+    expect(await svc.getActiveJob()).toBeNull();
   });
 
   it('returns same active job while running', () => {

@@ -11,6 +11,7 @@ import {
   RunClientHunterDtoType,
 } from '../dto/client-hunter.dto';
 import { config } from '../../../config';
+import { assertFactoryModule } from '../../billing/lib/factory-phase-guard';
 import { getScraperClient, getLeadDatabaseService } from '../../../integrations';
 import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
 import { OutboundQueueService } from '../../autonomy-loop/service/outbound-queue.service';
@@ -66,6 +67,7 @@ export class ClientHunterService {
   }
 
   async run(systemId: string, userId: string, dto: RunClientHunterDtoType, rawIdempotencyKey?: string) {
+    assertFactoryModule('hunter', 'Client Hunter requires factory phase M2+ (scraper).');
     const { rows: found } = await this.repo.getOwned(systemId, userId);
     if (!found[0]) throw new NotFoundError('Client Hunter workspace');
 

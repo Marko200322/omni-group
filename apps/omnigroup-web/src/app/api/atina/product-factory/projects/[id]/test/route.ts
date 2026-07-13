@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
-import { getServerSession } from '@/lib/auth-session';
+import { requireAdminSession } from '@/lib/bff-admin-gate';
 
 type Params = { params: { id: string } };
 
 export async function POST(_req: Request, { params }: Params) {
-  const session = await getServerSession();
-  if (!session || session.demo) {
-    return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
-  }
+  const gate = await requireAdminSession();
+  if ('error' in gate) return gate.error;
+  const { session } = gate;
   const r = await fetchAtinaForBff<unknown>(
     `/api/v1/product-factory/projects/${encodeURIComponent(params.id)}/test`,
     session,

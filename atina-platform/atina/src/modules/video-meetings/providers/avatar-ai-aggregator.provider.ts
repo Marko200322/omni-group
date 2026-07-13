@@ -2,6 +2,7 @@ import { config } from '../../../config';
 import { getAiClient } from '../../../integrations';
 import type { AgentType } from '../avatar/avatar-agent.personas';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
+import { resolveAvatarPhotoUrl } from '../avatar/avatar-asset-url';
 import { generateAgentReply } from '../providers/avatar-ai-chat.provider';
 import {
   avatarVideoCapable,
@@ -103,21 +104,28 @@ export async function localSpeechRender(input: {
   sessionId: string;
   text: string;
   avatarUrl: string;
+  photoUrl?: string;
   voiceId: string;
+  heygenAvatarId?: string;
+  heygenVoiceId?: string;
 }): Promise<AggregatorSpeechResult> {
   let audioMime: string | null = null;
   let audioBase64: string | null = null;
   let videoUrl: string | null = null;
 
+  const photoUrl = resolveAvatarPhotoUrl(input.avatarUrl, input.photoUrl);
+
   const tts = await renderAvatarTts(input.text, input.voiceId);
   if (tts) {
     audioMime = tts.mimeType;
     audioBase64 = tts.audioBase64;
-    if (avatarVideoCapable(input.avatarUrl)) {
+    if (avatarVideoCapable(photoUrl)) {
       const video = await renderAvatarVideo({
-        imageUrl: input.avatarUrl,
+        imageUrl: photoUrl,
         text: input.text,
         voiceId: input.voiceId,
+        heygenAvatarId: input.heygenAvatarId,
+        heygenVoiceId: input.heygenVoiceId,
         audioBase64: tts.audioBase64,
         audioMimeType: tts.mimeType,
         sessionId: input.sessionId,
@@ -142,7 +150,10 @@ export async function renderAgentSpeech(input: {
   sessionId: string;
   text: string;
   avatarUrl: string;
+  photoUrl?: string;
   voiceId: string;
+  heygenAvatarId?: string;
+  heygenVoiceId?: string;
 }): Promise<AggregatorSpeechResult> {
   const fromAgg = await renderSpeechViaAggregator(input);
   if (fromAgg) return fromAgg;
@@ -223,7 +234,10 @@ export async function conversationTurnLocal(input: {
     sessionId: input.sessionId,
     text,
     avatarUrl: input.agent.avatarUrl,
+    photoUrl: input.agent.photoUrl,
     voiceId: input.agent.voiceId,
+    heygenAvatarId: input.agent.heygenAvatarId,
+    heygenVoiceId: input.agent.heygenVoiceId,
   });
 
   return {
@@ -256,7 +270,10 @@ export async function runConversationTurn(input: {
         sessionId: input.sessionId,
         text: fromAgg.text,
         avatarUrl: fromAgg.avatarUrl ?? input.agent.avatarUrl,
+        photoUrl: input.agent.photoUrl,
         voiceId: input.agent.voiceId,
+        heygenAvatarId: input.agent.heygenAvatarId,
+        heygenVoiceId: input.agent.heygenVoiceId,
       });
       return {
         ...fromAgg,

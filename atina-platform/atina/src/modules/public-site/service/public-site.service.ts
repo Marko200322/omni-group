@@ -151,6 +151,44 @@ export class PublicSiteService {
       throw new ValidationError('Business site requires at least 3 pages');
     }
 
+    const clientLabel = input.clientName ?? input.title;
+    const defaultCatalog =
+      siteType === 'ecommerce'
+        ? [
+            {
+              id: 'starter-pack',
+              name: `${clientLabel} Starter`,
+              description: 'Core offering — delivered as part of your Omni Group package.',
+              priceEur: 49,
+              currency: 'EUR',
+            },
+            {
+              id: 'growth-pack',
+              name: `${clientLabel} Growth`,
+              description: 'Expanded service bundle with priority support.',
+              priceEur: 99,
+              currency: 'EUR',
+            },
+            {
+              id: 'partner-pack',
+              name: `${clientLabel} Partner`,
+              description: 'Full partner tier — custom scope on request.',
+              priceEur: 249,
+              currency: 'EUR',
+            },
+          ]
+        : [];
+
+    const enrichedPages = pages.map((page) => {
+      if (page.kind === 'home' && page.body.length < 120) {
+        return {
+          ...page,
+          body: `${clientLabel} — ${page.body}\n\nWe deliver professional digital services with transparent pricing and fast onboarding.`,
+        };
+      }
+      return page;
+    });
+
     const site = await this.repo.createClientSite({
       ownerUserId: input.userId,
       projectId: input.projectId,
@@ -158,8 +196,11 @@ export class PublicSiteService {
       title: input.title,
       tagline: input.clientName ? `Digital presence — ${input.clientName}` : null,
       siteType,
-      branding: { clientName: input.clientName ?? null },
-      pages,
+      branding: {
+        clientName: input.clientName ?? null,
+        ...(defaultCatalog.length ? { catalog: defaultCatalog } : {}),
+      },
+      pages: enrichedPages,
       publish: input.publish ?? false,
     });
     return this.mapClientSite(site);

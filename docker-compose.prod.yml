@@ -85,7 +85,12 @@ services:
       AUTONOMY_AUTO_START_SCHEDULER: ${AUTONOMY_AUTO_START_SCHEDULER:-true}
       AUTONOMY_ROLLOUT_SEGMENT: ${AUTONOMY_ROLLOUT_SEGMENT:-freelance}
       AUTONOMY_EVOLUTION_CODE_EDIT: ${AUTONOMY_EVOLUTION_CODE_EDIT:-false}
-      PHASE: v2
+      AUTONOMY_GIT_REPO_PATH: ${AUTONOMY_GIT_REPO_PATH:-/repo}
+      PHASE: ${PHASE:-v6}
+      FORGE_VAULT_PATH: /var/omni/forge/vault.db
+    volumes:
+      - forge_data:/var/omni/forge
+      - ${AUTONOMY_REPO_MOUNT:-./}:/repo:ro
     ports:
       - '${ATINA_PORT:-3000}:3000'
     depends_on:
@@ -109,7 +114,10 @@ services:
       - ./apps/omnigroup-web/.env.production
     environment:
       NODE_ENV: production
-      PORT: 3010
+      UPLOAD_STORAGE: local
+      UPLOAD_DIR: /var/omni/uploads
+    volumes:
+      - upload_data:/var/omni/uploads
     ports:
       - '${WEB_PORT:-3010}:3000'
     depends_on:
@@ -141,6 +149,8 @@ volumes:
   redis_data:
   caddy_data:
   caddy_config:
+  upload_data:
+  forge_data:
 
 networks:
   omni_net:

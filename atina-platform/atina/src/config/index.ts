@@ -167,6 +167,21 @@ export const config = {
   phase: {
     env: optional('PHASE', ''),
   },
+  factory: {
+    phase: (() => {
+      const raw = optional('FACTORY_PHASE', 'M0').trim().toUpperCase();
+      const allowed = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6'] as const;
+      return (allowed.includes(raw as (typeof allowed)[number]) ? raw : 'M0') as
+        | 'M0'
+        | 'M1'
+        | 'M2'
+        | 'M3'
+        | 'M4'
+        | 'M5'
+        | 'M6';
+    })(),
+    monthlyBudgetEur: optionalNumber('OWNER_MONTHLY_BUDGET_EUR', 200),
+  },
   pipelines: {
     youtubeWorkerUrl: optional('YOUTUBE_PIPELINE_URL', ''),
     elevenLabsKey: optional('ELEVENLABS_API_KEY', ''),
@@ -283,7 +298,7 @@ export const config = {
     salesEnabled: optionalBool('SALES_MEETINGS_ENABLED', false),
     supportAvatarEnabled: optionalBool('SUPPORT_AVATAR_ENABLED', true),
     salesAvatarEnabled: optionalBool('SALES_AVATAR_ENABLED', true),
-    avatarUseAiAggregator: optionalBool('AVATAR_USE_AI_AGGREGATOR', true),
+    avatarUseAiAggregator: optionalBool('AVATAR_USE_AI_AGGREGATOR', false),
     supportAgentsJson: optional('SUPPORT_AGENTS_JSON', ''),
     salesAgentsJson: optional('SALES_AGENTS_JSON', ''),
     defaultDurationMinutes: optionalNumber('MEETING_DEFAULT_DURATION_MIN', 30),
