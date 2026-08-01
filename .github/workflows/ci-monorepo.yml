@@ -51,7 +51,7 @@ jobs:
         working-directory: atina-platform/atina
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: atina-platform/atina/.nvmrc
           cache: npm
@@ -84,7 +84,7 @@ jobs:
         working-directory: apps/omnigroup-web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: apps/omnigroup-web/.nvmrc
           cache: npm
@@ -124,7 +124,7 @@ jobs:
         working-directory: atina-system
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: atina-system/.nvmrc
           cache: npm
