@@ -147,7 +147,7 @@ $agj = $agents.Content | ConvertFrom-Json
 if (-not $agj.ok) { throw "support/agents failed: $($agents.Content)" }
 $agentCount = @($agj.data.agents).Count
 if ($agentCount -eq 0) {
-  Write-Host "  OK agents=0 (lean prod — avatar disabled)" -ForegroundColor Green
+  Write-Host "  OK agents=0 (lean prod - avatar disabled)" -ForegroundColor Green
 } else {
   Write-Host "  OK agents=$agentCount" -ForegroundColor Green
 }
@@ -171,7 +171,8 @@ try {
 
 Write-Host "== Web BFF admin payments ==" -ForegroundColor Cyan
 $plj = Invoke-WithRateLimitRetry -Label 'admin/payments' -Action {
-  $payList = Invoke-WebRequest -Uri "$web/api/atina/admin/payments?status=processing&provider=manual&limit=5" -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  $paymentsUri = "$web/api/atina/admin/payments" + '?status=processing&provider=manual&limit=5'
+  $payList = Invoke-WebRequest -Uri $paymentsUri -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
   $parsed = $payList.Content | ConvertFrom-Json
   if (-not $parsed.ok) { throw "admin/payments failed: $($payList.Content)" }
   return $parsed

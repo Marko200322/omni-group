@@ -170,6 +170,7 @@ export const config = {
   factory: {
     phase: (() => {
       const raw = optional('FACTORY_PHASE', 'M0').trim().toUpperCase();
+      if (raw === 'AUTO') return 'M6' as const;
       const allowed = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6'] as const;
       return (allowed.includes(raw as (typeof allowed)[number]) ? raw : 'M0') as
         | 'M0'
@@ -180,6 +181,7 @@ export const config = {
         | 'M5'
         | 'M6';
     })(),
+    autoEnabled: optionalBool('FACTORY_PHASE_AUTO', false) || optional('FACTORY_PHASE', '').trim().toUpperCase() === 'AUTO',
     monthlyBudgetEur: optionalNumber('OWNER_MONTHLY_BUDGET_EUR', 200),
   },
   pipelines: {
@@ -275,6 +277,9 @@ export const config = {
         'MANUAL_PAYMENT_NOTE',
         'Uključi referencu u opis uplate. Pretplata se aktivira nakon potvrde admina (do 24h).'
       ),
+      companyLegalName: optional('COMPANY_LEGAL_NAME', ''),
+      companyTaxId: optional('COMPANY_TAX_ID', ''),
+      companyAddress: optional('COMPANY_ADDRESS', ''),
     },
   },
   smtp: {

@@ -20,7 +20,7 @@ export function OmniGroupLogo({ href = '/', size = 'sm', showWordmark = true, cl
       <OmniGroupLogoMark size={markSize} />
       {showWordmark && (
         <span className="font-display text-lg font-bold tracking-tight text-gradient animate-gradient-text whitespace-nowrap">
-          Omni Group
+          Omni Group Tech
         </span>
       )}
     </div>
@@ -30,7 +30,7 @@ export function OmniGroupLogo({ href = '/', size = 'sm', showWordmark = true, cl
 
   return (
     <motion.div whileHover={{ scale: 1.03 }} whileTap={tapScale}>
-      <Link href={href} className="group flex items-center" aria-label="Omni Group — home">
+      <Link href={href} className="group flex items-center" aria-label="Omni Group Tech — home">
         {inner}
       </Link>
     </motion.div>

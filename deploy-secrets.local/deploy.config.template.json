@@ -13,6 +13,7 @@
   "phase": "v6",
   "prodMode": "lean",
   "factoryPhase": "M0",
+  "factoryPhaseAuto": true,
   "monthlyBudgetEur": 200,
   "runPhaseBootAfterDeploy": false,
 
@@ -21,6 +22,11 @@
   "paymentNotifyEmail": "ti@tvojdomen.com",
   "contactCrmIngressEmail": "",
   "contactCrmIngressPassword": "",
+  "supportGoogleMeetUrl": "",
+  "salesGoogleMeetUrl": "",
+  "companyLegalName": "",
+  "companyTaxId": "",
+  "companyAddress": "",
 
   "manualPayment": {
     "accountName": "Omni Group DOO",
@@ -72,5 +78,13 @@
 
   "telegramBotToken": "",
   "telegramChatId": "",
-  "adminTelegramNotify": true
+  "adminTelegramNotify": true,
+
+  "businessAndDevUrl": "",
+  "businessAndDevKey": "",
+  "commsUrl": "",
+  "commsKey": "",
+  "vapidPublicKey": "",
+  "vapidPrivateKey": "",
+  "vapidSubject": ""
 }

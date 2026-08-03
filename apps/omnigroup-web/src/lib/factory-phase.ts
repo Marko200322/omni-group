@@ -1,9 +1,14 @@
 /**
  * Factory maturity M0→M6 — drives checkout gates, fixed pricing, and package unlocks.
- * Bump NEXT_PUBLIC_FACTORY_PHASE (or FACTORY_PHASE on API) after each revenue gate.
+ * When NEXT_PUBLIC_FACTORY_PHASE_AUTO=true, ceiling is M6; API enforces revenue+key effective phase.
+ * Keep in sync with atina-platform/atina/src/modules/billing/lib/factory-phase.ts
  */
 import { isBudgetLaunchMode } from './prod-budget';
-import { isLeanProdMode } from './prod-mode';
+
+function resolveProdModeFromEnv(): 'lean' | 'full' {
+  const raw = process.env.NEXT_PUBLIC_PROD_MODE?.trim().toLowerCase();
+  return raw === 'full' ? 'full' : 'lean';
+}
 
 export type FactoryPhase = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6';
 
@@ -15,13 +20,36 @@ export function parseFactoryPhase(raw: string | undefined | null): FactoryPhase 
   return null;
 }
 
-/** Current factory phase — env override, else infer from prod profile. */
+export function isFactoryPhaseAutoEnabled(): boolean {
+  const raw = (process.env.NEXT_PUBLIC_FACTORY_PHASE ?? '').trim().toUpperCase();
+  if (raw === 'AUTO') return true;
+  const flag = (process.env.NEXT_PUBLIC_FACTORY_PHASE_AUTO ?? '').trim().toLowerCase();
+  return flag === 'true' || flag === '1' || flag === 'yes';
+}
+
+/**
+ * UI / SSR phase. With AUTO, uses optional client override (from API) or ceiling M6.
+ * Purchase still gated on API canCheckoutPackage (effective phase).
+ */
+let clientEffectiveOverride: FactoryPhase | null = null;
+
+export function setClientFactoryPhaseOverride(phase: FactoryPhase | null): void {
+  clientEffectiveOverride = phase;
+}
+
 export function getFactoryPhase(): FactoryPhase {
+  if (clientEffectiveOverride) return clientEffectiveOverride;
+  if (isFactoryPhaseAutoEnabled()) {
+    const fromEnv = parseFactoryPhase(process.env.NEXT_PUBLIC_FACTORY_PHASE);
+    // AUTO literal or missing → ceiling M6 for catalog visibility; API is source of truth
+    if (fromEnv) return fromEnv;
+    return 'M6';
+  }
   const fromEnv = parseFactoryPhase(process.env.NEXT_PUBLIC_FACTORY_PHASE);
   if (fromEnv) return fromEnv;
-  if (isLeanProdMode() && isBudgetLaunchMode()) return 'M0';
-  if (isLeanProdMode()) return 'M1';
-  return 'M6';
+  if (resolveProdModeFromEnv() === 'full') return 'M6';
+  if (isBudgetLaunchMode()) return 'M0';
+  return 'M1';
 }
 
 export function phaseIndex(phase: FactoryPhase): number {

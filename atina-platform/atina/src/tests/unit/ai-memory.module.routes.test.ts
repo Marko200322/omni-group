@@ -9,6 +9,10 @@ import { AppError, AuthenticationError } from '../../utils/errors';
 
 jest.mock('../../database/connection');
 
+jest.mock('../../utils/plan-module-access', () => ({
+  assertPlanIncludesModule: jest.fn().mockResolvedValue(undefined),
+}));
+
 let aiMemoryAuthOn = true;
 jest.mock('../../api/middleware/auth.middleware', () => ({
   authenticate: (req: express.Request, _res: express.Response, next: express.NextFunction) => {

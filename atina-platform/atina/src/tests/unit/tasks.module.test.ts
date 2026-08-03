@@ -10,6 +10,9 @@ jest.mock('../../queue/register-workers', () => ({
   registerAuxiliaryQueueWorkers: jest.fn(),
 }));
 jest.mock('../../modules/tasks/task-executors', () => ({
+  executeSendEmail: jest.fn().mockResolvedValue({ status: 'sent', to: 'a@b.com' }),
+  executeExportData: jest.fn().mockResolvedValue({ status: 'exported', format: 'csv' }),
+  executeGenerateReport: jest.fn().mockResolvedValue({ status: 'generated' }),
   executeScrapeUrl: jest.fn().mockResolvedValue({ status: 'scraped', url: 'https://x.com', fallback: true, data: {} }),
   executeTitanixPipeline: jest.fn().mockResolvedValue({ status: 'completed' }),
   executeOmnitubePipeline: jest.fn().mockResolvedValue({ status: 'queued', jobId: 'yt-1' }),

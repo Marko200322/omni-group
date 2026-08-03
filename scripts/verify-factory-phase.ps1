@@ -37,12 +37,23 @@ if ($Regenerate) {
 
 $deployCfg = @{}
 $configPath = Join-Path $repoRoot 'deploy-secrets.local\deploy.config.json'
+$cfg = $null
+$auto = $false
 if (Test-Path $configPath) {
   $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
   $deployCfg = Build-DeployConfigHashtable $cfg
+  if ($cfg.factoryPhaseAuto -eq $true -or "$($cfg.factoryPhase)".Trim().ToUpper() -eq 'AUTO') {
+    $auto = $true
+  }
 }
 
-$result = Test-FactoryPhaseEnvFiles $repoRoot $FactoryPhase $MonthlyBudgetEur $deployCfg $cfg
+# With AUTO, deploy writes M6 module profile; env file checks use that profile.
+$envCheckPhase = if ($auto) { 'M6' } else { $FactoryPhase }
+if ($auto) {
+  Write-Host '  factoryPhaseAuto=true - env profile expected M6 (runtime effective still gated)' -ForegroundColor DarkGray
+}
+
+$result = Test-FactoryPhaseEnvFiles $repoRoot $envCheckPhase $MonthlyBudgetEur $deployCfg $cfg
 Write-Host "Phase $($result.phase): env checks pass=$($result.pass) fail=$($result.fail)" -ForegroundColor $(if ($result.fail -eq 0) { 'Green' } else { 'Red' })
 
 if ($result.missingKeys.Count -gt 0) {

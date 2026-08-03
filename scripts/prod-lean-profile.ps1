@@ -79,7 +79,23 @@ function Set-EnvLineInFile([string]$FilePath, [string]$Key, [string]$Value) {
     }
   }
   if (-not $found) { $out += "$Key=$Value" }
-  Set-Content -Path $FilePath -Value $out -Encoding UTF8
+  $text = ($out -join "`n") + "`n"
+  $tmp = "$FilePath.tmp.$PID"
+  [System.IO.File]::WriteAllText($tmp, $text, [System.Text.UTF8Encoding]::new($false))
+  $moved = $false
+  for ($i = 1; $i -le 8; $i++) {
+    try {
+      Move-Item -LiteralPath $tmp -Destination $FilePath -Force
+      $moved = $true
+      break
+    } catch {
+      Start-Sleep -Milliseconds (150 * $i)
+    }
+  }
+  if (-not $moved) {
+    Copy-Item -LiteralPath $tmp -Destination $FilePath -Force
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+  }
 }
 
 function Apply-LeanProdEnvFiles([string]$RepoRoot) {

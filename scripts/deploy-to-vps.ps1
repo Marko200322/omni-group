@@ -10,6 +10,12 @@ param(
   [string]$RemotePath = '/opt/omni-group',
   [string]$SshKey = '',
   [string]$SshPassword = '',
+  [ValidateSet('v2', 'v3', 'v4', 'v5', 'v6')]
+  [string]$Phase = 'v2',
+  [ValidateSet('lean', 'full')]
+  [string]$ProdMode = 'lean',
+  [ValidateSet('M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6')]
+  [string]$FactoryPhase = 'M0',
   [switch]$SkipBuild,
   [switch]$SkipPrepare,
   [switch]$FreshWipe,
@@ -41,7 +47,8 @@ try {
   Write-Host ''
 
   if (-not $SkipPrepare) {
-    & (Join-Path $PSScriptRoot 'prepare-vps-prod.ps1') -SiteDomain $SiteDomain -ApiDomain $ApiDomain -Phase v6
+    & (Join-Path $PSScriptRoot 'prepare-vps-prod.ps1') -SiteDomain $SiteDomain -ApiDomain $ApiDomain `
+      -Phase $Phase -ProdMode $ProdMode -FactoryPhase $FactoryPhase
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
 

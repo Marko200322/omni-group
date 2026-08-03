@@ -33,7 +33,7 @@ export function Footer() {
             Transparent pricing, professional support.
           </p>
         </motion.div>
-        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
+        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-4">
           <motion.div className="flex flex-col gap-2">
             <span className="font-medium text-white">Company</span>
             {[
@@ -65,6 +65,20 @@ export function Footer() {
             ))}
           </motion.div>
           <motion.div className="flex flex-col gap-2">
+            <span className="font-medium text-white">Legal</span>
+            {[
+              { href: '/legal/terms', label: 'Terms of Service' },
+              { href: '/legal/privacy', label: 'Privacy Policy' },
+              { href: '/contact', label: 'Contact' },
+            ].map(({ href, label }) => (
+              <motion.div key={href} whileHover={{ x: 4 }}>
+                <Link href={href} className="text-slate-400 transition hover:text-white">
+                  {label}
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.div className="flex flex-col gap-2">
             <span className="font-medium text-white">Deliverables</span>
             {[
               { href: '/products', label: 'Vertical solutions' },
@@ -86,7 +100,14 @@ export function Footer() {
         viewport={{ once: true }}
         className="mt-10 text-center text-xs text-slate-600"
       >
-        © {new Date().getFullYear()} Omni Group · Professional digital delivery
+        © {new Date().getFullYear()} Omni Group Tech ·{' '}
+        <Link href="/legal/terms" className="hover:text-slate-400">
+          Terms
+        </Link>
+        {' · '}
+        <Link href="/legal/privacy" className="hover:text-slate-400">
+          Privacy
+        </Link>
       </motion.p>
     </motion.footer>
   );

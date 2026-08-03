@@ -1,7 +1,9 @@
-# Env: SITE_DOMAIN (web + API paths on one TLS cert)
+# Env: SITE_DOMAIN (web) + API_DOMAIN (Atina API on its own TLS cert)
+# Prod: SITE_DOMAIN=omnigrouptech.com, API_DOMAIN=api.omnigrouptech.com
+# Keep API_DOMAIN different from SITE_DOMAIN (duplicate site blocks fail).
 
 {$SITE_DOMAIN} {
-	# Public API (works without separate api.* DNS)
+	# Public API also reachable on the marketing host (BFF / same-origin paths)
 	handle /api/v1/* {
 		reverse_proxy atina-api:3000
 	}
@@ -9,4 +11,8 @@
 		reverse_proxy atina-api:3000
 	}
 	reverse_proxy web:3000
+}
+
+{$API_DOMAIN} {
+	reverse_proxy atina-api:3000
 }

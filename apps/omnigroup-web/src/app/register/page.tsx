@@ -175,7 +175,7 @@ export default function RegisterPage() {
             </Suspense>
           </motion.div>
           <motion.div variants={fadeUp}>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group Tech</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white">Create your account</h1>
             <p className="mt-4 text-slate-400">
               Register for the client portal — track orders, billing, and project delivery in one place.

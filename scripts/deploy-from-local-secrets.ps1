@@ -66,9 +66,14 @@ $remotePath = if ($config.remotePath) { $config.remotePath.Trim() } else { '/opt
 . (Join-Path $scriptsDir 'deploy-config-env.ps1')
 
 $monthlyBudgetEur = Resolve-MonthlyBudgetEur $config.monthlyBudgetEur
-$factoryPhase = Resolve-FactoryPhase $(if ($config.factoryPhase) { $config.factoryPhase } else { 'M0' })
-if ($factoryPhase -eq 'M6' -and $prodMode -eq 'lean') {
-  Write-Host 'M6 factory: auto-switch prodMode lean -> full (Stripe + premium modules)' -ForegroundColor Yellow
+$factoryPhaseRaw = if ($config.factoryPhase) { $config.factoryPhase } else { 'M0' }
+$factoryAuto = $false
+if ($config.factoryPhaseAuto -eq $true) { $factoryAuto = $true }
+if ("$($config.factoryPhase)".Trim().ToUpper() -eq 'AUTO') { $factoryAuto = $true; $factoryPhaseRaw = 'M6' }
+$factoryPhase = Resolve-FactoryPhase $factoryPhaseRaw
+if ($factoryPhase -eq 'AUTO') { $factoryPhase = 'M6'; $factoryAuto = $true }
+if (($factoryPhase -eq 'M6' -or $factoryAuto) -and $prodMode -eq 'lean') {
+  Write-Host 'M6/AUTO factory: auto-switch prodMode lean -> full (Stripe + premium modules when keys present)' -ForegroundColor Yellow
   $prodMode = 'full'
 }
 

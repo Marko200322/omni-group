@@ -3,10 +3,10 @@ function Get-AdminCredentials {
   param([string]$RepoRoot = (Split-Path $PSScriptRoot -Parent))
   $email = 'admin@atina.io'
   $password = 'Admin@123456'
-  $paths = @(
-    (Join-Path $RepoRoot 'atina-platform\atina\ADMIN-CREDENTIALS.local.txt'),
-    (Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod')
-  )
+  $localPath = Join-Path $RepoRoot 'atina-platform\atina\ADMIN-CREDENTIALS.local.txt'
+  $vpsPath = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'
+  # Local credentials win for dev smoke; VPS template only when local file is absent.
+  $paths = if (Test-Path $localPath) { @($localPath) } elseif (Test-Path $vpsPath) { @($vpsPath) } else { @() }
   foreach ($path in $paths) {
     if (-not (Test-Path $path)) { continue }
     foreach ($line in Get-Content $path) {

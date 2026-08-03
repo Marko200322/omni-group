@@ -229,9 +229,22 @@ export function renderManualCheckoutInvoiceEmail(input: ManualInvoiceEmailInput)
   const bankName = input.instructions.bankName ?? '';
   const swift = input.instructions.swift ?? '';
   const note = input.instructions.note ?? '';
+  const companyLegalName = input.instructions.companyLegalName ?? '';
+  const companyTaxId = input.instructions.companyTaxId ?? '';
+  const companyAddress = input.instructions.companyAddress ?? '';
+
+  const issuerRows: Array<[string, string]> = [];
+  if (companyLegalName) issuerRows.push(['Legal name', escapeHtml(companyLegalName)]);
+  if (companyTaxId) issuerRows.push(['Tax ID / PIB', escapeHtml(companyTaxId)]);
+  if (companyAddress) issuerRows.push(['Address', escapeHtml(companyAddress)]);
 
   const bodyHtml = `
     ${lineItemsTable(lineItems, input.currency, input.amount)}
+    ${
+      issuerRows.length
+        ? paymentBox('Issuer', issuerRows)
+        : ''
+    }
     ${paymentBox(
       'Bank transfer details',
       [

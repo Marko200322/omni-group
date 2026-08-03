@@ -55,7 +55,7 @@ export function LogoRing() {
         </defs>
         <text className="fill-gray-200 text-[10px] font-medium uppercase tracking-[0.2em]">
           <textPath href={`#${pathId}`} startOffset="0%">
-            Omni Group · Atina · Astra · Titan ·
+            Omni Group Tech · Atina · Astra · Titan ·
           </textPath>
         </text>
       </motion.svg>

@@ -10,7 +10,8 @@ export type AdminOpsEvent =
   | 'fulfillment_failed'
   | 'fulfillment_qa'
   | 'contact_lead'
-  | 'system_error';
+  | 'system_error'
+  | 'factory_phase_advanced';
 
 const EVENT_LABEL: Record<AdminOpsEvent, string> = {
   payment_pending: '🔴 UPLATA — potvrdi u adminu',
@@ -19,6 +20,7 @@ const EVENT_LABEL: Record<AdminOpsEvent, string> = {
   fulfillment_qa: '🟡 QA — pregled isporuke',
   contact_lead: '📩 Novi kontakt / lead',
   system_error: '🔴 Sistem greška',
+  factory_phase_advanced: '🟢 Factory faza unapređena (AUTO)',
 };
 
 export class AdminOpsNotifierService {

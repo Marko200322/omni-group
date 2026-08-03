@@ -14,9 +14,18 @@ $script:FactoryPhaseOrder = @('M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6')
 function Resolve-FactoryPhase([object]$Value) {
   if ($null -eq $Value -or [string]::IsNullOrWhiteSpace("$Value")) { return 'M0' }
   $v = "$Value".Trim().ToUpper()
+  if ($v -eq 'AUTO') { return 'AUTO' }
   if ($script:FactoryPhaseOrder -contains $v) { return $v }
   Write-Warning "Unknown factoryPhase '$Value' - using M0"
   return 'M0'
+}
+
+function Resolve-FactoryPhaseDeploy([object]$Value, [object]$AutoFlag) {
+  $auto = $false
+  if ($AutoFlag -eq $true -or "$AutoFlag".Trim().ToLower() -in @('true','1','yes')) { $auto = $true }
+  $resolved = Resolve-FactoryPhase $Value
+  if ($resolved -eq 'AUTO') { $auto = $true; $resolved = 'M6' }
+  return @{ Phase = $resolved; Auto = $auto }
 }
 
 function Get-FactoryPhaseAiDailyCapUsd([string]$FactoryPhase, [int]$MonthlyBudgetEur) {
@@ -156,6 +165,18 @@ function Get-FactoryPhaseWebEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetEur
   }
 }
 
+function Get-FactoryPhaseWebEnvMapAuto([string]$FactoryPhase, [int]$MonthlyBudgetEur, [string]$ProdMode, [bool]$Auto) {
+  $map = Get-FactoryPhaseWebEnvMap $FactoryPhase $MonthlyBudgetEur $ProdMode
+  if ($Auto) {
+    $map['NEXT_PUBLIC_FACTORY_PHASE_AUTO'] = 'true'
+    # Ceiling M6 so catalog can unlock as API effective phase advances
+    $map['NEXT_PUBLIC_FACTORY_PHASE'] = 'M6'
+  } else {
+    $map['NEXT_PUBLIC_FACTORY_PHASE_AUTO'] = 'false'
+  }
+  return $map
+}
+
 function Get-FactoryPhaseRequiredKeys([string]$FactoryPhase) {
   $common = @('OPENROUTER_API_KEY')
   $byPhase = @{
@@ -201,31 +222,56 @@ function Apply-FactoryPhaseEnvFiles(
   [string]$ProdMode = 'lean',
   [hashtable]$DeployConfig = @{}
 ) {
-  $phase = Resolve-FactoryPhase $FactoryPhase
+  $autoFlag = $false
+  if ($DeployConfig.ContainsKey('factoryPhaseAuto')) { $autoFlag = [bool]$DeployConfig.factoryPhaseAuto }
+  if ($DeployConfig.ContainsKey('FACTORY_PHASE_AUTO')) {
+    $v = "$($DeployConfig.FACTORY_PHASE_AUTO)".Trim().ToLower()
+    if ($v -in @('true','1','yes')) { $autoFlag = $true }
+  }
+  $resolved = Resolve-FactoryPhaseDeploy $FactoryPhase $autoFlag
+  $phase = $resolved.Phase
+  if ($phase -eq 'AUTO') { $phase = 'M6'; $resolved.Auto = $true }
+  $auto = [bool]$resolved.Auto
+
   $atinaEnv = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'
   $webEnv = Join-Path $RepoRoot 'apps\omnigroup-web\.env.vps.production'
   $rootEnv = Join-Path $RepoRoot '.env.vps.prod'
 
-  $atinaMap = Get-FactoryPhaseAtinaEnvMap $phase $MonthlyBudgetEur
+  # With AUTO, write M6 module profile so env flags are ready; runtime still gates by effective phase + keys.
+  $profilePhase = if ($auto) { 'M6' } else { $phase }
+  $atinaMap = Get-FactoryPhaseAtinaEnvMap $profilePhase $MonthlyBudgetEur
+  $atinaMap.FACTORY_PHASE = if ($auto) { 'M6' } else { $phase }
+  $atinaMap['FACTORY_PHASE_AUTO'] = if ($auto) { 'true' } else { 'false' }
 
-  if ($phase -eq 'M6' -and $DeployConfig.stripeSecretKey) {
+  if (($phase -eq 'M6' -or $auto) -and $DeployConfig.stripeSecretKey) {
     $atinaMap.PAYMENTS_MODE = 'live'
     $atinaMap.ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION = 'true'
   }
 
   foreach ($entry in $atinaMap.GetEnumerator()) {
     Set-FactoryEnvLine $atinaEnv $entry.Key $entry.Value
-    if ($entry.Key -eq 'FACTORY_PHASE' -or $entry.Key -eq 'OWNER_MONTHLY_BUDGET_EUR') {
+    if ($entry.Key -eq 'FACTORY_PHASE' -or $entry.Key -eq 'OWNER_MONTHLY_BUDGET_EUR' -or $entry.Key -eq 'FACTORY_PHASE_AUTO') {
       Set-FactoryEnvLine $rootEnv $entry.Key $entry.Value
     }
   }
 
-  $webMap = Get-FactoryPhaseWebEnvMap $phase $MonthlyBudgetEur $ProdMode
+  $webMap = Get-FactoryPhaseWebEnvMapAuto $atinaMap.FACTORY_PHASE $MonthlyBudgetEur $ProdMode $auto
   foreach ($entry in $webMap.GetEnumerator()) {
     Set-FactoryEnvLine $webEnv $entry.Key $entry.Value
   }
 
-  return $phase
+  # Company legal on invoices
+  if ($DeployConfig.companyLegalName) {
+    Set-FactoryEnvLine $atinaEnv 'COMPANY_LEGAL_NAME' "$($DeployConfig.companyLegalName)"
+  }
+  if ($DeployConfig.companyTaxId) {
+    Set-FactoryEnvLine $atinaEnv 'COMPANY_TAX_ID' "$($DeployConfig.companyTaxId)"
+  }
+  if ($DeployConfig.companyAddress) {
+    Set-FactoryEnvLine $atinaEnv 'COMPANY_ADDRESS' "$($DeployConfig.companyAddress)"
+  }
+
+  return $atinaMap.FACTORY_PHASE
 }
 
 function Test-FactoryPhaseEnvFiles(

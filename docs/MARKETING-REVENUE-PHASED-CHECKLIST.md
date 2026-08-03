@@ -1,5 +1,7 @@
 # Marketing & revenue — fazno paljenje (M0 → M6)
 
+**Vrhunski GTM / messaging plan (prodaj sada, ICP, 90 dana, anti-promise):** [`MARKETING-PLAN-VRHUNSKI.md`](./MARKETING-PLAN-VRHUNSKI.md).
+
 **Cilj:** Sistem koji ** štampa pare** — svaka faza pali samo ono što donosi novac uz kontrolisan rizik i budžet.  
 **Princip:** Ne pali sve odjednom. Svaka faza ima **gate** (merljiv uslov), **env blok**, **module stack** i **verify skripte**.
 

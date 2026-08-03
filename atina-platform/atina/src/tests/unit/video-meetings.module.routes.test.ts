@@ -76,6 +76,7 @@ describe('VideoMeetingsModule HTTP routes', () => {
     getAgentsSpy = jest.spyOn(VideoMeetingsService.prototype, 'getAgents').mockResolvedValue({
       agentType: 'support',
       rosterSource: 'system',
+      enabled: true,
       agents: [{
         id: 'mila',
         name: 'Mila',

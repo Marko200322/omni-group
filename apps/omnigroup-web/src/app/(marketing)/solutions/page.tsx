@@ -4,7 +4,7 @@ import { fetchSolutionsList } from '@/lib/public-site-api';
 import { getGeneratedVerticalsIndex, listOnlineVerticalSlugs } from '@/lib/generated-verticals';
 
 export const metadata: Metadata = {
-  title: 'Vertical solutions | Omni Group',
+  title: 'Vertical solutions | Omni Group Tech',
   description: 'Autonomy-generated industry landings — ready for sales and deploy.',
 };
 

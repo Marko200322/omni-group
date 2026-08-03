@@ -1,8 +1,10 @@
 /**
  * Runtime module gates — sync with scripts/prod-factory-phase.ps1 + factory-phase-modules.ts
+ * When FACTORY_PHASE_AUTO is on, phase + key presence unlock modules without redeploy.
  */
 import { config } from '../../../config';
 import { getFactoryPhase, phaseGte, type FactoryPhase } from './factory-phase';
+import { envKeyPresent, isFactoryPhaseAutoEnabled } from './factory-phase-effective';
 
 export type FactoryModuleKey =
   | 'billing'
@@ -45,33 +47,49 @@ export function isFactoryModuleEnabled(
 ): boolean {
   if (!phaseGte(phase, MIN_PHASE[module])) return false;
 
+  const auto = isFactoryPhaseAutoEnabled();
+
   switch (module) {
     case 'billing':
     case 'fulfillment':
       return true;
     case 'inbound':
-      return config.features.crm;
+      return auto
+        ? envKeyPresent('RESEND_API_KEY') || config.features.crm
+        : config.features.crm;
     case 'scraper':
-      return config.features.scraper;
+      return auto ? envKeyPresent('SCRAPER_KEY') : config.features.scraper;
     case 'outbound_draft':
-      return config.features.scraper || envOn('AUTONOMY_REAL_ECOSYSTEM_RUNS');
+      return auto
+        ? envKeyPresent('SCRAPER_KEY') || envOn('AUTONOMY_REAL_ECOSYSTEM_RUNS')
+        : config.features.scraper || envOn('AUTONOMY_REAL_ECOSYSTEM_RUNS');
     case 'outbound_send':
       return (
-        config.outreach.dailyCap > 0 &&
-        (config.outreach.domainWarmupComplete || config.outreach.devSendToFallback)
+        (auto ? true : config.outreach.dailyCap > 0) &&
+        (config.outreach.domainWarmupComplete || config.outreach.devSendToFallback || auto)
       );
     case 'lead_db':
-      return envOn('LEAD_DATABASE_ENABLED');
+      return auto ? envKeyPresent('HUNTER_API_KEY') || envOn('LEAD_DATABASE_ENABLED') : envOn('LEAD_DATABASE_ENABLED');
     case 'hunter':
-      return config.features.scraper || envOn('LEAD_DATABASE_ENABLED');
+      return auto
+        ? envKeyPresent('HUNTER_API_KEY') || envKeyPresent('SCRAPER_KEY')
+        : config.features.scraper || envOn('LEAD_DATABASE_ENABLED');
     case 'autonomy':
-      return config.autonomy.enabled;
+      return auto ? phaseGte(phase, 'M5') : config.autonomy.enabled;
     case 'autonomy_marketing':
-      return config.autonomy.enabled && (config.autonomy.budget.marketingEnabled ?? false);
+      return auto
+        ? phaseGte(phase, 'M5')
+        : config.autonomy.enabled && (config.autonomy.budget.marketingEnabled ?? false);
     case 'avatar':
-      return envOn('SUPPORT_AVATAR_ENABLED') || envOn('SALES_AVATAR_ENABLED');
+      return (
+        envOn('SUPPORT_AVATAR_ENABLED') ||
+        envOn('SALES_AVATAR_ENABLED') ||
+        (auto && (envKeyPresent('HEYGEN_API_KEY') || envKeyPresent('DID_API_KEY')))
+      );
     case 'stripe_live':
-      return config.payments.mode === 'live';
+      return auto
+        ? envKeyPresent('STRIPE_SECRET_KEY') && config.payments.mode === 'live'
+        : config.payments.mode === 'live';
     default:
       return false;
   }
@@ -90,6 +108,7 @@ export function getFactoryRuntimeSnapshot() {
   return {
     phase,
     monthlyBudgetEur: config.factory.monthlyBudgetEur,
+    autoEnabled: isFactoryPhaseAutoEnabled(),
     modules: listFactoryModuleStatus(phase),
   };
 }

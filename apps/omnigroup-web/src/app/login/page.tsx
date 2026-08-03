@@ -194,7 +194,7 @@ export default function LoginPage() {
             </Link>
           </motion.div>
           <motion.div variants={fadeUp}>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group Tech</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white md:text-5xl">
               Client <span className="text-gradient animate-gradient-text">portal</span>
             </h1>

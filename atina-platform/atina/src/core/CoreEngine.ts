@@ -362,6 +362,15 @@ export class CoreEngine {
       logger.info(`📡 API root: http://localhost:${port}/api/v1`);
     });
 
+    try {
+      const { factoryPhaseAutoService } = await import(
+        '../modules/billing/service/factory-phase-auto.service'
+      );
+      factoryPhaseAutoService.startPeriodicEvaluation();
+    } catch (error) {
+      logger.warn('Factory phase AUTO evaluator not started', { error });
+    }
+
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));
     process.on('SIGINT', () => this.shutdown('SIGINT'));
   }

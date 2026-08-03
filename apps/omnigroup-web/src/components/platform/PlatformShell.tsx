@@ -119,7 +119,7 @@ export function PlatformShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const nav = variant === 'admin' ? adminNav : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
-  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Client Portal';
+  const brand = variant === 'admin' ? 'Omni Group Tech Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
 
   async function handleLogout() {
@@ -142,7 +142,7 @@ export function PlatformShell({
           </div>
           <div className="min-w-0">
             <p className={`truncate font-display text-sm font-bold ${accent}`}>{brand}</p>
-            <p className="truncate text-[10px] uppercase tracking-widest text-slate-500">Omni Group</p>
+            <p className="truncate text-[10px] uppercase tracking-widest text-slate-500">Omni Group Tech</p>
           </div>
         </div>
         <motion.nav

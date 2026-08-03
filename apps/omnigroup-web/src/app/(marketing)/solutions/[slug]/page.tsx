@@ -8,9 +8,9 @@ type PageProps = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const solution = await fetchSolution(slug);
-  if (!solution) return { title: 'Solution | Omni Group' };
+  if (!solution) return { title: 'Solution | Omni Group Tech' };
   return {
-    title: `${solution.name} | Omni Group`,
+    title: `${solution.name} | Omni Group Tech`,
     description: solution.deliveryPack.valueProp,
   };
 }

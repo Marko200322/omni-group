@@ -102,6 +102,9 @@ function buildTransferInstructions(
     amount: `${money.toFixed(2)} ${displayCurrency}`,
     plan: planName,
     note: manual.note,
+    companyLegalName: manual.companyLegalName || '',
+    companyTaxId: manual.companyTaxId || '',
+    companyAddress: manual.companyAddress || '',
   };
 }
 const billingService = new BillingService();
@@ -163,6 +166,14 @@ function dispatchAutoFulfillment(input: {
   clientEmail?: string | null;
 }): void {
   deliverableFulfillment.dispatchAfterPaymentConfirm(input);
+}
+
+function dispatchFactoryPhaseAutoEvaluate(): void {
+  void import('../../billing/service/factory-phase-auto.service')
+    .then(({ factoryPhaseAutoService }) => factoryPhaseAutoService.evaluate({ notify: true }))
+    .catch((error) => {
+      logger.warn('Factory phase AUTO evaluate after payment failed', { error });
+    });
 }
 
 /** N3-E1: Stripe may send `subscription` as an id string or an expanded object; DB queries need the id. */
@@ -794,6 +805,7 @@ export class PaymentsService {
         clientName: client?.name ?? null,
         clientEmail: client?.email ?? null,
       });
+      dispatchFactoryPhaseAutoEvaluate();
       return;
     }
 
@@ -924,6 +936,7 @@ export class PaymentsService {
       clientName: client?.name ?? null,
       clientEmail: client?.email ?? null,
     });
+    dispatchFactoryPhaseAutoEvaluate();
   }
 
   // ========================

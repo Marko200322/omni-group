@@ -23,8 +23,12 @@ export function isSellablePackage(deliverableId: string): boolean {
 export function getSellablePackageHint(): string {
   const budget = getMonthlyBudgetEur();
   const phase = getFactoryPhase();
-  if (budget <= 250) {
-    return `Factory ${phase} · €${budget}/mo: Setup Quick €249, Audit €349, Landing €549, Website €990, Workflow €449, Support €99/mo.`;
+  const ids = listCheckoutPackages();
+  if (ids.length === 0) {
+    return `Factory ${phase}: no self-serve packages open — revenue depends on contact quotes.`;
   }
-  return `Factory ${phase}: checkout packages match current system capabilities.`;
+  if (budget <= 250) {
+    return `Factory ${phase} · ${ids.length} packages ready: Quick setup, Audit, Landing, Website, Workflow, Support.`;
+  }
+  return `Factory ${phase}: ${ids.length} checkout packages match current delivery.`;
 }

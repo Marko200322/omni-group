@@ -22,6 +22,7 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'OPENROUTER_API_KEY' (Get-DeployConfigTrim $Config 'openRouterApiKey')
   & $set 'AI_KEY' (Get-DeployConfigTrim $Config 'openRouterApiKey')
   & $set 'ELEVENLABS_API_KEY' (Get-DeployConfigTrim $Config 'elevenLabsApiKey')
+  & $set 'APOLLO_API_KEY' (Get-DeployConfigTrim $Config 'apolloApiKey')
   & $set 'HEYGEN_API_KEY' (Get-DeployConfigTrim $Config 'heygenApiKey')
   & $set 'DID_API_KEY' (Get-DeployConfigTrim $Config 'didApiKey')
   & $set 'SCRAPER_KEY' (Get-DeployConfigTrim $Config 'scraperKey')
@@ -38,6 +39,25 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'SLACK_WEBHOOK_URL' (Get-DeployConfigTrim $Config 'slackWebhookUrl')
   & $set 'TELEGRAM_BOT_TOKEN' (Get-DeployConfigTrim $Config 'telegramBotToken')
   & $set 'TELEGRAM_CHAT_ID' (Get-DeployConfigTrim $Config 'telegramChatId')
+  & $set 'COMPANY_LEGAL_NAME' (Get-DeployConfigTrim $Config 'companyLegalName')
+  & $set 'COMPANY_TAX_ID' (Get-DeployConfigTrim $Config 'companyTaxId')
+  & $set 'COMPANY_ADDRESS' (Get-DeployConfigTrim $Config 'companyAddress')
+  & $set 'SUPPORT_GOOGLE_MEET_URL' (Get-DeployConfigTrim $Config 'supportGoogleMeetUrl')
+  & $set 'SALES_GOOGLE_MEET_URL' (Get-DeployConfigTrim $Config 'salesGoogleMeetUrl')
+  & $set 'MARKETING_GOOGLE_MEET_URL' (Get-DeployConfigTrim $Config 'marketingGoogleMeetUrl')
+  & $set 'SUPPORT_ZOOM_URL' (Get-DeployConfigTrim $Config 'supportZoomUrl')
+  & $set 'SALES_ZOOM_URL' (Get-DeployConfigTrim $Config 'salesZoomUrl')
+  & $set 'MARKETING_ZOOM_URL' (Get-DeployConfigTrim $Config 'marketingZoomUrl')
+  & $set 'ZOOM_ACCOUNT_ID' (Get-DeployConfigTrim $Config 'zoomAccountId')
+  & $set 'ZOOM_CLIENT_ID' (Get-DeployConfigTrim $Config 'zoomClientId')
+  & $set 'ZOOM_CLIENT_SECRET' (Get-DeployConfigTrim $Config 'zoomClientSecret')
+  & $set 'BUSINESS_AND_DEV_URL' (Get-DeployConfigTrim $Config 'businessAndDevUrl')
+  & $set 'BUSINESS_AND_DEV_KEY' (Get-DeployConfigTrim $Config 'businessAndDevKey')
+  & $set 'COMMS_URL' (Get-DeployConfigTrim $Config 'commsUrl')
+  & $set 'COMMS_KEY' (Get-DeployConfigTrim $Config 'commsKey')
+  & $set 'VAPID_PUBLIC_KEY' (Get-DeployConfigTrim $Config 'vapidPublicKey')
+  & $set 'VAPID_PRIVATE_KEY' (Get-DeployConfigTrim $Config 'vapidPrivateKey')
+  & $set 'VAPID_SUBJECT' (Get-DeployConfigTrim $Config 'vapidSubject')
 
   if ($Config.resend -and $Config.resend.contactFrom) {
     & $set 'CONTACT_EMAIL_FROM' "$($Config.resend.contactFrom)".Trim()
@@ -111,17 +131,23 @@ function Build-DeployConfigHashtable([object]$Config) {
     stripeSecretKey     = Get-DeployConfigTrim $Config 'stripeSecretKey'
     stripeWebhookSecret = Get-DeployConfigTrim $Config 'stripeWebhookSecret'
     stripePublishableKey = Get-DeployConfigTrim $Config 'stripePublishableKey'
+    apolloApiKey        = Get-DeployConfigTrim $Config 'apolloApiKey'
     heygenApiKey        = Get-DeployConfigTrim $Config 'heygenApiKey'
     didApiKey           = Get-DeployConfigTrim $Config 'didApiKey'
     openRouterApiKey    = Get-DeployConfigTrim $Config 'openRouterApiKey'
     resendApiKey        = if ($Config.resend -and $Config.resend.apiKey) { "$($Config.resend.apiKey)".Trim() } else { '' }
     hunterApiKey        = Get-DeployConfigTrim $Config 'hunterApiKey'
     scraperKey          = Get-DeployConfigTrim $Config 'scraperKey'
+    factoryPhaseAuto    = if ($Config.factoryPhaseAuto -eq $true -or "$($Config.factoryPhase)".Trim().ToUpper() -eq 'AUTO') { $true } else { $false }
+    companyLegalName    = Get-DeployConfigTrim $Config 'companyLegalName'
+    companyTaxId        = Get-DeployConfigTrim $Config 'companyTaxId'
+    companyAddress      = Get-DeployConfigTrim $Config 'companyAddress'
   }
 }
 
 function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
   $map = @{
+    APOLLO_API_KEY           = 'apolloApiKey'
     HEYGEN_API_KEY           = 'heygenApiKey'
     DID_API_KEY              = 'didApiKey'
     STRIPE_SECRET_KEY        = 'stripeSecretKey'
@@ -141,6 +167,22 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     TELEGRAM_BOT_TOKEN           = 'telegramBotToken'
     TELEGRAM_CHAT_ID             = 'telegramChatId'
     CONTACT_SLACK_WEBHOOK_URL = 'contactSlackWebhookUrl'
+    SUPPORT_GOOGLE_MEET_URL   = 'supportGoogleMeetUrl'
+    SALES_GOOGLE_MEET_URL     = 'salesGoogleMeetUrl'
+    MARKETING_GOOGLE_MEET_URL = 'marketingGoogleMeetUrl'
+    SUPPORT_ZOOM_URL          = 'supportZoomUrl'
+    SALES_ZOOM_URL            = 'salesZoomUrl'
+    MARKETING_ZOOM_URL        = 'marketingZoomUrl'
+    ZOOM_ACCOUNT_ID           = 'zoomAccountId'
+    ZOOM_CLIENT_ID            = 'zoomClientId'
+    ZOOM_CLIENT_SECRET        = 'zoomClientSecret'
+    BUSINESS_AND_DEV_URL      = 'businessAndDevUrl'
+    BUSINESS_AND_DEV_KEY      = 'businessAndDevKey'
+    COMMS_URL                 = 'commsUrl'
+    COMMS_KEY                 = 'commsKey'
+    VAPID_PUBLIC_KEY          = 'vapidPublicKey'
+    VAPID_PRIVATE_KEY         = 'vapidPrivateKey'
+    VAPID_SUBJECT             = 'vapidSubject'
   }
   foreach ($entry in $map.GetEnumerator()) {
     if ($Keys.ContainsKey($entry.Key) -and $Keys[$entry.Key]) {
@@ -166,6 +208,7 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     AI_KEY                       = Get-DeployConfigTrim $Config 'openRouterApiKey'
     OPENROUTER_API_KEY           = Get-DeployConfigTrim $Config 'openRouterApiKey'
     ELEVENLABS_API_KEY           = Get-DeployConfigTrim $Config 'elevenLabsApiKey'
+    APOLLO_API_KEY               = Get-DeployConfigTrim $Config 'apolloApiKey'
     HEYGEN_API_KEY               = Get-DeployConfigTrim $Config 'heygenApiKey'
     DID_API_KEY                  = Get-DeployConfigTrim $Config 'didApiKey'
     SCRAPER_KEY                  = Get-DeployConfigTrim $Config 'scraperKey'
@@ -184,6 +227,19 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     TELEGRAM_BOT_TOKEN           = Get-DeployConfigTrim $Config 'telegramBotToken'
     TELEGRAM_CHAT_ID             = Get-DeployConfigTrim $Config 'telegramChatId'
     CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'contactCrmIngressPassword'
+    SUPPORT_GOOGLE_MEET_URL      = Get-DeployConfigTrim $Config 'supportGoogleMeetUrl'
+    SALES_GOOGLE_MEET_URL        = Get-DeployConfigTrim $Config 'salesGoogleMeetUrl'
+    MARKETING_GOOGLE_MEET_URL    = Get-DeployConfigTrim $Config 'marketingGoogleMeetUrl'
+    SUPPORT_ZOOM_URL             = Get-DeployConfigTrim $Config 'supportZoomUrl'
+    SALES_ZOOM_URL               = Get-DeployConfigTrim $Config 'salesZoomUrl'
+    MARKETING_ZOOM_URL           = Get-DeployConfigTrim $Config 'marketingZoomUrl'
+    BUSINESS_AND_DEV_URL         = Get-DeployConfigTrim $Config 'businessAndDevUrl'
+    BUSINESS_AND_DEV_KEY         = Get-DeployConfigTrim $Config 'businessAndDevKey'
+    COMMS_URL                    = Get-DeployConfigTrim $Config 'commsUrl'
+    COMMS_KEY                    = Get-DeployConfigTrim $Config 'commsKey'
+    VAPID_PUBLIC_KEY             = Get-DeployConfigTrim $Config 'vapidPublicKey'
+    VAPID_PRIVATE_KEY            = Get-DeployConfigTrim $Config 'vapidPrivateKey'
+    VAPID_SUBJECT                = Get-DeployConfigTrim $Config 'vapidSubject'
   }
   if (-not $map.CONTACT_CRM_INGRESS_PASSWORD) {
     $map.CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'adminPassword'

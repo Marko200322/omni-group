@@ -197,11 +197,46 @@ export function buildFactoryPhaseStatus() {
   const phase = getFactoryPhase();
   const profile = getActiveFactoryModuleProfile(phase);
   const gaps = auditFactoryPhaseGaps(phase);
+  // Lazy require — effective breakdown may include async-populated cache
+  let auto: Record<string, unknown> | undefined;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { factoryPhaseAutoService } = require('../service/factory-phase-auto.service') as {
+      factoryPhaseAutoService: {
+        getCachedBreakdown: () => {
+          ceiling: string;
+          autoEnabled: boolean;
+          keysOkThrough: string;
+          revenueOkThrough: string;
+          effective: string;
+          blockedNext: string | null;
+          blockedReason: string | null;
+          metrics: Record<string, number>;
+        } | null;
+      };
+    };
+    const b = factoryPhaseAutoService.getCachedBreakdown();
+    if (b) {
+      auto = {
+        enabled: b.autoEnabled,
+        ceiling: b.ceiling,
+        effective: b.effective,
+        keysOkThrough: b.keysOkThrough,
+        revenueOkThrough: b.revenueOkThrough,
+        blockedNext: b.blockedNext,
+        blockedReason: b.blockedReason,
+        metrics: b.metrics,
+      };
+    }
+  } catch {
+    auto = undefined;
+  }
   return {
     phase,
     label: profile.label,
     modules: profile.modules,
     gaps,
     ready: gaps.filter((g) => g.kind === 'required' || g.kind === 'module_off').length === 0,
+    auto,
   };
 }

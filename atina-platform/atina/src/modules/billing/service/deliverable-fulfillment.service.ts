@@ -304,7 +304,7 @@ export class DeliverableFulfillmentService {
       const message = err instanceof Error ? err.message : String(err);
       await this.repo.markFailed(job.id, message);
       void adminOpsNotifier.notify('fulfillment_failed', [
-        `Payment: ${ctx.paymentId}`,
+        `Payment: ${input.paymentId}`,
         `Deliverable: ${deliverableId}`,
         message,
       ]);

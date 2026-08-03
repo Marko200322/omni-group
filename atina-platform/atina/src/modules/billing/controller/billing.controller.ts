@@ -155,6 +155,8 @@ export class BillingController {
   };
 
   getFactoryPhaseStatus = async (_req: Request, res: Response): Promise<void> => {
+    const { factoryPhaseAutoService } = await import('../service/factory-phase-auto.service');
+    await factoryPhaseAutoService.evaluate({ notify: true });
     sendSuccess(res, {
       ...buildFactoryPhaseStatus(),
       runtime: getFactoryRuntimeSnapshot(),

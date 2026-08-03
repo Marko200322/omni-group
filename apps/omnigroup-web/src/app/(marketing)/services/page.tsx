@@ -3,17 +3,22 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { CatalogSection } from '@/components/marketing/CatalogSection';
+import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
-import { SERVICE_CATEGORIES, withCatalogPricing, withPhaseServiceCatalog } from '@/lib/marketing-catalog';
+import { getClientOffer, listClientOffers } from '@/lib/client-offers';
 
 export default function ServicesPage() {
   const [industryCategory, setIndustryCategory] = useState('');
-  const categories = useMemo(
-    () => withCatalogPricing(withPhaseServiceCatalog(SERVICE_CATEGORIES), industryCategory || null),
+  const { available, later } = useMemo(
+    () => listClientOffers({ category: industryCategory || undefined }),
     [industryCategory],
   );
+
+  const setupAndConsulting = [...available, ...later].filter((o) =>
+    o.category === 'implementation' || o.category === 'consulting' || o.category === 'retainer' || o.category === 'growth',
+  );
+  const ready = setupAndConsulting.filter((o) => o.availability.checkoutAllowed);
+  const next = setupAndConsulting.filter((o) => !o.availability.checkoutAllowed);
 
   return (
     <div className="px-4 py-20">
@@ -21,10 +26,10 @@ export default function ServicesPage() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Services</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Services for your business
+            Setup, support, and growth
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Each service lists exactly what the system delivers after payment — no vague agency promises.
+            Same packages as Pricing — written so you know what arrives after you pay. Use Read more for the full detail.
           </p>
         </motion.div>
 
@@ -32,29 +37,50 @@ export default function ServicesPage() {
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
         </motion.div>
 
-        <div className="mt-14">
-          <CatalogSection categories={categories} />
-        </div>
+        <section className="mt-14">
+          <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {ready.map((offer, i) => (
+              <motion.div
+                key={offer.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+              >
+                <OfferCard
+                  offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-16 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-8"
-        >
-          <div>
-            <p className="font-display text-xl font-semibold text-white">Packages and products</p>
-            <p className="mt-1 text-sm text-slate-400">CRM, AI support, automations — browse what we offer.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/products" className="btn-primary inline-flex items-center gap-2 text-sm">
-              Products <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/pricing" className="btn-glass text-sm">
-              Monthly packages
-            </Link>
-          </div>
-        </motion.div>
+        {next.length > 0 && (
+          <section className="mt-20">
+            <h2 className="font-display text-2xl font-bold text-white">Currently under construction</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Not for sale yet. Opens automatically when the system is ready to deliver them.
+            </p>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {next.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                  compact
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="mt-16 flex flex-wrap gap-3">
+          <Link href="/pricing" className="btn-primary text-sm">
+            See all prices
+          </Link>
+          <Link href="/contact" className="btn-glass text-sm">
+            Ask before buying
+          </Link>
+        </div>
       </div>
     </div>
   );

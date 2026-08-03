@@ -199,6 +199,7 @@ async function seedAdmin(): Promise<void> {
     `INSERT INTO users (email, password_hash, name, role, is_email_verified, plan_id)
      VALUES ($1, $2, $3, 'admin', true, $4)
      ON CONFLICT (email) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
        name = EXCLUDED.name,
        role = EXCLUDED.role,
        plan_id = EXCLUDED.plan_id,

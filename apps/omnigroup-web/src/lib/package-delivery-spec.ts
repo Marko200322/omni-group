@@ -474,7 +474,7 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
   if (checkoutAllowed) {
     return {
       checkoutAllowed: true,
-      badge: 'Available now',
+      badge: 'Ready to buy',
       badgeTone: 'available',
       statusLabel: 'Self-serve checkout is open for this package.',
     };
@@ -483,20 +483,15 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
   const spec = getPackageDeliverySpec(deliverableId);
   const phase = getFactoryPhase();
   const min = spec?.minCheckoutPhase;
-  if (min && !phaseGte(phase, min)) {
-    return {
-      checkoutAllowed: false,
-      badge: `From ${min}`,
-      badgeTone: 'upcoming',
-      statusLabel: `Opens at factory phase ${min} — request a quote until then.`,
-    };
-  }
+  const opensAt = min && !phaseGte(phase, min) ? min : null;
 
   return {
     checkoutAllowed: false,
-    badge: 'Contact only',
-    badgeTone: 'contact',
-    statusLabel: 'Not on self-serve checkout yet — contact us for availability.',
+    badge: 'Currently under construction',
+    badgeTone: 'upcoming',
+    statusLabel: opensAt
+      ? `Currently under construction. Opens automatically at factory phase ${opensAt} — checkout and delivery unlock when the system reaches that phase.`
+      : 'Currently under construction. Checkout and automated delivery unlock when this package is enabled for the current factory phase.',
   };
 }
 

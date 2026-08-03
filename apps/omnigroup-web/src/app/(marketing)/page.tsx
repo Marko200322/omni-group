@@ -56,10 +56,10 @@ export default function HomePage() {
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
-                  Request a quote <ArrowRight className="h-4 w-4" />
+                  See packages <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  Solutions
+                  What you get
                 </Link>
                 <Link href="/contact" className="btn-glass">
                   Book a call

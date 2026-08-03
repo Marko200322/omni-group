@@ -1,5 +1,5 @@
-/** Omni Group brand + three product modules (they do not replace the brand name). */
-export const BRAND_NAME = 'Omni Group';
+/** Omni Group Tech brand + three product modules (they do not replace the brand name). */
+export const BRAND_NAME = 'Omni Group Tech';
 
 export const MODULES = [
   {

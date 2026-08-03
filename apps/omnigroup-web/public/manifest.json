@@ -1,6 +1,6 @@
 {
-  "name": "Omni Group Admin",
-  "short_name": "OG Admin",
+  "name": "Omni Group Tech Admin",
+  "short_name": "OGT Admin",
   "description": "Mobile operator console — payments, factory, autonomy.",
   "start_url": "/admin/mobile",
   "display": "standalone",

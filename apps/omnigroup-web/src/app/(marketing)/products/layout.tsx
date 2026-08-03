@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Products | Omni Group',
+  title: 'Products | Omni Group Tech',
   description: 'Platform modules — CRM, automations, AI support, enterprise tools.',
 };
 

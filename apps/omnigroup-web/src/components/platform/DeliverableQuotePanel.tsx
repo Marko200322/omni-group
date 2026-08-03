@@ -10,9 +10,9 @@ import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
 import {
   canCheckoutPackage,
-  getPackageDeliverySpec,
   listCheckoutPackages,
 } from '@/lib/package-delivery-spec';
+import { getClientOffer } from '@/lib/client-offers';
 import { isLeanProdMode } from '@/lib/prod-mode';
 import {
   calculateDeliverableQuote,
@@ -60,8 +60,13 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [sent, setSent] = useState(false);
 
   const deliverable = DELIVERABLE_CATALOG.find((d) => d.id === deliverableId);
-  const deliverySpec = getPackageDeliverySpec(deliverableId);
+  const clientOffer = getClientOffer(deliverableId);
   const checkoutAllowed = canCheckoutPackage(deliverableId);
+  const checkoutIds = listCheckoutPackages();
+  const catalogOrdered = [
+    ...DELIVERABLE_CATALOG.filter((d) => checkoutIds.includes(d.id)),
+    ...DELIVERABLE_CATALOG.filter((d) => !checkoutIds.includes(d.id)),
+  ];
 
   const quote = useMemo(() => {
     if (!deliverable) return null;
@@ -157,36 +162,35 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onChange={(e) => setDeliverableId(e.target.value)}
           disabled={disabled || loading}
         >
-          {DELIVERABLE_CATALOG.map((d) => {
+          {catalogOrdered.map((d) => {
             const ok = canCheckoutPackage(d.id);
             return (
               <option key={d.id} value={d.id}>
                 {deliverableLabel(d)}
-                {!ok ? ' (contact only)' : ''}
+                {!ok ? ' (not open yet)' : ''}
               </option>
             );
           })}
         </select>
       </label>
 
-      {deliverySpec && (
-        <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-400">
-          <p className="font-medium text-emerald-300">Automated delivery</p>
-          <ul className="mt-1 list-inside list-disc">
-            {deliverySpec.includes.map((line) => (
-              <li key={line}>{line}</li>
+      {clientOffer && (
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-slate-400">
+          <p className="font-medium text-emerald-300">{clientOffer.promise}</p>
+          <p className="mt-1 text-xs leading-relaxed">{clientOffer.summary}</p>
+          <ul className="mt-2 space-y-1 text-xs">
+            {clientOffer.youGet.map((line) => (
+              <li key={line}>✓ {line}</li>
             ))}
           </ul>
-          {deliverySpec.excludes.length > 0 && (
-            <>
-              <p className="mt-2 font-medium text-amber-300/90">Not included</p>
-              <ul className="list-inside list-disc text-slate-500">
-                {deliverySpec.excludes.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            </>
+          {clientOffer.notIncluded.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+              {clientOffer.notIncluded.map((line) => (
+                <li key={line}>✕ {line}</li>
+              ))}
+            </ul>
           )}
+          <p className="mt-2 text-xs text-slate-500">{clientOffer.when}</p>
         </div>
       )}
 
@@ -217,8 +221,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         <span className="text-xl font-bold text-white">{formatEur(quote.clientPriceEur)}</span>
         <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
         <span className="mt-1 block text-xs text-slate-500">
-          Resources {formatEur(quote.resourceCostEur)} · market {formatEur(quote.marketValueEur)} · fees{' '}
-          {formatEur(quote.paymentFeeEur)}
+          {clientOffer?.when ?? 'After payment confirmation'}
         </span>
       </p>
 

@@ -10,7 +10,7 @@ export default function ContactPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Contact</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient">Let&apos;s talk about your project</h1>
           <p className="mt-4 text-slate-400">
-            Reach the Omni Group team — we respond within one business day. Describe your project, timeline, and budget;
+            Reach the Omni Group Tech team — we respond within one business day. Describe your project, timeline, and budget;
             we will send a concrete quote with no obligation.
           </p>
         </FadeIn>
