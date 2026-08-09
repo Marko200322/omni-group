@@ -97,6 +97,7 @@ function Invoke-VpsRemoteBashScript {
     [string]$SshKey = '',
     [string]$SshPassword = '',
     [string]$ScriptContent,
+    [int]$TimeOutSeconds = 7200,
     [switch]$DryRun,
     [object]$Session = $null
   )
@@ -104,7 +105,7 @@ function Invoke-VpsRemoteBashScript {
   $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($ScriptContent))
   $cmd = "echo $b64 | base64 -d | bash"
   return Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
-    -SshPassword $SshPassword -Command $cmd -DryRun:$DryRun -Session $Session
+    -SshPassword $SshPassword -Command $cmd -TimeOutSeconds $TimeOutSeconds -DryRun:$DryRun -Session $Session
 }
 
 function Sync-VpsRemoteDirectory {

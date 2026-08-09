@@ -224,6 +224,7 @@ export class PaymentNotificationsService {
         companyLegalName: config.payments.manual.companyLegalName,
         companyTaxId: config.payments.manual.companyTaxId,
         companyAddress: config.payments.manual.companyAddress,
+        accountName: config.payments.manual.accountName,
       },
     });
 

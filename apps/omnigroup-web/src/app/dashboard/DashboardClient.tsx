@@ -170,6 +170,7 @@ export default function DashboardClient({
       </section>
 
       <section id="projects" className="mt-6 scroll-mt-24">
+        <span id="automations" className="block scroll-mt-24" aria-hidden="true" />
         <GlassCard delay={0.16}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-white">Project status</h2>
@@ -307,6 +308,7 @@ export default function DashboardClient({
       </section>
 
       <section id="consultation" className="mt-6 scroll-mt-24">
+        <span id="sales" className="block scroll-mt-24" aria-hidden="true" />
         <GlassCard delay={0.26}>
           <h2 className="font-display text-lg font-semibold text-white">Consultations</h2>
           <p className="mt-2 text-sm text-slate-400">

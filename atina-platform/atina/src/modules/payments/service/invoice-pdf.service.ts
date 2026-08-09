@@ -6,7 +6,12 @@ function issuerLines(instructions: Record<string, string>): string[] {
   const legal = instructions.companyLegalName?.trim();
   const tax = instructions.companyTaxId?.trim();
   const address = instructions.companyAddress?.trim();
-  if (legal) lines.push(`Legal name: ${legal}`);
+  const accountName = instructions.accountName?.trim();
+  if (legal) {
+    lines.push(`Legal name: ${legal}`);
+  } else if (accountName) {
+    lines.push(`Beneficiary: ${accountName}`);
+  }
   if (tax) lines.push(`Tax ID / PIB: ${tax}`);
   if (address) lines.push(`Address: ${address}`);
   return lines;
@@ -45,6 +50,7 @@ export type InvoicePdfInput = {
     companyLegalName?: string;
     companyTaxId?: string;
     companyAddress?: string;
+    accountName?: string;
   };
 };
 
@@ -73,6 +79,7 @@ export function generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer
       companyLegalName: input.issuer?.companyLegalName ?? '',
       companyTaxId: input.issuer?.companyTaxId ?? '',
       companyAddress: input.issuer?.companyAddress ?? '',
+      accountName: input.issuer?.accountName ?? '',
     });
     if (issuer.length) {
       doc.fontSize(11).text('Issuer:', { underline: true });
