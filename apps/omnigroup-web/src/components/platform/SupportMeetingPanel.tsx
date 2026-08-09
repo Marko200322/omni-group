@@ -112,7 +112,8 @@ export function SupportMeetingPanel({ disabled }: Props) {
         detail?: string;
       };
       if (!res.ok || !json.ok) {
-        throw new Error(json.detail ?? json.error ?? 'book_failed');
+        const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+        throw new Error(human ?? 'We couldn\u2019t schedule your call right now. Please try again shortly.');
       }
       setSuccess(
         json.data?.status === 'scheduled' && json.data.meeting_url
@@ -123,7 +124,11 @@ export function SupportMeetingPanel({ disabled }: Props) {
       setDescription('');
       await loadMeetings();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not schedule the call.');
+      setError(
+        err instanceof Error && /\s/.test(err.message)
+          ? err.message
+          : 'We couldn\u2019t schedule your call right now. Please try again shortly.',
+      );
     } finally {
       setLoading(false);
     }

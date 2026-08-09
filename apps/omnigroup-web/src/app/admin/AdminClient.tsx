@@ -48,6 +48,7 @@ type Props = {
   sessionUser: SessionUser | null;
   isDemo: boolean;
   overview?: AtinaAdminOverview | null;
+  overviewError?: string;
   pendingPayments?: AtinaAdminPayment[];
   marketKpi?: LiveMarketKpi | null;
 };
@@ -63,6 +64,7 @@ export default function AdminClient({
   sessionUser,
   isDemo,
   overview,
+  overviewError,
   pendingPayments = [],
   marketKpi = null,
 }: Props) {
@@ -92,29 +94,57 @@ export default function AdminClient({
       sessionUser={sessionUser}
       isDemo={isDemo}
     >
-      <FactoryPhasePanel initial={factoryOverview as Parameters<typeof FactoryPhasePanel>[0]['initial']} />
-
-      {leanProd ? (
-        <GlassCard delay={0} className="mb-6 border border-amber-500/30 bg-amber-500/5">
-          <p className="text-sm font-medium text-amber-100">
-            Factory {factoryPhase} — {getFactoryPhaseLabel(factoryPhase)} · €{budgetEur}/mo budget
-          </p>
-          <p className="mt-1 text-sm text-amber-200/80">{getSellablePackageHint()}</p>
-          <p className="mt-2 text-xs text-amber-200/70">
-            Autonomy, scraper, outbound, avatar off · AI cap enforced · Sales: warm outreach → contact →
-            manual checkout → confirm → fulfillment.
-          </p>
-          {isBudgetLaunchMode() ? (
-            <ul className="mt-3 space-y-1 text-xs text-amber-100/80">
-              {budgetHints.map((h) => (
-                <li key={h.label}>
-                  {h.label}: ~€{h.eur}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+      {!isDemo && overviewError ? (
+        <GlassCard delay={0} className="mb-6 border border-rose-500/40 bg-rose-500/5">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
+            <div>
+              <p className="text-sm font-medium text-rose-100">
+                Live operator podaci trenutno nedostupni — Atina API nije odgovorio ({overviewError}).
+              </p>
+              <p className="mt-1 text-xs text-rose-200/80">
+                Prikazani brojevi mogu biti nepotpuni ili iz kataloga (fallback), nisu potvrđeni uživo. Osveži za ponovni pokušaj.
+              </p>
+            </div>
+          </div>
         </GlassCard>
       ) : null}
+
+      <FactoryPhasePanel initial={factoryOverview as Parameters<typeof FactoryPhasePanel>[0]['initial']} />
+
+      <GlassCard
+        delay={0}
+        className={`mb-6 border ${leanProd ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/30 bg-emerald-500/5'}`}
+      >
+        <p className={`text-sm font-medium ${leanProd ? 'text-amber-100' : 'text-emerald-100'}`}>
+          Factory {factoryPhase} — {getFactoryPhaseLabel(factoryPhase)} · €{budgetEur}/mo budget
+          {!leanProd ? ' · prodMode full' : ' · prodMode lean'}
+        </p>
+        <p className={`mt-1 text-sm ${leanProd ? 'text-amber-200/80' : 'text-emerald-200/80'}`}>
+          {getSellablePackageHint()}
+        </p>
+        <p className={`mt-2 text-xs ${leanProd ? 'text-amber-200/70' : 'text-emerald-200/70'}`}>
+          {leanProd
+            ? 'Lean profile: limited checkout · AI cap enforced · Sales: contact → manual checkout → confirm → fulfillment.'
+            : 'Live ops: Hunting + Autonomy panels below · scraper/Hunter/outbound per readiness · Confirm payments → fulfillment.'}
+        </p>
+        <p className={`mt-2 text-xs ${leanProd ? 'text-amber-200/60' : 'text-emerald-200/60'}`}>
+          Jump: <a href="#hunting" className="underline underline-offset-2">Hunting</a>
+          {' · '}
+          <a href="#autonomy" className="underline underline-offset-2">Autonomy</a>
+          {' · '}
+          <a href="#billing" className="underline underline-offset-2">Pending payments</a>
+        </p>
+        {leanProd && isBudgetLaunchMode() ? (
+          <ul className="mt-3 space-y-1 text-xs text-amber-100/80">
+            {budgetHints.map((h) => (
+              <li key={h.label}>
+                {h.label}: ~€{h.eur}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </GlassCard>
 
       <div id="users" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -407,7 +437,7 @@ export default function AdminClient({
             <GlassCard delay={0.39}>
               <h2 className="font-display text-lg font-semibold text-white">Autonomy Loop</h2>
               <p className="mt-2 text-sm text-slate-400">
-                Rollout, outbound, evolution tick. Factory M5+.
+                Scheduler, outbound stats, vertical rollout. Live from Factory M4+.
               </p>
               <AutonomyLoopPanel
                 isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}

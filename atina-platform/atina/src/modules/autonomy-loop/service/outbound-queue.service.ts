@@ -13,6 +13,7 @@ import {
   normalizeJobPostingContext,
 } from '../../client-hunter/lib/job-hunt-copy';
 import { getJobBoardPlatform } from '../../client-hunter/data/job-board-catalog';
+import { isCompanyEmail } from '../../client-hunter/lib/company-email';
 
 export type OutboundQueueStats = {
   warmupComplete: boolean;
@@ -178,7 +179,11 @@ export class OutboundQueueService {
     source?: string;
   }): Promise<{ created: number; ids: string[] }> {
     const ids: string[] = [];
-    for (const lead of input.leads.slice(0, 5)) {
+    const companyOnly = config.hunt.companyEmailsOnly !== false;
+    const leads = input.leads.filter((lead) =>
+      companyOnly ? isCompanyEmail(lead.email) : Boolean(lead.email?.trim()),
+    );
+    for (const lead of leads.slice(0, 5)) {
       const row = await this.createDraftFromVertical({
         userId: input.userId,
         verticalSlug: input.verticalSlug,
@@ -226,10 +231,18 @@ export class OutboundQueueService {
     for (const msg of queued) {
       const to = devFallback
         ? config.outreach.fallbackNotifyEmail!.trim()
-        : msg.lead_email?.trim() || config.outreach.fallbackNotifyEmail;
+        : msg.lead_email?.trim() || '';
       if (!to) {
         await this.repo.updateStatus(msg.id, 'failed', {
           metadata: { error: 'no_recipient' },
+        });
+        failed += 1;
+        continue;
+      }
+      // Skip free-mail / gov / test — commercial outbound only.
+      if (!devFallback && !isCompanyEmail(to)) {
+        await this.repo.updateStatus(msg.id, 'failed', {
+          metadata: { error: 'blocked_recipient_policy', to },
         });
         failed += 1;
         continue;

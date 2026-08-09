@@ -8,6 +8,21 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { fadeUp, tapScale } from '@/lib/animations';
 
+function friendlyForgotError(code: string | undefined): string {
+  switch (code) {
+    case 'atina_unreachable':
+      return 'Our service is temporarily unavailable. Please try again in a moment.';
+    case 'rate_limited':
+      return 'Too many requests. Please wait a few minutes and try again.';
+    case 'email_required':
+      return 'Please enter your email address.';
+    case 'network':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return 'Unable to send a reset link right now. Please try again.';
+  }
+}
+
 export default function ForgotPasswordPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
@@ -40,14 +55,14 @@ export default function ForgotPasswordPage() {
               const data = (await res.json()) as { ok?: boolean; error?: string; message?: string; devToken?: string };
               if (!res.ok || !data.ok) {
                 setStatus('err');
-                setErrMsg(data.error ?? `HTTP ${res.status}`);
+                setErrMsg(friendlyForgotError(data.error));
                 return;
               }
               setStatus('ok');
               if (data.devToken) setDevToken(data.devToken);
             } catch {
               setStatus('err');
-              setErrMsg('network');
+              setErrMsg(friendlyForgotError('network'));
             }
           }}
         >

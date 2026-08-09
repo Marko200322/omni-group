@@ -301,6 +301,15 @@ OUTREACH_DAILY_CAP=50
 
 ENABLE_CRM=true
 ENABLE_ANALYTICS=true
+
+# Opciono — external AI stack (ključevi + povezivanje; vidi KLJUCEVI §11)
+CLAY_API_KEY=
+SALESFORGE_API_KEY=
+INTERCOM_API_KEY=
+MAKE_API_KEY=
+MAKE_WEBHOOK_URL=
+N8N_API_KEY=
+N8N_BASE_URL=
 ```
 
 ### Module stack

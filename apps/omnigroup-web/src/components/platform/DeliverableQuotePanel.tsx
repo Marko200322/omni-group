@@ -88,7 +88,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
 
   const startCheckout = useCallback(async () => {
     if (!checkoutAllowed) {
-      setError('This package requires full production mode. Use Contact or ask admin.');
+      setError('This package is currently available by request — use “Ask before buying” or Contact and our team will set it up for you.');
       return;
     }
     setLoading(true);
@@ -111,11 +111,16 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         detail?: string;
       };
       if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.detail ?? json.error ?? 'checkout_failed');
+        const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+        throw new Error(human ?? 'We couldn\u2019t create your payment instructions right now. Please try again shortly.');
       }
       setCheckout(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create payment.');
+      setError(
+        err instanceof Error && /\s/.test(err.message)
+          ? err.message
+          : 'We couldn\u2019t create your payment instructions right now. Please try again shortly.',
+      );
     } finally {
       setLoading(false);
     }
@@ -131,11 +136,16 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!res.ok || !json.ok) {
-        throw new Error(json.detail ?? json.error ?? 'mark_sent_failed');
+        const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+        throw new Error(human ?? 'We couldn\u2019t record your payment just now. Please try again shortly.');
       }
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(
+        err instanceof Error && /\s/.test(err.message)
+          ? err.message
+          : 'We couldn\u2019t record your payment just now. Please try again shortly.',
+      );
     } finally {
       setLoading(false);
     }
@@ -149,7 +159,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         You&apos;re buying a deliverable the platform produces — scope is listed below. Not platform access.
         {isLeanProdMode() && (
           <span className="mt-1 block text-amber-200/90">
-            Lean mode: some packages are contact-only until full prod is enabled.
+            Some packages are currently available by request — use “Ask before buying” and our team will set them up for you.
           </span>
         )}
       </p>
@@ -232,7 +242,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onClick={startCheckout}
           disabled={disabled || loading || !checkoutAllowed}
         >
-          {loading ? 'Generating…' : checkoutAllowed ? 'Generate payment instructions' : 'Checkout disabled (lean)'}
+          {loading ? 'Generating…' : checkoutAllowed ? 'Generate payment instructions' : 'Available on request'}
         </button>
         <Link
           href={`/contact?service=${encodeURIComponent(deliverableId)}${industryCategory ? `&category=${encodeURIComponent(industryCategory)}` : ''}`}

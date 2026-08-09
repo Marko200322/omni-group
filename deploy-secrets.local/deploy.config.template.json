@@ -86,5 +86,26 @@
   "commsKey": "",
   "vapidPublicKey": "",
   "vapidPrivateKey": "",
-  "vapidSubject": ""
+  "vapidSubject": "",
+
+  "_externalAiStack": "M4/M5 vendor keys — popuni samo što koristiš; status: GET /api/v1/billing/factory-phase/status → externalAiStack",
+  "clayApiKey": "",
+  "salesforgeApiKey": "",
+  "intercomApiKey": "",
+  "intercomAppId": "",
+  "sierraApiKey": "",
+  "makeApiKey": "",
+  "makeWebhookUrl": "",
+  "n8nApiKey": "",
+  "n8nBaseUrl": "",
+  "rampApiKey": "",
+  "vicAiApiKey": "",
+  "jasperApiKey": "",
+  "predisApiKey": "",
+  "devinApiKey": "",
+  "replitAgentApiKey": "",
+  "crewaiApiKey": "",
+  "crewaiBaseUrl": "",
+  "langchainApiKey": "",
+  "langchainProject": ""
 }

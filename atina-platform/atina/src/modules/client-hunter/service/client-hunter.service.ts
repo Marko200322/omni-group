@@ -17,9 +17,10 @@ import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
 import { OutboundQueueService } from '../../autonomy-loop/service/outbound-queue.service';
 import { CrmService } from '../../crm/service/crm.service';
 import { ClientHunterRepository } from '../repository/client-hunter.repository';
-import { listJobBoardPlatforms, countJobBoardPlatforms } from '../data/job-board-catalog';
+import { listJobBoardPlatforms, countJobBoardPlatforms, type JobBoardKind } from '../data/job-board-catalog';
 import { listHuntLocaleCodes } from '../data/hunt-locales';
 import { HotClientsService } from './hot-clients.service';
+import { isCompanyEmail } from '../lib/company-email';
 
 const DEFAULT_PLATFORMS_PER_RUN = 12;
 
@@ -84,11 +85,16 @@ export class ClientHunterService {
       if (dto.mode === 'hunt') {
         const scraper = getScraperClient();
         if (scraper.isConfigured() || config.features.scraper) {
+          const excludeKinds = (config.hunt.excludePlatformKinds ?? ['government']).filter(
+            (k): k is JobBoardKind =>
+              ['job_board', 'freelance', 'government', 'aggregator', 'application_portal'].includes(k),
+          );
           const platformList = listJobBoardPlatforms({
             region: dto.region,
             locale: dto.locale,
             slugs: dto.platforms,
             enabledOnly: true,
+            excludeKinds: dto.platforms?.length ? undefined : excludeKinds,
             limit: dto.maxPlatforms ?? DEFAULT_PLATFORMS_PER_RUN,
           });
 
@@ -149,6 +155,9 @@ export class ClientHunterService {
             verticalName,
             sampleLinks,
           });
+          if (config.hunt.companyEmailsOnly) {
+            enrichedLeads = enrichedLeads.filter((l) => isCompanyEmail(l.email));
+          }
           outputPayload.lead_database = {
             phase: this.leadDb.getStatus().phase,
             enriched: enrichedLeads.length,
@@ -156,6 +165,7 @@ export class ClientHunterService {
           };
         }
 
+        // Commercial mode: only drafts with company emails (no scrape stubs without recipients).
         const drafts =
           enrichedLeads.length > 0
             ? await this.outbound.createDraftsFromLeads({
@@ -166,35 +176,27 @@ export class ClientHunterService {
                 leads: enrichedLeads,
                 source: 'client_hunter_lead_db',
               })
-            : await this.outbound.createDraftsFromScrape({
-                userId,
-                verticalSlug: dto.verticalSlug,
-                category,
-                verticalName,
-                leadsDiscovered,
-                platformsScraped: scrapeHits,
-                sampleLinks,
-              });
+            : { created: 0, ids: [] as string[] };
+        if (!enrichedLeads.length) {
+          outputPayload.outbound_skipped = 'no_company_emails';
+        }
         outputPayload.outbound = drafts;
         outputPayload.job_boards_scraped = scrapeHits.length;
         const crmContacts: string[] = [];
-        const crmSource = enrichedLeads.length ? enrichedLeads : null;
-        const crmCount = crmSource?.length ?? drafts.created;
-        for (let i = 0; i < crmCount; i += 1) {
+        for (let i = 0; i < enrichedLeads.length; i += 1) {
           try {
-            const lead = crmSource?.[i];
+            const lead = enrichedLeads[i];
+            if (config.hunt.companyEmailsOnly && !isCompanyEmail(lead.email)) continue;
             const contact = await this.crm.createContact(userId, {
-              firstName: lead?.firstName ?? 'Lead',
-              lastName: lead?.lastName ?? String(i + 1),
-              email: lead?.email ?? undefined,
-              company: lead?.company ?? scrapeHits[i % scrapeHits.length] ?? dto.verticalSlug,
+              firstName: lead.firstName ?? 'Lead',
+              lastName: lead.lastName ?? String(i + 1),
+              email: lead.email ?? undefined,
+              company: lead.company ?? scrapeHits[i % Math.max(1, scrapeHits.length)] ?? dto.verticalSlug,
               status: 'lead',
-              source: enrichedLeads.length ? 'lead_database' : 'client_hunter',
-              tags: [dto.verticalSlug, category, ...(lead?.provider ? [lead.provider] : [])],
-              notes: enrichedLeads.length
-                ? `Lead DB (${lead?.provider}). Verified: ${lead?.verified ? 'yes' : 'no'}`
-                : `Auto from hunt. Platforms: ${scrapeHits.join(', ')}`,
-              customFields: lead?.linkedinUrl ? { linkedin: lead.linkedinUrl } : {},
+              source: 'lead_database',
+              tags: [dto.verticalSlug, category, ...(lead.provider ? [lead.provider] : []), 'company_email'],
+              notes: `Lead DB (${lead.provider}). Verified: ${lead.verified ? 'yes' : 'no'}`,
+              customFields: lead.linkedinUrl ? { linkedin: lead.linkedinUrl } : {},
             });
             const contactId = (contact as { id?: string } | undefined)?.id;
             if (contactId) crmContacts.push(contactId);

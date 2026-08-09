@@ -108,4 +108,8 @@ function Write-BudgetPlanSummary([int]$MonthlyBudgetEur) {
   Write-Host "  Budget:  EUR $MonthlyBudgetEur/mo operational (VPS + domain extra)" -ForegroundColor Cyan
   Write-Host "  AI cap:  ~`$$aiDaily/day (~EUR $aiMo/mo max)" -ForegroundColor DarkGray
   Write-Host '  Sell:    Setup Quick, Landing, Audit, Support - warm outreach only' -ForegroundColor DarkGray
+  if ($MonthlyBudgetEur -ge 400 -and $MonthlyBudgetEur -le 600) {
+    Write-Host '  Hint:    Resend Pro ~EUR20 + OpenRouter ~120 + Apify ~25 + buffer' -ForegroundColor DarkGray
+    Write-Host '  Tracker: .\scripts\m4-budget-burn-tracker.ps1' -ForegroundColor DarkGray
+  }
 }

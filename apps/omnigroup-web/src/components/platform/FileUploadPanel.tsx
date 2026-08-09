@@ -14,6 +14,38 @@ type Props = {
   disabled?: boolean;
 };
 
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg', 'text/plain']);
+const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.txt'];
+
+/** Map internal upload error codes to client-friendly copy — never surface raw codes. */
+function friendlyUploadError(code: string | undefined): string {
+  switch (code) {
+    case 'file_too_large':
+      return 'That file is too large — please keep it under 2 MB.';
+    case 'file_type_not_allowed':
+      return 'That file type isn\u2019t supported. Please upload a PDF, PNG, JPEG, or TXT file.';
+    case 'no_file':
+    case 'invalid_multipart':
+      return 'We couldn\u2019t read that file. Please choose a different file and try again.';
+    case 'unauthorized':
+      return 'Please sign in again to upload documents.';
+    default:
+      return 'Upload failed. Please try again in a moment.';
+  }
+}
+
+function validateFile(file: File): string | null {
+  if (file.size === 0) return 'no_file';
+  if (file.size > MAX_UPLOAD_BYTES) return 'file_too_large';
+  const type = file.type || '';
+  const nameLower = file.name.toLowerCase();
+  const extOk = ALLOWED_EXTENSIONS.some((ext) => nameLower.endsWith(ext));
+  if (type && !ALLOWED_TYPES.has(type) && !extOk) return 'file_type_not_allowed';
+  if (!type && !extOk) return 'file_type_not_allowed';
+  return null;
+}
+
 export function FileUploadPanel({ disabled }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -23,6 +55,13 @@ export function FileUploadPanel({ disabled }: Props) {
     const file = files?.[0];
     if (!file || disabled) return;
 
+    const validationError = validateFile(file);
+    if (validationError) {
+      setResult({ ok: false, error: validationError });
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
     setBusy(true);
     setResult(null);
     try {
@@ -30,8 +69,8 @@ export function FileUploadPanel({ disabled }: Props) {
       body.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body });
       const json = (await res.json()) as UploadResult;
-      if (!res.ok) {
-        setResult({ ok: false, error: json.error ?? `HTTP ${res.status}` });
+      if (!res.ok || !json.ok) {
+        setResult({ ok: false, error: json.error ?? 'upload_failed' });
         return;
       }
       setResult(json);
@@ -68,14 +107,13 @@ export function FileUploadPanel({ disabled }: Props) {
           {result?.ok && result.file ? (
             <p className="mt-3 flex items-center gap-2 text-xs text-emerald-300">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
-              {result.file.name} ({Math.round(result.file.size / 1024)} KB)
-              {result.file.storedPath ? ` — ${result.file.storedPath}` : ''}
+              Uploaded {result.file.name} ({Math.round(result.file.size / 1024)} KB) — your team can now access it.
             </p>
           ) : null}
           {result && !result.ok ? (
             <p className="mt-3 flex items-center gap-2 text-xs text-rose-300">
               <AlertCircle className="h-4 w-4 shrink-0" />
-              Upload failed: {result.error}
+              {friendlyUploadError(result.error)}
             </p>
           ) : null}
         </div>

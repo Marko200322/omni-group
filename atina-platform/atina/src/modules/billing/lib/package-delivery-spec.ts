@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Honest delivery contract per package — keep in sync with
  * apps/omnigroup-web/src/lib/package-delivery-spec.ts
  */
@@ -54,7 +54,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Onboarding checklist in PDF',
     ],
     excludes: ['Custom domain on your DNS', 'Dedicated VPS for the client'],
-    anchorByPhase: { M0: 249, M1: 279, M3: 329, M6: 390 },
+    anchorByPhase: { M0: 349, M1: 399, M3: 449, M4: 449, M6: 549 },
     phaseUnlocks: [
       {
         fromPhase: 'M1',
@@ -88,7 +88,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Live training calls (add Support retainer)',
       'Daily human support without retainer',
     ],
-    anchorByPhase: { M1: 690, M3: 990, M6: 1290 },
+    anchorByPhase: { M1: 890, M3: 1290, M4: 1290, M6: 1690 },
     minCheckoutPhase: 'M1',
     phaseUnlocks: [
       {
@@ -112,7 +112,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Custom-tier setup PDF',
     ],
     excludes: ['Deploy on client-owned servers', '24/7 SLA operations', 'Backup/monitoring on client infra'],
-    anchorByPhase: { M3: 2490, M6: 3900 },
+    anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
     leanCheckout: false,
     fullCheckout: true,
@@ -125,7 +125,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'AI tehnički audit PDF: rezime, bezbednost, stack, 90-dnevni plan i ROI — po industriji.',
     includes: ['PDF report (6+ sections)', 'Markdown source bundle', 'Industry-specific recommendations'],
     excludes: ['On-site inspection', 'Penetration testing', 'Legal compliance sign-off'],
-    anchorByPhase: { M0: 349, M2: 490, M6: 690 },
+    anchorByPhase: { M0: 449, M2: 590, M4: 590, M6: 790 },
     phaseUnlocks: [
       {
         fromPhase: 'M2',
@@ -151,7 +151,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Live connection to client Stripe/ERP/CRM',
       'OAuth app registration on third-party tools',
     ],
-    anchorByPhase: { M2: 590, M4: 890, M6: 1190 },
+    anchorByPhase: { M2: 790, M4: 1190, M6: 1490 },
     minCheckoutPhase: 'M2',
     leanCheckout: false,
     fullCheckout: true,
@@ -162,7 +162,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Workflow i SOP PDF: mapa procesa, koraci automatizacije, uloge, KPI, plan uvođenja.',
     includes: ['Workflow design PDF', 'SOP sections per process step', 'Module mapping'],
     excludes: ['Building automations in client tools (add Setup or Integration)'],
-    anchorByPhase: { M0: 449, M2: 590, M6: 790 },
+    anchorByPhase: { M0: 549, M2: 690, M4: 690, M6: 890 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -181,7 +181,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Mesečni retainer: welcome PDF, support queue SLA 24h, moduli na portalu — odgovori našeg tima.',
     includes: ['Welcome PDF', 'Support automation task (SLA 24h)', 'Modules: notifications, support-avatar, AI-RAG'],
     excludes: ['Unlimited dev hours', 'Emergency weekend SLA'],
-    anchorByPhase: { M0: 99, M2: 149, M6: 199 },
+    anchorByPhase: { M0: 149, M2: 249, M4: 249, M6: 349 },
     phaseUnlocks: [
       {
         fromPhase: 'M1',
@@ -215,7 +215,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Monthly health-check task',
     ],
     excludes: ['Private Slack channel setup on client workspace (we notify via webhook)'],
-    anchorByPhase: { M2: 290, M4: 390, M6: 490 },
+    anchorByPhase: { M2: 490, M4: 690, M6: 890 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -226,7 +226,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Live landing na /sites/{slug} sa AI copy-jem — host na omnigrouptech.com.',
     includes: ['Published live URL', 'AI-generated copy for niche', 'Contact section'],
     excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
-    anchorByPhase: { M0: 549, M2: 690, M6: 890 },
+    anchorByPhase: { M0: 690, M2: 890, M4: 990, M6: 1290 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -243,7 +243,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na /sites/{slug}.',
     includes: ['Live URL with 5+ pages', 'Product factory project linked', 'Services, pricing, contact pages'],
     excludes: ['Custom domain', 'CMS training', 'Copywriting beyond AI first draft'],
-    anchorByPhase: { M0: 990, M3: 1490, M6: 2490 },
+    anchorByPhase: { M0: 1290, M3: 1990, M4: 1990, M6: 2990 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -256,15 +256,15 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'website-ecommerce',
-    description: 'Demo e-commerce storefront with 4+ catalog products and documented checkout path — hosted live.',
-    descriptionSr: 'Demo e-commerce sa 4+ proizvoda i dokumentovanim checkout putem — live.',
+    description: 'Hosted demo e-commerce storefront (4+ products) + checkout documentation — not a full merchant Stripe shop or inventory system.',
+    descriptionSr: 'Demo e-commerce (4+ proizvoda) + dokumentacija checkout-a — nije pun merchantski Stripe shop ni magacin.',
     includes: [
       'Live storefront URL',
       '4+ demo products in catalog',
       'Checkout integration notes in delivery',
     ],
     excludes: ['Real inventory sync', 'Client Stripe account wiring', 'Payment processing fees'],
-    anchorByPhase: { M3: 2490, M6: 3900 },
+    anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
     leanCheckout: false,
     fullCheckout: true,
@@ -275,7 +275,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'White-label brand PDF plus live landing za partnersku prodaju.',
     includes: ['Brand & packaging PDF', 'Live landing page (/sites/{slug})'],
     excludes: ['Partner legal agreements', 'Custom domain for partner'],
-    anchorByPhase: { M2: 990, M4: 1490, M6: 1990 },
+    anchorByPhase: { M2: 1290, M4: 1790, M6: 2490 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -286,7 +286,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Sales enablement PDF: demo skripta, outreach hook-ovi, FAQ, closing checklist.',
     includes: ['Sales enablement PDF', 'Industry-specific hooks', 'FAQ from catalog'],
     excludes: ['Live sales calls', 'CRM setup for sales team'],
-    anchorByPhase: { M2: 690, M4: 990, M6: 1290 },
+    anchorByPhase: { M2: 690, M4: 890, M6: 1190 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -297,7 +297,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Mesečno: vertical brief PDF, CRM seed, moduli CRM + automation + billing.',
     includes: ['Vertical solution PDF', 'CRM pipeline seeded', 'Modules: CRM, automation, billing'],
     excludes: ['Video avatar (needs AI-support retainer + HeyGen)', 'Outbound lead hunting in lean mode'],
-    anchorByPhase: { M2: 129, M4: 159, M6: 179 },
+    anchorByPhase: { M2: 199, M4: 299, M6: 399 },
     minCheckoutPhase: 'M2',
     phaseUnlocks: [
       {
@@ -321,7 +321,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Monthly cron tick',
     ],
     excludes: ['Guaranteed qualified meetings', 'Works fully in lean prod (scraper/outbound off)'],
-    anchorByPhase: { M4: 249, M6: 349 },
+    anchorByPhase: { M4: 499, M6: 699 },
     minCheckoutPhase: 'M4',
     phaseUnlocks: [
       {
@@ -350,7 +350,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Avatar provisioning artifact',
     ],
     excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],
-    anchorByPhase: { M3: 179, M5: 219, M6: 249 },
+    anchorByPhase: { M3: 299, M4: 349, M5: 399, M6: 449 },
     minCheckoutPhase: 'M3',
     phaseUnlocks: [
       {
@@ -365,8 +365,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'custom-software',
     description:
-      'Greenfield Node API + SPA scaffold, passing test gate, software handoff PDF — starter codebase, not full product dev.',
-    descriptionSr: 'Greenfield Node API + SPA scaffold, test gate, handoff PDF — starter kod.',
+      'Starter codebase only: Node API + SPA scaffold, tests, handoff PDF — not a finished custom product or unlimited build hours.',
+    descriptionSr: 'Samo starter kod: Node API + SPA scaffold, testovi, handoff PDF — nije gotov custom proizvod ni neograničeni razvoj.',
     includes: [
       'Isolated greenfield project',
       'Build/test gate metadata',
@@ -374,7 +374,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Node 20 REST + static SPA scaffold',
     ],
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
-    anchorByPhase: { M3: 2900, M6: 4900 },
+    anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },
     minCheckoutPhase: 'M3',
     leanCheckout: false,
     fullCheckout: true,

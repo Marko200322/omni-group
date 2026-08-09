@@ -31,6 +31,7 @@ scripts/.cache/
 .tmp/
 .local-workspace/
 deploy-secrets.local/deploy.config.json
+deploy-secrets.local/budget-burn-ledger.json
 deploy-secrets.local/*.pem
 deploy-secrets.local/*.key
 deploy-secrets.local/id_*
@@ -47,6 +48,7 @@ atina-platform/atina/config/avatar-premium.local.json
 deploy-secrets.local/resend-dkim*.txt
 deploy-secrets.local/*.txt
 !deploy-secrets.local/deploy.config.template.json
+!deploy-secrets.local/budget-burn-ledger.template.json
 !deploy-secrets.local/README.md
 
 # Nested clutter / desktop mirror

@@ -41,6 +41,17 @@ type RolloutSummary = {
   nextCategoryName?: string | null;
 };
 
+type HuntingLive = {
+  score?: number;
+  ready?: boolean;
+  outbound?: {
+    sentToday?: number;
+    remainingToday?: number;
+    warmupComplete?: boolean;
+    byStatus?: { draft?: number; queued?: number; sent?: number };
+  };
+};
+
 type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionEmail: string;
@@ -81,6 +92,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
   const [factoryStats, setFactoryStats] = useState<FactoryStats | null>(null);
   const [autonomy, setAutonomy] = useState<AutonomyStatus | null>(null);
   const [rollout, setRollout] = useState<RolloutSummary | null>(null);
+  const [hunting, setHunting] = useState<HuntingLive | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,22 +104,35 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
   const loadExtras = useCallback(async () => {
     setRefreshing(true);
     setError(null);
-    try {
-      const [fs, as, rs, pr] = await Promise.all([
-        fetch('/api/atina/product-factory/stats').then((r) => r.json()),
-        fetch('/api/atina/autonomy-loop/status').then((r) => r.json()),
-        fetch('/api/atina/autonomy-loop/categories/status').then((r) => r.json()),
-        fetch('/api/atina/admin/payments?status=processing&provider=manual&limit=50').then((r) => r.json()),
-      ]);
-      if (fs.ok) setFactoryStats(fs.data as FactoryStats);
-      if (as.ok) setAutonomy(as.data as AutonomyStatus);
-      if (rs.ok) setRollout(rs.data as RolloutSummary);
-      if (pr.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
-    } finally {
-      setRefreshing(false);
+    // Fetch each source independently so one failing endpoint can't blank the
+    // whole dashboard — each card keeps its own live/loading/fallback state.
+    const readJson = async (url: string): Promise<{ ok?: boolean; data?: unknown } | null> => {
+      try {
+        const r = await fetch(url);
+        return (await r.json()) as { ok?: boolean; data?: unknown };
+      } catch {
+        return null;
+      }
+    };
+
+    const [fs, as, rs, pr, hr] = await Promise.all([
+      readJson('/api/atina/product-factory/stats'),
+      readJson('/api/atina/autonomy-loop/status'),
+      readJson('/api/atina/autonomy-loop/categories/status'),
+      readJson('/api/atina/admin/payments?status=processing&provider=manual&limit=50'),
+      readJson('/api/atina/hunting/readiness'),
+    ]);
+
+    if (fs?.ok) setFactoryStats(fs.data as FactoryStats);
+    if (as?.ok) setAutonomy(as.data as AutonomyStatus);
+    if (rs?.ok) setRollout(rs.data as RolloutSummary);
+    if (pr?.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
+    if (hr?.ok) setHunting(hr.data as HuntingLive);
+
+    if (!fs && !as && !rs && !pr && !hr) {
+      setError('Live data unavailable — check the connection and retry.');
     }
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -210,6 +235,22 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
               <p className="text-sm text-slate-400">
                 Budget: ${autonomy?.budget?.balanceUsd?.toFixed(0) ?? '—'}
                 {autonomy?.budget?.hardStop ? ' · HARD STOP' : ''}
+              </p>
+            </Card>
+            <Card title="Lead machine (live)">
+              <p className="text-2xl font-bold text-white">
+                {hunting?.score != null ? `${hunting.score}%` : '—'}
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  {hunting?.ready ? 'ready' : hunting ? 'not ready' : 'loading…'}
+                </span>
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Today: {hunting?.outbound?.sentToday ?? '—'} sent · {hunting?.outbound?.remainingToday ?? '—'} left
+              </p>
+              <p className="text-sm text-slate-400">
+                Drafts: {hunting?.outbound?.byStatus?.draft ?? '—'}
+                {' · '}queued: {hunting?.outbound?.byStatus?.queued ?? '—'}
+                {hunting?.outbound?.warmupComplete ? ' · warmup OK' : ''}
               </p>
             </Card>
             {!pushEnabled && (

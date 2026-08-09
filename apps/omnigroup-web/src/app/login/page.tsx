@@ -10,6 +10,25 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 
+function friendlyLoginError(code: string | undefined, status: number): string {
+  switch (code) {
+    case 'atina_unreachable':
+      return 'Our sign-in service is temporarily unavailable. Please try again in a moment.';
+    case 'invalid_credentials':
+      return 'Incorrect email or password. Please try again.';
+    case 'email_and_password_required':
+      return 'Please enter both your email and password.';
+    case 'rate_limited':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'server_error':
+      return 'Something went wrong on our end. Please try again shortly.';
+    case 'network':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return `Unable to sign in right now. Please try again.${status ? '' : ''}`;
+  }
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,14 +52,14 @@ function LoginForm() {
       const data = (await res.json()) as { ok?: boolean; redirectTo?: string; error?: string };
       if (!res.ok || !data.ok) {
         setStatus('err');
-        setErrMsg(data.error ?? `HTTP ${res.status}`);
+        setErrMsg(friendlyLoginError(data.error, res.status));
         return;
       }
       router.push(nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard');
       router.refresh();
     } catch {
       setStatus('err');
-      setErrMsg('network');
+      setErrMsg(friendlyLoginError('network', 0));
     }
   }
 
@@ -72,11 +91,7 @@ function LoginForm() {
           };
           if (!res.ok || !data.ok) {
             setStatus('err');
-            if (data.error === 'atina_unreachable') {
-              setErrMsg('Atina API is unavailable — start the backend or use demo sign-in.');
-            } else {
-              setErrMsg(data.error ?? data.detail ?? `HTTP ${res.status}`);
-            }
+            setErrMsg(friendlyLoginError(data.error, res.status));
             return;
           }
           const dest = nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard';
@@ -84,7 +99,7 @@ function LoginForm() {
           router.refresh();
         } catch {
           setStatus('err');
-          setErrMsg('network');
+          setErrMsg(friendlyLoginError('network', 0));
         }
       }}
     >

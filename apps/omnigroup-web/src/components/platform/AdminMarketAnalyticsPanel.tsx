@@ -163,14 +163,14 @@ export function AdminMarketAnalyticsPanel({ disabled, initialKpi = null }: Props
       <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiTile
           label="Bruto prihod (DB)"
-          value={live ? formatEur(live.totalRevenueEur) : '—'}
-          sub={live ? `${live.paymentCount} uplata` : 'API offline — samo katalog'}
+          value={live ? formatEur(live.totalRevenueEur ?? 0) : '—'}
+          sub={live ? `${live.paymentCount ?? 0} uplata` : 'API offline — samo katalog'}
           live={kpi?.source === 'live'}
         />
         <KpiTile
           label="Tvoja neto (alokacija)"
-          value={live ? formatEur(live.ownerNetEur) : '—'}
-          sub={live ? `Reinvest: ${formatEur(live.systemReinvestEur)}` : 'Posle potvrđene uplate'}
+          value={live ? formatEur(live.ownerNetEur ?? 0) : '—'}
+          sub={live ? `Reinvest: ${formatEur(live.systemReinvestEur ?? 0)}` : 'Posle potvrđene uplate'}
           live={kpi?.source === 'live' && (live?.ownerNetEur ?? 0) > 0}
         />
         <KpiTile
@@ -191,11 +191,11 @@ export function AdminMarketAnalyticsPanel({ disabled, initialKpi = null }: Props
         />
       </div>
 
-      {catalog && (
+      {catalog && (catalog.topCategories?.length ?? 0) > 0 && (
         <div className="mb-6 rounded-xl border border-white/5 bg-white/[0.02] p-3">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Top kategorije (avg neto/mes)</p>
           <ul className="mt-2 space-y-1 text-xs text-slate-300">
-            {catalog.topCategories.map((c) => (
+            {(catalog.topCategories ?? []).map((c) => (
               <li key={c.category} className="flex justify-between gap-2">
                 <span>
                   {c.category}{' '}
@@ -302,7 +302,7 @@ export function AdminMarketAnalyticsPanel({ disabled, initialKpi = null }: Props
               <p className="font-medium text-white">{simulation.verticalName}</p>
               <p className="mt-1 text-slate-400">
                 {simulation.categoryNameSr} · tier {simulation.pricingTier} · index{' '}
-                {simulation.marketIndex} · TAM ${simulation.tamEstimateUsd.toLocaleString('en-US')} ·{' '}
+                {simulation.marketIndex} · TAM ${(simulation.tamEstimateUsd ?? 0).toLocaleString('en-US')} ·{' '}
                 {simulation.verticalsInCategory} vertikala u kategoriji
               </p>
             </div>
@@ -318,7 +318,7 @@ export function AdminMarketAnalyticsPanel({ disabled, initialKpi = null }: Props
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-slate-300">
-                  {simulation.packages.map((p) => (
+                  {(simulation.packages ?? []).map((p) => (
                     <tr key={p.deliverableId}>
                       <td className="px-3 py-2 text-white">{p.nameSr}</td>
                       <td className="px-3 py-2">{formatEur(p.clientPriceEur)}</td>
@@ -334,20 +334,20 @@ export function AdminMarketAnalyticsPanel({ disabled, initialKpi = null }: Props
               <MiniStat
                 icon={TrendingUp}
                 label="1 retainer + 1 projekat/mes"
-                value={formatEur(simulation.monthlyScenario.combinedOwnerNetEur)}
-                sub={`@ kvalitet: ${formatEur(simulation.monthlyScenario.combinedAfterQualityEur)}`}
+                value={formatEur(simulation.monthlyScenario?.combinedOwnerNetEur ?? 0)}
+                sub={`@ kvalitet: ${formatEur(simulation.monthlyScenario?.combinedAfterQualityEur ?? 0)}`}
               />
               <MiniStat
                 icon={LineChart}
                 label="Titanis close (50 target)"
-                value={formatEur(simulation.titanisPipeline.closeTarget50.estimatedRevenueEur)}
-                sub={`${simulation.titanisPipeline.closeTarget50.conversions} konverzija × €120`}
+                value={formatEur(simulation.titanisPipeline?.closeTarget50?.estimatedRevenueEur ?? 0)}
+                sub={`${simulation.titanisPipeline?.closeTarget50?.conversions ?? 0} konverzija × €120`}
               />
               <MiniStat
                 icon={LineChart}
                 label="Titanis follow-up (25 target)"
-                value={formatEur(simulation.titanisPipeline.followUpTarget25.estimatedRevenueEur)}
-                sub={`${simulation.titanisPipeline.followUpTarget25.conversions} konverzija × €55`}
+                value={formatEur(simulation.titanisPipeline?.followUpTarget25?.estimatedRevenueEur ?? 0)}
+                sub={`${simulation.titanisPipeline?.followUpTarget25?.conversions ?? 0} konverzija × €55`}
               />
             </div>
           </div>

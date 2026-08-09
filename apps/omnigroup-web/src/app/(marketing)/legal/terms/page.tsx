@@ -13,7 +13,7 @@ export default function TermsPage() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Legal</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-gradient">Terms of Service</h1>
         <p className="mt-3 text-sm text-slate-500">
-          Template for launch — replace with counsel-approved text before relying on it as binding legal terms.
+          These terms apply to our current services and may be updated. Contact us with any questions.
         </p>
 
         <div className="prose prose-invert mt-10 max-w-none space-y-6 text-slate-300">

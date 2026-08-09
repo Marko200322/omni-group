@@ -78,6 +78,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') ?? '';
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [methodsLoaded, setMethodsLoaded] = useState(false);
   const [mode, setMode] = useState<string>('manual');
   const [planSlug, setPlanSlug] = useState('pro');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -128,6 +129,8 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         setMethods(json.data.methods ?? []);
       } catch {
         if (!cancelled) setError('Unable to load payment methods.');
+      } finally {
+        if (!cancelled) setMethodsLoaded(true);
       }
     })();
     return () => {
@@ -507,11 +510,17 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         )}
       </div>
 
-      {!stripeAvailable && !paypalAvailable && !wiseAvailable && !manualAvailable && !kriptomanAvailable && (
-        <p className="text-sm text-amber-400/90">
-          No payment methods are configured — set PAYMENTS/STRIPE/PAYPAL in Atina .env.
-        </p>
-      )}
+      {methodsLoaded &&
+        !stripeAvailable &&
+        !paypalAvailable &&
+        !wiseAvailable &&
+        !manualAvailable &&
+        !kriptomanAvailable && (
+          <p className="text-sm text-amber-400/90">
+            Online payment is being set up. Please contact us and we&apos;ll send you payment
+            instructions to complete your order.
+          </p>
+        )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 

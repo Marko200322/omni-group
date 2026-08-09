@@ -41,11 +41,11 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     reference: 'ATINA-MK7F2A9B',
     proformaNumber: 'PRO-202605-MK7F2A9B',
     instructions: {
-      accountName: 'Marko Kosic pr Omni Group',
-      iban: 'RS35260000556211337868',
-      bankName: 'Raiffeisen banka a.d. Beograd',
-      swift: 'RZBSRSBG',
-      note: 'Enter reference ATINA-MK7F2A9B exactly in the payment reference field. Payments without a reference cannot be matched automatically.',
+      accountName: 'Omni Group Tech (sample account)',
+      iban: 'RS00 0000 0000 0000 0000 00',
+      bankName: 'Sample Bank a.d. (example only)',
+      swift: 'XXXXXXXX',
+      note: 'Enter reference ATINA-MK7F2A9B exactly in the payment reference field. Payments without a reference cannot be matched automatically. (Bank details shown here are placeholders — real details are sent with your actual invoice.)',
     },
     issueDate,
   });

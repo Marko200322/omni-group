@@ -4,8 +4,25 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** OneDrive corrupts `.next` symlinks — keep dist inside app but under node_modules. */
-const distDir = 'node_modules/.cache/omnigroup-next';
+/**
+ * OneDrive (local Windows dev) corrupts `.next` symlinks, so by default we keep
+ * dist inside app but under node_modules.
+ *
+ * Inside the Docker/Linux build there is NO OneDrive, so the Dockerfile sets
+ * NEXT_DIST_DIR=.next to get the standard Next layout. This matters for
+ * `output: 'standalone'`: nesting the standalone/static output inside
+ * node_modules/.cache is fragile (the tracer copies node_modules), whereas a
+ * plain `.next` gives the well-documented, robust standalone layout.
+ */
+const distDir = process.env.NEXT_DIST_DIR || 'node_modules/.cache/omnigroup-next';
+
+/**
+ * Standalone output ships a minimal server.js plus ONLY the node_modules the app
+ * actually traces, instead of the full dependency tree loaded by `next start`.
+ * That is the core cold-start fix (far fewer files to read on boot). Gated by env
+ * so local `npm run build` on OneDrive keeps its current behavior untouched.
+ */
+const useStandalone = process.env.NEXT_OUTPUT_STANDALONE === 'true';
 
 function loadOmnigroupEnvFromAggregator() {
   let dir = path.resolve(__dirname, '..', '..');
@@ -34,10 +51,17 @@ function loadOmnigroupEnvFromAggregator() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir,
+  ...(useStandalone ? { output: 'standalone' } : {}),
   experimental: {
     instrumentationHook: true,
   },
   env: loadOmnigroupEnvFromAggregator(),
+  async redirects() {
+    return [
+      { source: '/industries', destination: '/solutions', permanent: true },
+      { source: '/industries/:slug', destination: '/solutions/:slug', permanent: true },
+    ];
+  },
   webpack(config, { dev }) {
     // Filesystem webpack cache on OneDrive causes stale/missing chunk errors.
     if (dev) {

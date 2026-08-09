@@ -23,5 +23,17 @@ export function getBudgetAllocationHint(): { label: string; eur: number }[] {
       { label: 'Reserve', eur: total - 115 },
     ];
   }
+  if (total <= 600) {
+    const openRouter = Math.min(120, Math.floor(total * 0.22));
+    const fixed = 20 + openRouter + 25 + 45 + 20; // Resend Pro + AI + Apify + Hunter + NeverBounce
+    return [
+      { label: 'Resend Pro (kontakt + marketing domen)', eur: 20 },
+      { label: 'OpenRouter AI (isporuke + draftovi)', eur: openRouter },
+      { label: 'Apify (dnevni hunt)', eur: 25 },
+      { label: 'Hunter (Starter kad free nestane)', eur: 45 },
+      { label: 'NeverBounce (kad outbound send ON)', eur: 20 },
+      { label: 'Buffer / isporuke', eur: Math.max(0, total - fixed) },
+    ];
+  }
   return [{ label: 'Operational pool', eur: total }];
 }

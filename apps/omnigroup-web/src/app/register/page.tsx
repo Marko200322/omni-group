@@ -9,6 +9,31 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 
+function friendlyRegisterError(code: string | undefined): string {
+  switch (code) {
+    case 'atina_unreachable':
+      return 'Our sign-up service is temporarily unavailable. Please try again in a moment.';
+    case 'email_already_registered':
+      return 'This email is already registered. Sign in instead.';
+    case 'password_requirements':
+      return 'Password must include an uppercase letter, a lowercase letter, and a number (min 8 characters).';
+    case 'password_too_short':
+      return 'Password must be at least 8 characters.';
+    case 'name_required':
+      return 'Please enter your full name.';
+    case 'email_and_password_required':
+      return 'Please enter both your email and a password.';
+    case 'rate_limited':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'server_error':
+      return 'Something went wrong on our end. Please try again shortly.';
+    case 'network':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return 'Unable to create your account right now. Please try again.';
+  }
+}
+
 function RegisterBackLink() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next');
@@ -58,15 +83,7 @@ function RegisterForm() {
           };
           if (!res.ok || !data.ok) {
             setStatus('err');
-            if (data.error === 'atina_unreachable') {
-              setErrMsg('Atina API is unavailable — start the backend first.');
-            } else if (data.error === 'email_already_registered') {
-              setErrMsg('This email is already registered. Sign in instead.');
-            } else if (data.error === 'password_requirements') {
-              setErrMsg('Password must include uppercase, lowercase, and a number (min 8 chars).');
-            } else {
-              setErrMsg(data.error ?? data.detail ?? `HTTP ${res.status}`);
-            }
+            setErrMsg(friendlyRegisterError(data.error));
             return;
           }
           const dest = nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard';
@@ -74,7 +91,7 @@ function RegisterForm() {
           router.refresh();
         } catch {
           setStatus('err');
-          setErrMsg('network');
+          setErrMsg(friendlyRegisterError('network'));
         }
       }}
     >

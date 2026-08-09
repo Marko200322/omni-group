@@ -289,8 +289,12 @@ export const config = {
     secure: optionalBool('SMTP_SECURE', false),
     user: optional('SMTP_USER', ''),
     password: optional('SMTP_PASSWORD', ''),
-    from: optional('EMAIL_FROM', 'noreply@atina.io'),
+    from: optional('EMAIL_FROM', optional('CONTACT_EMAIL_FROM', 'noreply@atina.io')),
     fromName: optional('EMAIL_FROM_NAME', 'ATINA'),
+  },
+  resend: {
+    apiKey: optional('RESEND_API_KEY', ''),
+    from: optional('CONTACT_EMAIL_FROM', optional('EMAIL_FROM', 'noreply@atina.io')),
   },
   admin: {
     email: optional('ADMIN_EMAIL', 'admin@atina.io'),
@@ -347,7 +351,7 @@ export const config = {
   },
   rateLimit: {
     windowMs: optionalNumber('RATE_LIMIT_WINDOW_MS', 900000),
-    max: optionalNumber('RATE_LIMIT_MAX', 100),
+    max: optionalNumber('RATE_LIMIT_MAX', 2000),
   },
   logging: {
     level: optional('LOG_LEVEL', 'info'),
@@ -466,6 +470,40 @@ export const config = {
     fallbackNotifyEmail: optional('OUTREACH_FALLBACK_EMAIL', optional('ADMIN_EMAIL', '')),
     /** Dev: šalji draftove na fallback email bez domain warmup (ne za produkciju). */
     devSendToFallback: optionalBool('OUTREACH_DEV_SEND_TO_FALLBACK', false),
+  },
+  hunt: {
+    /** Comma list of JobBoardKind to skip (default: government). */
+    excludePlatformKinds: parseCsvList(optional('HUNT_EXCLUDE_PLATFORM_KINDS', 'government'), [
+      'government',
+    ]),
+    /** Only create outbound/CRM rows with company (non-free-mail) emails. */
+    companyEmailsOnly: optionalBool('HUNT_COMPANY_EMAILS_ONLY', true),
+  },
+  /**
+   * External AI vendor stack (Clay, Intercom, Make, Jasper, Devin, …).
+   * Keys + connection URLs only — product adapters land later.
+   * Catalog/status: modules/billing/lib/external-ai-stack.ts
+   */
+  externalAiStack: {
+    clayApiKey: optional('CLAY_API_KEY', ''),
+    salesforgeApiKey: optional('SALESFORGE_API_KEY', ''),
+    intercomApiKey: optional('INTERCOM_API_KEY', ''),
+    intercomAppId: optional('INTERCOM_APP_ID', ''),
+    sierraApiKey: optional('SIERRA_API_KEY', ''),
+    makeApiKey: optional('MAKE_API_KEY', ''),
+    makeWebhookUrl: optional('MAKE_WEBHOOK_URL', ''),
+    n8nApiKey: optional('N8N_API_KEY', ''),
+    n8nBaseUrl: optional('N8N_BASE_URL', ''),
+    rampApiKey: optional('RAMP_API_KEY', ''),
+    vicAiApiKey: optional('VIC_AI_API_KEY', ''),
+    jasperApiKey: optional('JASPER_API_KEY', ''),
+    predisApiKey: optional('PREDIS_API_KEY', ''),
+    devinApiKey: optional('DEVIN_API_KEY', ''),
+    replitAgentApiKey: optional('REPLIT_AGENT_API_KEY', ''),
+    crewaiApiKey: optional('CREWAI_API_KEY', ''),
+    crewaiBaseUrl: optional('CREWAI_BASE_URL', ''),
+    langchainApiKey: optional('LANGCHAIN_API_KEY', ''),
+    langchainProject: optional('LANGCHAIN_PROJECT', ''),
   },
   /** B2B lead baze (Apollo, Hunter, …) + email verify — fazno paljenje LEAD_DATABASE_ROLLOUT_PHASE F0–F5 */
   leadDatabases: {

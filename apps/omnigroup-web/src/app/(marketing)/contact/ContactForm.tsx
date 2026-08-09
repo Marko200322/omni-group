@@ -97,23 +97,17 @@ export function ContactForm() {
           if (!res.ok || !data.ok) {
             setStatus('err');
             const err = data.error || `HTTP ${res.status}`;
-            if (err === 'contact_email_env_incomplete') {
-              setErrMsg('email configuration incomplete (FROM/TO)');
-            } else if (err === 'contact_delivery_unconfigured') {
-              setErrMsg('Contact delivery is not configured on the server. Try again later or email us directly.');
+            if (err === 'contact_email_env_incomplete' || err === 'contact_delivery_unconfigured') {
+              setErrMsg('email delivery is temporarily unavailable — please email us directly');
             } else if (err === 'email_provider_error' || err === 'email_send_failed') {
-              setErrMsg('Resend failed — check your API key');
+              setErrMsg('email delivery failed — please try again shortly');
             } else {
-              setErrMsg(err);
+              setErrMsg('please try again shortly');
             }
             return;
           }
           setStatus('ok');
-          setOkMsg(
-            data.message === 'sent_via_resend'
-              ? 'Message sent by email. We will get back to you soon.'
-              : 'Message received (dev mode — set RESEND_API_KEY for live email).',
-          );
+          setOkMsg('Message received. We will get back to you soon.');
           e.currentTarget.reset();
           setMessage(defaultMessage);
         } catch {

@@ -32,7 +32,11 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : 'forgot_failed';
     const unreachable = message.includes('fetch') || message.includes('abort') || message.includes('ECONNREFUSED');
     return NextResponse.json(
-      { ok: false, error: unreachable ? 'atina_unreachable' : 'forgot_failed', detail: message },
+      {
+        ok: false,
+        error: unreachable ? 'atina_unreachable' : 'forgot_failed',
+        ...(process.env.NODE_ENV !== 'production' ? { detail: message } : {}),
+      },
       { status: unreachable ? 503 : 502 },
     );
   }

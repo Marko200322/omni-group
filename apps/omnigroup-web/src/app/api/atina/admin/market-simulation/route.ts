@@ -24,9 +24,9 @@ export async function GET(req: Request) {
   try {
     const simulation = simulateIndustry({ category, verticalSlug, qualityPassRate });
     return NextResponse.json({ ok: true, data: simulation });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'simulation_failed' },
+      { ok: false, error: 'simulation_failed' },
       { status: 500 },
     );
   }

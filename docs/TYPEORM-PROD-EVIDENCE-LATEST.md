@@ -1,8 +1,26 @@
 # Evidencija — CEO sekcija C (Nest / TypeORM produkcija)
 
-**Poslednji pregled repoa (2026-05-13):** nije zatvoreno — prod koraci ispod nisu potvrđeni.
+**Poslednji pregled (2026-08-04, gap-scan 10 agenata):** Nest **nije** u live Docker stacku (`docker-compose.prod.yml` = web + atina-api + postgres + redis + caddy). Live API = Atina Node Express; Nest migracije **ne smeju** ići na `atina_saas_db`.
 
-**Status:** _čeka izvršenje na produkcijskoj bazi_
+**Status:** **N/A do Nest u prod** — CEO C zatvoren kao scope reduction (Path A). Full Path B (poseban Nest Postgres + `TYPEORM_SYNC=false` + migracije) ostaje u backlogu REDOM #9.
+
+**Odluka:** Live produkt ne deploy-uje Nest. Stavka važi tek kad Nest uđe u `docker-compose.prod.yml` + dedicated DB. Vidi [`VLASNIK-DOSTAVA.md`](./VLASNIK-DOSTAVA.md) §17 · gap: `docs/evidence/gap-scan-2026-08-04/Nest.md`.
+
+**Sign-off N/A (2026-08-04):**
+
+| Korak | PASS / FAIL / N/A | Napomena |
+|-------|-------------------|----------|
+| Pre-deploy: prod `.env` ima `TYPEORM_SYNC=false` | N/A | Nest nije na VPS |
+| Backup / migracije / health Nest | N/A | Live DB = Atina Node `schema_migrations` |
+| Repo gate `verify:ci` | PASS | CI monorepo + lokalni Val 360 |
+
+**Ukupno:** N/A (Nest out of scope for omnigrouptech.com) — re-open kad Nest + Python/Astra uđu u prod (ADMIN #9).
+
+---
+
+**Arhiva runbooka ispod** — koristi samo ako se bira Path B (Nest u prod).
+
+**Stari status (2026-05-13):** _čeka izvršenje na produkcijskoj bazi_ (zamenjeno N/A 2026-08-04)
 
 **Runbook (detalji):** [`atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md`](../atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md) (sekcija *Evidencija za CEO sekciju C*)  
 **Migration plan / index:** [`atina-system/docs/MIGRATIONS-PLAN.md`](../atina-system/docs/MIGRATIONS-PLAN.md)

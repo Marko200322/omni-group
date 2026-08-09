@@ -92,7 +92,7 @@ export function IndustryVerticalSelect({
               </option>
             ))}
           </optgroup>
-          <optgroup label="SMB verticals (legacy)">
+          <optgroup label="SMB verticals">
             {LEGACY_SMB_INDUSTRY_CATEGORIES.map((cat) => (
               <option key={cat.slug} value={cat.slug}>
                 {cat.name} — {PRICING_TIER_META[cat.tier].label}

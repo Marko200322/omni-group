@@ -9,7 +9,6 @@ import {
   CreditCard,
   Workflow,
   Settings,
-  Bell,
   Search,
   Menu,
   X,
@@ -35,6 +34,7 @@ import { AnimatedBackground } from './AnimatedBackground';
 import type { LucideIcon } from 'lucide-react';
 import { fadeUp, staggerContainer, tapScale } from '@/lib/animations';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
+import { NotificationBell } from '@/components/platform/NotificationBell';
 
 export type PlatformVariant = 'admin' | 'client';
 
@@ -280,25 +280,7 @@ export function PlatformShell({
             />
           </div>
           <div className="flex flex-1 items-center justify-end gap-3 lg:flex-none">
-            <motion.button
-              type="button"
-              className="relative rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white"
-              aria-label="Notifications"
-              whileHover={{ scale: 1.08 }}
-              whileTap={tapScale}
-            >
-              <motion.div
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 6 }}
-              >
-                <Bell className="h-5 w-5" />
-              </motion.div>
-              <motion.span
-                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-              />
-            </motion.button>
+            <NotificationBell disabled={isDemo || !sessionUser} />
             <div className="hidden h-8 w-px bg-white/10 sm:block" />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-white">{sessionUser?.name ?? title}</p>

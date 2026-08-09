@@ -176,7 +176,7 @@ Ovo **nije** u listi “nalepi secret” — ali **blokira** M0→M1 / “upalje
 |---|--------|-------------|-----|
 | 1 | DNS `api.omnigrouptech.com` → A `5.189.184.103` | **FAIL (NXDOMAIN)** | Registrar |
 | 2 | Resend domen `omnigrouptech.com` = **Verified** | nepotvrđeno | Resend dashboard |
-| 3 | Sync CRM ingress u **deploy** | **rupa:** ima u KLJUCEVI, **prazno** u `deploy.config.json` | pokreni `.\scripts\apply-integration-keys.ps1` pa redeploy |
+| 3 | Sync CRM ingress u **deploy** | **DONE** (2026-08-04) — `contactCrmIngressEmail/Password` SET u deploy.config + web VPS | — |
 | 4 | Test kontakt forme na prod | čeka Resend verify + deploy | `.\scripts\test-contact-resend.ps1` |
 | 5 | **Prva Confirm uplata** (M0 gate) | neurađeno | Admin → Pending payments → Confirm |
 | 6 | Prod web/API dostupnost | **timeout** sa ove mašine (2026-07-17) | VPS panel / `ssh` / Contabo — proveri da li kontejneri žive |

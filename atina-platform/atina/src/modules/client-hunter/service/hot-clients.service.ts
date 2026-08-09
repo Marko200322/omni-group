@@ -32,8 +32,10 @@ export function computeHeatScore(input: HotClientHeatInput, platform?: JobBoardP
   if (input.city) score += 4;
   if (input.hasEmail) score += 18;
   if (input.jobUrl) score += 5;
-  if (platform?.kind === 'government') score += 8;
-  else if (platform?.kind === 'job_board') score += 5;
+  if (platform?.kind === 'job_board') score += 5;
+  else if (platform?.kind === 'freelance') score += 4;
+  else if (platform?.kind === 'aggregator') score += 3;
+  // government platforms are excluded from commercial hunts — no heat boost
   if (input.huntIntensity) score += Math.min(12, Math.round(input.huntIntensity / 8));
   return Math.min(100, Math.max(0, score));
 }

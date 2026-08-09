@@ -45,6 +45,17 @@ const taskStatus = {
   done: { label: 'Completed', color: 'text-emerald-400', icon: CheckCircle2 },
 };
 
+const GENERIC_UNAVAILABLE = 'This section is temporarily unavailable.';
+
+/** Guard against internal/dev phrasing reaching clients (e.g. .env, ports, backend hints). */
+function clientSafeMessage(input: string | undefined): string {
+  const msg = describeAtinaError(input);
+  if (/\.env|localhost|port\s*\d|backend|stub|undefined|atina api|access token/i.test(msg)) {
+    return GENERIC_UNAVAILABLE;
+  }
+  return msg;
+}
+
 export default function DashboardClient({
   snapshot,
   live,
@@ -91,11 +102,11 @@ export default function DashboardClient({
           {live?.errors?.length ? (
             <ul className="mt-2 list-inside list-disc text-rose-300/90">
               {live.errors.map((e, i) => (
-                <li key={i}>{describeAtinaError(e)}</li>
+                <li key={i}>{clientSafeMessage(e)}</li>
               ))}
             </ul>
           ) : null}
-          {unreadError ? <p className="mt-2 text-rose-300/90">{unreadError}</p> : null}
+          {unreadError ? <p className="mt-2 text-rose-300/90">{clientSafeMessage(unreadError)}</p> : null}
           <p className="mt-2 text-xs text-rose-300/80">
             Try again in a few minutes or contact our support team.
           </p>

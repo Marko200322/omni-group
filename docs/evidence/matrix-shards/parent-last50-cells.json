@@ -1,0 +1,202 @@
+﻿[
+    {
+        "deliverableId":  "setup-full",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "setup-custom",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "audit",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "integration",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "workflow-design",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "support-priority",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "support-dedicated",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "landing",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "website-business",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "website-ecommerce",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "white-label-setup",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "sales-enablement",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "vertical-package",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "lead-gen-retainer",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "ai-support-retainer",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "custom-software",
+        "industryCategory":  "home_services"
+    },
+    {
+        "deliverableId":  "setup-quick",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "setup-full",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "setup-custom",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "audit",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "integration",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "workflow-design",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "support-priority",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "support-dedicated",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "landing",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "website-business",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "website-ecommerce",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "white-label-setup",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "sales-enablement",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "vertical-package",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "lead-gen-retainer",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "ai-support-retainer",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "custom-software",
+        "industryCategory":  "pets"
+    },
+    {
+        "deliverableId":  "setup-quick",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "setup-full",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "setup-custom",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "audit",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "integration",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "workflow-design",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "support-priority",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "support-dedicated",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "landing",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "website-business",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "website-ecommerce",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "white-label-setup",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "sales-enablement",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "vertical-package",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "lead-gen-retainer",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "ai-support-retainer",
+        "industryCategory":  "industrial"
+    },
+    {
+        "deliverableId":  "custom-software",
+        "industryCategory":  "industrial"
+    }
+]

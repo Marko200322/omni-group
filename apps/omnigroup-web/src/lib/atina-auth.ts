@@ -170,6 +170,10 @@ export async function fetchAtinaAuthenticated<T>(
   session: AuthSession,
   init: RequestInit & { timeoutMs?: number } = {},
 ): Promise<{ ok: boolean; status: number; data: T | null; meta?: AtinaFetchMeta; message?: string }> {
+  if (session.demo) {
+    // Demo sessions are sandboxed and must never reach live backend endpoints.
+    return { ok: false, status: 403, data: null, message: 'demo_session' };
+  }
   if (!session.accessToken) {
     return { ok: false, status: 401, data: null, message: 'no_access_token' };
   }

@@ -70,7 +70,7 @@ const TEMPLATES = [
   { key: 'lead-proxy-acquisition-pipeline', label: 'Proxy + Hunt' },
 ];
 
-const statusColor = {
+const statusColor: Record<string, string> = {
   ready: 'text-emerald-400',
   partial: 'text-amber-400',
   missing: 'text-rose-400',
@@ -224,9 +224,11 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {(readiness?.checks ?? []).map((check) => (
-          <div key={check.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-            <p className={`text-xs font-semibold uppercase tracking-wider ${statusColor[check.status]}`}>{check.status}</p>
+        {(readiness?.checks ?? []).map((check, idx) => (
+          <div key={check.id ?? idx} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <p className={`text-xs font-semibold uppercase tracking-wider ${statusColor[check.status] ?? 'text-slate-400'}`}>
+              {check.status ?? 'unknown'}
+            </p>
             <p className="mt-1 text-sm text-white">{check.label}</p>
             {check.hint && <p className="mt-1 text-xs text-slate-500">{check.hint}</p>}
           </div>

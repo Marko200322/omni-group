@@ -2,6 +2,12 @@
 # Prod: SITE_DOMAIN=omnigrouptech.com, API_DOMAIN=api.omnigrouptech.com
 # Keep API_DOMAIN different from SITE_DOMAIN (duplicate site blocks fail).
 
+# www → apex: without this block Caddy has no cert for www.* and the TLS
+# handshake fails (browsers hitting www.omnigrouptech.com get an SSL error).
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
 {$SITE_DOMAIN} {
 	# Public API also reachable on the marketing host (BFF / same-origin paths)
 	handle /api/v1/* {

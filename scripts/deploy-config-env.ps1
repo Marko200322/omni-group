@@ -59,6 +59,27 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'VAPID_PRIVATE_KEY' (Get-DeployConfigTrim $Config 'vapidPrivateKey')
   & $set 'VAPID_SUBJECT' (Get-DeployConfigTrim $Config 'vapidSubject')
 
+  # External AI stack (M4/M5 — keys + connection URLs)
+  & $set 'CLAY_API_KEY' (Get-DeployConfigTrim $Config 'clayApiKey')
+  & $set 'SALESFORGE_API_KEY' (Get-DeployConfigTrim $Config 'salesforgeApiKey')
+  & $set 'INTERCOM_API_KEY' (Get-DeployConfigTrim $Config 'intercomApiKey')
+  & $set 'INTERCOM_APP_ID' (Get-DeployConfigTrim $Config 'intercomAppId')
+  & $set 'SIERRA_API_KEY' (Get-DeployConfigTrim $Config 'sierraApiKey')
+  & $set 'MAKE_API_KEY' (Get-DeployConfigTrim $Config 'makeApiKey')
+  & $set 'MAKE_WEBHOOK_URL' (Get-DeployConfigTrim $Config 'makeWebhookUrl')
+  & $set 'N8N_API_KEY' (Get-DeployConfigTrim $Config 'n8nApiKey')
+  & $set 'N8N_BASE_URL' (Get-DeployConfigTrim $Config 'n8nBaseUrl')
+  & $set 'RAMP_API_KEY' (Get-DeployConfigTrim $Config 'rampApiKey')
+  & $set 'VIC_AI_API_KEY' (Get-DeployConfigTrim $Config 'vicAiApiKey')
+  & $set 'JASPER_API_KEY' (Get-DeployConfigTrim $Config 'jasperApiKey')
+  & $set 'PREDIS_API_KEY' (Get-DeployConfigTrim $Config 'predisApiKey')
+  & $set 'DEVIN_API_KEY' (Get-DeployConfigTrim $Config 'devinApiKey')
+  & $set 'REPLIT_AGENT_API_KEY' (Get-DeployConfigTrim $Config 'replitAgentApiKey')
+  & $set 'CREWAI_API_KEY' (Get-DeployConfigTrim $Config 'crewaiApiKey')
+  & $set 'CREWAI_BASE_URL' (Get-DeployConfigTrim $Config 'crewaiBaseUrl')
+  & $set 'LANGCHAIN_API_KEY' (Get-DeployConfigTrim $Config 'langchainApiKey')
+  & $set 'LANGCHAIN_PROJECT' (Get-DeployConfigTrim $Config 'langchainProject')
+
   if ($Config.resend -and $Config.resend.contactFrom) {
     & $set 'CONTACT_EMAIL_FROM' "$($Config.resend.contactFrom)".Trim()
   }
@@ -88,7 +109,7 @@ function Get-DeployConfigAtinaEnvPatches([object]$Config) {
   $lookup = Build-DeployConfigKeyLookup $Config
   $patches = [ordered]@{}
   foreach ($entry in $lookup.GetEnumerator()) {
-    if ($entry.Key -in @('CONTACT_EMAIL_FROM', 'CONTACT_EMAIL_TO')) { continue }
+    # CONTACT_EMAIL_* must reach Atina API (factory M1+ required + outbound From)
     $patches[$entry.Key] = $entry.Value
   }
   if ($lookup.ContainsKey('RESEND_API_KEY')) {
@@ -183,6 +204,25 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     VAPID_PUBLIC_KEY          = 'vapidPublicKey'
     VAPID_PRIVATE_KEY         = 'vapidPrivateKey'
     VAPID_SUBJECT             = 'vapidSubject'
+    CLAY_API_KEY              = 'clayApiKey'
+    SALESFORGE_API_KEY        = 'salesforgeApiKey'
+    INTERCOM_API_KEY          = 'intercomApiKey'
+    INTERCOM_APP_ID           = 'intercomAppId'
+    SIERRA_API_KEY            = 'sierraApiKey'
+    MAKE_API_KEY              = 'makeApiKey'
+    MAKE_WEBHOOK_URL          = 'makeWebhookUrl'
+    N8N_API_KEY               = 'n8nApiKey'
+    N8N_BASE_URL              = 'n8nBaseUrl'
+    RAMP_API_KEY              = 'rampApiKey'
+    VIC_AI_API_KEY            = 'vicAiApiKey'
+    JASPER_API_KEY            = 'jasperApiKey'
+    PREDIS_API_KEY            = 'predisApiKey'
+    DEVIN_API_KEY             = 'devinApiKey'
+    REPLIT_AGENT_API_KEY      = 'replitAgentApiKey'
+    CREWAI_API_KEY            = 'crewaiApiKey'
+    CREWAI_BASE_URL           = 'crewaiBaseUrl'
+    LANGCHAIN_API_KEY         = 'langchainApiKey'
+    LANGCHAIN_PROJECT         = 'langchainProject'
   }
   foreach ($entry in $map.GetEnumerator()) {
     if ($Keys.ContainsKey($entry.Key) -and $Keys[$entry.Key]) {
@@ -240,6 +280,25 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     VAPID_PUBLIC_KEY             = Get-DeployConfigTrim $Config 'vapidPublicKey'
     VAPID_PRIVATE_KEY            = Get-DeployConfigTrim $Config 'vapidPrivateKey'
     VAPID_SUBJECT                = Get-DeployConfigTrim $Config 'vapidSubject'
+    CLAY_API_KEY                 = Get-DeployConfigTrim $Config 'clayApiKey'
+    SALESFORGE_API_KEY           = Get-DeployConfigTrim $Config 'salesforgeApiKey'
+    INTERCOM_API_KEY             = Get-DeployConfigTrim $Config 'intercomApiKey'
+    INTERCOM_APP_ID              = Get-DeployConfigTrim $Config 'intercomAppId'
+    SIERRA_API_KEY               = Get-DeployConfigTrim $Config 'sierraApiKey'
+    MAKE_API_KEY                 = Get-DeployConfigTrim $Config 'makeApiKey'
+    MAKE_WEBHOOK_URL             = Get-DeployConfigTrim $Config 'makeWebhookUrl'
+    N8N_API_KEY                  = Get-DeployConfigTrim $Config 'n8nApiKey'
+    N8N_BASE_URL                 = Get-DeployConfigTrim $Config 'n8nBaseUrl'
+    RAMP_API_KEY                 = Get-DeployConfigTrim $Config 'rampApiKey'
+    VIC_AI_API_KEY               = Get-DeployConfigTrim $Config 'vicAiApiKey'
+    JASPER_API_KEY               = Get-DeployConfigTrim $Config 'jasperApiKey'
+    PREDIS_API_KEY               = Get-DeployConfigTrim $Config 'predisApiKey'
+    DEVIN_API_KEY                = Get-DeployConfigTrim $Config 'devinApiKey'
+    REPLIT_AGENT_API_KEY         = Get-DeployConfigTrim $Config 'replitAgentApiKey'
+    CREWAI_API_KEY               = Get-DeployConfigTrim $Config 'crewaiApiKey'
+    CREWAI_BASE_URL              = Get-DeployConfigTrim $Config 'crewaiBaseUrl'
+    LANGCHAIN_API_KEY            = Get-DeployConfigTrim $Config 'langchainApiKey'
+    LANGCHAIN_PROJECT            = Get-DeployConfigTrim $Config 'langchainProject'
   }
   if (-not $map.CONTACT_CRM_INGRESS_PASSWORD) {
     $map.CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'adminPassword'

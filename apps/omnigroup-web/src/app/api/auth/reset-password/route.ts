@@ -32,7 +32,11 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : 'reset_failed';
     const unreachable = message.includes('fetch') || message.includes('abort') || message.includes('ECONNREFUSED');
     return NextResponse.json(
-      { ok: false, error: unreachable ? 'atina_unreachable' : 'invalid_or_expired_token', detail: message },
+      {
+        ok: false,
+        error: unreachable ? 'atina_unreachable' : 'invalid_or_expired_token',
+        ...(process.env.NODE_ENV !== 'production' ? { detail: message } : {}),
+      },
       { status: unreachable ? 503 : 400 },
     );
   }

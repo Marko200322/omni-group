@@ -1,6 +1,4 @@
-/** Production spend profile — derived from factory phase + NEXT_PUBLIC_PROD_MODE. */
-import { getFactoryPhase } from './factory-phase';
-
+/** Production spend profile — from NEXT_PUBLIC_PROD_MODE (deploy.config prodMode). */
 export type ProdMode = 'lean' | 'full';
 
 export function getProdMode(): ProdMode {
@@ -8,7 +6,7 @@ export function getProdMode(): ProdMode {
   return raw === 'full' ? 'full' : 'lean';
 }
 
-/** True when factory is below M6 or web prod mode is lean. */
+/** True only when web is explicitly in lean spend profile — not merely "below M6". */
 export function isLeanProdMode(): boolean {
-  return getFactoryPhase() !== 'M6' || getProdMode() === 'lean';
+  return getProdMode() === 'lean';
 }

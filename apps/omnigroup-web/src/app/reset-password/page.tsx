@@ -9,6 +9,25 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { fadeUp, tapScale } from '@/lib/animations';
 
+function friendlyResetError(code: string | undefined): string {
+  switch (code) {
+    case 'atina_unreachable':
+      return 'Our service is temporarily unavailable. Please try again in a moment.';
+    case 'invalid_or_expired_token':
+      return 'This reset link is invalid or has expired. Request a new one.';
+    case 'password_too_short':
+      return 'Password must be at least 8 characters.';
+    case 'token_and_password_required':
+      return 'Please choose a new password.';
+    case 'rate_limited':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'network':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return 'Unable to update your password right now. Please try again.';
+  }
+}
+
 function ResetForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,14 +65,14 @@ function ResetForm() {
           const data = (await res.json()) as { ok?: boolean; error?: string };
           if (!res.ok || !data.ok) {
             setStatus('err');
-            setErrMsg(data.error ?? `HTTP ${res.status}`);
+            setErrMsg(friendlyResetError(data.error));
             return;
           }
           setStatus('ok');
           setTimeout(() => router.push('/login'), 1500);
         } catch {
           setStatus('err');
-          setErrMsg('network');
+          setErrMsg(friendlyResetError('network'));
         }
       }}
     >

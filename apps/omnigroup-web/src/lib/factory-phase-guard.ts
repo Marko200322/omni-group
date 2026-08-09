@@ -26,7 +26,8 @@ const MIN_PHASE: Record<FactoryModuleKey, FactoryPhase> = {
   outbound_send: 'M4',
   lead_db: 'M4',
   hunter: 'M2',
-  autonomy: 'M5',
+  /** Live ops / scheduler status visible from M4 (marketing spend still M5). */
+  autonomy: 'M4',
   autonomy_marketing: 'M5',
   avatar: 'M6',
   stripe_live: 'M6',

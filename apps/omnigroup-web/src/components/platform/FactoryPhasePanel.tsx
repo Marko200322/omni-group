@@ -43,18 +43,24 @@ type Props = {
 export function FactoryPhasePanel({ initial }: Props) {
   const [status, setStatus] = useState<FactoryStatus | null>(initial ?? null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const phase = (status?.phase ?? getFactoryPhase()) as ReturnType<typeof getFactoryPhase>;
 
   const refresh = async () => {
     setLoading(true);
+    setError(null);
     try {
       const r = await fetch('/api/atina/factory-phase/status');
-      const json = (await r.json()) as { ok?: boolean; data?: FactoryStatus };
-      if (json.ok && json.data) {
-        setStatus(json.data);
-        const eff = parseFactoryPhase(json.data.auto?.effective ?? json.data.phase ?? null);
-        if (eff) setClientFactoryPhaseOverride(eff);
+      const json = (await r.json()) as { ok?: boolean; data?: FactoryStatus; error?: string; detail?: string };
+      if (!r.ok || !json.ok || !json.data) {
+        setError(json.detail ?? json.error ?? `http_${r.status}`);
+        return;
       }
+      setStatus(json.data);
+      const eff = parseFactoryPhase(json.data.auto?.effective ?? json.data.phase ?? null);
+      if (eff) setClientFactoryPhaseOverride(eff);
+    } catch {
+      setError('network_error');
     } finally {
       setLoading(false);
     }
@@ -94,6 +100,15 @@ export function FactoryPhasePanel({ initial }: Props) {
           Refresh
         </button>
       </div>
+
+      {error && (
+        <p className="mt-3 text-xs text-amber-300/90">
+          Phase status refresh failed ({error}) — showing last known values.{' '}
+          <button type="button" className="underline" onClick={() => void refresh()}>
+            Retry
+          </button>
+        </p>
+      )}
 
       {auto?.enabled && auto.metrics && (
         <p className="mt-3 text-xs text-violet-200/80">

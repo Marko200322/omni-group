@@ -185,13 +185,13 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Video avatar without AI keys'],
   },
   'custom-software': {
-    promise: 'Starter codebase + handoff — not unlimited build.',
-    summary: 'Isolated Node API + SPA scaffold with tests and a handoff PDF.',
+    promise: 'Software starter kit — scaffold + tests, not a finished custom product.',
+    summary: 'Isolated Node API + SPA starter with test gate and handoff PDF.',
     readMore:
-      'This is a starter greenfield project, not unlimited feature development or app-store launch.',
+      'Priced as a starter codebase. Not unlimited feature development, production launch on your infra, or app-store deployment.',
     when: 'When this package opens for checkout',
-    youGet: ['Isolated project', 'Test gate metadata', 'Handoff PDF'],
-    notIncluded: ['Unlimited features', 'App store deploy'],
+    youGet: ['Isolated starter project', 'Test gate metadata', 'Handoff PDF'],
+    notIncluded: ['Unlimited features', 'Full product build', 'App store deploy'],
   },
 };
 

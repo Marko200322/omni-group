@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PieChart, RefreshCw } from 'lucide-react';
+import { Loader2, PieChart, RefreshCw } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 
 type AllocationSummary = {
@@ -65,7 +65,22 @@ export function AdminRevenueAllocationPanel({ disabled }: Props) {
         </button>
       </div>
       {disabled && <p className="text-xs text-slate-500">Sign in as admin to view allocation.</p>}
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {!disabled && loading && !summary && (
+        <p className="flex items-center gap-2 text-xs text-slate-500">
+          <Loader2 className="h-3 w-3 animate-spin" /> Loading allocation…
+        </p>
+      )}
+      {!disabled && error && (
+        <p className="text-xs text-rose-400">
+          Could not load allocation ({error}).{' '}
+          <button type="button" className="underline" onClick={() => void refresh()}>
+            Retry
+          </button>
+        </p>
+      )}
+      {!disabled && !loading && !error && !summary && (
+        <p className="text-xs text-slate-500">No allocation data yet.</p>
+      )}
       {summary && (
         <div className="space-y-2 text-xs text-slate-300">
           {typeof summary.totals?.grossEur === 'number' && (

@@ -92,7 +92,7 @@ Za **Nivo 1** se ne traži celokupan red modula u **CEO sekciji C** (auth–core
 - [x] `npm run verify:ci` zeleno (lokalno i CI: `build` + unit + `migration:run` + e2e) — lokalno + workflow u repou; **F.4** = `main` u Actions **ili** isti gate lokalno ([`verify-monorepo.ps1`](./scripts/verify-monorepo.ps1) (job **`python`** / required check **`Python (Doslednost dok + pytest)`** — [`docs/GIT-BRANCH-PROTECTION.md`](./docs/GIT-BRANCH-PROTECTION.md)) · [`scripts/README.md`](./scripts/README.md) (**Port mismatch** Nest/pg) · [`NIVO-1-F4-TIM-CHECKLIST.md`](./docs/NIVO-1-F4-TIM-CHECKLIST.md) · **LATEST verify** [`docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) (**Val 355** / 2026-05-14 (D.1 Iter 2 — [`docs/D1-ITER2-PR-BODY.md`](./docs/D1-ITER2-PR-BODY.md); ranije **Val 354** / 2026-05-13)) · **LATEST smoke** (**sekcija H**) [`docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md`](./docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md) (**Val 351** / 2026-05-14))
 - [x] `npm audit` / plan za high severity — **N1:** [`atina-system/docs/NPM-AUDIT-NIVO1.md`](./atina-system/docs/NPM-AUDIT-NIVO1.md) + README; automatsko uklanjanje svih high bez review-a nije gate N1
 - [x] Repou / CI: TypeORM **migracije** (`atina-system/src/database/migrations/`), `npm run verify:ci` pokreće `migration:run` (lokalno uz Docker Postgres, 2026-04-17)
-- [ ] Produkcija: u pravom `.env` **`TYPEORM_SYNC=false`** + migracije **primljene na produkcijskoj** bazi pre prvog deploya — [`TypeORM prod`](./atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md) (sekcija *Evidencija za CEO sekciju C*)
+- [x] Produkcija Nest TypeORM: **N/A** do Nest u live stacku (2026-08-04) — [`TYPEORM-PROD-EVIDENCE-LATEST.md`](./docs/TYPEORM-PROD-EVIDENCE-LATEST.md); Path B kad Nest+dedicated DB
 - [x] Redis + BullMQ u compose-u: `docker-compose.atina.yml` — **`atina-redis`** (host **6380**), `atina-api` **`depends_on`** + env **`REDIS_*`**. U Nest-u: **`QueueModule`** (kad je `REDIS_HOST` postavljen) registruje Bull i red **`system`** + worker; bez Redis env-a modul je prazan (CI). Dev POST **`/internal/queue/smoke`**: opciono **`INTERNAL_QUEUE_SMOKE_KEY`**, rate limit env **`INTERNAL_QUEUE_SMOKE_RATE_*`**, iza LB **`TRUST_PROXY`** — `atina-system/README.md`.
 - [x] Modul **auth** — JWT, testovi, rate limiting po potrebi — **2026-05-05 (T1-A4):** JWT (`JwtModule` + `JwtStrategy` + `resolveJwtSecret`); unit `auth.service.spec.ts`, `jwt.strategy.spec.ts`, `auth.controller.spec.ts`; e2e `test/app.e2e-spec.ts` → `auth (JWT)` (uz `E2E_WITH_DB=1`, kao u `atina-system/.github/workflows/ci.yml`). HTTP rate limit za `/auth` nije dodat — u kodu postoji samo limit za `/internal/queue/smoke` (`INTERNAL_QUEUE_SMOKE_RATE_*`). Gate: `npm run verify:ci` u `atina-system`.
 - [x] Modul **users** — **2026-05-05:** `users.controller.spec.ts`, `users.service.spec.ts`; gate: `npm test` u `atina-system` (32 suite / 140 testova).
@@ -223,14 +223,14 @@ Za **Nivo 1** se ne traži celokupan red modula u **CEO sekciji C** (auth–core
 *(Iz `atina-platform/atina/README.md` i `docs/operations/`)*  
 *Šablon jednog sign-off-a za sve stavke ispod:* [`docs/CEO-G-PRODUCTION-EVIDENCE.template.md`](./docs/CEO-G-PRODUCTION-EVIDENCE.template.md)
 
-- [ ] `npm run build` u produkciji
+- [x] `npm run build` u produkciji — live VPS boot + CI build (2026-08-04 CEO-G)
 - [x] `npm run test:ci` u CI — **N1:** job `atina-saas` u `.github/workflows/ci-monorepo.yml` ako koristiš Actions; **F.4** = `main` zelen **ili** pun lokalni [`verify-monorepo.ps1`](./scripts/verify-monorepo.ps1) (job **`python`** / required check **`Python (Doslednost dok + pytest)`** — [`docs/GIT-BRANCH-PROTECTION.md`](./docs/GIT-BRANCH-PROTECTION.md)) (**Port mismatch** na Nest koraku — [`scripts/README.md`](./scripts/README.md); **LATEST verify** [`docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) — **Val 355** / 2026-05-14 (D.1 Iter 2 — [`docs/D1-ITER2-PR-BODY.md`](./docs/D1-ITER2-PR-BODY.md); ranije **Val 354** / 2026-05-13) · **LATEST smoke** (**sekcija H**) [`docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md`](./docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md) — **Val 351** / 2026-05-14) · runbook [`NIVO-1-F4-TIM-CHECKLIST.md`](./docs/NIVO-1-F4-TIM-CHECKLIST.md)
-- [ ] Migracije pregledane na stagingu
-- [ ] `.env` produkcija (bez default tajni, `NODE_ENV=production`, `DB_SSL` ako treba)
+- [x] Migracije pregledane na stagingu — **N/A** bez staging VPS (2026-08-04); live Atina Node + backup drill
+- [x] `.env` produkcija (bez default tajni, `NODE_ENV=production`, `DB_SSL` ako treba) — boot + health `environment=production` 2026-08-04
 - [ ] Stripe / PayPal / Wise **live** + webhook secreti
-- [ ] SMTP proveren ako je email obavezan
-- [ ] Smoke (Atina Node): `npm run smoke:all` u `atina-platform/atina` — `/health`, login, `/auth/me`, `GET /api/v1/forge/status`, workflow execution-stats smoke, forge-admin ([`release-gate-checklist.md`](./atina-platform/atina/docs/operations/release-gate-checklist.md) *Local notes — Smoke tests*). Za tri stuba (Astra / Nest / Node health): odeljak **H** ispod i [`smoke-stack.ps1`](./scripts/smoke-stack.ps1).
-- [ ] Admin monitoring: `GET /api/v1/admin/overview`, execution-stats
+- [ ] SMTP proveren ako je email obavezan — kontakt Resend OK; invoice PDF SMTP još open
+- [x] Smoke (Atina Node): `npm run smoke:all` na **prod** `https://api.omnigrouptech.com` — **PASS 2026-08-04** ([`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./docs/CEO-G-PRODUCTION-EVIDENCE-LATEST.md))
+- [x] Admin monitoring: overview + execution-stats — **PASS** (forge-admin smoke 2026-08-04)
 - [ ] Vlasnik rollback-a i uslovi za rollback definisani
 
 ---

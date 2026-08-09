@@ -221,13 +221,23 @@ export class CoreEngine {
       stream: { write: (msg: string) => logger.info(msg.trim()) },
     }));
 
-    // Rate limiting
+    // Rate limiting — key by bearer token when present so BFF traffic from the
+    // shared web container IP does not collapse all users into one bucket.
     const limiter = rateLimit({
       windowMs: config.rateLimit.windowMs,
       max: config.rateLimit.max,
       standardHeaders: true,
       legacyHeaders: false,
-      skip: (req) => req.path === '/health',
+      // Custom bearer key — disable IPv6 keyGenerator validation (v7).
+      validate: false,
+      skip: (req) => req.path === '/health' || req.path === '/api/v1/health',
+      keyGenerator: (req) => {
+        const auth = req.get('authorization');
+        if (auth && auth.startsWith('Bearer ') && auth.length > 20) {
+          return `bearer:${auth.slice(7, 55)}`;
+        }
+        return req.ip || req.socket.remoteAddress || 'unknown';
+      },
       message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' } },
     });
     this.app.use(limiter);

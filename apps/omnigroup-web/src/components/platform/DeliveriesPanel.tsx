@@ -79,15 +79,23 @@ export function DeliveriesPanel({ disabled }: Props) {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading your deliveries…</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading your deliveries…
+      </p>
+    );
   }
 
   if (error) {
     return (
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
-        Could not load deliveries ({error}).{' '}
-        <button type="button" className="underline" onClick={() => void load()}>
-          Retry
+        <p>We couldn&apos;t load your deliveries right now. Please try again or contact support.</p>
+        <button
+          type="button"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-100 underline-offset-2 hover:underline"
+          onClick={() => void load()}
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Retry
         </button>
       </div>
     );

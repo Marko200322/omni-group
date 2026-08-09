@@ -208,7 +208,7 @@ export default function HomePage() {
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
             <p className="relative text-sm text-slate-400">Delivery process</p>
             <ol className="relative mt-6 space-y-6">
-              {['Discovery & architecture', 'Implementation + test gates', 'Staging mirror & CEO checklist'].map(
+              {['Discovery & architecture', 'Implementation with test gates', 'Staging preview & launch sign-off'].map(
                 (step, i) => (
                   <li key={step} className="flex gap-4">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 font-display text-sm font-bold">
@@ -216,7 +216,7 @@ export default function HomePage() {
                     </span>
                     <div>
                       <p className="font-medium text-white">{step}</p>
-                      <p className="mt-1 text-xs text-slate-500">Phase {i + 1} · documented in monorepo</p>
+                      <p className="mt-1 text-xs text-slate-500">Phase {i + 1} · tracked and documented</p>
                     </div>
                   </li>
                 ),

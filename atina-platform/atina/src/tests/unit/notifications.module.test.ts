@@ -31,6 +31,9 @@ jest.mock('../../config', () => {
     config: {
       ...actual.config,
       smtp: notifSmtp,
+      // Keep unit tests offline/deterministic: the Resend fallback must not
+      // reach the network based on ambient RESEND_API_KEY in the dev shell.
+      resend: { apiKey: '', from: '' },
     },
   };
 });

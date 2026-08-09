@@ -1,0 +1,6 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+website-business,marketing,PASS,,0,5de63b27-fa75-4f62-a533-9fe6bc8a61dd,"",17,2026-08-05T01:19:46.0807819+02:00
+website-ecommerce,marketing,PASS,,0,d4f12bd0-990c-4431-899b-f4b7844c3a27,"",5,2026-08-05T01:20:06.2508618+02:00
+white-label-setup,marketing,PASS,,2,98982c6b-a8f1-41ee-b604-34f781b5d064,"",5,2026-08-05T01:20:25.9890413+02:00
+custom-software,marketing,PASS,,2,c51d328f-ac4c-4171-aad3-b85c83b87526,"",5,2026-08-05T01:20:45.7266456+02:00
+setup-custom,marketing,PASS,,3,c1729e0e-81d9-4948-af4c-d5d72db61642,"",5,2026-08-05T01:21:06.0224500+02:00

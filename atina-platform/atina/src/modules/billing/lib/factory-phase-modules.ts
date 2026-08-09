@@ -2,6 +2,7 @@
  * Expected module flags per revenue factory phase — keep in sync with scripts/prod-factory-phase.ps1
  */
 import { getFactoryPhase, phaseGte, type FactoryPhase } from './factory-phase';
+import { buildExternalAiStackStatus } from './external-ai-stack';
 
 export type FactoryModuleProfile = {
   phase: FactoryPhase;
@@ -82,7 +83,17 @@ const PROFILES: FactoryModuleProfile[] = [
       analytics: true,
     },
     requiredEnvKeys: ['HUNTER_API_KEY', 'LEAD_DATABASE_ENABLED'],
-    optionalEnvKeys: ['SNOV_API_KEY', 'NEVERBOUNCE_API_KEY'],
+    optionalEnvKeys: [
+      'SNOV_API_KEY',
+      'NEVERBOUNCE_API_KEY',
+      'CLAY_API_KEY',
+      'SALESFORGE_API_KEY',
+      'INTERCOM_API_KEY',
+      'SIERRA_API_KEY',
+      'MAKE_API_KEY',
+      'N8N_API_KEY',
+      'ELEVENLABS_API_KEY',
+    ],
   },
   {
     phase: 'M5',
@@ -93,7 +104,17 @@ const PROFILES: FactoryModuleProfile[] = [
       product_factory_internal: true,
     },
     requiredEnvKeys: ['AUTONOMY_ENABLED'],
-    optionalEnvKeys: ['BUSINESS_AND_DEV_KEY'],
+    optionalEnvKeys: [
+      'BUSINESS_AND_DEV_KEY',
+      'RAMP_API_KEY',
+      'VIC_AI_API_KEY',
+      'JASPER_API_KEY',
+      'PREDIS_API_KEY',
+      'DEVIN_API_KEY',
+      'REPLIT_AGENT_API_KEY',
+      'CREWAI_API_KEY',
+      'LANGCHAIN_API_KEY',
+    ],
   },
   {
     phase: 'M6',
@@ -238,5 +259,6 @@ export function buildFactoryPhaseStatus() {
     gaps,
     ready: gaps.filter((g) => g.kind === 'required' || g.kind === 'module_off').length === 0,
     auto,
+    externalAiStack: buildExternalAiStackStatus(),
   };
 }

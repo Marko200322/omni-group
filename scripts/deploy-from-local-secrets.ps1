@@ -135,6 +135,12 @@ function Patch-ProdEnvFiles {
     if ($config.resend.apiKey) {
       Set-EnvLine $atinaEnv 'RESEND_API_KEY' $config.resend.apiKey.Trim()
     }
+    if ($config.resend.contactFrom) {
+      Set-EnvLine $atinaEnv 'CONTACT_EMAIL_FROM' $config.resend.contactFrom.Trim()
+    }
+    if ($config.resend.contactTo) {
+      Set-EnvLine $atinaEnv 'CONTACT_EMAIL_TO' $config.resend.contactTo.Trim()
+    }
   }
 
   foreach ($entry in (Get-DeployConfigWebEnvPatches $config $siteDomain).GetEnumerator()) {
