@@ -50,7 +50,7 @@
 2. **Stripe live** keys + price IDs → `deploy.config` (blocks G #5, I agregatori/Stripe, M6)
 3. **Rollback owner** name + contact + thresholds (G #8) — write privately, not in repo
 4. **Firma / PIB / adresa** in `deploy.config` (invoice/legal; parallel to G)
-5. **Disk C** cleanup if `verify-monorepo` still hits ENOSPC (I)
+5. **Disk C** cleanup if `verify-monorepo` still hits ENOSPC (I) — gate includes **`Python (Doslednost dok + pytest)`** ([`GIT-BRANCH-PROTECTION.md`](../../GIT-BRANCH-PROTECTION.md))
 6. *(Optional)* Atina SMTP relay or mark N/A if Resend-only (G #6, I D.5)
 
 ### JA (agent)

@@ -1,4 +1,4 @@
-import { isCompanyEmail, isBlockedOrgDomain, isExcludedHuntPlatformKind, passesHotClientPersistGate } from '../../modules/client-hunter/lib/company-email';
+import { isCompanyEmail, isBlockedOrgDomain, isExcludedHuntPlatformKind, passesHotClientPersistGate, emailDomain, extractHotClientContactEmail } from '../../modules/client-hunter/lib/company-email';
 
 describe('company-email', () => {
   it('accepts company domains', () => {
@@ -39,5 +39,42 @@ describe('company-email', () => {
     expect(passesHotClientPersistGate({ platformKind: 'job_board', hasEmail: true }, { companyEmailsOnly: true })).toBe(
       false,
     );
+  });
+
+  it('emailDomain returns empty for invalid addresses', () => {
+    expect(emailDomain('not-an-email')).toBe('');
+    expect(emailDomain('  ')).toBe('');
+  });
+
+  it('isBlockedOrgDomain flags gov and job-board hosts', () => {
+    expect(isBlockedOrgDomain('')).toBe(true);
+    expect(isBlockedOrgDomain('agency.gov')).toBe(true);
+    expect(isBlockedOrgDomain('board.indeed.com')).toBe(true);
+    expect(isBlockedOrgDomain('www.acme.de')).toBe(false);
+  });
+
+  it('isCompanyEmail rejects smoke aliases and demo domains', () => {
+    expect(isCompanyEmail('smoke+1@test.com')).toBe(false);
+    expect(isCompanyEmail('opscheck@acme.de')).toBe(false);
+    expect(isCompanyEmail('sales@example-demo.demo')).toBe(false);
+    expect(isCompanyEmail(null)).toBe(false);
+  });
+
+  it('extractHotClientContactEmail reads metadata keys', () => {
+    expect(
+      extractHotClientContactEmail({
+        metadata: { lead_email: ' lead@acme.de ' },
+      }),
+    ).toBe('lead@acme.de');
+    expect(extractHotClientContactEmail({ metadata: {} })).toBeNull();
+  });
+
+  it('passesHotClientPersistGate allows non-company email when companyEmailsOnly is false', () => {
+    expect(
+      passesHotClientPersistGate(
+        { platformKind: 'job_board', contactEmail: 'max@gmail.com' },
+        { companyEmailsOnly: false },
+      ),
+    ).toBe(true);
   });
 });

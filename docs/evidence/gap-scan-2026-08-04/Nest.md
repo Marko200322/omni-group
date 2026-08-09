@@ -99,7 +99,7 @@ From `CHECKLIST-CEO-SISTEM.md` section C:
 | `api.omnigrouptech.com` | **No impact** — Caddy → Atina Node only |
 | Login / register / dashboard | **No impact** — Atina Node auth |
 | Workflow-chain `atina-system` module slug | **No impact** — in-process Node module, not Nest HTTP |
-| Local/CI tri-stub smoke (CEO H) | Nest stub fails if you run `smoke-stack.ps1` without Nest up — **not prod** |
+| Local/CI tri-stub smoke (CEO H) | Nest stub fails if you run `smoke-stack.ps1` without Nest up — **not prod**; bundled Atina gate is `npm run smoke:all` |
 | CEO C checklist | **Stays open** until evidence filed |
 | Future Nest-in-prod (backlog item #9) | Blocked until Nest added to compose + dedicated DB |
 
