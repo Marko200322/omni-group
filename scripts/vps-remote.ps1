@@ -130,7 +130,12 @@ function Sync-VpsRemoteDirectory {
     '--exclude=dist',
     '--exclude=.next',
     '--exclude=deploy-secrets.local',
-    '--exclude=omni-shared-vault'
+    '--exclude=omni-shared-vault',
+    '--exclude=.env.docker.prod',
+    '--exclude=.env.vps.prod',
+    '--exclude=atina-platform/atina/.env.docker.prod',
+    '--exclude=atina-platform/atina/.env.vps.prod',
+    '--exclude=apps/omnigroup-web/.env.production'
   )
 
   if ($DryRun) {
