@@ -163,7 +163,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'vertical-package': {
     promise: 'Monthly industry pack: CRM + automations.',
     summary: 'Vertical brief, CRM pipeline, and core modules for your niche — billed monthly.',
-    readMore: 'Video avatar and outbound hunting need later factory phases / other retainers.',
+    readMore: 'Video avatar and outbound campaigns are available on higher-tier retainers — ask us which package fits.',
     when: 'Monthly · when package is open',
     youGet: ['Vertical brief PDF', 'CRM pipeline', 'CRM + automation + billing'],
     notIncluded: ['Outbound hunting in lean mode'],
@@ -171,7 +171,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'lead-gen-retainer': {
     promise: 'Monthly lead gen into your CRM.',
     summary: 'Lead report, CRM pipeline, and hunter workspace — needs outbound stack.',
-    readMore: 'No guaranteed meetings. Full outbound needs later factory phase.',
+    readMore: 'No guaranteed meetings. Full outbound prospecting is a separate engagement.',
     when: 'Monthly · when package is open',
     youGet: ['Monthly lead report', 'CRM + outreach modules'],
     notIncluded: ['Guaranteed meetings'],

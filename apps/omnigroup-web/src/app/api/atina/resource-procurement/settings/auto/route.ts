@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
@@ -16,6 +17,6 @@ export async function PATCH(req: Request) {
       body: JSON.stringify({ enabled: Boolean(body.enabled) }),
     }
   );
-  if (!r.ok) return NextResponse.json({ ok: false, detail: r.message }, { status: r.status || 502 });
+  if (!r.ok) return clientSafeBffError('upstream_failed', r.message, r.status || 502);
   return NextResponse.json({ ok: true, data: r.data });
 }

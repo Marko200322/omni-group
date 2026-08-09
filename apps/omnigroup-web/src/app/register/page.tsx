@@ -8,6 +8,7 @@ import { Suspense, useState } from 'react';
 import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
+import { safeInternalPath } from '@/lib/safe-internal-path';
 
 function friendlyRegisterError(code: string | undefined): string {
   switch (code) {
@@ -36,7 +37,7 @@ function friendlyRegisterError(code: string | undefined): string {
 
 function RegisterBackLink() {
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = safeInternalPath(searchParams.get('next'));
   const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/login';
   return (
     <Link href={loginHref} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white">
@@ -49,7 +50,7 @@ function RegisterBackLink() {
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = safeInternalPath(searchParams.get('next'));
   const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/login';
   const [status, setStatus] = useState<'idle' | 'loading' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
@@ -86,7 +87,7 @@ function RegisterForm() {
             setErrMsg(friendlyRegisterError(data.error));
             return;
           }
-          const dest = nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard';
+          const dest = nextPath ?? data.redirectTo ?? '/dashboard';
           router.push(dest);
           router.refresh();
         } catch {

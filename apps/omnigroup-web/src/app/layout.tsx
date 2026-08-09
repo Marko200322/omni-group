@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Syne } from 'next/font/google';
+import { rootSiteMetadata } from '@/lib/site-metadata';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
@@ -10,8 +11,7 @@ export const metadata: Metadata = {
     default: 'Omni Group Tech',
     template: '%s · Omni Group Tech',
   },
-  description:
-    'Omni Group Tech — custom software, digital services, and monthly support for your business. Transparent industry-based pricing.',
+  ...rootSiteMetadata,
   manifest: '/manifest.json',
   icons: { icon: '/icon.svg', apple: '/icon.svg' },
 };

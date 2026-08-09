@@ -74,7 +74,7 @@ export default function ProductsPage() {
           <section className="mt-20">
             <h2 className="font-display text-2xl font-bold text-white">Currently under construction</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Not for sale yet. Opens automatically at the matching factory phase.
+              Not for sale yet. Contact us for early access — we will enable checkout when the package is ready.
             </p>
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {later.map((offer, i) => (

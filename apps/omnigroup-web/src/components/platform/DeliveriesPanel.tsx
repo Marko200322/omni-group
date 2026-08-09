@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { AtinaFulfillmentJob, AtinaClientSite } from '@/lib/atina-live-types';
+import { describeAtinaError } from '@/lib/atina-errors';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 
 const STATUS_META: Record<
@@ -89,7 +90,7 @@ export function DeliveriesPanel({ disabled }: Props) {
   if (error) {
     return (
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
-        <p>We couldn&apos;t load your deliveries right now. Please try again or contact support.</p>
+        <p>{describeAtinaError(error)}</p>
         <button
           type="button"
           className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-100 underline-offset-2 hover:underline"
@@ -150,7 +151,9 @@ export function DeliveriesPanel({ disabled }: Props) {
                       <Icon className={`h-4 w-4 ${job.status === 'running' ? 'animate-spin' : ''}`} />
                       {meta.label}
                     </p>
-                    {job.error && <p className="mt-2 text-xs text-rose-300/90">{job.error}</p>}
+                    {job.error && job.status === 'failed' && (
+                      <p className="mt-2 text-xs text-rose-300/90">{describeAtinaError('fulfillment_failed')}</p>
+                    )}
                     {!job.clientVisible && job.reviewStatus === 'pending_review' && (
                       <p className="mt-2 text-xs text-violet-300">Quality review in progress — downloads unlock when ready.</p>
                     )}

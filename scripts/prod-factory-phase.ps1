@@ -111,6 +111,7 @@ function Get-FactoryPhaseAtinaEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetE
   }
 
   if ($idx -ge 4) {
+    # M4 — lead machine: Hunter + lead DB + outbound drafts (cap 50). Autonomy stays OFF until M5.
     $env.LEAD_DATABASE_ENABLED = 'true'
     $env.LEAD_DATABASE_ROLLOUT_PHASE = 'F3'
     $env.LEAD_ENRICH_ON_HUNT = 'true'
@@ -122,6 +123,7 @@ function Get-FactoryPhaseAtinaEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetE
   }
 
   if ($idx -ge 5) {
+    # M5+ — autonomy reinvest (scheduler, marketing loop). Not enabled at M4.
     $env.AUTONOMY_ENABLED = 'true'
     $env.AUTONOMY_AUTO_START_SCHEDULER = 'true'
     $env.AUTONOMY_MARKETING_ENABLED = 'true'
@@ -343,7 +345,7 @@ function Get-FactoryPhaseLabel([string]$FactoryPhase) {
     'M1' { return 'Inbound - contact + CRM' }
     'M2' { return 'Warm outbound - scraper + drafts' }
     'M3' { return 'Deliver and upsell - sites + retainers' }
-    'M4' { return 'Lead machine - Hunter + send' }
+    'M4' { return 'Lead machine - Hunter + drafts (no autonomy)' }
     'M5' { return 'Autonomy reinvest' }
     'M6' { return 'Full factory - Stripe + premium' }
     default { return $FactoryPhase }

@@ -1,9 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FadeIn } from '@/components/motion/FadeIn';
+import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
-export const metadata = {
-  title: 'Privacy Policy | Omni Group Tech',
+const LAST_UPDATED = 'August 2026';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
   description: 'Privacy Policy for Omni Group Tech — how we handle contact and account data.',
+  openGraph: marketingOpenGraph('Privacy Policy', 'Privacy Policy for Omni Group Tech — how we handle contact and account data.'),
+  twitter: marketingTwitter('Privacy Policy', 'Privacy Policy for Omni Group Tech — how we handle contact and account data.'),
 };
 
 export default function PrivacyPage() {
@@ -15,6 +21,7 @@ export default function PrivacyPage() {
         <p className="mt-3 text-sm text-slate-500">
           This policy explains how we handle your data and may be updated. Contact us with any questions.
         </p>
+        <p className="mt-1 text-xs text-slate-600">Last updated: {LAST_UPDATED}</p>
 
         <div className="prose prose-invert mt-10 max-w-none space-y-6 text-slate-300">
           <section>
@@ -35,7 +42,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-white">3. Processors</h2>
             <p>
               We may use infrastructure and email providers (e.g. hosting/VPS, Resend or similar) under their terms.
-              Payment processors (Stripe and others) apply when those channels are enabled.
+              Bank transfer details are processed in-house; card or wallet processors apply only when those channels
+              are explicitly enabled at checkout.
             </p>
           </section>
           <section>

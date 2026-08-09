@@ -3,6 +3,24 @@ import { NextResponse } from 'next/server';
 import { fetchAtinaForBff } from './atina-bff';
 import { getServerSession, isAdminRole } from './auth-session';
 
+const isProd = process.env.NODE_ENV === 'production';
+
+/** Log upstream detail server-side; omit raw messages from client responses in production. */
+export function clientSafeBffError(
+  errorCode: string,
+  upstreamDetail?: string,
+  status = 502,
+): NextResponse {
+  if (upstreamDetail) {
+    console.error(`[bff] ${errorCode}:`, upstreamDetail);
+  }
+  const body: { ok: false; error: string; detail?: string } = { ok: false, error: errorCode };
+  if (!isProd && upstreamDetail) {
+    body.detail = upstreamDetail;
+  }
+  return NextResponse.json(body, { status });
+}
+
 export async function bffRequireSession() {
   const session = await getServerSession();
   if (!session || session.demo) {
@@ -33,10 +51,7 @@ export async function bffProxyGet(atinaPath: string, options?: { adminOnly?: boo
 
   const r = await fetchAtinaForBff<unknown>(atinaPath, session, { method: 'GET' });
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'upstream_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('upstream_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data, meta: r.meta ?? null });
@@ -61,10 +76,7 @@ export async function bffProxyPost(atinaPath: string, req: Request, options?: { 
   });
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'upstream_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('upstream_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data }, { status: 201 });
@@ -93,10 +105,7 @@ export async function bffProxyRun(atinaBasePath: string, id: string, req: Reques
   });
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'upstream_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('upstream_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

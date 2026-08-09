@@ -9,6 +9,7 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
+import { safeInternalPath } from '@/lib/safe-internal-path';
 
 function friendlyLoginError(code: string | undefined, status: number): string {
   switch (code) {
@@ -32,7 +33,7 @@ function friendlyLoginError(code: string | undefined, status: number): string {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = safeInternalPath(searchParams.get('next'));
   const registerHref = nextPath
     ? `/register?next=${encodeURIComponent(nextPath)}`
     : '/register';
@@ -55,7 +56,7 @@ function LoginForm() {
         setErrMsg(friendlyLoginError(data.error, res.status));
         return;
       }
-      router.push(nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard');
+      router.push(nextPath ?? data.redirectTo ?? '/dashboard');
       router.refresh();
     } catch {
       setStatus('err');
@@ -94,7 +95,7 @@ function LoginForm() {
             setErrMsg(friendlyLoginError(data.error, res.status));
             return;
           }
-          const dest = nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard';
+          const dest = nextPath ?? data.redirectTo ?? '/dashboard';
           router.push(dest);
           router.refresh();
         } catch {

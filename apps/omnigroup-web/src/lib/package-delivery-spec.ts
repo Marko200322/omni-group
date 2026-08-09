@@ -490,8 +490,8 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
     badge: 'Currently under construction',
     badgeTone: 'upcoming',
     statusLabel: opensAt
-      ? `Currently under construction. Opens automatically at factory phase ${opensAt} — checkout and delivery unlock when the system reaches that phase.`
-      : 'Currently under construction. Checkout and automated delivery unlock when this package is enabled for the current factory phase.',
+      ? 'Currently under construction. Contact us for early access — checkout opens when this package is ready.'
+      : 'Currently under construction. Contact us if you want to be notified when checkout opens.',
   };
 }
 

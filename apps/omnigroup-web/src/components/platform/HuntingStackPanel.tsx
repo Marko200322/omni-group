@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Crosshair, Flame, Globe2, Play, RefreshCw, Rocket, ShieldCheck, Zap } from 'lucide-react';
+import { isDevClient } from '@/lib/is-dev-client';
 
 type ReadinessCheck = {
   id: string;
@@ -391,7 +392,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
         )}
       </div>
 
-      {lastResult && (
+      {lastResult && isDevClient() && (
         <pre className="max-h-48 overflow-auto rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-emerald-200/90">
           {JSON.stringify(lastResult, null, 2)}
         </pre>

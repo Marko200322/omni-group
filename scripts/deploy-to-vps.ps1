@@ -92,6 +92,32 @@ cp -f apps/omnigroup-web/.env.vps.production apps/omnigroup-web/.env.production
   $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $envCopy -DryRun:$DryRun -Session $session
 
+  # Caddy requires real domains in .env.docker.prod (missing → localhost → crash loop)
+  $domainGuard = @"
+cd $RemotePath
+for kv in SITE_DOMAIN=$SiteDomain API_DOMAIN=$ApiDomain; do
+  key=`${kv%%=*}; val=`${kv#*=}
+  if grep -q "^`${key}=" .env.docker.prod 2>/dev/null; then
+    sed -i "s/^`${key}=.*/`${key}=`${val}/" .env.docker.prod
+  else
+    echo "`${key}=`${val}" >> .env.docker.prod
+  fi
+done
+"@
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command $domainGuard -DryRun:$DryRun -Session $session
+
+  # tar extract strips +x on shell scripts — restore hunt cron executable
+  $chmodCmd = @"
+cd $RemotePath
+if [ -f scripts/m4-daily-hunt.sh ]; then
+  sed -i 's/\r$//' scripts/m4-daily-hunt.sh
+  chmod 700 scripts/m4-daily-hunt.sh
+fi
+"@
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command $chmodCmd -DryRun:$DryRun -Session $session
+
   $deployCmd = @"
 cd $RemotePath
 docker compose -f docker-compose.prod.yml --env-file .env.docker.prod build atina-api web

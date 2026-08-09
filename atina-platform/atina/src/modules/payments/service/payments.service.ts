@@ -975,11 +975,15 @@ export class PaymentsService {
     }
 
     if (mode !== 'manual') {
+      const finance = getFinanceClient();
+      const wiseConfigured = finance.isConfigured();
       methods.push({
         id: 'wise',
-        label: 'Wise / international transfer',
-        description: 'Transfer instructions + manual confirmation.',
-        available: true,
+        label: 'International transfer (Wise)',
+        description: wiseConfigured
+          ? 'Wise transfer via finance integration — manual confirmation after funds arrive.'
+          : 'Not configured — use bank transfer (IBAN) instead.',
+        available: wiseConfigured,
       });
     }
 

@@ -220,6 +220,11 @@ export class PaymentNotificationsService {
       periodStart: input.periodStart,
       periodEnd: input.periodEnd,
       purchasedAt: input.purchasedAt,
+      issuer: {
+        companyLegalName: config.payments.manual.companyLegalName,
+        companyTaxId: config.payments.manual.companyTaxId,
+        companyAddress: config.payments.manual.companyAddress,
+      },
     });
 
     await this.notifications.sendEmail(input.toEmail, subject, html, text, [

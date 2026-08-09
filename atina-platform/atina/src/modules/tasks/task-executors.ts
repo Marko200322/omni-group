@@ -178,3 +178,16 @@ export async function executeScrapeUrl(payload: Record<string, unknown>): Promis
   }
   return { url, status: 'scraped', data: {}, fallback: true };
 }
+
+/** Acknowledges CRM pipeline stage tasks seeded during client deliverable bootstrap. */
+export async function executeCrmPipeline(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const stage = String(payload.stage ?? 'lead');
+  const verticalSlug = typeof payload.verticalSlug === 'string' ? payload.verticalSlug : undefined;
+  return {
+    executed: true,
+    stage,
+    verticalSlug,
+    automated: payload.automated === true,
+    note: 'pipeline_stage_acknowledged',
+  };
+}

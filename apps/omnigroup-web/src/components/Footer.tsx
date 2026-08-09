@@ -38,7 +38,8 @@ export function Footer() {
             <span className="font-medium text-white">Company</span>
             {[
               { href: '/', label: 'Home' },
-              { href: '/products', label: 'Solutions' },
+              { href: '/products', label: 'Packages' },
+              { href: '/solutions', label: 'Industries' },
               { href: '/services', label: 'Services' },
               { href: '/pricing', label: 'Pricing' },
               { href: '/contact', label: 'Contact' },
@@ -81,7 +82,7 @@ export function Footer() {
           <motion.div className="flex flex-col gap-2">
             <span className="font-medium text-white">Deliverables</span>
             {[
-              { href: '/products', label: 'Vertical solutions' },
+              { href: '/solutions', label: 'Industry pages' },
               { href: '/services', label: 'Setup & onboarding' },
               { href: '/pricing', label: 'Retainers' },
             ].map(({ href, label }) => (

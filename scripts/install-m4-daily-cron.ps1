@@ -7,6 +7,10 @@
   Uploads m4-daily-hunt.sh + env file, installs crontab entry.
   Default: hunt only (M4_OUTBOUND_SEND=0). Set -EnableOutboundSend after real domain warmup.
 
+  Outbound gate: keep M4_OUTBOUND_SEND=0 until ≥1 week of draft-only cron runs with 0 failed
+  outbound messages (inspect /var/log/m4-daily-hunt.log and outbound/stats byStatus.failed).
+  install-m4-daily-cron.ps1 never sets send=1 unless -EnableOutboundSend is passed explicitly.
+
 .EXAMPLE
   .\scripts\install-m4-daily-cron.ps1
   .\scripts\install-m4-daily-cron.ps1 -EnableOutboundSend -CronExpr '0 8 * * *'

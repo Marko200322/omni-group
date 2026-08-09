@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { requireAdminSession } from '@/lib/bff-admin-gate';
 
@@ -48,10 +49,7 @@ export async function GET(req: Request) {
   const r = await fetchAtinaForBff<unknown>(`/api/v1/autonomy-loop/verticals?${qs.toString()}`, session);
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'verticals_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('verticals_failed', r.message, r.status || 502);
   }
 
   const { items, total } = unwrapVerticals(r.data);

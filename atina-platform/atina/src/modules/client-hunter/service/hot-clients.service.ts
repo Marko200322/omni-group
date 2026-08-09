@@ -1,6 +1,8 @@
 import type { JobBoardPlatform } from '../data/job-board-catalog';
 import { getJobBoardPlatform } from '../data/job-board-catalog';
+import { config } from '../../../config';
 import { computeJobHuntEconomics } from '../lib/job-hunt-copy';
+import { extractHotClientContactEmail, passesHotClientPersistGate } from '../lib/company-email';
 import { HotClientsRepository, type InsertHotClientInput } from '../repository/hot-clients.repository';
 
 export type HotClientHeatInput = {
@@ -20,6 +22,7 @@ export type HotClientHeatInput = {
   sourceRunId?: string | null;
   crmContactId?: string | null;
   outboundMessageId?: string | null;
+  contactEmail?: string | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -52,7 +55,31 @@ export class HotClientsService {
 
   async recordFromHunt(input: HotClientHeatInput) {
     const platform = getJobBoardPlatform(input.platformSlug);
-    const heatScore = computeHeatScore(input, platform);
+    const platformKind =
+      platform?.kind ?? (typeof input.metadata?.platform_kind === 'string' ? input.metadata.platform_kind : null);
+    const contactEmail = extractHotClientContactEmail(input);
+    if (
+      !passesHotClientPersistGate(
+        {
+          platformKind,
+          contactEmail,
+          hasEmail: input.hasEmail,
+          metadata: input.metadata,
+        },
+        {
+          excludePlatformKinds: config.hunt.excludePlatformKinds,
+          companyEmailsOnly: config.hunt.companyEmailsOnly,
+        },
+      )
+    ) {
+      return null;
+    }
+
+    const heatInput: HotClientHeatInput = {
+      ...input,
+      hasEmail: contactEmail ? true : input.hasEmail,
+    };
+    const heatScore = computeHeatScore(heatInput, platform);
     const heatBand = resolveHeatBand(heatScore);
     const salary = input.salaryGrossMonthlyEur ?? null;
     const atinaMonthlyEur = salary ? computeJobHuntEconomics(salary).atinaMonthlyEur : null;
@@ -78,7 +105,8 @@ export class HotClientsService {
       sourceRunId: input.sourceRunId,
       metadata: {
         ...(input.metadata ?? {}),
-        platform_kind: platform?.kind ?? 'job_board',
+        platform_kind: platformKind ?? platform?.kind ?? 'job_board',
+        ...(contactEmail ? { contact_email: contactEmail } : {}),
       },
     };
 

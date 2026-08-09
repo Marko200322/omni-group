@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { requireAdminSession } from '@/lib/bff-admin-gate';
 
@@ -11,9 +12,10 @@ export async function GET() {
 
   if (!r.ok) {
     const unreachable = r.message?.includes('fetch') || r.status === 503;
-    return NextResponse.json(
-      { ok: false, error: unreachable ? 'atina_unreachable' : 'budget_failed', detail: r.message },
-      { status: unreachable ? 503 : r.status || 502 },
+    return clientSafeBffError(
+      unreachable ? 'atina_unreachable' : 'budget_failed',
+      r.message,
+      unreachable ? 503 : r.status || 502,
     );
   }
 

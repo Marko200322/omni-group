@@ -61,7 +61,8 @@ export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
       <p className="mt-3 text-sm leading-relaxed text-slate-400">{offer.summary}</p>
       {!ready && (
         <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-          Currently under construction. This package is not for sale yet — it will open automatically when the system reaches the required factory phase, and the website will update with it.
+          Currently under construction. This package is not for sale yet — contact us if you want early access and we
+          will notify you when checkout opens.
         </p>
       )}
 

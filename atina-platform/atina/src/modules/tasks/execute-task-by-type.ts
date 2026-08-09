@@ -8,6 +8,7 @@ import {
   executeScrapeUrl,
   executeSendEmail,
   executeTitanixPipeline,
+  executeCrmPipeline,
 } from './task-executors';
 
 export async function executeTaskByType(
@@ -29,6 +30,8 @@ export async function executeTaskByType(
       return executeExportData(payload);
     case 'generate_report':
       return executeGenerateReport(payload);
+    case 'crm_pipeline':
+      return executeCrmPipeline(payload);
     case 'dominus_swarm_batch':
       return runDominusSwarmBatch(payload as Parameters<typeof runDominusSwarmBatch>[0]);
     default:

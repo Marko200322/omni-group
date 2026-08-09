@@ -255,7 +255,8 @@ export default function DashboardClient({
         <GlassCard delay={0.2}>
           <h2 className="font-display text-lg font-semibold text-white">Billing &amp; payments</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Your subscription, invoices, and payment history — card, PayPal, crypto, Wise, or bank transfer.
+            Your subscription, invoices, and payment history. Primary method: bank transfer (IBAN). Card, PayPal, and
+            crypto appear only when enabled for your account.
           </p>
           {sessionUser && !isDemo ? (
             <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading billing…</p>}>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession } from '@/lib/auth-session';
 
@@ -12,7 +13,7 @@ export async function GET(_req: Request, { params }: Params) {
   const { paymentId } = await params;
   const r = await fetchAtinaForBff<unknown>(`/api/v1/billing/fulfillment/jobs/${paymentId}`, session);
   if (!r.ok) {
-    return NextResponse.json({ ok: false, error: 'fulfillment_get_failed', detail: r.message }, { status: r.status || 502 });
+    return clientSafeBffError('fulfillment_get_failed', r.message, r.status || 502);
   }
   return NextResponse.json({ ok: true, data: r.data });
 }

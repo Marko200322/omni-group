@@ -11,6 +11,8 @@ export function describeAtinaError(code: string | undefined): string {
     session_failed: 'Could not start the session. Please try again shortly.',
     chat_failed: 'The assistant is temporarily unavailable. Please try again shortly.',
     checkout_failed: 'We couldn’t create the payment instructions. Please try again.',
+    fulfillment_failed: 'Delivery could not be completed. Our team has been notified — please contact support if this persists.',
+    load_failed: 'We couldn’t load your deliveries right now. Please try again.',
     login_failed: 'Sign-in failed. Please try again.',
     register_failed: 'Registration failed. Please try again.',
     email_already_registered: 'This email is already registered.',

@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # M4 daily hunt (REDOM 6b) — login → readiness → pipeline/run → optional outbound.
-# Default: processOutbound=false (drafts only). Set M4_OUTBOUND_SEND=1 to allow send when warmup OK.
+#
+# OUTBOUND GATE (default M4_OUTBOUND_SEND=0):
+#   - Hunt + draft creation only; processOutbound=false blocks process-send.
+#   - Enable M4_OUTBOUND_SEND=1 only after ≥1 week of draft-only runs with 0 failed sends
+#     (check /api/v1/autonomy-loop/outbound/stats: byStatus.failed=0, review sentToday/draft counts).
+#   - Even when send flag=1, send is blocked unless warmupComplete=true and remainingToday>0.
+#
+# Draft-only path: pipeline/run always runs nurture-loop (hunt → lead enrich → outbound drafts).
+# No POST to process-send unless PROCESS_OUTBOUND=true above.
 set -euo pipefail
 
 ENV_FILE="${M4_CRON_ENV:-/opt/omni-group/deploy-secrets.local/m4-daily-hunt.env}"

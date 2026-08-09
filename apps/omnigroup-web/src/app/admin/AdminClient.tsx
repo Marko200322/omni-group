@@ -70,7 +70,13 @@ export default function AdminClient({
 }: Props) {
   const router = useRouter();
   const metrics = buildAdminMetrics(snapshot, overview);
-  const status = overview ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
+  const status = overviewError
+    ? 'partial'
+    : overview
+      ? 'live'
+      : snapshot.source === 'live'
+        ? 'live'
+        : snapshot.source;
   const leanProd = isLeanProdMode();
   const factoryPhase = getFactoryPhase();
   const budgetEur = getMonthlyBudgetEur();
@@ -471,7 +477,10 @@ export default function AdminClient({
             <h3 className="font-display text-base font-semibold text-white">AI memory</h3>
             <p className="mt-1 text-sm text-slate-500">Operator context store — not visible to clients.</p>
             <div className="mt-4">
-              <AiMemoryPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
+              <AiMemoryPanel
+                disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
+                operatorMode={!isDemo && !!sessionUser && isAdminRole(sessionUser.role)}
+              />
             </div>
           </div>
         </GlassCard>

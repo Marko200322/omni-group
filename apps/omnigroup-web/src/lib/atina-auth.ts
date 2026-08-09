@@ -72,6 +72,16 @@ async function fetchAtina<T>(
       meta: body?.meta,
       message,
     };
+  } catch (err) {
+    const aborted =
+      err instanceof Error &&
+      (err.name === 'AbortError' || /aborted|timeout/i.test(err.message));
+    return {
+      ok: false,
+      status: aborted ? 503 : 502,
+      data: null,
+      message: aborted ? 'atina_unreachable' : 'network_error',
+    };
   } finally {
     clearTimeout(timer);
   }

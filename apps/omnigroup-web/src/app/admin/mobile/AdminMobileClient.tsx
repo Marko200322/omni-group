@@ -52,6 +52,8 @@ type HuntingLive = {
   };
 };
 
+type CardKey = 'rollout' | 'autonomy' | 'hunting' | 'factory' | 'payments';
+
 type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionEmail: string;
@@ -98,12 +100,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [cardErrors, setCardErrors] = useState<Partial<Record<CardKey, string>>>({});
 
   const metrics = buildAdminMetrics(snapshot, overview);
 
   const loadExtras = useCallback(async () => {
     setRefreshing(true);
     setError(null);
+    const nextCardErrors: Partial<Record<CardKey, string>> = {};
     // Fetch each source independently so one failing endpoint can't blank the
     // whole dashboard — each card keeps its own live/loading/fallback state.
     const readJson = async (url: string): Promise<{ ok?: boolean; data?: unknown } | null> => {
@@ -124,10 +128,21 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     ]);
 
     if (fs?.ok) setFactoryStats(fs.data as FactoryStats);
+    else nextCardErrors.factory = 'Factory stats unavailable';
+
     if (as?.ok) setAutonomy(as.data as AutonomyStatus);
+    else nextCardErrors.autonomy = 'Autonomy status unavailable';
+
     if (rs?.ok) setRollout(rs.data as RolloutSummary);
+    else nextCardErrors.rollout = 'Rollout status unavailable';
+
     if (pr?.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
+    else nextCardErrors.payments = 'Payments list unavailable';
+
     if (hr?.ok) setHunting(hr.data as HuntingLive);
+    else nextCardErrors.hunting = 'Hunting readiness unavailable';
+
+    setCardErrors(nextCardErrors);
 
     if (!fs && !as && !rs && !pr && !hr) {
       setError('Live data unavailable — check the connection and retry.');
@@ -219,7 +234,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
               <StatTile label="Users" value={metrics.activeUsers} accent="violet" />
               <StatTile label="MRR" value={metrics.mrr} accent="cyan" />
             </div>
-            <Card title="Category rollout">
+            <Card title="Category rollout" error={cardErrors.rollout}>
               <p className="text-2xl font-bold text-white">
                 {rollout?.overallCompletionPct ?? '—'}%
               </p>
@@ -228,7 +243,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                 {rollout?.nextCategoryName ? ` · next: ${rollout.nextCategoryName}` : ''}
               </p>
             </Card>
-            <Card title="Autonomy">
+            <Card title="Autonomy" error={cardErrors.autonomy}>
               <p className="text-sm text-slate-300">
                 Scheduler: {autonomy?.scheduler?.running ? 'running' : 'stopped'}
               </p>
@@ -237,7 +252,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                 {autonomy?.budget?.hardStop ? ' · HARD STOP' : ''}
               </p>
             </Card>
-            <Card title="Lead machine (live)">
+            <Card title="Lead machine (live)" error={cardErrors.hunting}>
               <p className="text-2xl font-bold text-white">
                 {hunting?.score != null ? `${hunting.score}%` : '—'}
                 <span className="ml-2 text-sm font-normal text-slate-400">
@@ -273,6 +288,11 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'uplate' && (
           <div className="space-y-3">
+            {cardErrors.payments ? (
+              <Card title="Pending payments" error={cardErrors.payments}>
+                <p className="text-sm text-slate-400">Showing last loaded list — pull to refresh.</p>
+              </Card>
+            ) : null}
             {payments.length === 0 ? (
               <Card title="No pending payments">
                 <p className="text-sm text-slate-400">All manual payments have been processed.</p>
@@ -305,13 +325,13 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'fabrika' && (
           <div className="space-y-3">
-            <Card title="Client orders">
+            <Card title="Client orders" error={cardErrors.factory}>
               <p className="text-2xl font-bold">{factoryStats?.clientOrders?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
                 In progress: {factoryStats?.clientOrders?.building ?? 0} · Ready: {factoryStats?.clientOrders?.ready ?? 0}
               </p>
             </Card>
-            <Card title="Internal SaaS">
+            <Card title="Internal SaaS" error={cardErrors.factory}>
               <p className="text-2xl font-bold">{factoryStats?.internalProducts?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
                 In progress: {factoryStats?.internalProducts?.building ?? 0} · Ready: {factoryStats?.internalProducts?.ready ?? 0}
@@ -431,10 +451,11 @@ function StatTile({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, error }: { title: string; children: React.ReactNode; error?: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <p className="text-xs uppercase tracking-wider text-slate-500">{title}</p>
+      {error ? <p className="mt-1 text-xs text-rose-300">{error}</p> : null}
       <div className="mt-2">{children}</div>
     </div>
   );

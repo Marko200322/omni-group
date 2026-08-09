@@ -84,3 +84,64 @@ export function isCompanyEmail(email: string | null | undefined): boolean {
   if (domain.includes('example-') || domain.endsWith('.demo')) return false;
   return true;
 }
+
+/** True when platform kind is excluded from commercial hunts (default: government). */
+export function isExcludedHuntPlatformKind(
+  kind: string | null | undefined,
+  excludeKinds: readonly string[] = ['government'],
+): boolean {
+  if (!kind) return false;
+  return excludeKinds.includes(kind);
+}
+
+const HOT_CLIENT_EMAIL_KEYS = ['contact_email', 'email', 'lead_email', 'recipient_email'] as const;
+
+/** Resolve a contact email from hot-client input or metadata (if present). */
+export function extractHotClientContactEmail(input: {
+  contactEmail?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): string | null {
+  if (input.contactEmail?.trim()) return input.contactEmail.trim();
+  const md = input.metadata;
+  if (!md) return null;
+  for (const key of HOT_CLIENT_EMAIL_KEYS) {
+    const v = md[key];
+    if (typeof v === 'string' && v.includes('@')) return v.trim();
+  }
+  return null;
+}
+
+export type HotClientPersistGateInput = {
+  platformKind?: string | null;
+  contactEmail?: string | null;
+  hasEmail?: boolean;
+  metadata?: Record<string, unknown> | null;
+};
+
+export type HotClientPersistGateOptions = {
+  excludePlatformKinds?: readonly string[];
+  companyEmailsOnly?: boolean;
+};
+
+/**
+ * Gate hot_clients inserts: skip gov/excluded boards; when an email is known,
+ * require a company inbox (never free-mail or gov hosts).
+ */
+export function passesHotClientPersistGate(
+  input: HotClientPersistGateInput,
+  opts: HotClientPersistGateOptions = {},
+): boolean {
+  const excludeKinds = opts.excludePlatformKinds ?? ['government'];
+  if (isExcludedHuntPlatformKind(input.platformKind, excludeKinds)) return false;
+
+  const contactEmail = extractHotClientContactEmail(input);
+  const companyOnly = opts.companyEmailsOnly !== false;
+
+  if (contactEmail) {
+    return companyOnly ? isCompanyEmail(contactEmail) : true;
+  }
+  if (input.hasEmail && companyOnly) {
+    return false;
+  }
+  return true;
+}

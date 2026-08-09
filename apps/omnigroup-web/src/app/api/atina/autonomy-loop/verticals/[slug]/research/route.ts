@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { requireAdminSession } from '@/lib/bff-admin-gate';
 
@@ -28,10 +29,7 @@ export async function POST(req: Request, { params }: RouteParams) {
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'research_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('research_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

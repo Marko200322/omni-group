@@ -17,7 +17,6 @@ import { isLeanProdMode } from '@/lib/prod-mode';
 import {
   calculateDeliverableQuote,
   formatBillingLabel,
-  type PaymentProviderId,
 } from '@/lib/dynamic-pricing';
 
 type ManualCheckout = {
@@ -32,11 +31,7 @@ type Props = {
   disabled?: boolean;
 };
 
-const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
-  { id: 'manual', label: 'Bank transfer' },
-  { id: 'kriptoman', label: 'Kriptoman' },
-  { id: 'stripe', label: 'Stripe' },
-];
+const PAYMENT_METHOD_LABEL = 'Bank transfer (IBAN)';
 
 export function DeliverableQuotePanel({ disabled }: Props) {
   const searchParams = useSearchParams();
@@ -52,7 +47,6 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
   const verticalSlug = initialVertical;
   const [deliverableId, setDeliverableId] = useState(resolvedInitial);
-  const [paymentProvider, setPaymentProvider] = useState<PaymentProviderId>('manual');
   const [intensity] = useState(55);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,17 +68,17 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       deliverableId,
       industryCategory: industryCategory || null,
       verticalSlug: verticalSlug || null,
-      paymentProvider,
+      paymentProvider: 'manual',
       marketIntensity: intensity,
       tamEstimateUsd: 50_000 + intensity * 1200,
       competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
     });
-  }, [deliverable, deliverableId, industryCategory, verticalSlug, paymentProvider, intensity]);
+  }, [deliverable, deliverableId, industryCategory, verticalSlug, intensity]);
 
   useEffect(() => {
     setCheckout(null);
     setSent(false);
-  }, [deliverableId, industryCategory, verticalSlug, paymentProvider, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug, intensity]);
 
   const startCheckout = useCallback(async () => {
     if (!checkoutAllowed) {
@@ -100,7 +94,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         body: JSON.stringify({
           deliverableId,
           industryCategory: industryCategory || undefined,
-          paymentProvider,
+          paymentProvider: 'manual',
           marketIntensity: intensity,
         }),
       });
@@ -124,7 +118,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [deliverableId, industryCategory, verticalSlug, paymentProvider, intensity, checkoutAllowed]);
+  }, [deliverableId, industryCategory, verticalSlug, intensity, checkoutAllowed]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -210,21 +204,14 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
       />
 
-      <label className="block text-sm">
-        <span className="text-slate-400">Payment</span>
-        <select
-          className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
-          value={paymentProvider}
-          onChange={(e) => setPaymentProvider(e.target.value as PaymentProviderId)}
-          disabled={disabled || loading}
-        >
-          {PAYMENT_OPTIONS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
+        <span className="text-slate-400">Payment method: </span>
+        <span className="font-medium text-white">{PAYMENT_METHOD_LABEL}</span>
+        <span className="mt-1 block text-xs text-emerald-200/80">
+          Card and crypto checkout are not available for deliverables — pay by bank transfer using the reference we
+          generate.
+        </span>
+      </div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm">
         <span className="text-slate-400">Quoted price: </span>

@@ -1,9 +1,15 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FadeIn } from '@/components/motion/FadeIn';
+import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
-export const metadata = {
-  title: 'Terms of Service | Omni Group Tech',
+const LAST_UPDATED = 'August 2026';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
   description: 'Terms of Service for Omni Group Tech digital delivery services.',
+  openGraph: marketingOpenGraph('Terms of Service', 'Terms of Service for Omni Group Tech digital delivery services.'),
+  twitter: marketingTwitter('Terms of Service', 'Terms of Service for Omni Group Tech digital delivery services.'),
 };
 
 export default function TermsPage() {
@@ -15,6 +21,7 @@ export default function TermsPage() {
         <p className="mt-3 text-sm text-slate-500">
           These terms apply to our current services and may be updated. Contact us with any questions.
         </p>
+        <p className="mt-1 text-xs text-slate-600">Last updated: {LAST_UPDATED}</p>
 
         <div className="prose prose-invert mt-10 max-w-none space-y-6 text-slate-300">
           <section>
@@ -28,8 +35,9 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">2. Orders and payment</h2>
             <p>
-              Until card payments are enabled, payment may be completed by bank transfer (IBAN) using the reference on
-              your proforma. Access and automated fulfillment begin after payment confirmation by our team.
+              Payment is completed by bank transfer (IBAN) using the reference on your proforma. Card and other
+              online methods may be offered later — when enabled, they will be shown clearly at checkout. Access and
+              automated fulfillment begin after payment confirmation by our team.
             </p>
           </section>
           <section>

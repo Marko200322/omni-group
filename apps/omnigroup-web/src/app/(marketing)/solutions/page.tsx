@@ -2,10 +2,19 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchSolutionsList } from '@/lib/public-site-api';
 import { getGeneratedVerticalsIndex, listOnlineVerticalSlugs } from '@/lib/generated-verticals';
+import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
 export const metadata: Metadata = {
-  title: 'Vertical solutions | Omni Group Tech',
-  description: 'Autonomy-generated industry landings — ready for sales and deploy.',
+  title: 'Industries',
+  description: 'Industry-specific landing pages with delivery packages, pricing, and scope for your niche.',
+  openGraph: marketingOpenGraph(
+    'Industries',
+    'Industry-specific landing pages with delivery packages, pricing, and scope for your niche.',
+  ),
+  twitter: marketingTwitter(
+    'Industries',
+    'Industry-specific landing pages with delivery packages, pricing, and scope for your niche.',
+  ),
 };
 
 export const dynamic = 'force-dynamic';
@@ -35,12 +44,12 @@ export default async function SolutionsPage() {
   return (
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Niche catalog</p>
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">By industry</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-          Vertical solutions online
+          Solutions for your niche
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
-          {total} generated landing pages — each linked to a delivery pack, pricing, and workflow steps.
+          {total} industry pages — each with a delivery pack, pricing, and clear scope you can buy or request.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -20,7 +20,7 @@ import { ClientHunterRepository } from '../repository/client-hunter.repository';
 import { listJobBoardPlatforms, countJobBoardPlatforms, type JobBoardKind } from '../data/job-board-catalog';
 import { listHuntLocaleCodes } from '../data/hunt-locales';
 import { HotClientsService } from './hot-clients.service';
-import { isCompanyEmail } from '../lib/company-email';
+import { isCompanyEmail, isExcludedHuntPlatformKind } from '../lib/company-email';
 
 const DEFAULT_PLATFORMS_PER_RUN = 12;
 
@@ -81,6 +81,7 @@ export class ClientHunterService {
       let qualityScore = Math.min(100, 55 + Math.round(dto.intensity / 3));
       const scrapeHits: string[] = [];
       const sampleLinks: string[] = [];
+      const hotClientsSkipped: string[] = [];
 
       if (dto.mode === 'hunt') {
         const scraper = getScraperClient();
@@ -109,21 +110,26 @@ export class ClientHunterService {
                   sampleLinks.push(link);
                 }
               }
-              try {
-                await this.hotClients.recordFromHunt({
-                  userId,
-                  platformSlug: platform.slug,
-                  locale: platform.locale,
-                  region: platform.region,
-                  companyName: platform.name,
-                  jobUrl: links[0] && typeof links[0] === 'string' ? links[0] : undefined,
-                  jobPostingExcerpt: `Intercepted listing via ${platform.name}`,
-                  huntIntensity: dto.intensity,
-                  verticalSlug: dto.verticalSlug,
-                  metadata: { sample_links: links.slice(0, 3) },
-                });
-              } catch {
-                /* hot_clients optional when migration pending */
+              if (!isExcludedHuntPlatformKind(platform.kind, excludeKinds)) {
+                try {
+                  const hotRow = await this.hotClients.recordFromHunt({
+                    userId,
+                    platformSlug: platform.slug,
+                    locale: platform.locale,
+                    region: platform.region,
+                    companyName: platform.name,
+                    jobUrl: links[0] && typeof links[0] === 'string' ? links[0] : undefined,
+                    jobPostingExcerpt: `Intercepted listing via ${platform.name}`,
+                    huntIntensity: dto.intensity,
+                    verticalSlug: dto.verticalSlug,
+                    metadata: { sample_links: links.slice(0, 3), platform_kind: platform.kind },
+                  });
+                  if (!hotRow) {
+                    hotClientsSkipped.push(platform.slug);
+                  }
+                } catch {
+                  /* hot_clients optional when migration pending */
+                }
               }
             }
           }
@@ -141,6 +147,7 @@ export class ClientHunterService {
         sample_links: sampleLinks.slice(0, 10),
         scraper_configured: getScraperClient().isConfigured() || config.features.scraper,
         idempotency_key: idempotencyKey || null,
+        ...(hotClientsSkipped.length ? { hot_clients_skipped: hotClientsSkipped } : {}),
       };
 
       if (dto.verticalSlug && dto.mode === 'hunt' && scrapeHits.length > 0) {

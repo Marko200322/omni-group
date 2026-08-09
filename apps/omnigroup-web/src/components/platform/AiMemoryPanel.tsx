@@ -13,13 +13,15 @@ type RecallItem = {
 type Props = {
   planSlug?: string | null;
   disabled?: boolean;
+  /** Admin operator console — bypass enterprise plan gate */
+  operatorMode?: boolean;
 };
 
 function hasAiMemoryPlan(planSlug?: string | null): boolean {
   return planSlug === 'enterprise';
 }
 
-export function AiMemoryPanel({ planSlug, disabled }: Props) {
+export function AiMemoryPanel({ planSlug, disabled, operatorMode }: Props) {
   const [namespace, setNamespace] = useState('global');
   const [key, setKey] = useState('prefs');
   const [valueText, setValueText] = useState('{"theme":"dark"}');
@@ -27,7 +29,7 @@ export function AiMemoryPanel({ planSlug, disabled }: Props) {
   const [message, setMessage] = useState('');
   const [items, setItems] = useState<RecallItem[]>([]);
 
-  const locked = disabled || !hasAiMemoryPlan(planSlug);
+  const locked = disabled || (!operatorMode && !hasAiMemoryPlan(planSlug));
 
   async function handleRemember() {
     if (locked) return;
@@ -107,7 +109,7 @@ export function AiMemoryPanel({ planSlug, disabled }: Props) {
 
   return (
     <div className="space-y-4">
-      {locked && (
+      {locked && !operatorMode && (
         <p className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           AI memory is included on the Partner (Enterprise) plan.{' '}

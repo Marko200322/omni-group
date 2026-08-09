@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Factory, FlaskConical, Hammer, Sparkles } from 'lucide-react';
+import { isDevClient } from '@/lib/is-dev-client';
 
 type Project = {
   id: string;
@@ -214,7 +215,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
         )}
       </ul>
 
-      {lastResult && (
+      {lastResult && isDevClient() && (
         <pre className="max-h-40 overflow-auto rounded-lg border border-violet-500/20 bg-violet-500/5 p-3 font-mono text-[11px] text-slate-300">
           {JSON.stringify(lastResult, null, 2)}
         </pre>

@@ -1,6 +1,32 @@
 import PDFDocument from 'pdfkit';
 import type { InvoiceLineItem } from '../templates/invoice-email.template';
 
+function issuerLines(instructions: Record<string, string>): string[] {
+  const lines: string[] = [];
+  const legal = instructions.companyLegalName?.trim();
+  const tax = instructions.companyTaxId?.trim();
+  const address = instructions.companyAddress?.trim();
+  if (legal) lines.push(`Legal name: ${legal}`);
+  if (tax) lines.push(`Tax ID / PIB: ${tax}`);
+  if (address) lines.push(`Address: ${address}`);
+  return lines;
+}
+
+function paymentInstructionLines(instructions: Record<string, string>): string[] {
+  const lines: string[] = [];
+  const labels: Record<string, string> = {
+    accountName: 'Beneficiary',
+    iban: 'IBAN',
+    bankName: 'Bank',
+    swift: 'SWIFT/BIC',
+  };
+  for (const [key, label] of Object.entries(labels)) {
+    const value = instructions[key]?.trim();
+    if (value) lines.push(`${label}: ${value}`);
+  }
+  return lines;
+}
+
 export type InvoicePdfInput = {
   invoiceNumber: string;
   brandName: string;
@@ -15,6 +41,11 @@ export type InvoicePdfInput = {
   periodStart?: string;
   periodEnd?: string;
   purchasedAt: string;
+  issuer?: {
+    companyLegalName?: string;
+    companyTaxId?: string;
+    companyAddress?: string;
+  };
 };
 
 const dateFmt = (iso: string) =>
@@ -37,6 +68,17 @@ export function generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer
     doc.fontSize(12).text(`Number: ${input.invoiceNumber}`);
     doc.text(`Date: ${dateFmt(input.purchasedAt)}`);
     doc.moveDown();
+
+    const issuer = issuerLines({
+      companyLegalName: input.issuer?.companyLegalName ?? '',
+      companyTaxId: input.issuer?.companyTaxId ?? '',
+      companyAddress: input.issuer?.companyAddress ?? '',
+    });
+    if (issuer.length) {
+      doc.fontSize(11).text('Issuer:', { underline: true });
+      issuer.forEach((line) => doc.text(line));
+      doc.moveDown();
+    }
 
     doc.text(`Bill to: ${input.toName}`);
     doc.text(`Email: ${input.toEmail}`);
@@ -104,17 +146,26 @@ export function generateProformaPdfBuffer(input: ProformaPdfInput): Promise<Buff
     doc.text(`Email: ${input.toEmail}`);
     doc.moveDown();
 
+    const proformaIssuer = issuerLines(input.instructions);
+    if (proformaIssuer.length) {
+      doc.fontSize(11).text('Issuer:', { underline: true });
+      proformaIssuer.forEach((line) => doc.text(line));
+      doc.moveDown();
+    }
+
     doc.fontSize(14).text(input.planName, { underline: true });
     doc.fontSize(11).text(`Billing cycle: ${input.billingCycle}`);
     doc.text(`Amount due: ${input.amount.toFixed(2)} ${input.currency}`);
     doc.moveDown();
 
     doc.fontSize(11).text('Payment instructions:', { underline: true });
-    Object.entries(input.instructions).forEach(([key, value]) => {
-      if (value?.trim()) {
-        doc.text(`${key}: ${value}`);
-      }
-    });
+    paymentInstructionLines(input.instructions).forEach((line) => doc.text(line));
+    const note = input.instructions.note?.trim();
+    if (note) {
+      doc.moveDown(0.5);
+      doc.fontSize(10).fillColor('#444').text(note);
+      doc.fillColor('#000');
+    }
     doc.moveDown(2);
     doc.fontSize(9).fillColor('#666').text('This proforma is not a tax invoice until payment is confirmed.', {
       align: 'center',
