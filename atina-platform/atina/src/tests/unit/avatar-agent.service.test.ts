@@ -95,7 +95,7 @@ describe('AvatarAgentService aggregator path', () => {
     const service = new AvatarAgentService();
     const session = await service.startGuestSession();
     expect(session.audience).toBe('public');
-    expect(session.agent.name).toBe('Atina');
+    expect(session.agent.name).toBe('Omi');
     expect(session.capabilities.aggregator).toBe(false);
   });
 });

@@ -1,6 +1,9 @@
 /** Omni Group Tech brand + three product modules (they do not replace the brand name). */
 export const BRAND_NAME = 'Omni Group Tech';
 
+/** Public/portal chat assistant display name (not the Atina API module). */
+export const ASSISTANT_NAME = 'Omi';
+
 export const MODULES = [
   {
     id: 'atina',

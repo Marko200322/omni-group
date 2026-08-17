@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react';
 import { PORTAL_QUICK_PROMPTS, PUBLIC_QUICK_PROMPTS } from '@/lib/client-portal-ai-context';
+import { ASSISTANT_NAME } from '@/lib/brand';
 
 type ChatMessage = {
   id: string;
@@ -28,7 +29,7 @@ function friendlyError(raw: string | undefined): string {
   if (raw && /\s/.test(raw) && !/\.env|localhost|port \d|stub|undefined/i.test(raw)) {
     return raw;
   }
-  return 'Atina is temporarily unavailable. Try again or open Contact.';
+  return `${ASSISTANT_NAME} is temporarily unavailable. Try again or open Contact.`;
 }
 
 export function ClientAiAssistant({ userName }: Props) {
@@ -130,6 +131,7 @@ export function ClientAiAssistant({ userName }: Props) {
   );
 
   const firstName = userName?.split(' ')[0];
+  const displayName = ASSISTANT_NAME;
   const chips = audience === 'portal' ? PORTAL_QUICK_PROMPTS : PUBLIC_QUICK_PROMPTS;
   const subtitle =
     audience === 'portal'
@@ -143,10 +145,10 @@ export function ClientAiAssistant({ userName }: Props) {
           type="button"
           onClick={() => setOpen(true)}
           className="fixed bottom-6 right-6 z-[70] flex h-14 items-center gap-2 rounded-full border border-emerald-500/40 bg-[#0a1218]/95 px-4 text-emerald-200 shadow-lg shadow-emerald-500/10 backdrop-blur-md transition hover:scale-105 hover:border-emerald-400/60 hover:bg-emerald-500/10"
-          aria-label="Open Atina"
+          aria-label={`Open ${displayName}`}
         >
           <MessageCircle className="h-5 w-5 shrink-0" />
-          <span className="hidden text-sm font-semibold sm:inline">Atina</span>
+          <span className="hidden text-sm font-semibold sm:inline">{displayName}</span>
         </button>
       )}
 
@@ -159,7 +161,7 @@ export function ClientAiAssistant({ userName }: Props) {
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
             className="fixed bottom-6 right-6 z-[70] flex h-[min(560px,calc(100vh-3rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0a0e18]/98 shadow-2xl backdrop-blur-xl"
             role="dialog"
-            aria-label="Atina chat"
+            aria-label={`${displayName} chat`}
           >
             <header className="flex items-center gap-3 border-b border-white/10 bg-emerald-500/5 px-4 py-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30">
@@ -171,14 +173,14 @@ export function ClientAiAssistant({ userName }: Props) {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">Atina</p>
+                <p className="truncate text-sm font-semibold text-white">{displayName}</p>
                 <p className="truncate text-xs text-slate-400">{subtitle}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white"
-                aria-label="Close Atina"
+                aria-label={`Close ${displayName}`}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -188,7 +190,7 @@ export function ClientAiAssistant({ userName }: Props) {
               {booting && messages.length === 0 && (
                 <p className="flex items-center gap-2 text-sm text-slate-500">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Starting Atina…
+                  Starting {displayName}…
                 </p>
               )}
               {messages.map((m) => (
@@ -206,7 +208,7 @@ export function ClientAiAssistant({ userName }: Props) {
               {loading && (
                 <p className="text-xs text-slate-500">
                   <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
-                  Atina is typing…
+                  {displayName} is typing…
                 </p>
               )}
             </div>
@@ -236,7 +238,7 @@ export function ClientAiAssistant({ userName }: Props) {
                     }
                   }}
                   disabled={booting || loading || !sessionId}
-                  placeholder="Ask Atina anything…"
+                  placeholder={`Ask ${displayName} anything…`}
                   className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none focus:border-emerald-500/40"
                 />
                 <button

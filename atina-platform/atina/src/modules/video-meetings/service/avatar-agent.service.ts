@@ -9,6 +9,7 @@ import {
   DEFAULT_SUPPORT_GREETING,
   DEFAULT_SUPPORT_PERSONA,
   PUBLIC_SITE_PERSONA,
+  SITE_ASSISTANT_NAME,
 } from '../avatar/avatar-agent.personas';
 import { getAvatarAgent, getAvatarAgentAsync, listAvatarAgentsAsync } from '../avatar/avatar-agent.config';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
@@ -48,6 +49,15 @@ function sessionAgentId(metadata: Record<string, unknown> | string): string | un
     }
   }
   return typeof metadata.agentId === 'string' ? metadata.agentId : undefined;
+}
+
+function withSiteAssistantIdentity(agent: AvatarAgentDefinition): AvatarAgentDefinition {
+  return {
+    ...agent,
+    name: SITE_ASSISTANT_NAME,
+    title: 'Omni Group assistant',
+    greeting: DEFAULT_SUPPORT_GREETING,
+  };
 }
 
 function avatarEnabled(agentType: AgentType): boolean {
@@ -154,7 +164,8 @@ export class AvatarAgentService {
   async startSession(userId: string, agentType: AgentType, agentId?: string) {
     assertAvatarEnabled(agentType);
     await listAvatarAgentsAsync(agentType);
-    const agent = getAvatarAgent(agentType, agentId);
+    const base = getAvatarAgent(agentType, agentId);
+    const agent = agentType === 'support' ? withSiteAssistantIdentity(base) : base;
 
     const { rows: sessionRows } = await this.repo.createSession(userId, agentType, {
       agentId: agent.id,
@@ -216,7 +227,7 @@ export class AvatarAgentService {
     const base = getAvatarAgent('support', agentId);
     const agent = {
       ...base,
-      name: 'Atina',
+      name: SITE_ASSISTANT_NAME,
       title: 'Omni Group assistant',
       persona: PUBLIC_SITE_PERSONA,
       greeting: DEFAULT_PUBLIC_GREETING,
@@ -292,7 +303,7 @@ export class AvatarAgentService {
     const base = await getAvatarAgentAsync('support', boundAgentId);
     const agent = {
       ...base,
-      name: 'Atina',
+      name: SITE_ASSISTANT_NAME,
       title: 'Omni Group assistant',
       persona: PUBLIC_SITE_PERSONA,
       greeting: DEFAULT_PUBLIC_GREETING,
@@ -368,7 +379,8 @@ export class AvatarAgentService {
     if (session.status !== 'active') throw new ValidationError('Session is closed');
 
     const boundAgentId = sessionAgentId(session.metadata);
-    const agent = await getAvatarAgentAsync(agentType, boundAgentId);
+    const base = await getAvatarAgentAsync(agentType, boundAgentId);
+    const agent = agentType === 'support' ? withSiteAssistantIdentity(base) : base;
 
     await this.repo.insertMessage({
       sessionId,

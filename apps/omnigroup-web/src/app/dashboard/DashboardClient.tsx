@@ -290,7 +290,7 @@ export default function DashboardClient({
         <GlassCard delay={0.24}>
           <h2 className="font-display text-lg font-semibold text-white">Support</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Atina or live call with our team — response within your plan&apos;s support window.
+            Omi or live call with our team — response within your plan&apos;s support window.
           </p>
           {sessionUser && !isDemo ? (
             <SupportMeetingPanel />
