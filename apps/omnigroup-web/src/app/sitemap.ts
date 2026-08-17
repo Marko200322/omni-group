@@ -14,7 +14,6 @@ const PUBLIC_ROUTES = [
   '/legal/privacy',
   '/legal/cookies',
 ] as const;
-const SOLUTION_SITEMAP_CAP = 500;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://omnigrouptech.com';
@@ -31,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   const index = getGeneratedVerticalsIndex();
-  const slugs = listOnlineVerticalSlugs(SOLUTION_SITEMAP_CAP);
+  const slugs = listOnlineVerticalSlugs();
   const solutionEntries: MetadataRoute.Sitemap = slugs.map((slug) => {
     const entry = index.verticals.find((v) => v.slug === slug);
     return {

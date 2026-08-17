@@ -4,6 +4,7 @@
  *
  * Pricing: anchorByPhase reflects what the factory can deliver today.
  * phaseUnlocks: merged into includes automatically when FACTORY_PHASE advances.
+ * Checkout is open for every catalog package; phase/budget only change price and extras.
  */
 import {
   FACTORY_PHASE_ORDER,
@@ -13,9 +14,8 @@ import {
 } from './factory-phase';
 import type { ProdMode } from './prod-mode';
 import { getProdMode } from './prod-mode';
-import { getMonthlyBudgetEur } from './prod-budget';
 
-/** Focus sell list for €200/mo operational budget (warm outreach path). */
+/** Recommended first-sale list — not a checkout gate. */
 export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'setup-quick',
   'audit',
@@ -24,8 +24,6 @@ export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'workflow-design',
   'support-priority',
 ] as const;
-
-const BUDGET_LAUNCH_SET = new Set<string>(BUDGET_LAUNCH_PACKAGE_IDS);
 
 export type PhaseUnlock = {
   fromPhase: FactoryPhase;
@@ -42,7 +40,7 @@ export type PackageDeliverySpec = {
   excludes: string[];
   /** EUR anchor per factory phase — price = highest defined phase ≤ current. */
   anchorByPhase: Partial<Record<FactoryPhase, number>>;
-  /** Minimum factory phase before checkout is allowed. */
+  /** Factory phase where extra capability is included — does not block checkout. */
   minCheckoutPhase?: FactoryPhase;
   /** Extra deliverables auto-added when factory reaches phase. */
   phaseUnlocks?: PhaseUnlock[];
@@ -117,7 +115,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['Automation workflow šabloni po vašoj industriji'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -134,7 +132,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Deploy on client-owned servers', '24/7 SLA operations', 'Backup/monitoring on client infra'],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -184,7 +182,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     anchorByPhase: { M2: 790, M4: 1190, M6: 1490 },
     minCheckoutPhase: 'M2',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -332,7 +330,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Real inventory sync', 'Client Stripe account wiring', 'Payment processing fees'],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -401,7 +399,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['Apollo lead batch-evi kad je F4 aktivan'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -425,7 +423,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['HeyGen/D-ID video avatar kad su ključevi podešeni'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -442,7 +440,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
     anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
 ];
@@ -505,13 +503,7 @@ export function canCheckoutPackage(deliverableId: string, mode?: ProdMode): bool
   const spec = getPackageDeliverySpec(deliverableId);
   if (!spec) return true;
   const m = mode ?? getProdMode();
-  const modeOk = m === 'full' ? spec.fullCheckout : spec.leanCheckout;
-  if (!modeOk) return false;
-  if (spec.minCheckoutPhase && !phaseGte(getFactoryPhase(), spec.minCheckoutPhase)) return false;
-  if (getMonthlyBudgetEur() <= 250 && !BUDGET_LAUNCH_SET.has(deliverableId.trim())) {
-    return false;
-  }
-  return true;
+  return m === 'full' ? spec.fullCheckout : spec.leanCheckout;
 }
 
 export type PackageAvailabilityTone = 'available' | 'upcoming' | 'contact';
@@ -552,10 +544,9 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
 
 export function listCheckoutPackages(mode?: ProdMode): string[] {
   const m = mode ?? getProdMode();
-  return PACKAGE_DELIVERY_SPECS.filter((s) => (m === 'full' ? s.fullCheckout : s.leanCheckout))
-    .filter((s) => phaseGte(getFactoryPhase(), s.minCheckoutPhase ?? 'M0'))
-    .filter((s) => getMonthlyBudgetEur() > 250 || BUDGET_LAUNCH_SET.has(s.deliverableId))
-    .map((s) => s.deliverableId);
+  return PACKAGE_DELIVERY_SPECS.filter((s) => (m === 'full' ? s.fullCheckout : s.leanCheckout)).map(
+    (s) => s.deliverableId,
+  );
 }
 
 export function applyHonestCatalogDescription<T extends { id: string; description: string }>(item: T): T {

@@ -1,6 +1,8 @@
 ﻿/**
  * Honest delivery contract per package — keep in sync with
  * apps/omnigroup-web/src/lib/package-delivery-spec.ts
+ *
+ * Checkout is open for every catalog package; phase/budget only change price and extras.
  */
 import { config } from '../../../config';
 import {
@@ -10,6 +12,7 @@ import {
   type FactoryPhase,
 } from './factory-phase';
 
+/** Recommended first-sale list — not a checkout gate. */
 export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'setup-quick',
   'audit',
@@ -18,8 +21,6 @@ export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'workflow-design',
   'support-priority',
 ] as const;
-
-const BUDGET_LAUNCH_SET = new Set<string>(BUDGET_LAUNCH_PACKAGE_IDS);
 
 export type PhaseUnlock = {
   fromPhase: FactoryPhase;
@@ -107,7 +108,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['Automation workflow šabloni po vašoj industriji'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -124,7 +125,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Deploy on client-owned servers', '24/7 SLA operations', 'Backup/monitoring on client infra'],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -173,7 +174,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     anchorByPhase: { M2: 790, M4: 1190, M6: 1490 },
     minCheckoutPhase: 'M2',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -321,7 +322,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Real inventory sync', 'Client Stripe account wiring', 'Payment processing fees'],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -390,7 +391,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['Apollo lead batch-evi kad je F4 aktivan'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -414,7 +415,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         includesSr: ['HeyGen/D-ID video avatar kad su ključevi podešeni'],
       },
     ],
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
   {
@@ -431,7 +432,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
     anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },
     minCheckoutPhase: 'M3',
-    leanCheckout: false,
+    leanCheckout: true,
     fullCheckout: true,
   },
 ];
@@ -473,13 +474,7 @@ export function canCheckoutPackage(deliverableId: string): boolean {
   const spec = getPackageDeliverySpec(deliverableId);
   if (!spec) return true;
   const lean = isLeanProdMode();
-  const modeOk = lean ? spec.leanCheckout : spec.fullCheckout;
-  if (!modeOk) return false;
-  if (spec.minCheckoutPhase && !phaseGte(getFactoryPhase(), spec.minCheckoutPhase)) return false;
-  if (getMonthlyBudgetEur() <= 250 && !BUDGET_LAUNCH_SET.has(deliverableId.trim())) {
-    return false;
-  }
-  return true;
+  return lean ? spec.leanCheckout : spec.fullCheckout;
 }
 
 export function honestDescriptionFor(deliverableId: string): string | null {

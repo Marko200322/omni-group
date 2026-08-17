@@ -3,6 +3,7 @@ import 'server-only';
 import { resolveAtinaApiBase } from './atina-api-base';
 import { getGeneratedVerticalsIndex } from './generated-verticals';
 import { getPackageAnchorEur } from './package-delivery-spec';
+import { DELIVERABLE_CATALOG } from './deliverable-catalog';
 
 type AtinaEnvelope<T> = {
   success?: boolean;
@@ -115,12 +116,12 @@ export function fallbackSolutionFromIndex(slug: string): SolutionDetail | null {
   const name = entry.name?.trim() || slug.replace(/-/g, ' ');
   const valueProp =
     (entry.valueProp ?? '').trim() ||
-    `Industry landing for ${name}. Contact us for a tailored quote.`;
+    `Industry landing for ${name}. Buy a delivery package or contact us for a tailored quote.`;
   return {
     slug,
     name,
     category: entry.category ?? 'vertical',
-    status: 'draft',
+    status: 'deployed',
     deliveryPack: {
       verticalSlug: slug,
       category: entry.category ?? 'vertical',
@@ -128,7 +129,13 @@ export function fallbackSolutionFromIndex(slug: string): SolutionDetail | null {
       valueProp,
       keywords: [],
       outreachHooks: [],
-      recommendedDeliverables: [],
+      recommendedDeliverables: DELIVERABLE_CATALOG.map((d) => ({
+        id: d.id,
+        name: d.name,
+        nameSr: d.nameSr,
+        clientPriceEur: getPackageAnchorEur(d.id),
+        billing: d.billing,
+      })),
       verticalPackageQuoteEur: getPackageAnchorEur('vertical-package'),
       workflowSteps: [],
     },

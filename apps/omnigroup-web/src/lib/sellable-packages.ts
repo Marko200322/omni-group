@@ -28,7 +28,7 @@ export function getSellablePackageHint(): string {
     return `Factory ${phase}: no self-serve packages open — revenue depends on contact quotes.`;
   }
   if (budget <= 250) {
-    return `Factory ${phase} · ${ids.length} packages ready: Quick setup, Audit, Landing, Website, Workflow, Support.`;
+    return `Factory ${phase} · ${ids.length} packages on checkout. Recommended first sale: Quick setup, Audit, Landing, Website, Workflow, Support.`;
   }
-  return `Factory ${phase}: ${ids.length} checkout packages match current delivery.`;
+  return `Factory ${phase}: ${ids.length} catalog packages open for checkout.`;
 }

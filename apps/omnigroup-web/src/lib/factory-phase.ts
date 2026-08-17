@@ -1,5 +1,6 @@
 /**
- * Factory maturity M0→M6 — drives checkout gates, fixed pricing, and package unlocks.
+ * Factory maturity M0→M6 — drives pricing, package unlocks, and honest delivery extras.
+ * Checkout for catalog packages stays open; API canCheckoutPackage no longer hides SKUs by phase.
  * When NEXT_PUBLIC_FACTORY_PHASE_AUTO=true, ceiling is M6; API enforces revenue+key effective phase.
  * Keep in sync with atina-platform/atina/src/modules/billing/lib/factory-phase.ts
  */
@@ -29,7 +30,6 @@ export function isFactoryPhaseAutoEnabled(): boolean {
 
 /**
  * UI / SSR phase. With AUTO, uses optional client override (from API) or ceiling M6.
- * Purchase still gated on API canCheckoutPackage (effective phase).
  */
 let clientEffectiveOverride: FactoryPhase | null = null;
 

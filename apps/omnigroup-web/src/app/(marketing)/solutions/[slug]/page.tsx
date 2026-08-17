@@ -17,12 +17,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!solution) {
     const fallback = fallbackSolutionFromIndex(slug);
     if (!fallback) return { title: 'Industry solution' };
+    const description = fallback.deliveryPack.valueProp;
+    const thin = isThinSolution(fallback);
     return {
       title: fallback.name,
-      description: fallback.deliveryPack.valueProp,
-      robots: { index: false, follow: true },
-      openGraph: marketingOpenGraph(fallback.name, fallback.deliveryPack.valueProp),
-      twitter: marketingTwitter(fallback.name, fallback.deliveryPack.valueProp),
+      description,
+      ...(thin ? { robots: { index: false, follow: true } } : {}),
+      openGraph: marketingOpenGraph(fallback.name, description),
+      twitter: marketingTwitter(fallback.name, description),
     };
   }
   const description = solution.deliveryPack.valueProp || `Delivery packages and pricing for ${solution.name}.`;
