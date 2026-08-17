@@ -150,6 +150,21 @@ export class PaymentsRepository {
     );
   }
 
+  countCompletedPaymentsForSubscription(subscriptionId: string) {
+    return query<{ n: string }>(
+      `SELECT COUNT(*)::text AS n FROM payments
+       WHERE subscription_id = $1 AND status = 'completed' AND amount > 0`,
+      [subscriptionId]
+    );
+  }
+
+  updateProviderPaymentId(paymentId: string, providerPaymentId: string) {
+    return query(
+      `UPDATE payments SET provider_payment_id = $2, updated_at = NOW() WHERE id = $1`,
+      [paymentId, providerPaymentId]
+    );
+  }
+
   markSubscriptionPastDue(stripeSubscriptionId: string) {
     return query(
       `UPDATE subscriptions SET status = 'past_due', updated_at = NOW()
@@ -316,6 +331,30 @@ export class PaymentsRepository {
        VALUES ($1, $2, $3, 'pending', 'manual', $4, $5)
        RETURNING id`,
       [params.userId, params.amount, params.currency, params.description, params.metadataJson]
+    );
+  }
+
+  insertStripePendingPayment(params: {
+    userId: string;
+    amount: number;
+    currency: string;
+    description: string;
+    metadataJson: string;
+    stripeSessionId?: string;
+  }) {
+    return query<{ id: string }>(
+      `INSERT INTO payments
+         (user_id, amount, currency, status, provider, description, metadata, provider_payment_id)
+       VALUES ($1, $2, $3, 'pending', 'stripe', $4, $5, $6)
+       RETURNING id`,
+      [
+        params.userId,
+        params.amount,
+        params.currency,
+        params.description,
+        params.metadataJson,
+        params.stripeSessionId ?? null,
+      ]
     );
   }
 

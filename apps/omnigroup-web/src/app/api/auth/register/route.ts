@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { atinaRegister } from '@/lib/atina-auth';
 import { buildAuthSession, setSessionCookie } from '@/lib/auth-session';
+import { registrationDisabledResponse } from '@/lib/registration-gate';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
 export async function POST(req: Request) {
+  const blocked = registrationDisabledResponse();
+  if (blocked) return blocked;
   let body: {
     name?: string;
     email?: string;

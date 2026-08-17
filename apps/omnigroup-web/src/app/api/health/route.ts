@@ -22,11 +22,10 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    ok: true,
+    ok: atina.ok,
     app: 'omnigroup-web',
-    platformUrl: 'http://localhost:3010',
-    apiUrl: atinaBase,
-    atina,
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+    atina: { ok: atina.ok, status: atina.status },
     ts: new Date().toISOString(),
   });
 }

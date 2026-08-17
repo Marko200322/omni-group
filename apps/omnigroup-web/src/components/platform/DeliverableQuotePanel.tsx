@@ -31,7 +31,8 @@ type Props = {
   disabled?: boolean;
 };
 
-const PAYMENT_METHOD_LABEL = 'Bank transfer (IBAN)';
+const PAYMENT_METHOD_LABEL_MANUAL = 'Bank transfer (IBAN)';
+const PAYMENT_METHOD_LABEL_STRIPE = 'Card (Stripe)';
 
 export function DeliverableQuotePanel({ disabled }: Props) {
   const searchParams = useSearchParams();
@@ -52,6 +53,29 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [stripePreferred, setStripePreferred] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/atina/payments/methods');
+        const json = (await res.json()) as {
+          ok?: boolean;
+          data?: { mode?: string; methods?: Array<{ id: string; available: boolean }> };
+        };
+        if (!cancelled && json.ok && json.data?.methods) {
+          const stripeOn = json.data.methods.some((m) => m.id === 'stripe' && m.available);
+          setStripePreferred(stripeOn && json.data.mode !== 'manual');
+        }
+      } catch {
+        /* keep manual default */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const deliverable = DELIVERABLE_CATALOG.find((d) => d.id === deliverableId);
   const clientOffer = getClientOffer(deliverableId);
@@ -68,12 +92,12 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       deliverableId,
       industryCategory: industryCategory || null,
       verticalSlug: verticalSlug || null,
-      paymentProvider: 'manual',
+      paymentProvider: stripePreferred ? 'stripe' : 'manual',
       marketIntensity: intensity,
       tamEstimateUsd: 50_000 + intensity * 1200,
       competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
     });
-  }, [deliverable, deliverableId, industryCategory, verticalSlug, intensity]);
+  }, [deliverable, deliverableId, industryCategory, verticalSlug, intensity, stripePreferred]);
 
   useEffect(() => {
     setCheckout(null);
@@ -88,6 +112,25 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
+      if (stripePreferred) {
+        const res = await fetch('/api/atina/payments/stripe/deliverable-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deliverableId,
+            industryCategory: industryCategory || undefined,
+            marketIntensity: intensity,
+          }),
+        });
+        const json = (await res.json()) as { ok?: boolean; data?: { url?: string | null }; error?: string; detail?: string };
+        if (!res.ok || !json.ok || !json.data?.url) {
+          const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+          throw new Error(human ?? 'Card checkout is unavailable right now. Try again or contact us.');
+        }
+        window.location.href = json.data.url;
+        return;
+      }
+
       const res = await fetch('/api/atina/payments/manual/deliverable-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,7 +161,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [deliverableId, industryCategory, verticalSlug, intensity, checkoutAllowed]);
+  }, [deliverableId, industryCategory, verticalSlug, intensity, checkoutAllowed, stripePreferred]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -206,10 +249,13 @@ export function DeliverableQuotePanel({ disabled }: Props) {
 
       <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
         <span className="text-slate-400">Payment method: </span>
-        <span className="font-medium text-white">{PAYMENT_METHOD_LABEL}</span>
+        <span className="font-medium text-white">
+          {stripePreferred ? PAYMENT_METHOD_LABEL_STRIPE : PAYMENT_METHOD_LABEL_MANUAL}
+        </span>
         <span className="mt-1 block text-xs text-emerald-200/80">
-          Card and crypto checkout are not available for deliverables — pay by bank transfer using the reference we
-          generate.
+          {stripePreferred
+            ? 'Pay by card — fulfillment starts automatically after Stripe confirms payment.'
+            : 'Pay by bank transfer — activation after admin confirms your payment.'}
         </span>
       </div>
 
@@ -229,7 +275,15 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onClick={startCheckout}
           disabled={disabled || loading || !checkoutAllowed}
         >
-          {loading ? 'Generating…' : checkoutAllowed ? 'Generate payment instructions' : 'Available on request'}
+          {loading
+            ? stripePreferred
+              ? 'Redirecting…'
+              : 'Generating…'
+            : checkoutAllowed
+              ? stripePreferred
+                ? 'Pay with card'
+                : 'Generate payment instructions'
+              : 'Available on request'}
         </button>
         <Link
           href={`/contact?service=${encodeURIComponent(deliverableId)}${industryCategory ? `&category=${encodeURIComponent(industryCategory)}` : ''}`}

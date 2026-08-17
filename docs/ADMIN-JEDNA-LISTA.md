@@ -21,7 +21,19 @@
 Radi **jednu po jednu**. Kad stavka padne, pređi na sledeću.  
 **Gap-scan 2026-08-04:** 10 agenata → `docs/evidence/gap-scan-2026-08-04/` (+ ovaj REDOM).
 
-### Tier A — trust / IBAN kvalitet (pre “čistih” faktura)
+### Tier A — trust / prodaja (Stripe + LLC)
+
+1. [x] **JA** Dashboard/admin UX + **Atina** chat widget (2026-08-14)
+2. [x] **JA** Stripe deliverable checkout u kodu (2026-08-14)
+3. [x] **JA** Instantly.ai adapter u kodu (2026-08-14) — **TI** ključevi + kampanja
+4. [ ] **TI** Firma / EIN / adresa u `deploy.config` — REDOM #3
+5. [ ] **TI** Stripe live + webhook + smoke paket checkout — REDOM #4 (**P0 prodaja**)
+6. [ ] **TI** Deploy poslednjeg sprinta (web + API)
+7. [ ] **TI** Atina live — `AI_KEY` + pravi klijentski login test
+8. [ ] **TI+JA** Invoice PDF email — REDOM #3b
+9. [ ] **TI** Legal counsel — REDOM #3c
+
+### Tier A (staro) — trust / IBAN kvalitet
 
 1. [x] **TI+JA** GitHub branch protection na `main` (2026-08-05) — Require PR before merging (bez obaveznog approval-a) · rule id `81345794` · [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md)
 2. [x] **JA** VPS backup + restore test (2026-08-04) — cron 03:15, dump `atina_saas_db`, restore drill 56 tabela — [`VPS-BACKUP-EVIDENCE-LATEST.md`](./VPS-BACKUP-EVIDENCE-LATEST.md)
@@ -145,5 +157,5 @@ Vidi REDOM #9.
 
 **Budžet burn:** `.\scripts\m4-budget-burn-tracker.ps1` → `-AddTopup 550` pa `-AddSpend -Provider Resend|OpenRouter|Apify|Hunter …` — pokazuje remaining + runway (dani). Ledger: `deploy-secrets.local/budget-burn-ledger.json`.
 
-**Sledeći korak (TI):** pošalji `companyLegalName` / `companyTaxId` / `companyAddress` kad firma bude gotova; (opciono) Resend warmup pre masovnog outbounda.  
-**Sledeći korak (JA):** #3b invoice PDF kad SMTP/COMMS; #6e seed CRM kad hoćeš outbound→checkout smoke.
+**Sledeći korak (TI):** LLC + Stripe keys + deploy + smoke Atina/Stripe; (opciono) Instantly kad krene outbound.  
+**Sledeći korak (JA):** na zahtev — deploy assist, #3b invoice PDF, #6e seed CRM.

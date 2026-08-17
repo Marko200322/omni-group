@@ -48,7 +48,7 @@ export class HuntingStackService {
     );
 
     let outboundSend: Record<string, unknown> | null = null;
-    if (input.processOutbound !== false) {
+    if (input.processOutbound === true) {
       outboundSend = await this.outbound.processSendQueue();
     }
 

@@ -9,10 +9,10 @@ import {
 } from './invoice-email-template';
 
 const brand = {
-  name: 'Omni Group',
-  url: 'https://omnigroup.io',
-  tagline: 'Digital platform for growth and automation',
-  supportEmail: 'billing@omnigroup.io',
+  name: 'Omni Group Tech',
+  url: 'https://omnigrouptech.com',
+  tagline: 'Custom digital delivery',
+  supportEmail: 'hello@omnigrouptech.com',
 };
 
 const issueDate = '2026-05-27T10:30:00.000Z';
@@ -69,7 +69,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     periodStart: '2026-05-27T00:00:00.000Z',
     periodEnd: '2027-05-27T00:00:00.000Z',
     purchasedAt: issueDate,
-    billingUrl: 'https://omnigroup.io/dashboard#billing',
+    billingUrl: 'https://omnigrouptech.com/dashboard#billing',
   });
 
   const admin = renderAdminPendingEmail({
@@ -82,7 +82,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     currency: 'EUR',
     reference: 'ATINA-MK7F2A9B',
     paymentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    dashboardUrl: 'https://omnigroup.io/admin',
+    dashboardUrl: 'https://omnigrouptech.com/admin',
     issueDate,
   });
 

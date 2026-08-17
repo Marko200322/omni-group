@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Video, Calendar } from 'lucide-react';
 import { ConversationalAvatarPanel } from '@/components/platform/ConversationalAvatarPanel';
+import { LiveCallPanel } from '@/components/platform/LiveCallPanel';
 
 type MeetingMethod = {
   id: string;
@@ -51,6 +52,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
   const [topic, setTopic] = useState('');
   const [description, setDescription] = useState('');
   const [provider, setProvider] = useState('manual');
+  const [hostType, setHostType] = useState<'human' | 'ai_avatar'>('human');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -102,7 +104,10 @@ export function SupportMeetingPanel({ disabled }: Props) {
         body: JSON.stringify({
           topic: topic.trim(),
           description: description.trim() || undefined,
-          provider,
+          provider: hostType === 'ai_avatar' && provider === 'manual' ? 'zoom' : provider,
+          hostType,
+          agentId: hostType === 'ai_avatar' ? 'mila' : undefined,
+          liveProvider: hostType === 'ai_avatar' ? 'auto' : undefined,
         }),
       });
       const json = (await res.json()) as {
@@ -132,10 +137,11 @@ export function SupportMeetingPanel({ disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [topic, description, provider, loadMeetings]);
+  }, [topic, description, provider, hostType, loadMeetings]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-8">
+      <LiveCallPanel disabled={disabled} agentType="support" />
       <ConversationalAvatarPanel agentType="support" disabled={disabled} />
 
       <motion.div className="border-t border-white/5 pt-6">
@@ -163,6 +169,16 @@ export function SupportMeetingPanel({ disabled }: Props) {
             />
             {methods.length > 0 && (
               <>
+                <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Host</label>
+                <select
+                  value={hostType}
+                  onChange={(e) => setHostType(e.target.value as 'human' | 'ai_avatar')}
+                  disabled={disabled || loading}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+                >
+                  <option value="human" className="bg-slate-900">Human support agent</option>
+                  <option value="ai_avatar" className="bg-slate-900">AI avatar (Mila) — Zoom / Meet</option>
+                </select>
                 <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">Platform</label>
                 <select
                   value={provider}
@@ -170,7 +186,9 @@ export function SupportMeetingPanel({ disabled }: Props) {
                   disabled={disabled || loading}
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
                 >
-                  {methods.map((m) => (
+                  {methods
+                    .filter((m) => hostType === 'human' || m.id !== 'manual')
+                    .map((m) => (
                     <option key={m.id} value={m.id} className="bg-slate-900">
                       {m.label} — {m.description}
                     </option>

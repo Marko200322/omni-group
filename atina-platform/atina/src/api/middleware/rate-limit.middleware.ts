@@ -87,6 +87,16 @@ export const adminMutationLimiter = rateLimit({
   skip: skipRateLimit,
 });
 
+export const publicChatLimiter = rateLimit({
+  windowMs: toInt(process.env.PUBLIC_CHAT_RATE_LIMIT_WINDOW_MS, 10 * 60 * 1000),
+  max: toInt(process.env.PUBLIC_CHAT_RATE_LIMIT_MAX, 40),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+  keyGenerator: clientKey,
+  skip: skipRateLimit,
+});
+
 export const authSessionLimiter = rateLimit({
   windowMs: toInt(process.env.AUTH_SESSION_RATE_LIMIT_WINDOW_MS, 60 * 1000),
   max: toInt(process.env.AUTH_SESSION_RATE_LIMIT_MAX, 60),

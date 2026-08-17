@@ -11,6 +11,7 @@ const AUTH_RATE_LIMIT_PATHS = new Set([
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
 ]);
+const CONTACT_RATE_LIMIT_PATH = '/api/contact';
 
 function sameOrigin(req: NextRequest): boolean {
   const host = req.headers.get('host');
@@ -54,6 +55,18 @@ export async function middleware(req: NextRequest) {
       const ip = clientIpFromRequest(req);
       const max = Math.max(20, Number(process.env.BFF_AUTH_RATE_LIMIT_MAX || 20) || 20);
       const rl = checkRateLimit(`auth:${pathname}:${ip}`, max, 15 * 60 * 1000);
+      if (!rl.allowed) {
+        return NextResponse.json(
+          { ok: false, error: 'rate_limited', retryAfterSec: rl.retryAfterSec },
+          { status: 429 },
+        );
+      }
+    }
+
+    if (pathname === CONTACT_RATE_LIMIT_PATH) {
+      const ip = clientIpFromRequest(req);
+      const max = Math.max(5, Number(process.env.BFF_CONTACT_RATE_LIMIT_MAX || 5) || 5);
+      const rl = checkRateLimit(`contact:${ip}`, max, 60 * 60 * 1000);
       if (!rl.allowed) {
         return NextResponse.json(
           { ok: false, error: 'rate_limited', retryAfterSec: rl.retryAfterSec },
@@ -106,5 +119,17 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/dev/:path*', '/api/:path*', '/login', '/register', '/forgot-password', '/reset-password'],
+  matcher: [
+    '/dashboard',
+    '/dashboard/:path*',
+    '/admin',
+    '/admin/:path*',
+    '/dev',
+    '/dev/:path*',
+    '/api/:path*',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+  ],
 };

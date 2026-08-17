@@ -10,6 +10,9 @@ jest.mock('../../modules/video-meetings/repository/avatar-sessions.repository', 
     getSessionForUser: jest.fn().mockResolvedValue({
       rows: [{ id: 'sess-1', user_id: 'u1', agent_type: 'support', status: 'active', metadata: { agentId: 'stefan' } }],
     }),
+    getGuestSession: jest.fn().mockResolvedValue({
+      rows: [{ id: 'sess-guest', user_id: null, agent_type: 'support', status: 'active', metadata: { guest: true, agentId: 'mila' } }],
+    }),
     insertMessage: jest.fn().mockImplementation(({ role, text }) => ({
       rows: [{ id: `msg-${role}`, role, text, audio_mime: null, audio_base64: null, video_url: null }],
     })),
@@ -86,5 +89,13 @@ describe('AvatarAgentService aggregator path', () => {
     const session = await service.startSession('u1', 'support', 'stefan');
     expect(session.greeting.text).toBe('Hello from aggregator');
     expect(session.capabilities.aggregator).toBe(true);
+  });
+
+  it('startGuestSession is public and skips aggregator capability', async () => {
+    const service = new AvatarAgentService();
+    const session = await service.startGuestSession();
+    expect(session.audience).toBe('public');
+    expect(session.agent.name).toBe('Atina');
+    expect(session.capabilities.aggregator).toBe(false);
   });
 });

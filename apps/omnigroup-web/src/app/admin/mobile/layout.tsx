@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from 'next';
 export const metadata: Metadata = {
   title: 'Mobile admin',
   description: 'Omni Group operator console for mobile — payments, factory, autonomy.',
-  manifest: '/manifest.json',
+  manifest: '/admin-manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

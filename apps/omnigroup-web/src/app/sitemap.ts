@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getGeneratedVerticalsIndex, listOnlineVerticalSlugs } from '@/lib/generated-verticals';
+import { isPublicRegistrationOpen } from '@/lib/registration-public';
 
 const PUBLIC_ROUTES = [
   '',
@@ -8,19 +9,21 @@ const PUBLIC_ROUTES = [
   '/pricing',
   '/contact',
   '/login',
-  '/register',
   '/solutions',
   '/legal/terms',
   '/legal/privacy',
+  '/legal/cookies',
 ] as const;
 const SOLUTION_SITEMAP_CAP = 500;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://omnigroup.example';
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://omnigrouptech.com';
   const origin = base.replace(/\/$/, '');
   const now = new Date();
 
-  const staticEntries: MetadataRoute.Sitemap = PUBLIC_ROUTES.map((path, index) => ({
+  const staticPaths = isPublicRegistrationOpen() ? [...PUBLIC_ROUTES, '/register'] : [...PUBLIC_ROUTES];
+
+  const staticEntries: MetadataRoute.Sitemap = staticPaths.map((path, index) => ({
     url: `${origin}${path}`,
     lastModified: now,
     changeFrequency: path === '' || path === '/solutions' ? 'weekly' : 'monthly',

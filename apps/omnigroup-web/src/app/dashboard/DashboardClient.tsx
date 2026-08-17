@@ -290,7 +290,7 @@ export default function DashboardClient({
         <GlassCard delay={0.24}>
           <h2 className="font-display text-lg font-semibold text-white">Support</h2>
           <p className="mt-2 text-sm text-slate-400">
-            AI assistant or live call with our team — response within your plan&apos;s support window.
+            Atina or live call with our team — response within your plan&apos;s support window.
           </p>
           {sessionUser && !isDemo ? (
             <SupportMeetingPanel />
@@ -312,7 +312,8 @@ export default function DashboardClient({
         <GlassCard delay={0.26}>
           <h2 className="font-display text-lg font-semibold text-white">Consultations</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Book a call with our team — we&apos;ll define scope, timelines, and the right delivery package.
+            Chat with our sales AI or send a project brief — we&apos;ll define scope, timelines, and the right delivery
+            package.
           </p>
           {sessionUser && !isDemo ? (
             <SalesMeetingPanel />

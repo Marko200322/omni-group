@@ -1,5 +1,6 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { MarketingShell } from '@/components/marketing/MarketingShell';
+import { getSiteCompany } from '@/lib/site-company';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
 export const metadata: Metadata = {
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
-  return <MarketingShell>{children}</MarketingShell>;
+  const company = getSiteCompany();
+  return (
+    <MarketingShell impressum={company.impressumLine()} supportEmail={company.supportEmail}>
+      {children}
+    </MarketingShell>
+  );
 }

@@ -29,7 +29,7 @@ export const PHASE_BOOT_MANIFEST: readonly PhaseBootStep[] = [
   {
     phase: 'v4',
     label: 'Premium avatars & autonomy',
-    activates: ['video-meetings', 'autonomy-loop', 'resource-procurement', 'product-factory'],
+    activates: ['video-meetings', 'live-call-avatar', 'autonomy-loop', 'resource-procurement', 'product-factory'],
   },
   {
     phase: 'v5',

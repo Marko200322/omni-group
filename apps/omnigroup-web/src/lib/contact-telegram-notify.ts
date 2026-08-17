@@ -8,6 +8,7 @@ export type ContactTelegramInput = {
   service?: string;
   category?: string;
   vertical?: string;
+  topic?: string;
 };
 
 /** Direct Telegram ping for new website contacts (server-only env). */
@@ -25,6 +26,7 @@ export async function notifyContactTelegram(
     `Email: ${input.email}`,
     input.company ? `Firma: ${input.company}` : null,
     input.service ? `Usluga: ${input.service}` : null,
+    input.topic ? `Tema: ${input.topic}` : null,
     input.category ? `Kategorija: ${input.category}` : null,
     input.vertical ? `Vertikala: ${input.vertical}` : null,
     '',

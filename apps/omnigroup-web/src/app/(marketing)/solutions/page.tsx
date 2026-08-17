@@ -46,10 +46,14 @@ export default async function SolutionsPage() {
       <div className="mx-auto max-w-6xl">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">By industry</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-          Solutions for your niche
+          Industry catalog
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
-          {total} industry pages — each with a delivery pack, pricing, and clear scope you can buy or request.
+          {total} catalog entries — template landing pages for SEO and discovery. Ready packages with fixed scope are on{' '}
+          <Link href="/pricing" className="text-violet-300 hover:text-white">
+            Pricing
+          </Link>
+          . Most entries are starting points; contact us for a tailored quote.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

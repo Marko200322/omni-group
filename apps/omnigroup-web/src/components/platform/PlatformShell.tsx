@@ -5,10 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   LayoutDashboard,
-  Users,
   CreditCard,
-  Workflow,
-  Settings,
   Search,
   Menu,
   X,
@@ -16,46 +13,26 @@ import {
   ChevronRight,
   FolderKanban,
   LifeBuoy,
-  Bot,
   MessageCircle,
   UserCircle,
-  Activity,
   Shield,
-  Factory,
   Package,
-  ShoppingCart,
   FileText,
-  Crosshair,
   Truck,
-  Briefcase,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
-import type { LucideIcon } from 'lucide-react';
 import { fadeUp, staggerContainer, tapScale } from '@/lib/animations';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { NotificationBell } from '@/components/platform/NotificationBell';
+import { buildAdminNavItems, type PlatformNavItem } from '@/lib/platform-nav';
+import { getFactoryPhase } from '@/lib/factory-phase';
+import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
+import { isLeanProdMode } from '@/lib/prod-mode';
 
 export type PlatformVariant = 'admin' | 'client';
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
-
-const adminNav: NavItem[] = [
-  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard', label: 'Client portal', icon: FolderKanban },
-  { href: '/admin#factory', label: 'Product Factory', icon: Factory },
-  { href: '/admin#hunting', label: 'Hunting', icon: Crosshair },
-  { href: '/admin#resources', label: 'Resources', icon: ShoppingCart },
-  { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
-  { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
-  { href: '/admin#users', label: 'Users', icon: Users },
-  { href: '/admin#crm', label: 'CRM', icon: Briefcase },
-  { href: '/admin#billing', label: 'Billing', icon: CreditCard },
-  { href: '/admin#system', label: 'System', icon: Activity },
-  { href: '/admin#settings', label: 'Settings', icon: Settings },
-];
-
-const clientNav: NavItem[] = [
+const clientNav: PlatformNavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard#orders', label: 'Orders', icon: Package },
   { href: '/dashboard#deliveries', label: 'Deliveries', icon: Truck },
@@ -75,6 +52,8 @@ type Props = {
   badge?: React.ReactNode;
   sessionUser?: { name: string; email: string } | null;
   isDemo?: boolean;
+  /** Admin only — omit to use default client nav; pass from AdminClient for phase-aware links. */
+  navItems?: PlatformNavItem[];
   children: React.ReactNode;
 };
 
@@ -111,13 +90,22 @@ export function PlatformShell({
   badge,
   sessionUser,
   isDemo = false,
+  navItems,
   children,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const routeHash = useRouteHash();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const nav = variant === 'admin' ? adminNav : clientNav;
+  const defaultAdminNav = useMemo(() => {
+    const phase = getFactoryPhase();
+    return buildAdminNavItems({
+      leanProd: isLeanProdMode(),
+      hunterAllowed: isFactoryModuleAllowed('hunter', phase),
+      autonomyAllowed: isFactoryModuleAllowed('autonomy', phase),
+    });
+  }, []);
+  const nav = variant === 'admin' ? (navItems ?? defaultAdminNav) : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
   const brand = variant === 'admin' ? 'Omni Group Tech Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
@@ -269,14 +257,19 @@ export function PlatformShell({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="hidden flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 md:flex md:max-w-md">
-            <Search className="h-4 w-4 text-slate-500" />
+          <div
+            className="hidden flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 md:flex md:max-w-md"
+            title="Global search is not available yet"
+          >
+            <Search className="h-4 w-4 text-slate-600" aria-hidden />
             <input
               type="search"
               placeholder="Search (coming soon)"
-              readOnly
+              disabled
+              tabIndex={-1}
+              aria-disabled="true"
               aria-label="Search — coming soon"
-              className="w-full cursor-not-allowed bg-transparent text-sm text-slate-500 outline-none placeholder:text-slate-600"
+              className="w-full cursor-not-allowed bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-600"
             />
           </div>
           <div className="flex flex-1 items-center justify-end gap-3 lg:flex-none">

@@ -58,6 +58,7 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   billing: 'v2',
   payments: 'v2',
   'video-meetings': 'v2',
+  'live-call-avatar': 'v4',
   'alert-system': 'v1',
   scaling: 'v5',
   'ai-rag': 'v3',

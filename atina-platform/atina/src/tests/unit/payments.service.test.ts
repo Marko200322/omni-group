@@ -54,11 +54,12 @@ jest.mock('stripe', () => {
 });
 
 // eslint-disable-next-line no-var
-var billingApi: { getPlanBySlug: jest.Mock; createInvoice: jest.Mock };
+var billingApi: { getPlanBySlug: jest.Mock; getPlanById: jest.Mock; createInvoice: jest.Mock };
 
 jest.mock('../../modules/billing/service/billing.service', () => {
   billingApi = {
     getPlanBySlug: jest.fn(),
+    getPlanById: jest.fn(),
     createInvoice: jest.fn().mockResolvedValue(undefined),
   };
   return {
@@ -139,6 +140,7 @@ describe('PaymentsService', () => {
     testStripeApi.subscriptions.update.mockResolvedValue({});
     testStripeApi.billingPortal.sessions.create.mockResolvedValue({ url: 'https://portal.test' });
     billingApi.getPlanBySlug.mockResolvedValue(planFull as never);
+    billingApi.getPlanById.mockResolvedValue(planFull as never);
     billingApi.createInvoice.mockResolvedValue({
       invoice_number: 'INV-202605-0001',
       amount: 29,
@@ -455,7 +457,9 @@ describe('PaymentsService', () => {
           rows: [{ user_id: 'u1', plan_id: 'p1', id: 's1' }],
           rowCount: 1,
         } as never)
-        .mockResolvedValueOnce({ rows: [{ id: 'pay_new' }], rowCount: 1 } as never);
+        .mockResolvedValueOnce({ rows: [{ id: 'pay_new' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ n: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ email: 'a@b.c', name: 'Ada' }], rowCount: 1 } as never);
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
 
@@ -490,7 +494,9 @@ describe('PaymentsService', () => {
           rows: [{ user_id: 'u1', plan_id: 'p1', id: 's1' }],
           rowCount: 1,
         } as never)
-        .mockResolvedValueOnce({ rows: [{ id: 'pay_exp' }], rowCount: 1 } as never);
+        .mockResolvedValueOnce({ rows: [{ id: 'pay_exp' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ n: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ email: 'a@b.c', name: 'Ada' }], rowCount: 1 } as never);
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
 

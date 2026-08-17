@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Mic, Send, UserCircle2, Volume2, Users } from 'lucide-react';
 
@@ -296,9 +297,14 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
             </p>
             <p className="mt-1 text-sm text-slate-500">
               {agentType === 'support'
-                ? 'Please schedule a live call below or reach us via Contact.'
-                : 'Please schedule a consultation below or reach us via Contact.'}
+                ? 'Schedule a live call below or reach us via Contact.'
+                : 'Send your brief via the contact form and we will schedule a consultation.'}
             </p>
+            {agentType === 'sales' && (
+              <Link href="/contact" className="btn-glass mt-4 inline-block text-sm">
+                Contact sales
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

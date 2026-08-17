@@ -10,10 +10,10 @@
   "siteDomain": "tvojdomen.com",
   "apiDomain": "api.tvojdomen.com",
 
-  "phase": "v6",
+  "phase": "v2",
   "prodMode": "lean",
-  "factoryPhase": "M0",
-  "factoryPhaseAuto": true,
+  "factoryPhase": "M3",
+  "factoryPhaseAuto": false,
   "monthlyBudgetEur": 200,
   "runPhaseBootAfterDeploy": false,
 
@@ -25,8 +25,19 @@
   "supportGoogleMeetUrl": "",
   "salesGoogleMeetUrl": "",
   "companyLegalName": "",
+  "_companyLegalName_comment": "Popuni sutra posle LLC: pun naziv firme na fakturi",
   "companyTaxId": "",
+  "_companyTaxId_comment": "EIN (US LLC) ili PIB/MB posle registracije u RS",
   "companyAddress": "",
+  "_companyAddress_comment": "Registrovana adresa firme (ulica, grad, država)",
+  "registrationEnabled": false,
+  "_registrationEnabled_comment": "false = samo invite/admin kreira naloge u prod",
+
+  "foundingClientPromo": false,
+  "_foundingClientPromo_comment": "NEXT_PUBLIC_FOUNDING_CLIENT_PROMO na /pricing (build-time env)",
+  "foundingClientDiscountPct": 15,
+  "foundingClientMaxSlots": 50,
+  "foundingClientLockMonths": 12,
 
   "manualPayment": {
     "accountName": "Omni Group DOO",
@@ -61,6 +72,34 @@
 
   "heygenApiKey": "",
   "didApiKey": "",
+
+  "_liveCallAvatar_comment": "Real-time avatar u Zoom/Meet (Recall + HeyGen Live / D-ID Agents). Odvojeno od async HEYGEN_API_KEY.",
+  "liveCallAvatarEnabled": false,
+  "liveCallAvatarAllowStub": true,
+  "liveAvatarProviderChain": "heygen,d-id,stub",
+  "liveCallMaxMinutes": 30,
+  "liveCallHumanHandoffEnabled": true,
+  "heygenLiveApiKey": "",
+  "heygenDefaultAvatarId": "",
+  "didAgentsApiKey": "",
+  "didDefaultAgentId": "",
+  "didAgentIdMila": "",
+  "didAgentIdStefan": "",
+  "didAgentIdNikola": "",
+  "recallApiKey": "",
+  "recallApiBase": "https://api.recall.ai/api/v1",
+  "recallWebhookUrl": "",
+  "_recallWebhookUrl_comment": "Prazno = auto https://api.{siteDomain}/api/v1/live-call-avatar/recall/webhook",
+  "recallWebhookSecret": "",
+  "deepgramApiKey": "",
+  "liveSttProvider": "deepgram",
+  "liveTtsStreaming": true,
+
+  "_instantly_comment": "Cold outbound — posle prve prodaje + domain warmup",
+  "instantly": {
+    "apiKey": "",
+    "campaignId": ""
+  },
 
   "hunterApiKey": "",
   "neverbounceApiKey": "",

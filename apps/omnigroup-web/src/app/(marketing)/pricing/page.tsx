@@ -5,6 +5,12 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { RegulatedFoundingPartnerPanel } from '@/components/marketing/RegulatedFoundingPartnerPanel';
+import { FoundingClientPromoBanner } from '@/components/marketing/FoundingClientPromoBanner';
+import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
+import { isRegulatedIndustryCategory } from '@/lib/regulated-founding-partner';
+import { getFoundingClientPlanQuote, isFoundingClientPromoEnabled } from '@/lib/founding-client-promo';
+import { formatEur } from '@/lib/category-pricing';
 import { getClientOffer, listClientOffers } from '@/lib/client-offers';
 import { calculateDeliverableQuote, type PaymentProviderId } from '@/lib/dynamic-pricing';
 import { getIndustryCategory } from '@/lib/category-pricing';
@@ -39,9 +45,27 @@ export default function PricingPage() {
 
   const categoryMeta = industryCategory ? getIndustryCategory(industryCategory) : null;
   const readyCount = listCheckoutPackages().length;
+  const foundingPromo = isFoundingClientPromoEnabled();
+  const growthFounding =
+    industryCategory && !isRegulatedIndustryCategory(industryCategory)
+      ? getFoundingClientPlanQuote('pro', industryCategory)
+      : null;
 
   useEffect(() => {
-    const service = new URLSearchParams(window.location.search).get('service') ?? '';
+    const params = new URLSearchParams(window.location.search);
+    const service = params.get('service') ?? '';
+    const plan = params.get('plan') ?? '';
+
+    if (plan === 'enterprise') {
+      const enterprise = document.getElementById('enterprise-inquiry');
+      if (enterprise) {
+        enterprise.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        enterprise.classList.add('ring-2', 'ring-violet-400/60');
+        const t = window.setTimeout(() => enterprise.classList.remove('ring-2', 'ring-violet-400/60'), 2500);
+        return () => window.clearTimeout(t);
+      }
+    }
+
     if (!service) return;
     const el = document.getElementById(`offer-${service}`);
     if (!el) return;
@@ -73,6 +97,8 @@ export default function PricingPage() {
           </p>
         </motion.div>
 
+        <FoundingClientPromoBanner industryCategory={industryCategory} />
+
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-3">
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
           {categoryMeta && (
@@ -89,8 +115,15 @@ export default function PricingPage() {
           </button>
           {showAdjust && (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-              Prices are fixed for launch packages. Industry can adjust the quote slightly.
-              Payment is bank transfer after you sign in. Want something custom?{' '}
+              Subscription plans start from {formatEur(39)}/mo (industry-adjusted). Package prices are fixed anchors
+              for launch SKUs. Industry can adjust quotes slightly. Payment is bank transfer or Stripe after sign-in.
+              {foundingPromo && growthFounding?.active ? (
+                <span className="mt-2 block text-emerald-200/90">
+                  Founding client promo: Growth from {formatEur(growthFounding.foundingEur)}/mo (
+                  {growthFounding.discountPct}% off list).
+                </span>
+              ) : null}{' '}
+              Want something custom?{' '}
               <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
                 Contact us
               </Link>
@@ -98,6 +131,12 @@ export default function PricingPage() {
             </p>
           )}
         </motion.div>
+
+        <LaunchBundlesPanel />
+
+        {industryCategory && isRegulatedIndustryCategory(industryCategory) && (
+          <RegulatedFoundingPartnerPanel industryCategory={industryCategory} />
+        )}
 
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
@@ -158,6 +197,21 @@ export default function PricingPage() {
             </div>
           </section>
         )}
+
+        <section
+          id="enterprise-inquiry"
+          className="mt-20 scroll-mt-24 rounded-2xl border border-violet-500/25 bg-violet-500/5 p-8 md:p-10"
+        >
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Enterprise &amp; custom</p>
+          <h2 className="mt-2 font-display text-2xl font-bold text-white">Need a tailored scope or Partner plan?</h2>
+          <p className="mt-3 max-w-2xl text-sm text-slate-400">
+            Multi-site rollouts, dedicated support, AI memory, and custom SLAs are sold via quote — not self-serve
+            checkout. Tell us what you need and we&apos;ll send a proposal.
+          </p>
+          <Link href="/contact" className="btn-primary mt-6 inline-block text-sm">
+            Request enterprise quote
+          </Link>
+        </section>
 
         <p className="mt-14 text-center text-sm text-slate-500">
           Already a client?{' '}

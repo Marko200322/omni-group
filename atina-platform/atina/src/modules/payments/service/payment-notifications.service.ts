@@ -204,6 +204,11 @@ export class PaymentNotificationsService {
       periodEnd: input.periodEnd,
       purchasedAt: input.purchasedAt,
       billingUrl,
+      issuer: {
+        companyLegalName: config.payments.manual.companyLegalName,
+        companyTaxId: config.payments.manual.companyTaxId,
+        companyAddress: config.payments.manual.companyAddress,
+      },
     });
 
     const pdf = await generateInvoicePdfBuffer({

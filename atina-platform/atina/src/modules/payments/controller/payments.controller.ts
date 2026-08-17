@@ -142,6 +142,12 @@ export class PaymentsController {
     sendCreated(res, result, 'Deliverable checkout generated');
   };
 
+  createDeliverableStripeCheckout = async (req: Request, res: Response): Promise<void> => {
+    const body = DeliverableCheckoutDto.parse(req.body);
+    const result = await this.service.createDeliverableStripeCheckout(req.user!.userId, body);
+    sendCreated(res, result, 'Stripe deliverable checkout session created');
+  };
+
   markManualPaymentSent = async (req: Request, res: Response): Promise<void> => {
     await this.service.markManualPaymentSent(req.params.paymentId, req.user!.userId);
     sendSuccess(res, null, 'Payment marked as sent — awaiting admin confirmation');

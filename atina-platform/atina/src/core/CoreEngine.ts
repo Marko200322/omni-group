@@ -24,6 +24,7 @@ import { BillingModule } from '../modules/billing/billing.module';
 import { SubscriptionsModule } from '../modules/subscriptions/subscriptions.module';
 import { PaymentsModule } from '../modules/payments/payments.module';
 import { VideoMeetingsModule } from '../modules/video-meetings/video-meetings.module';
+import { LiveCallAvatarModule } from '../modules/live-call-avatar/live-call-avatar.module';
 import { TasksModule } from '../modules/tasks/tasks.module';
 import { AutomationModule } from '../modules/automation/automation.module';
 import { CrmModule } from '../modules/crm/crm.module';
@@ -126,6 +127,7 @@ export class CoreEngine {
     moduleRegistry.register(new SubscriptionsModule());
     moduleRegistry.register(new PaymentsModule());
     moduleRegistry.register(new VideoMeetingsModule());
+    moduleRegistry.register(new LiveCallAvatarModule());
     moduleRegistry.register(new TasksModule());
     if (config.features.crm) moduleRegistry.register(new CrmModule());
     moduleRegistry.register(new TemplateEngineModule());
@@ -267,6 +269,12 @@ export class CoreEngine {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       async (_req: Request, res: Response) => {
+      let dbHealthy = true;
+      try {
+        dbHealthy = await testConnection();
+      } catch {
+        dbHealthy = false;
+      }
       let forge = {
         vaultPath: null as string | null,
         vaultSignal: 'unavailable' as 'available' | 'unavailable',
@@ -287,8 +295,9 @@ export class CoreEngine {
         // Keep /health resilient even if forge diagnostics fail unexpectedly.
       }
 
-      res.json({
-        status: 'ok',
+      res.status(dbHealthy ? 200 : 503).json({
+        status: dbHealthy ? 'ok' : 'degraded',
+        db: dbHealthy ? 'up' : 'down',
         version: '1.0.0',
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),

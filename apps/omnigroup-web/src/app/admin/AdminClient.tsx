@@ -25,6 +25,7 @@ import type { SessionUser } from '@/lib/auth-session';
 import { isAdminRole } from '@/lib/auth-roles';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
 import { buildAdminMetrics } from '@/lib/platform-metrics';
+import { buildAdminNavItems } from '@/lib/platform-nav';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -84,10 +85,12 @@ export default function AdminClient({
   const hunterAllowed = isFactoryModuleAllowed('hunter', factoryPhase);
   const autonomyAllowed = isFactoryModuleAllowed('autonomy', factoryPhase);
   const factoryOverview = (overview as { factory?: Record<string, unknown> } | null)?.factory ?? null;
+  const adminNavItems = buildAdminNavItems({ leanProd, hunterAllowed, autonomyAllowed });
 
   return (
     <PlatformShell
       variant="admin"
+      navItems={adminNavItems}
       title="Operator overview"
       subtitle={
         isDemo
@@ -135,11 +138,26 @@ export default function AdminClient({
             : 'Live ops: Hunting + Autonomy panels below · scraper/Hunter/outbound per readiness · Confirm payments → fulfillment.'}
         </p>
         <p className={`mt-2 text-xs ${leanProd ? 'text-amber-200/60' : 'text-emerald-200/60'}`}>
-          Jump: <a href="#hunting" className="underline underline-offset-2">Hunting</a>
-          {' · '}
-          <a href="#autonomy" className="underline underline-offset-2">Autonomy</a>
-          {' · '}
-          <a href="#billing" className="underline underline-offset-2">Pending payments</a>
+          Jump:{' '}
+          {hunterAllowed ? (
+            <>
+              <a href="#hunting" className="underline underline-offset-2">
+                Hunting
+              </a>
+              {' · '}
+            </>
+          ) : null}
+          {autonomyAllowed ? (
+            <>
+              <a href="#autonomy" className="underline underline-offset-2">
+                Autonomy
+              </a>
+              {' · '}
+            </>
+          ) : null}
+          <a href="#billing" className="underline underline-offset-2">
+            Pending payments
+          </a>
         </p>
         {leanProd && isBudgetLaunchMode() ? (
           <ul className="mt-3 space-y-1 text-xs text-amber-100/80">
@@ -194,7 +212,7 @@ export default function AdminClient({
         />
       </div>
 
-      <div className="mt-6">
+      <div id="invite-users" className="mt-6 scroll-mt-24">
         <InviteClientPanel
           disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
           plans={snapshot.plans}
@@ -290,7 +308,7 @@ export default function AdminClient({
         </GlassCard>
       </div>
 
-      <section id="billing" className="mt-6">
+      <section id="billing" className="mt-6 scroll-mt-24">
         <GlassCard delay={0.4}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-lg font-semibold text-white">Internal plans (operator)</h2>
@@ -383,7 +401,7 @@ export default function AdminClient({
         </div>
       </section>
 
-      <section id="factory" className="mt-6">
+      <section id="factory" className="mt-6 scroll-mt-24">
         {leanProd ? (
           <GlassCard delay={0.38}>
             <h2 className="font-display text-lg font-semibold text-white">Product Factory</h2>
@@ -453,7 +471,7 @@ export default function AdminClient({
           </section>
       ) : null}
 
-      <section id="settings" className="mt-6">
+      <section id="settings" className="mt-6 scroll-mt-24">
         <GlassCard delay={0.42}>
           <h2 className="font-display text-lg font-semibold text-white">Settings</h2>
           <p className="mt-2 text-sm text-slate-400">
@@ -486,7 +504,7 @@ export default function AdminClient({
         </GlassCard>
       </section>
 
-      <section id="workflows" className="mt-6 grid gap-4 md:grid-cols-3">
+      <section id="workflows" className="mt-6 scroll-mt-24 grid gap-4 md:grid-cols-3">
         {(overview?.modules?.slice(0, 3) ?? [
           { name: 'Onboarding chain', slug: 'onboarding' },
           { name: 'Forge health', slug: 'forge' },

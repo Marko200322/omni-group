@@ -58,6 +58,38 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'VAPID_PUBLIC_KEY' (Get-DeployConfigTrim $Config 'vapidPublicKey')
   & $set 'VAPID_PRIVATE_KEY' (Get-DeployConfigTrim $Config 'vapidPrivateKey')
   & $set 'VAPID_SUBJECT' (Get-DeployConfigTrim $Config 'vapidSubject')
+  & $set 'BRIGHTDATA_API_KEY' (Get-DeployConfigTrim $Config 'brightdataApiKey')
+
+  # Live call avatar (HeyGen Live / D-ID Agents / Recall.ai)
+  & $set 'LIVE_CALL_AVATAR_ENABLED' (Get-DeployConfigLiveCallEnabled $Config)
+  & $set 'LIVE_CALL_AVATAR_ALLOW_STUB' (Get-DeployConfigLiveCallAllowStub $Config)
+  & $set 'LIVE_AVATAR_PROVIDER_CHAIN' (Get-DeployConfigTrim $Config 'liveAvatarProviderChain')
+  & $set 'LIVE_CALL_MAX_MINUTES' (Get-DeployConfigTrim $Config 'liveCallMaxMinutes')
+  & $set 'LIVE_CALL_HUMAN_HANDOFF_ENABLED' (Get-DeployConfigLiveCallHandoff $Config)
+  & $set 'HEYGEN_LIVE_API_KEY' (Get-DeployConfigTrim $Config 'heygenLiveApiKey')
+  & $set 'HEYGEN_DEFAULT_AVATAR_ID' (Get-DeployConfigTrim $Config 'heygenDefaultAvatarId')
+  & $set 'DID_AGENTS_API_KEY' (Get-DeployConfigTrim $Config 'didAgentsApiKey')
+  & $set 'DID_DEFAULT_AGENT_ID' (Get-DeployConfigTrim $Config 'didDefaultAgentId')
+  & $set 'DID_AGENT_ID_MILA' (Get-DeployConfigTrim $Config 'didAgentIdMila')
+  & $set 'DID_AGENT_ID_STEFAN' (Get-DeployConfigTrim $Config 'didAgentIdStefan')
+  & $set 'DID_AGENT_ID_NIKOLA' (Get-DeployConfigTrim $Config 'didAgentIdNikola')
+  & $set 'RECALL_API_KEY' (Get-DeployConfigTrim $Config 'recallApiKey')
+  & $set 'RECALL_API_BASE' (Get-DeployConfigTrim $Config 'recallApiBase')
+  & $set 'RECALL_WEBHOOK_SECRET' (Get-DeployConfigTrim $Config 'recallWebhookSecret')
+  & $set 'DEEPGRAM_API_KEY' (Get-DeployConfigTrim $Config 'deepgramApiKey')
+  & $set 'LIVE_STT_PROVIDER' (Get-DeployConfigTrim $Config 'liveSttProvider')
+  & $set 'LIVE_TTS_STREAMING' (Get-DeployConfigLiveCallTtsStreaming $Config)
+
+  # Instantly outbound
+  if ($Config.instantly -and $Config.instantly.apiKey) {
+    & $set 'INSTANTLY_API_KEY' "$($Config.instantly.apiKey)".Trim()
+  }
+  if ($Config.instantly -and $Config.instantly.campaignId) {
+    & $set 'INSTANTLY_CAMPAIGN_ID' "$($Config.instantly.campaignId)".Trim()
+  }
+  if ($Config.instantly -and $Config.instantly.apiKey) {
+    & $set 'OUTREACH_EMAIL_PROVIDER' 'instantly'
+  }
 
   # External AI stack (M4/M5 — keys + connection URLs)
   & $set 'CLAY_API_KEY' (Get-DeployConfigTrim $Config 'clayApiKey')
@@ -105,7 +137,94 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   return $lookup
 }
 
-function Get-DeployConfigAtinaEnvPatches([object]$Config) {
+function Get-DeployConfigLiveCallEnabled([object]$Config) {
+  $top = Get-DeployConfigTrim $Config 'liveCallAvatarEnabled'
+  if ($top) { return $top.ToLower() }
+  if ($null -ne $Config.liveCallAvatar -and $null -ne $Config.liveCallAvatar.enabled) {
+    return if ($Config.liveCallAvatar.enabled -eq $true) { 'true' } else { 'false' }
+  }
+  return ''
+}
+
+function Get-DeployConfigLiveCallAllowStub([object]$Config) {
+  $top = Get-DeployConfigTrim $Config 'liveCallAvatarAllowStub'
+  if ($top) { return $top.ToLower() }
+  if ($null -ne $Config.liveCallAvatar -and $null -ne $Config.liveCallAvatar.allowStub) {
+    return if ($Config.liveCallAvatar.allowStub -eq $false) { 'false' } else { 'true' }
+  }
+  return 'true'
+}
+
+function Get-DeployConfigLiveCallHandoff([object]$Config) {
+  $top = Get-DeployConfigTrim $Config 'liveCallHumanHandoffEnabled'
+  if ($top) { return $top.ToLower() }
+  if ($null -ne $Config.liveCallAvatar -and $null -ne $Config.liveCallAvatar.humanHandoffEnabled) {
+    return if ($Config.liveCallAvatar.humanHandoffEnabled -eq $false) { 'false' } else { 'true' }
+  }
+  return 'true'
+}
+
+function Get-DeployConfigLiveCallTtsStreaming([object]$Config) {
+  $top = Get-DeployConfigTrim $Config 'liveTtsStreaming'
+  if ($top) { return $top.ToLower() }
+  if ($null -ne $Config.liveCallAvatar -and $null -ne $Config.liveCallAvatar.ttsStreaming) {
+    return if ($Config.liveCallAvatar.ttsStreaming -eq $false) { 'false' } else { 'true' }
+  }
+  return 'true'
+}
+
+function Resolve-RecallWebhookUrl([object]$Config, [string]$ApiDomain) {
+  $explicit = Get-DeployConfigTrim $Config 'recallWebhookUrl'
+  if ($explicit) { return $explicit }
+  if ($Config.liveCallAvatar -and $Config.liveCallAvatar.recallWebhookUrl) {
+    $nested = "$($Config.liveCallAvatar.recallWebhookUrl)".Trim()
+    if ($nested) { return $nested }
+  }
+  $domain = if ($ApiDomain) { $ApiDomain.Trim() } else { Get-DeployConfigTrim $Config 'apiDomain' }
+  if (-not $domain) { return '' }
+  return "https://$domain/api/v1/live-call-avatar/recall/webhook"
+}
+
+function Get-DeployConfigLiveCallEnvPatches([object]$Config, [string]$ApiDomain = '') {
+  $patches = [ordered]@{}
+  $defaults = @{
+    LIVE_CALL_AVATAR_ALLOW_STUB       = 'true'
+    LIVE_AVATAR_PROVIDER_CHAIN        = 'heygen,d-id,stub'
+    LIVE_CALL_MAX_MINUTES             = '30'
+    LIVE_CALL_HUMAN_HANDOFF_ENABLED   = 'true'
+    LIVE_STT_PROVIDER                 = 'deepgram'
+    LIVE_TTS_STREAMING                = 'true'
+    RECALL_API_BASE                   = 'https://api.recall.ai/api/v1'
+  }
+  foreach ($entry in $defaults.GetEnumerator()) {
+    $patches[$entry.Key] = $entry.Value
+  }
+
+  $lookup = Build-DeployConfigKeyLookup $Config
+  foreach ($key in @(
+    'LIVE_CALL_AVATAR_ENABLED', 'LIVE_CALL_AVATAR_ALLOW_STUB', 'LIVE_AVATAR_PROVIDER_CHAIN',
+    'LIVE_CALL_MAX_MINUTES', 'LIVE_CALL_HUMAN_HANDOFF_ENABLED', 'HEYGEN_LIVE_API_KEY',
+    'HEYGEN_DEFAULT_AVATAR_ID', 'DID_AGENTS_API_KEY', 'DID_DEFAULT_AGENT_ID',
+    'DID_AGENT_ID_MILA', 'DID_AGENT_ID_STEFAN', 'DID_AGENT_ID_NIKOLA',
+    'RECALL_API_KEY', 'RECALL_API_BASE', 'RECALL_WEBHOOK_SECRET', 'DEEPGRAM_API_KEY',
+    'LIVE_STT_PROVIDER', 'LIVE_TTS_STREAMING'
+  )) {
+    if ($lookup.ContainsKey($key) -and $lookup[$key]) {
+      $patches[$key] = $lookup[$key]
+    }
+  }
+
+  if (-not $lookup.ContainsKey('LIVE_CALL_AVATAR_ENABLED') -or -not $lookup['LIVE_CALL_AVATAR_ENABLED']) {
+    $patches['LIVE_CALL_AVATAR_ENABLED'] = 'false'
+  }
+
+  $webhookUrl = Resolve-RecallWebhookUrl $Config $ApiDomain
+  if ($webhookUrl) { $patches['RECALL_WEBHOOK_URL'] = $webhookUrl }
+
+  return $patches
+}
+
+function Get-DeployConfigAtinaEnvPatches([object]$Config, [string]$ApiDomain = '') {
   $lookup = Build-DeployConfigKeyLookup $Config
   $patches = [ordered]@{}
   foreach ($entry in $lookup.GetEnumerator()) {
@@ -114,6 +233,13 @@ function Get-DeployConfigAtinaEnvPatches([object]$Config) {
   }
   if ($lookup.ContainsKey('RESEND_API_KEY')) {
     $patches['RESEND_API_KEY'] = $lookup['RESEND_API_KEY']
+  }
+  $patches['REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
+  foreach ($entry in (Get-FoundingClientPromoEnvMap $Config).GetEnumerator()) {
+    $patches[$entry.Key] = $entry.Value
+  }
+  foreach ($entry in (Get-DeployConfigLiveCallEnvPatches $Config $ApiDomain).GetEnumerator()) {
+    $patches[$entry.Key] = $entry.Value
   }
   return $patches
 }
@@ -144,7 +270,72 @@ function Get-DeployConfigWebEnvPatches([object]$Config, [string]$SiteDomain) {
   if ($SiteDomain) {
     $patches['NEXT_PUBLIC_SITE_URL'] = "https://$SiteDomain"
   }
+  if ($lookup.ContainsKey('COMPANY_LEGAL_NAME')) {
+    $patches['NEXT_PUBLIC_COMPANY_LEGAL_NAME'] = $lookup['COMPANY_LEGAL_NAME']
+  }
+  if ($lookup.ContainsKey('COMPANY_TAX_ID')) {
+    $patches['NEXT_PUBLIC_COMPANY_TAX_ID'] = $lookup['COMPANY_TAX_ID']
+  }
+  if ($lookup.ContainsKey('COMPANY_ADDRESS')) {
+    $patches['NEXT_PUBLIC_COMPANY_ADDRESS'] = $lookup['COMPANY_ADDRESS']
+  }
+  if ($lookup.ContainsKey('CONTACT_EMAIL_TO')) {
+    $patches['NEXT_PUBLIC_SUPPORT_EMAIL'] = $lookup['CONTACT_EMAIL_TO']
+  }
+  $patches['REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
+  $patches['NEXT_PUBLIC_REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
+  foreach ($entry in (Get-FoundingClientPromoEnvMap $Config).GetEnumerator()) {
+    $patches[$entry.Key] = $entry.Value
+  }
   return $patches
+}
+
+function Get-FoundingClientPromoEnvMap([object]$Config) {
+  $enabled = if ($null -eq $Config -or $null -eq $Config.foundingClientPromo) { 'false' }
+    elseif ($Config.foundingClientPromo -eq $false) { 'false' }
+    else { 'true' }
+  $map = [ordered]@{
+    NEXT_PUBLIC_FOUNDING_CLIENT_PROMO = $enabled
+    FOUNDING_CLIENT_PROMO             = $enabled
+  }
+  $discount = Get-DeployConfigTrim $Config 'foundingClientDiscountPct'
+  if ($discount) {
+    $map['NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT'] = $discount
+    $map['FOUNDING_CLIENT_DISCOUNT_PCT'] = $discount
+  }
+  $slots = Get-DeployConfigTrim $Config 'foundingClientMaxSlots'
+  if ($slots) { $map['NEXT_PUBLIC_FOUNDING_CLIENT_MAX_SLOTS'] = $slots }
+  $lockMo = Get-DeployConfigTrim $Config 'foundingClientLockMonths'
+  if ($lockMo) { $map['NEXT_PUBLIC_FOUNDING_CLIENT_LOCK_MONTHS'] = $lockMo }
+  return $map
+}
+
+function Sync-RootDockerNextPublicFromWeb([string]$RepoRoot) {
+  $rootEnv = Join-Path $RepoRoot '.env.vps.prod'
+  $webEnv = Join-Path $RepoRoot 'apps\omnigroup-web\.env.vps.production'
+  if (-not (Test-Path $webEnv)) { return }
+  foreach ($line in Get-Content $webEnv) {
+    if ($line -match '^\s*(NEXT_PUBLIC_[A-Z0-9_]+)\s*=\s*(.*)$') {
+      Set-EnvLineInDeployFile $rootEnv $Matches[1] $Matches[2]
+    }
+  }
+}
+
+function Set-EnvLineInDeployFile([string]$FilePath, [string]$Key, [string]$Value) {
+  if (-not (Test-Path $FilePath)) { return }
+  $escaped = [regex]::Escape($Key)
+  $lines = Get-Content $FilePath
+  $found = $false
+  $out = foreach ($line in $lines) {
+    if ($line -match "^\s*$escaped\s*=") {
+      $found = $true
+      "$Key=$Value"
+    } else {
+      $line
+    }
+  }
+  if (-not $found) { $out += "$Key=$Value" }
+  Set-Content -Path $FilePath -Value $out -Encoding UTF8
 }
 
 function Build-DeployConfigHashtable([object]$Config) {
@@ -223,6 +414,27 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     CREWAI_BASE_URL           = 'crewaiBaseUrl'
     LANGCHAIN_API_KEY         = 'langchainApiKey'
     LANGCHAIN_PROJECT         = 'langchainProject'
+    HEYGEN_LIVE_API_KEY       = 'heygenLiveApiKey'
+    HEYGEN_DEFAULT_AVATAR_ID  = 'heygenDefaultAvatarId'
+    DID_AGENTS_API_KEY        = 'didAgentsApiKey'
+    DID_DEFAULT_AGENT_ID      = 'didDefaultAgentId'
+    DID_AGENT_ID_MILA         = 'didAgentIdMila'
+    DID_AGENT_ID_STEFAN       = 'didAgentIdStefan'
+    DID_AGENT_ID_NIKOLA       = 'didAgentIdNikola'
+    RECALL_API_KEY            = 'recallApiKey'
+    RECALL_API_BASE           = 'recallApiBase'
+    RECALL_WEBHOOK_URL        = 'recallWebhookUrl'
+    RECALL_WEBHOOK_SECRET     = 'recallWebhookSecret'
+    DEEPGRAM_API_KEY          = 'deepgramApiKey'
+    LIVE_CALL_AVATAR_ENABLED  = 'liveCallAvatarEnabled'
+    LIVE_CALL_AVATAR_ALLOW_STUB = 'liveCallAvatarAllowStub'
+    LIVE_AVATAR_PROVIDER_CHAIN = 'liveAvatarProviderChain'
+    LIVE_CALL_MAX_MINUTES     = 'liveCallMaxMinutes'
+    LIVE_CALL_HUMAN_HANDOFF_ENABLED = 'liveCallHumanHandoffEnabled'
+    LIVE_STT_PROVIDER         = 'liveSttProvider'
+    LIVE_TTS_STREAMING        = 'liveTtsStreaming'
+    INSTANTLY_API_KEY         = 'instantlyApiKey'
+    INSTANTLY_CAMPAIGN_ID     = 'instantlyCampaignId'
   }
   foreach ($entry in $map.GetEnumerator()) {
     if ($Keys.ContainsKey($entry.Key) -and $Keys[$entry.Key]) {
@@ -238,6 +450,14 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
   }
   if ($Keys.CONTACT_CRM_INGRESS_PASSWORD) {
     $Cfg | Add-Member -NotePropertyName contactCrmIngressPassword -NotePropertyValue $Keys.CONTACT_CRM_INGRESS_PASSWORD -Force
+  }
+  if ($Keys.INSTANTLY_API_KEY) {
+    if (-not $Cfg.instantly) { $Cfg | Add-Member -NotePropertyName instantly -NotePropertyValue ([pscustomobject]@{}) -Force }
+    $Cfg.instantly | Add-Member -NotePropertyName apiKey -NotePropertyValue $Keys.INSTANTLY_API_KEY -Force
+  }
+  if ($Keys.INSTANTLY_CAMPAIGN_ID) {
+    if (-not $Cfg.instantly) { $Cfg | Add-Member -NotePropertyName instantly -NotePropertyValue ([pscustomobject]@{}) -Force }
+    $Cfg.instantly | Add-Member -NotePropertyName campaignId -NotePropertyValue $Keys.INSTANTLY_CAMPAIGN_ID -Force
   }
   return $Cfg
 }
@@ -299,6 +519,32 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     CREWAI_BASE_URL              = Get-DeployConfigTrim $Config 'crewaiBaseUrl'
     LANGCHAIN_API_KEY            = Get-DeployConfigTrim $Config 'langchainApiKey'
     LANGCHAIN_PROJECT            = Get-DeployConfigTrim $Config 'langchainProject'
+    HEYGEN_LIVE_API_KEY          = Get-DeployConfigTrim $Config 'heygenLiveApiKey'
+    HEYGEN_DEFAULT_AVATAR_ID     = Get-DeployConfigTrim $Config 'heygenDefaultAvatarId'
+    DID_AGENTS_API_KEY           = Get-DeployConfigTrim $Config 'didAgentsApiKey'
+    DID_DEFAULT_AGENT_ID         = Get-DeployConfigTrim $Config 'didDefaultAgentId'
+    DID_AGENT_ID_MILA            = Get-DeployConfigTrim $Config 'didAgentIdMila'
+    DID_AGENT_ID_STEFAN          = Get-DeployConfigTrim $Config 'didAgentIdStefan'
+    DID_AGENT_ID_NIKOLA          = Get-DeployConfigTrim $Config 'didAgentIdNikola'
+    RECALL_API_KEY               = Get-DeployConfigTrim $Config 'recallApiKey'
+    RECALL_API_BASE              = Get-DeployConfigTrim $Config 'recallApiBase'
+    RECALL_WEBHOOK_URL           = Get-DeployConfigTrim $Config 'recallWebhookUrl'
+    RECALL_WEBHOOK_SECRET        = Get-DeployConfigTrim $Config 'recallWebhookSecret'
+    DEEPGRAM_API_KEY             = Get-DeployConfigTrim $Config 'deepgramApiKey'
+    LIVE_CALL_AVATAR_ENABLED     = Get-DeployConfigLiveCallEnabled $Config
+    LIVE_CALL_AVATAR_ALLOW_STUB  = Get-DeployConfigLiveCallAllowStub $Config
+    LIVE_AVATAR_PROVIDER_CHAIN   = Get-DeployConfigTrim $Config 'liveAvatarProviderChain'
+    LIVE_CALL_MAX_MINUTES        = Get-DeployConfigTrim $Config 'liveCallMaxMinutes'
+    LIVE_CALL_HUMAN_HANDOFF_ENABLED = Get-DeployConfigLiveCallHandoff $Config
+    LIVE_STT_PROVIDER            = Get-DeployConfigTrim $Config 'liveSttProvider'
+    LIVE_TTS_STREAMING           = Get-DeployConfigLiveCallTtsStreaming $Config
+  }
+  $map['RECALL_WEBHOOK_URL'] = Resolve-RecallWebhookUrl $Config (Get-DeployConfigTrim $Config 'apiDomain')
+  if ($Config.instantly -and $Config.instantly.apiKey) {
+    $map['INSTANTLY_API_KEY'] = "$($Config.instantly.apiKey)".Trim()
+  }
+  if ($Config.instantly -and $Config.instantly.campaignId) {
+    $map['INSTANTLY_CAMPAIGN_ID'] = "$($Config.instantly.campaignId)".Trim()
   }
   if (-not $map.CONTACT_CRM_INGRESS_PASSWORD) {
     $map.CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'adminPassword'

@@ -9,6 +9,7 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 import { safeInternalPath } from '@/lib/safe-internal-path';
+import { isPublicRegistrationOpen } from '@/lib/registration-public';
 
 function friendlyRegisterError(code: string | undefined): string {
   switch (code) {
@@ -24,6 +25,8 @@ function friendlyRegisterError(code: string | undefined): string {
       return 'Please enter your full name.';
     case 'email_and_password_required':
       return 'Please enter both your email and a password.';
+    case 'registration_disabled':
+      return 'Public sign-up is closed. Contact us for an invite.';
     case 'rate_limited':
       return 'Too many attempts. Please wait a few minutes and try again.';
     case 'server_error':
@@ -194,14 +197,35 @@ export default function RegisterPage() {
           </motion.div>
           <motion.div variants={fadeUp}>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group Tech</p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-white">Create your account</h1>
+            <h1 className="mt-2 font-display text-4xl font-bold text-white">
+              {isPublicRegistrationOpen() ? 'Create your account' : 'Invite only'}
+            </h1>
             <p className="mt-4 text-slate-400">
-              Register for the client portal — track orders, billing, and project delivery in one place.
+              {isPublicRegistrationOpen()
+                ? 'Register for the client portal — track orders, billing, and project delivery in one place.'
+                : 'Public registration is closed. Request access and we will send you a portal invite.'}
             </p>
           </motion.div>
-          <Suspense fallback={<div className="mt-10 h-64 animate-pulse rounded-2xl bg-white/5" />}>
-            <RegisterForm />
-          </Suspense>
+          {isPublicRegistrationOpen() ? (
+            <Suspense fallback={<div className="mt-10 h-64 animate-pulse rounded-2xl bg-white/5" />}>
+              <RegisterForm />
+            </Suspense>
+          ) : (
+            <div className="glass-strong mt-10 max-w-md space-y-4 p-6">
+              <p className="text-sm text-slate-300">
+                New client accounts are created by the operator after we confirm the project.
+              </p>
+              <Link href="/contact" className="btn-primary inline-flex w-full items-center justify-center">
+                Request access
+              </Link>
+              <p className="text-center text-xs text-slate-500">
+                Already invited?{' '}
+                <Link href="/login" className="text-violet-300 underline-offset-2 hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>

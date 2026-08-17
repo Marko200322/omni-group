@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FadeIn } from '@/components/motion/FadeIn';
+import { getSiteCompany } from '@/lib/site-company';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
 const LAST_UPDATED = 'August 2026';
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
+  const company = getSiteCompany();
+
   return (
     <div className="px-4 py-16">
       <FadeIn className="mx-auto max-w-3xl">
@@ -35,9 +38,9 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">2. Orders and payment</h2>
             <p>
-              Payment is completed by bank transfer (IBAN) using the reference on your proforma. Card and other
-              online methods may be offered later — when enabled, they will be shown clearly at checkout. Access and
-              automated fulfillment begin after payment confirmation by our team.
+              Payment is completed by card (Stripe) when enabled at checkout, or by bank transfer (IBAN) using the
+              reference on your proforma. Access and automated fulfillment begin after payment is confirmed (card:
+              automatically; bank transfer: after our team verifies funds).
             </p>
           </section>
           <section>
@@ -56,7 +59,15 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white">5. Liability</h2>
+            <h2 className="text-xl font-semibold text-white">5. Refunds and cancellation</h2>
+            <p>
+              Digital deliverables begin processing after payment confirmation. If we cannot deliver as described, contact
+              us within 14 days for a good-faith resolution (revision or partial refund at our discretion). Subscription
+              retainers may be cancelled before the next billing period with written notice.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-xl font-semibold text-white">6. Liability</h2>
             <p>
               Services are provided on a best-effort basis. To the maximum extent permitted by law, Omni Group Tech is
               not liable for indirect or consequential damages. Aggregate liability for a purchase is limited to the
@@ -64,11 +75,15 @@ export default function TermsPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-xl font-semibold text-white">6. Contact</h2>
+            <h2 className="text-xl font-semibold text-white">7. Contact</h2>
             <p>
               Questions:{' '}
+              <a href={`mailto:${company.supportEmail}`} className="text-violet-300 hover:text-white">
+                {company.supportEmail}
+              </a>
+              {' · '}
               <Link href="/contact" className="text-violet-300 hover:text-white">
-                Contact
+                Contact form
               </Link>
               . See also our{' '}
               <Link href="/legal/privacy" className="text-violet-300 hover:text-white">
@@ -76,6 +91,13 @@ export default function TermsPage() {
               </Link>
               .
             </p>
+            {company.legalName ? (
+              <p className="mt-3 text-sm text-slate-500">{company.impressumLine()}</p>
+            ) : (
+              <p className="mt-3 text-xs text-slate-600">
+                Company registration details will be published here after formal incorporation.
+              </p>
+            )}
           </section>
         </div>
       </FadeIn>

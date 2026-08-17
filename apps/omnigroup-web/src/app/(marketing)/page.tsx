@@ -17,13 +17,11 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Industries online', value: '25+' },
-  { label: 'Delivery', value: 'Custom' },
-  { label: 'Payment', value: 'EUR / bank' },
-  { label: 'Support', value: '24/7 AI' },
+  { label: 'Industry catalog', value: '50+' },
+  { label: 'Delivery', value: 'Turnkey' },
+  { label: 'Payment', value: 'Bank or card' },
+  { label: 'Support', value: '24h target' },
 ];
-
-const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
 
 export default function HomePage() {
   return (
@@ -51,8 +49,8 @@ export default function HomePage() {
                 <span className="text-gradient">built for your business</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                You are not buying a platform — you get a turnkey solution: CRM, AI support, lead gen, and custom
-                software, tested before delivery. Transparent pricing and professional support.
+                You get a finished digital deliverable — setup, websites, audits, and retainers — tested before handover.
+                Transparent EUR pricing. Bank transfer or card at checkout.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
@@ -62,7 +60,7 @@ export default function HomePage() {
                   What you get
                 </Link>
                 <Link href="/contact" className="btn-glass">
-                  Book a call
+                  Start a project
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -92,20 +90,6 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
-        </motion.div>
-      </section>
-
-      <section className="overflow-hidden border-y border-white/[0.06] bg-white/[0.02] py-6">
-        <motion.div
-          animate={{ x: [0, -600] }}
-          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-          className="flex gap-12 whitespace-nowrap text-sm font-medium uppercase tracking-[0.25em] text-slate-600"
-        >
-          {[...logos, ...logos, ...logos].map((name, i) => (
-            <span key={i} className="text-slate-500">
-              {name}
-            </span>
-          ))}
         </motion.div>
       </section>
 

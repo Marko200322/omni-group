@@ -56,6 +56,10 @@ export class NotificationsService {
       return;
     }
 
+    if (attachments?.length && (await this.sendViaResend(to, subject, html, text, attachments))) {
+      return;
+    }
+
     if (!this.isSmtpConfigured()) {
       logger.warn('Email not sent — SMTP not configured', { to, subject });
       return;
@@ -80,10 +84,25 @@ export class NotificationsService {
     subject: string,
     html: string,
     text?: string,
+    attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>,
   ): Promise<boolean> {
     const apiKey = config.resend.apiKey?.trim();
     const from = (config.resend.from || config.smtp.from || '').trim();
     if (!apiKey || !from) return false;
+
+    const payload: Record<string, unknown> = {
+      from: `"${config.smtp.fromName}" <${from}>`,
+      to: [to],
+      subject,
+      html,
+      text: text || subject,
+    };
+    if (attachments?.length) {
+      payload.attachments = attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content.toString('base64'),
+      }));
+    }
 
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -92,13 +111,7 @@ export class NotificationsService {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: `"${config.smtp.fromName}" <${from}>`,
-          to: [to],
-          subject,
-          html,
-          text: text || subject,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {

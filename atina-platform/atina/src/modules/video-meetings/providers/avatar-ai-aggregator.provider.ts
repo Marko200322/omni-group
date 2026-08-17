@@ -3,7 +3,7 @@ import { getAiClient } from '../../../integrations';
 import type { AgentType } from '../avatar/avatar-agent.personas';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
 import { resolveAvatarPhotoUrl } from '../avatar/avatar-asset-url';
-import { generateAgentReply } from '../providers/avatar-ai-chat.provider';
+import { generateAgentReply, type ChatAudience } from '../providers/avatar-ai-chat.provider';
 import {
   avatarVideoCapable,
   renderAvatarVideo,
@@ -209,6 +209,7 @@ export async function conversationTurnLocal(input: {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
   clientMemoryContext?: string;
+  audience?: ChatAudience;
 }): Promise<AggregatorTurnResult> {
   let text: string;
   let replySource: 'ai' | 'fallback' = 'fallback';
@@ -223,6 +224,7 @@ export async function conversationTurnLocal(input: {
       history: input.history,
       userMessage: input.userMessage ?? '',
       clientMemoryContext: input.clientMemoryContext,
+      audience: input.audience,
     });
     text = reply.content;
     replySource = reply.source;
@@ -260,31 +262,34 @@ export async function runConversationTurn(input: {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
   clientMemoryContext?: string;
+  audience?: ChatAudience;
 }): Promise<AggregatorTurnResult> {
-  const fromAgg = await conversationTurnViaAggregator(input);
-  if (fromAgg) {
-    if (fromAgg.mediaSource === 'none') {
-      const media = await renderAgentSpeech({
-        agentType: input.agentType,
-        agentId: input.agentId,
-        sessionId: input.sessionId,
-        text: fromAgg.text,
-        avatarUrl: fromAgg.avatarUrl ?? input.agent.avatarUrl,
-        photoUrl: input.agent.photoUrl,
-        voiceId: input.agent.voiceId,
-        heygenAvatarId: input.agent.heygenAvatarId,
-        heygenVoiceId: input.agent.heygenVoiceId,
-      });
-      return {
-        ...fromAgg,
-        audioMime: media.audioMime,
-        audioBase64: media.audioBase64,
-        videoUrl: media.videoUrl,
-        avatarUrl: media.avatarUrl ?? fromAgg.avatarUrl,
-        mediaSource: media.source,
-      };
+  if (input.audience !== 'public') {
+    const fromAgg = await conversationTurnViaAggregator(input);
+    if (fromAgg) {
+      if (fromAgg.mediaSource === 'none') {
+        const media = await renderAgentSpeech({
+          agentType: input.agentType,
+          agentId: input.agentId,
+          sessionId: input.sessionId,
+          text: fromAgg.text,
+          avatarUrl: fromAgg.avatarUrl ?? input.agent.avatarUrl,
+          photoUrl: input.agent.photoUrl,
+          voiceId: input.agent.voiceId,
+          heygenAvatarId: input.agent.heygenAvatarId,
+          heygenVoiceId: input.agent.heygenVoiceId,
+        });
+        return {
+          ...fromAgg,
+          audioMime: media.audioMime,
+          audioBase64: media.audioBase64,
+          videoUrl: media.videoUrl,
+          avatarUrl: media.avatarUrl ?? fromAgg.avatarUrl,
+          mediaSource: media.source,
+        };
+      }
+      return fromAgg;
     }
-    return fromAgg;
   }
   return conversationTurnLocal(input);
 }

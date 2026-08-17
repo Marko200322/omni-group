@@ -6,6 +6,7 @@ import { VideoMeetingsModule } from '../../modules/video-meetings/video-meetings
 import { sendError } from '../../utils/response';
 import { AppError, AuthenticationError } from '../../utils/errors';
 import { VideoMeetingsService } from '../../modules/video-meetings/service/video-meetings.service';
+import { AvatarAgentService } from '../../modules/video-meetings/service/avatar-agent.service';
 
 jest.mock('../../modules/video-meetings/service/video-meetings.service');
 
@@ -36,6 +37,7 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
 jest.mock('../../api/middleware/rate-limit.middleware', () => ({
   authSessionLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
   paymentsLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
+  publicChatLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
 
 describe('VideoMeetingsModule HTTP routes', () => {
@@ -91,7 +93,8 @@ describe('VideoMeetingsModule HTTP routes', () => {
     });
     getMethodsSpy = jest.spyOn(VideoMeetingsService.prototype, 'getMethods').mockReturnValue({
       meetingType: 'support',
-      methods: [{ id: 'manual', label: 'Ručno', available: true, description: 'Admin potvrda' }],
+      methods: [{ id: 'manual', label: 'Ručno', available: true, description: 'Admin potvrma' }],
+      liveAvatar: { enabled: false },
     });
     bookSpy = jest.spyOn(VideoMeetingsService.prototype, 'book').mockResolvedValue({
       id: MEETING_UUID,
@@ -154,5 +157,33 @@ describe('VideoMeetingsModule HTTP routes', () => {
       .send({ meetingUrl: 'https://meet.google.com/abc-defg-hij' });
     expect(res.status).toBe(200);
     expect(confirmSpy).toHaveBeenCalled();
+  });
+
+  it('POST /public/avatar/session works without auth', async () => {
+    authOn = false;
+    const startGuest = jest.spyOn(AvatarAgentService.prototype, 'startGuestSession').mockResolvedValue({
+      sessionId: MEETING_UUID,
+      agentType: 'support',
+      audience: 'public',
+      greeting: { id: 'g1', role: 'assistant', text: 'Hi' },
+    } as never);
+    const res = await request(server).post('/video-meetings/public/avatar/session').send({});
+    expect(res.status).toBe(201);
+    expect(startGuest).toHaveBeenCalled();
+    expect(res.body.data.audience).toBe('public');
+  });
+
+  it('POST /public/avatar/chat works without auth', async () => {
+    authOn = false;
+    const chatGuest = jest.spyOn(AvatarAgentService.prototype, 'chatGuest').mockResolvedValue({
+      sessionId: MEETING_UUID,
+      audience: 'public',
+      message: { id: 'm1', role: 'assistant', text: 'See /pricing' },
+    } as never);
+    const res = await request(server)
+      .post('/video-meetings/public/avatar/chat')
+      .send({ sessionId: MEETING_UUID, message: 'What do you sell?' });
+    expect(res.status).toBe(200);
+    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?');
   });
 });

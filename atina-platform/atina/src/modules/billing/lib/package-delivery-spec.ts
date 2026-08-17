@@ -54,8 +54,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Onboarding checklist in PDF',
     ],
     excludes: ['Custom domain on your DNS', 'Dedicated VPS for the client'],
-    anchorByPhase: { M0: 349, M1: 399, M3: 449, M4: 449, M6: 549 },
+    anchorByPhase: { M0: 349, M1: 399, M3: 429, M4: 429, M6: 549 },
     phaseUnlocks: [
+      {
+        fromPhase: 'M0',
+        includes: ['Branded portal welcome PDF (logo + company name from signup)'],
+        includesSr: ['Branded portal welcome PDF (logo + naziv firme iz registracije)'],
+      },
+      {
+        fromPhase: 'M0',
+        includes: ['Custom-domain DNS checklist PDF (you keep DNS control)'],
+        includesSr: ['DNS checklist PDF za custom domen (DNS ostaje kod vas)'],
+      },
       {
         fromPhase: 'M1',
         includes: ['Contact form → CRM lead sync when inbound is live'],
@@ -88,7 +98,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Live training calls (add Support retainer)',
       'Daily human support without retainer',
     ],
-    anchorByPhase: { M1: 890, M3: 1290, M4: 1290, M6: 1690 },
+    anchorByPhase: { M1: 890, M3: 1095, M4: 1095, M6: 1690 },
     minCheckoutPhase: 'M1',
     phaseUnlocks: [
       {
@@ -125,8 +135,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'AI tehnički audit PDF: rezime, bezbednost, stack, 90-dnevni plan i ROI — po industriji.',
     includes: ['PDF report (6+ sections)', 'Markdown source bundle', 'Industry-specific recommendations'],
     excludes: ['On-site inspection', 'Penetration testing', 'Legal compliance sign-off'],
-    anchorByPhase: { M0: 449, M2: 590, M4: 590, M6: 790 },
+    anchorByPhase: { M0: 449, M2: 549, M4: 549, M6: 790 },
     phaseUnlocks: [
+      {
+        fromPhase: 'M0',
+        includes: ['Security hygiene checklist (10 items, self-assessment)'],
+        includesSr: ['Security hygiene checklist (10 stavki, self-assessment)'],
+      },
+      {
+        fromPhase: 'M1',
+        includes: ['Stack comparison table vs 3 common alternatives in your niche'],
+        includesSr: ['Tabela poređenja stack-a sa 3 uobičajene alternative u niši'],
+      },
       {
         fromPhase: 'M2',
         includes: ['Competitor snapshot appendix (scraper-assisted)'],
@@ -162,7 +182,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Workflow i SOP PDF: mapa procesa, koraci automatizacije, uloge, KPI, plan uvođenja.',
     includes: ['Workflow design PDF', 'SOP sections per process step', 'Module mapping'],
     excludes: ['Building automations in client tools (add Setup or Integration)'],
-    anchorByPhase: { M0: 549, M2: 690, M4: 690, M6: 890 },
+    anchorByPhase: { M0: 549, M2: 649, M4: 649, M6: 890 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -181,8 +201,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Mesečni retainer: welcome PDF, support queue SLA 24h, moduli na portalu — odgovori našeg tima.',
     includes: ['Welcome PDF', 'Support automation task (SLA 24h)', 'Modules: notifications, support-avatar, AI-RAG'],
     excludes: ['Unlimited dev hours', 'Emergency weekend SLA'],
-    anchorByPhase: { M0: 149, M2: 249, M4: 249, M6: 349 },
+    anchorByPhase: { M0: 149, M2: 149, M4: 149, M6: 349 },
     phaseUnlocks: [
+      {
+        fromPhase: 'M0',
+        includes: ['FAQ seed document (10 Q&A from your industry catalog)'],
+        includesSr: ['FAQ seed dokument (10 pitanja/odgovora iz industry kataloga)'],
+      },
+      {
+        fromPhase: 'M0',
+        includes: ['Support ticket categories preset in portal'],
+        includesSr: ['Unapred podešene kategorije support tiketa u portalu'],
+      },
       {
         fromPhase: 'M1',
         includes: ['Email notification on new support ticket'],
@@ -215,7 +245,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Monthly health-check task',
     ],
     excludes: ['Private Slack channel setup on client workspace (we notify via webhook)'],
-    anchorByPhase: { M2: 490, M4: 690, M6: 890 },
+    anchorByPhase: { M2: 349, M4: 490, M6: 890 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -226,8 +256,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Live landing na /sites/{slug} sa AI copy-jem — host na omnigrouptech.com.',
     includes: ['Published live URL', 'AI-generated copy for niche', 'Contact section'],
     excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
-    anchorByPhase: { M0: 690, M2: 890, M4: 990, M6: 1290 },
+    anchorByPhase: { M0: 690, M2: 690, M4: 749, M6: 1290 },
     phaseUnlocks: [
+      {
+        fromPhase: 'M0',
+        includes: ['Favicon + Open Graph meta tags on published page'],
+        includesSr: ['Favicon + Open Graph meta tagovi na objavljenoj stranici'],
+      },
+      {
+        fromPhase: 'M1',
+        includes: ['Plausible/GA4 placeholder snippet guide (you add the ID)'],
+        includesSr: ['Vodič za Plausible/GA4 snippet (vi dodajete ID)'],
+      },
       {
         fromPhase: 'M3',
         includes: ['Retargeting pixel placement guide'],
@@ -243,12 +283,27 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na /sites/{slug}.',
     includes: ['Live URL with 5+ pages', 'Product factory project linked', 'Services, pricing, contact pages'],
     excludes: ['Custom domain', 'CMS training', 'Copywriting beyond AI first draft'],
-    anchorByPhase: { M0: 1290, M3: 1990, M4: 1990, M6: 2990 },
+    anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
     phaseUnlocks: [
+      {
+        fromPhase: 'M0',
+        includes: ['sitemap.xml + robots.txt on live site'],
+        includesSr: ['sitemap.xml + robots.txt na live sajtu'],
+      },
+      {
+        fromPhase: 'M2',
+        includes: ['Google Business Profile setup checklist PDF'],
+        includesSr: ['Google Business Profile setup checklist PDF'],
+      },
       {
         fromPhase: 'M3',
         includes: ['Monthly content refresh task (retainer upsell path)'],
         includesSr: ['Mesečni content refresh task (put ka retaineru)'],
+      },
+      {
+        fromPhase: 'M4',
+        includes: ['Contact form → CRM lead sync when inbound is live'],
+        includesSr: ['Kontakt forma → CRM sync kad inbound faza bude aktivna'],
       },
     ],
     leanCheckout: true,
@@ -297,7 +352,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Mesečno: vertical brief PDF, CRM seed, moduli CRM + automation + billing.',
     includes: ['Vertical solution PDF', 'CRM pipeline seeded', 'Modules: CRM, automation, billing'],
     excludes: ['Video avatar (needs AI-support retainer + HeyGen)', 'Outbound lead hunting in lean mode'],
-    anchorByPhase: { M2: 199, M4: 299, M6: 399 },
+    anchorByPhase: { M2: 179, M4: 299, M6: 399 },
     minCheckoutPhase: 'M2',
     phaseUnlocks: [
       {
@@ -350,7 +405,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Avatar provisioning artifact',
     ],
     excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],
-    anchorByPhase: { M3: 299, M4: 349, M5: 399, M6: 449 },
+    anchorByPhase: { M3: 199, M4: 349, M5: 399, M6: 449 },
     minCheckoutPhase: 'M3',
     phaseUnlocks: [
       {

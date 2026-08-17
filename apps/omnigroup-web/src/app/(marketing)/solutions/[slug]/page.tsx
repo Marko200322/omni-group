@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { VerticalLanding } from '@/components/marketing/VerticalLanding';
-import { fetchSolution } from '@/lib/public-site-api';
+import { fetchSolution, fallbackSolutionFromIndex } from '@/lib/public-site-api';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -14,7 +14,17 @@ function isThinSolution(solution: NonNullable<Awaited<ReturnType<typeof fetchSol
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const solution = await fetchSolution(slug);
-  if (!solution) return { title: 'Industry solution' };
+  if (!solution) {
+    const fallback = fallbackSolutionFromIndex(slug);
+    if (!fallback) return { title: 'Industry solution' };
+    return {
+      title: fallback.name,
+      description: fallback.deliveryPack.valueProp,
+      robots: { index: false, follow: true },
+      openGraph: marketingOpenGraph(fallback.name, fallback.deliveryPack.valueProp),
+      twitter: marketingTwitter(fallback.name, fallback.deliveryPack.valueProp),
+    };
+  }
   const description = solution.deliveryPack.valueProp || `Delivery packages and pricing for ${solution.name}.`;
   const thin = isThinSolution(solution);
   return {
@@ -30,7 +40,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SolutionPage({ params }: PageProps) {
   const { slug } = await params;
-  const solution = await fetchSolution(slug);
+  const solution = (await fetchSolution(slug)) ?? fallbackSolutionFromIndex(slug);
   if (!solution) notFound();
   return <VerticalLanding solution={solution} />;
 }

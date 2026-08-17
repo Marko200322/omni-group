@@ -18,6 +18,8 @@ type ReadinessData = {
   huntingModules?: Array<{ slug: string; registered: boolean }>;
   templates?: Array<{ key: string; available: boolean; minPhase?: string | null }>;
   outbound?: {
+    emailProvider?: string;
+    instantlyConfigured?: boolean;
     warmupComplete?: boolean;
     sentToday?: number;
     remainingToday?: number;
@@ -297,7 +299,11 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
         <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-slate-300">
           <Zap className="mr-1 inline h-3.5 w-3.5 text-cyan-400" />
           Outbound today: {readiness.outbound.sentToday ?? 0} sent · {readiness.outbound.remainingToday ?? 0} remaining
-          {readiness.outbound.warmupComplete ? ' · warmup OK' : ' · warmup in progress (dev: OUTREACH_DEV_SEND_TO_FALLBACK)'}
+          {readiness.outbound.emailProvider === 'instantly' && readiness.outbound.instantlyConfigured
+            ? ' · Instantly.ai'
+            : readiness.outbound.warmupComplete
+              ? ' · warmup OK'
+              : ' · warmup in progress (dev: OUTREACH_DEV_SEND_TO_FALLBACK)'}
           {readiness.outbound.byStatus && (
             <span className="ml-2 text-slate-500">
               draft: {readiness.outbound.byStatus.draft ?? 0} · sent: {readiness.outbound.byStatus.sent ?? 0}
@@ -362,7 +368,19 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
               <tbody>
                 {hotClients?.items?.map((row) => (
                   <tr key={row.id} className="border-b border-white/5">
-                    <td className="py-1.5 pr-2 text-white">{row.company_name ?? '—'}</td>
+                    <td className="py-1.5 pr-2 text-white">
+                      {row.company_name ?? '—'}
+                      {row.job_url ? (
+                        <a
+                          href={row.job_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-2 text-xs text-cyan-300 hover:underline"
+                        >
+                          View listing
+                        </a>
+                      ) : null}
+                    </td>
                     <td className="py-1.5 pr-2">
                       {row.role_title ?? '—'}
                       {row.city ? <span className="text-slate-500"> · {row.city}</span> : null}

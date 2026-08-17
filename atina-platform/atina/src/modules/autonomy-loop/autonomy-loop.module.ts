@@ -103,6 +103,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.post(
       '/verticals/:slug/research',
       authenticate,
+      requireAdmin,
       validateParams(VerticalSlugParamDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(ResearchVerticalDto),
@@ -112,6 +113,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.post(
       '/verticals/:slug/generate',
       authenticate,
+      requireAdmin,
       validateParams(VerticalSlugParamDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(GenerateVerticalDto),
@@ -165,6 +167,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/outbound/stats',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.outboundStats
@@ -182,6 +185,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.post(
       '/verticals/:slug/deploy',
       authenticate,
+      requireAdmin,
       validateParams(VerticalSlugParamDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(DeployVerticalDto),
@@ -191,6 +195,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.post(
       '/feedback/sync',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(FeedbackSyncDto),
       this.controller.syncFeedback
@@ -199,6 +204,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.post(
       '/tick',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(TickAutonomyDto),
       this.controller.tick

@@ -3,10 +3,12 @@ import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { AvatarSessionsRepository } from '../repository/avatar-sessions.repository';
 import type { AgentType } from '../avatar/avatar-agent.personas';
 import {
+  DEFAULT_PUBLIC_GREETING,
   DEFAULT_SALES_GREETING,
   DEFAULT_SALES_PERSONA,
   DEFAULT_SUPPORT_GREETING,
   DEFAULT_SUPPORT_PERSONA,
+  PUBLIC_SITE_PERSONA,
 } from '../avatar/avatar-agent.personas';
 import { getAvatarAgent, getAvatarAgentAsync, listAvatarAgentsAsync } from '../avatar/avatar-agent.config';
 import type { AvatarAgentDefinition } from '../avatar/avatar-agent.roster';
@@ -167,6 +169,7 @@ export class AvatarAgentService {
       mode: 'greeting',
       agent,
       history: [],
+      audience: 'portal',
     });
 
     if (turn.avatarUrl?.trim()) {
@@ -194,6 +197,7 @@ export class AvatarAgentService {
     return {
       sessionId: session.id,
       agentType,
+      audience: 'portal' as const,
       agent: presentAgent(agentType, agent),
       greeting: this.mapMessage(messageRows[0]),
       capabilities: {
@@ -202,6 +206,153 @@ export class AvatarAgentService {
         video: caps.video,
         ai: getAiClient().isConfigured(),
         aggregator: useAiAggregatorForAvatars(),
+      },
+    };
+  }
+
+  async startGuestSession(agentId?: string) {
+    assertAvatarEnabled('support');
+    await listAvatarAgentsAsync('support');
+    const base = getAvatarAgent('support', agentId);
+    const agent = {
+      ...base,
+      name: 'Atina',
+      title: 'Omni Group assistant',
+      persona: PUBLIC_SITE_PERSONA,
+      greeting: DEFAULT_PUBLIC_GREETING,
+    };
+
+    const { rows: sessionRows } = await this.repo.createSession(null, 'support', {
+      guest: true,
+      audience: 'public',
+      agentId: agent.id,
+      agentName: agent.name,
+    });
+    const session = sessionRows[0];
+
+    const turn = await runConversationTurn({
+      agentType: 'support',
+      agentId: agent.id,
+      sessionId: session.id,
+      mode: 'greeting',
+      agent,
+      history: [],
+      audience: 'public',
+    });
+
+    if (turn.avatarUrl?.trim()) {
+      agent.avatarUrl = turn.avatarUrl.trim();
+    }
+
+    const greetingText = turn.text || DEFAULT_PUBLIC_GREETING;
+    const { rows: messageRows } = await this.repo.insertMessage({
+      sessionId: session.id,
+      role: 'assistant',
+      text: greetingText,
+      audioMime: turn.audioMime,
+      audioBase64: turn.audioBase64,
+      videoUrl: turn.videoUrl,
+      metadata: {
+        kind: 'greeting',
+        guest: true,
+        agentId: agent.id,
+        replySource: turn.replySource,
+        mediaSource: turn.mediaSource,
+      },
+    });
+
+    const caps = avatarMediaCapabilities(agent);
+    return {
+      sessionId: session.id,
+      agentType: 'support' as const,
+      audience: 'public' as const,
+      agent: presentAgent('support', agent),
+      greeting: this.mapMessage(messageRows[0]),
+      capabilities: {
+        chat: true,
+        voice: caps.voice,
+        video: caps.video,
+        ai: getAiClient().isConfigured(),
+        aggregator: false,
+      },
+    };
+  }
+
+  async chatGuest(sessionId: string, userMessage: string) {
+    assertAvatarEnabled('support');
+    const trimmed = userMessage.trim();
+    if (trimmed.length < 1) throw new ValidationError('message is required');
+
+    const { rows: sessions } = await this.repo.getGuestSession(sessionId);
+    const session = sessions[0];
+    if (!session || session.agent_type !== 'support') throw new NotFoundError('Avatar session');
+    if (session.status !== 'active') throw new ValidationError('Session is closed');
+
+    const boundAgentId = sessionAgentId(session.metadata);
+    const base = await getAvatarAgentAsync('support', boundAgentId);
+    const agent = {
+      ...base,
+      name: 'Atina',
+      title: 'Omni Group assistant',
+      persona: PUBLIC_SITE_PERSONA,
+      greeting: DEFAULT_PUBLIC_GREETING,
+    };
+
+    await this.repo.insertMessage({
+      sessionId,
+      role: 'user',
+      text: trimmed,
+      metadata: { agentId: agent.id, guest: true },
+    });
+
+    const { rows: historyRows } = await this.repo.listMessagesForChat(sessionId);
+    const history = historyRows
+      .slice(0, -1)
+      .filter((h) => h.role === 'user' || h.role === 'assistant')
+      .map((h) => ({ role: h.role as 'user' | 'assistant', content: h.text }));
+
+    const turn = await runConversationTurn({
+      agentType: 'support',
+      agentId: agent.id,
+      sessionId,
+      mode: 'reply',
+      agent,
+      history,
+      userMessage: trimmed,
+      audience: 'public',
+    });
+
+    if (turn.avatarUrl?.trim()) {
+      agent.avatarUrl = turn.avatarUrl.trim();
+    }
+
+    const { rows: assistantRows } = await this.repo.insertMessage({
+      sessionId,
+      role: 'assistant',
+      text: turn.text,
+      audioMime: turn.audioMime,
+      audioBase64: turn.audioBase64,
+      videoUrl: turn.videoUrl,
+      metadata: {
+        replySource: turn.replySource,
+        mediaSource: turn.mediaSource,
+        agentId: agent.id,
+        guest: true,
+      },
+    });
+
+    const caps = avatarMediaCapabilities(agent);
+    return {
+      sessionId,
+      audience: 'public' as const,
+      message: this.mapMessage(assistantRows[0]),
+      agent: presentAgent('support', agent),
+      capabilities: {
+        chat: true,
+        voice: caps.voice,
+        video: caps.video,
+        ai: getAiClient().isConfigured(),
+        aggregator: false,
       },
     };
   }
@@ -247,6 +398,7 @@ export class AvatarAgentService {
       history,
       userMessage: trimmed,
       clientMemoryContext,
+      audience: 'portal',
     });
 
     if (turn.avatarUrl?.trim()) {

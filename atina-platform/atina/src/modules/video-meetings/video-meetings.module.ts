@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { VideoMeetingsController } from './controller/video-meetings.controller';
 import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
-import { authSessionLimiter, paymentsLimiter } from '../../api/middleware/rate-limit.middleware';
+import { authSessionLimiter, paymentsLimiter, publicChatLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -34,6 +34,20 @@ export class VideoMeetingsModule implements IModule {
     this.router.get('/avatar/media-stack', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getAvatarMediaStack);
     this.router.get('/support/agents', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getSupportAgents);
     this.router.get('/support/methods', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getSupportMethods);
+    this.router.post(
+      '/public/avatar/session',
+      publicChatLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StartAvatarSessionDto),
+      this.controller.startPublicAvatarSession
+    );
+    this.router.post(
+      '/public/avatar/chat',
+      publicChatLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AvatarChatDto),
+      this.controller.chatPublicAvatar
+    );
     this.router.post(
       '/support/book',
       paymentsLimiter,

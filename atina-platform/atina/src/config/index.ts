@@ -122,7 +122,7 @@ export const config = {
   aggregators: {
     ai: {
       url: optional('AI_URL', ''),
-      key: optional('AI_KEY', ''),
+      key: envFirst('AI_KEY', 'OPENROUTER_API_KEY'),
     },
     aiModel: optional('AI_MODEL', 'openrouter/auto'),
     businessDev: {
@@ -410,11 +410,11 @@ export const config = {
       },
     },
     tierMultipliers: {
-      budget: optionalNumber('PRICING_TIER_BUDGET', 0.75),
-      standard: optionalNumber('PRICING_TIER_STANDARD', 1),
-      premium: optionalNumber('PRICING_TIER_PREMIUM', 1.35),
-      regulated: optionalNumber('PRICING_TIER_REGULATED', 1.65),
-      nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.6),
+      budget: optionalNumber('PRICING_TIER_BUDGET', 0.7),
+      standard: optionalNumber('PRICING_TIER_STANDARD', 0.92),
+      premium: optionalNumber('PRICING_TIER_PREMIUM', 1.22),
+      regulated: optionalNumber('PRICING_TIER_REGULATED', 1.5),
+      nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.58),
     },
   },
   /** Split client payments: resources, tax reserve, fees, owner net, system reinvest. */
@@ -470,6 +470,13 @@ export const config = {
     fallbackNotifyEmail: optional('OUTREACH_FALLBACK_EMAIL', optional('ADMIN_EMAIL', '')),
     /** Dev: šalji draftove na fallback email bez domain warmup (ne za produkciju). */
     devSendToFallback: optionalBool('OUTREACH_DEV_SEND_TO_FALLBACK', false),
+    /** resend = direct SMTP/Resend send · instantly = push leads to Instantly campaign */
+    emailProvider: optional('OUTREACH_EMAIL_PROVIDER', 'resend'),
+  },
+  instantly: {
+    apiKey: optional('INSTANTLY_API_KEY', ''),
+    campaignId: optional('INSTANTLY_CAMPAIGN_ID', ''),
+    baseUrl: optional('INSTANTLY_API_BASE', 'https://api.instantly.ai'),
   },
   hunt: {
     /** Comma list of JobBoardKind to skip (default: government). */
@@ -504,6 +511,7 @@ export const config = {
     crewaiBaseUrl: optional('CREWAI_BASE_URL', ''),
     langchainApiKey: optional('LANGCHAIN_API_KEY', ''),
     langchainProject: optional('LANGCHAIN_PROJECT', ''),
+    instantlyApiKey: optional('INSTANTLY_API_KEY', ''),
   },
   /** B2B lead baze (Apollo, Hunter, …) + email verify — fazno paljenje LEAD_DATABASE_ROLLOUT_PHASE F0–F5 */
   leadDatabases: {
@@ -536,6 +544,29 @@ export const config = {
     enabled: optionalBool('RETAINER_SCHEDULER_ENABLED', true),
     /** Daily check for monthly lead-gen retainer runs */
     intervalMs: optionalNumber('RETAINER_SCHEDULER_INTERVAL_MS', 86_400_000),
+  },
+  liveCallAvatar: {
+    enabled: optionalBool('LIVE_CALL_AVATAR_ENABLED', false),
+    allowStub: optionalBool('LIVE_CALL_AVATAR_ALLOW_STUB', true),
+    providerChain: optional('LIVE_AVATAR_PROVIDER_CHAIN', 'heygen,d-id,stub'),
+    maxDurationMinutes: optionalNumber('LIVE_CALL_MAX_MINUTES', 30),
+    humanHandoffEnabled: optionalBool('LIVE_CALL_HUMAN_HANDOFF_ENABLED', true),
+    heygenLiveApiKey: optional('HEYGEN_LIVE_API_KEY', ''),
+    heygenDefaultAvatarId: optional('HEYGEN_DEFAULT_AVATAR_ID', ''),
+    didAgentsApiKey: optional('DID_AGENTS_API_KEY', ''),
+    didDefaultAgentId: optional('DID_DEFAULT_AGENT_ID', ''),
+    didAgentIdByPersona: {
+      mila: optional('DID_AGENT_ID_MILA', ''),
+      stefan: optional('DID_AGENT_ID_STEFAN', ''),
+      nikola: optional('DID_AGENT_ID_NIKOLA', ''),
+    },
+    recallApiKey: optional('RECALL_API_KEY', ''),
+    recallApiBase: optional('RECALL_API_BASE', 'https://api.recall.ai/api/v1'),
+    recallWebhookUrl: optional('RECALL_WEBHOOK_URL', ''),
+    recallWebhookSecret: optional('RECALL_WEBHOOK_SECRET', ''),
+    deepgramApiKey: optional('DEEPGRAM_API_KEY', ''),
+    sttProvider: optional('LIVE_STT_PROVIDER', 'deepgram'),
+    ttsStreaming: optionalBool('LIVE_TTS_STREAMING', true),
   },
 };
 

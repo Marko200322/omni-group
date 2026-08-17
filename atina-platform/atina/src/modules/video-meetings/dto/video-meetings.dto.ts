@@ -7,6 +7,9 @@ export const BookMeetingDto = z
     provider: z.enum(['manual', 'zoom', 'google_meet']).default('manual'),
     scheduledAt: z.string().datetime().optional(),
     durationMinutes: z.coerce.number().int().min(15).max(180).optional(),
+    hostType: z.enum(['human', 'ai_avatar']).default('human'),
+    agentId: z.string().trim().min(1).max(64).optional(),
+    liveProvider: z.enum(['auto', 'heygen', 'd-id', 'stub']).default('auto'),
   })
   .strict();
 

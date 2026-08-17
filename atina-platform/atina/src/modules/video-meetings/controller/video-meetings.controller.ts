@@ -60,6 +60,16 @@ export class VideoMeetingsController {
     sendCreated(res, session, 'Support avatar session started');
   };
 
+  startPublicAvatarSession = async (req: Request, res: Response): Promise<void> => {
+    const session = await this.avatarService.startGuestSession(req.body?.agentId);
+    sendCreated(res, session, 'Public assistant session started');
+  };
+
+  chatPublicAvatar = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.avatarService.chatGuest(req.body.sessionId, req.body.message);
+    sendSuccess(res, result);
+  };
+
   chatSupportAvatar = async (req: Request, res: Response): Promise<void> => {
     const result = await this.avatarService.chat(
       req.user!.userId,

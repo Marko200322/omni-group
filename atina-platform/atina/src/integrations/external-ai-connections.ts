@@ -28,6 +28,7 @@ function readStackField(field: keyof typeof config.externalAiStack): string {
 const KEY_FIELD: Record<string, keyof typeof config.externalAiStack | 'heygen' | 'elevenlabs'> = {
   clay: 'clayApiKey',
   salesforge: 'salesforgeApiKey',
+  instantly: 'instantlyApiKey',
   intercom: 'intercomApiKey',
   sierra: 'sierraApiKey',
   make: 'makeApiKey',

@@ -164,6 +164,15 @@ export class PaymentsModule implements IModule {
       this.controller.createManualCheckout
     );
     this.router.post(
+      '/stripe/deliverable-checkout',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(DeliverableCheckoutDto),
+      this.controller.createDeliverableStripeCheckout
+    );
+    this.router.post(
       '/manual/deliverable-checkout',
       paymentsLimiter,
       authenticate,

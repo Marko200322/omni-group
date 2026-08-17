@@ -64,6 +64,7 @@ $remotePath = if ($config.remotePath) { $config.remotePath.Trim() } else { '/opt
 . (Join-Path $scriptsDir 'prod-budget-profile.ps1')
 . (Join-Path $scriptsDir 'prod-factory-phase.ps1')
 . (Join-Path $scriptsDir 'deploy-config-env.ps1')
+. (Join-Path $scriptsDir 'warm-lean-profile.ps1')
 
 $monthlyBudgetEur = Resolve-MonthlyBudgetEur $config.monthlyBudgetEur
 $factoryPhaseRaw = if ($config.factoryPhase) { $config.factoryPhase } else { 'M0' }
@@ -107,7 +108,7 @@ function Patch-ProdEnvFiles {
     Set-EnvLine $atinaEnv 'PAYMENT_NOTIFY_EMAIL' $config.paymentNotifyEmail.Trim()
   }
 
-  foreach ($entry in (Get-DeployConfigAtinaEnvPatches $config).GetEnumerator()) {
+  foreach ($entry in (Get-DeployConfigAtinaEnvPatches $config $apiDomain).GetEnumerator()) {
     Set-EnvLine $atinaEnv $entry.Key $entry.Value
   }
 
@@ -119,6 +120,17 @@ function Patch-ProdEnvFiles {
     if ($mp.swift) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_SWIFT' $mp.swift }
     if ($mp.currency) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_CURRENCY' $mp.currency }
     if ($mp.note) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_NOTE' $mp.note }
+  }
+
+  if ($config.stripeSecretKey) {
+    Set-EnvLine $atinaEnv 'STRIPE_SECRET_KEY' $config.stripeSecretKey.Trim()
+    Set-EnvLine $atinaEnv 'PAYMENTS_MODE' 'live'
+    Set-EnvLine $atinaEnv 'PAYMENTS_MANUAL_ENABLED' 'false'
+    if ($config.stripePublishableKey) { Set-EnvLine $atinaEnv 'STRIPE_PUBLISHABLE_KEY' $config.stripePublishableKey.Trim() }
+    if ($config.stripeWebhookSecret) { Set-EnvLine $atinaEnv 'STRIPE_WEBHOOK_SECRET' $config.stripeWebhookSecret.Trim() }
+    if ($config.starterPriceId) { Set-EnvLine $atinaEnv 'STARTER_PRICE_ID' $config.starterPriceId.Trim() }
+    if ($config.proPriceId) { Set-EnvLine $atinaEnv 'PRO_PRICE_ID' $config.proPriceId.Trim() }
+    if ($config.enterprisePriceId) { Set-EnvLine $atinaEnv 'ENTERPRISE_PRICE_ID' $config.enterprisePriceId.Trim() }
   }
 
   if ($config.smtp -and $config.smtp.enabled -eq $true) {
@@ -140,6 +152,18 @@ function Patch-ProdEnvFiles {
     }
     if ($config.resend.contactTo) {
       Set-EnvLine $atinaEnv 'CONTACT_EMAIL_TO' $config.resend.contactTo.Trim()
+    }
+  }
+
+  if ($config.instantly) {
+    if ($config.instantly.apiKey) {
+      Set-EnvLine $atinaEnv 'INSTANTLY_API_KEY' $config.instantly.apiKey.Trim()
+    }
+    if ($config.instantly.campaignId) {
+      Set-EnvLine $atinaEnv 'INSTANTLY_CAMPAIGN_ID' $config.instantly.campaignId.Trim()
+    }
+    if ($config.instantly.apiKey) {
+      Set-EnvLine $atinaEnv 'OUTREACH_EMAIL_PROVIDER' 'instantly'
     }
   }
 
@@ -203,6 +227,11 @@ if (-not $DryRun) {
   $deployCfg = Build-DeployConfigHashtable $config
   Apply-FactoryPhaseEnvFiles $repoRoot $factoryPhase $monthlyBudgetEur $prodMode $deployCfg
   Write-Host "Factory phase $factoryPhase module profile applied" -ForegroundColor Green
+  if (Test-IsLeanProdMode $prodMode) {
+    Apply-WarmLeanInboundEnvFiles $repoRoot $monthlyBudgetEur
+    Write-Host 'Warm lean inbound env applied' -ForegroundColor DarkGray
+  }
+  Sync-RootDockerNextPublicFromWeb $repoRoot
   Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
 }
 

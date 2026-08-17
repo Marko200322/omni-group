@@ -10,6 +10,7 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 import { safeInternalPath } from '@/lib/safe-internal-path';
+import { isPublicRegistrationOpen } from '@/lib/registration-public';
 
 function friendlyLoginError(code: string | undefined, status: number): string {
   switch (code) {
@@ -153,11 +154,17 @@ function LoginForm() {
         </Link>
       </p>
       <p className="text-center text-xs text-slate-500">
-        No account?{' '}
-        <Link href={registerHref} className="text-violet-300 underline-offset-2 hover:underline">
-          Create one
-        </Link>{' '}
-        or{' '}
+        {isPublicRegistrationOpen() ? (
+          <>
+            No account?{' '}
+            <Link href={registerHref} className="text-violet-300 underline-offset-2 hover:underline">
+              Create one
+            </Link>{' '}
+            or{' '}
+          </>
+        ) : (
+          'Need an account? '
+        )}
         <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
           contact us
         </Link>{' '}

@@ -23,6 +23,7 @@ export async function POST(req: Request) {
   const service = slugParam(body.service);
   const category = slugParam(body.category);
   const vertical = slugParam(body.vertical);
+  const topic = slugParam(body.topic);
   if (!email || !name) {
     return NextResponse.json({ ok: false, error: 'name_and_email_required' }, { status: 400 });
   }
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
     service,
     category,
     vertical,
+    topic,
   });
 
   const slack = await notifyContactSlack({
@@ -60,6 +62,7 @@ export async function POST(req: Request) {
     service,
     category,
     vertical,
+    topic,
   });
 
   const telegram = await notifyContactTelegram({
@@ -70,6 +73,7 @@ export async function POST(req: Request) {
     service,
     category,
     vertical,
+    topic,
   });
 
   const apiKey = process.env.RESEND_API_KEY?.trim();
@@ -98,11 +102,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'contact_email_env_incomplete' }, { status: 500 });
   }
 
-  const subject = service
-    ? `Contact: ${name} — ${service}`
-    : `Contact: ${name} <${email}>`;
+  const subject = topic
+    ? `Contact: ${name} — ${topic}`
+    : service
+      ? `Contact: ${name} — ${service}`
+      : `Contact: ${name} <${email}>`;
   const companyLine = company ? `Company: ${company}` : '';
   const serviceLine = service ? `Service: ${service}` : '';
+  const topicLine = topic ? `Topic: ${topic}` : '';
   const categoryLine = category ? `Category: ${category}` : '';
   const verticalLine = vertical ? `Vertical: ${vertical}` : '';
   const text = [
@@ -110,6 +117,7 @@ export async function POST(req: Request) {
     `Email: ${email}`,
     companyLine,
     serviceLine,
+    topicLine,
     categoryLine,
     verticalLine,
     '',
@@ -122,9 +130,10 @@ export async function POST(req: Request) {
     ? `<p><strong>Company:</strong> ${escapeHtml(company)}</p>`
     : '';
   const serviceHtml = service ? `<p><strong>Service:</strong> ${escapeHtml(service)}</p>` : '';
+  const topicHtml = topic ? `<p><strong>Topic:</strong> ${escapeHtml(topic)}</p>` : '';
   const categoryHtml = category ? `<p><strong>Category:</strong> ${escapeHtml(category)}</p>` : '';
   const verticalHtml = vertical ? `<p><strong>Vertical:</strong> ${escapeHtml(vertical)}</p>` : '';
-  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${categoryHtml}${verticalHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
+  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${topicHtml}${categoryHtml}${verticalHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
 
   let res: Response;
   try {
