@@ -175,7 +175,7 @@ function Sync-VpsRemoteDirectory {
 
 function Close-VpsSession {
   param([object]$Session)
-  if ($Session) {
+  if ($Session -and $Session.PSObject.Properties['SessionId']) {
     Remove-SSHSession -SessionId $Session.SessionId -ErrorAction SilentlyContinue | Out-Null
   }
 }
