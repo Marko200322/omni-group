@@ -50,7 +50,7 @@ cd '$remote'
 chmod 700 scripts/keep-warm-prod.sh
 sed -i 's/\r$//' scripts/keep-warm-prod.sh
 mkdir -p /var/log
-CRON_LINE='$CronExpr KEEP_WARM_SITE_URL=https://$site KEEP_WARM_API_URL=https://$api $remote/scripts/keep-warm-prod.sh >> /var/log/keep-warm-prod.log 2>&1'
+CRON_LINE='$CronExpr KEEP_WARM_SITE_URL=https://$site KEEP_WARM_API_URL=https://$api bash $remote/scripts/keep-warm-prod.sh >> /var/log/keep-warm-prod.log 2>&1'
 (crontab -l 2>/dev/null | grep -v 'keep-warm-prod' || true; echo "`$CRON_LINE") | crontab -
 crontab -l | grep keep-warm-prod || true
 echo INSTALL_OK

@@ -165,7 +165,7 @@ function Sync-VpsRemoteDirectory {
     if ($LASTEXITCODE -ne 0) { throw 'scp upload failed' }
   }
 
-  $extract = "mkdir -p $RemotePath && tar -xzf $remoteTar -C $RemotePath && rm -f $remoteTar"
+  $extract = "mkdir -p $RemotePath && tar -xzf $remoteTar -C $RemotePath && rm -f $remoteTar && (chmod +x $RemotePath/scripts/*.sh || true)"
   $Session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $extract -Session $Session
 
