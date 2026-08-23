@@ -123,7 +123,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
       readJson('/api/atina/product-factory/stats'),
       readJson('/api/atina/autonomy-loop/status'),
       readJson('/api/atina/autonomy-loop/categories/status'),
-      readJson('/api/atina/admin/payments?status=processing&provider=manual&limit=50'),
+      readJson('/api/atina/admin/payments?status=processing&limit=50'),
       readJson('/api/atina/hunting/readiness'),
     ]);
 
@@ -177,12 +177,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     }
   };
 
-  const confirmPayment = async (paymentId: string) => {
+  const confirmPayment = async (paymentId: string, provider: string) => {
     setBusy(paymentId);
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/manual/confirm/${paymentId}`, { method: 'POST' });
+      const res = await fetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
+        method: 'POST',
+      });
       const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'confirm_failed');
       setPayments((prev) => prev.filter((p) => p.id !== paymentId));
@@ -295,7 +297,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
             ) : null}
             {payments.length === 0 ? (
               <Card title="No pending payments">
-                <p className="text-sm text-slate-400">All manual payments have been processed.</p>
+                <p className="text-sm text-slate-400">All pending payments have been processed.</p>
               </Card>
             ) : (
               payments.map((p) => {
@@ -305,12 +307,13 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                   <div key={p.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                     <p className="font-semibold text-white">{formatAmount(p.amount, p.currency)}</p>
                     <p className="mt-1 text-sm text-slate-400">{p.email ?? p.user_name ?? p.user_id}</p>
+                    <p className="mt-1 text-xs text-violet-300">Provider: {p.provider}</p>
                     {deliverable && <p className="text-xs text-violet-300">{deliverable}</p>}
                     {p.description && <p className="mt-1 text-xs text-slate-500">{p.description}</p>}
                     <button
                       type="button"
                       disabled={busy === p.id}
-                      onClick={() => void confirmPayment(p.id)}
+                      onClick={() => void confirmPayment(p.id, p.provider)}
                       className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-medium text-white active:bg-emerald-500 disabled:opacity-50"
                     >
                       {busy === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}

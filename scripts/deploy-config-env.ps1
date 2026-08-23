@@ -557,3 +557,123 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
   }
   return $map
 }
+
+function Apply-DeployConfigProdEnvFiles {
+  param(
+    [object]$Config,
+    [string]$RepoRoot,
+    [string]$SiteDomain,
+    [string]$ApiDomain,
+    [string]$Phase
+  )
+
+  $rootEnv = Join-Path $RepoRoot '.env.vps.prod'
+  $atinaEnv = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'
+  $webEnv = Join-Path $RepoRoot 'apps\omnigroup-web\.env.vps.production'
+
+  if ($Config.adminEmail) {
+    Set-EnvLineInDeployFile $atinaEnv 'ADMIN_EMAIL' $Config.adminEmail.Trim()
+  }
+  if ($Config.paymentNotifyEmail) {
+    Set-EnvLineInDeployFile $atinaEnv 'PAYMENT_NOTIFY_EMAIL' $Config.paymentNotifyEmail.Trim()
+  }
+
+  foreach ($entry in (Get-DeployConfigAtinaEnvPatches $Config $ApiDomain).GetEnumerator()) {
+    Set-EnvLineInDeployFile $atinaEnv $entry.Key $entry.Value
+  }
+
+  if ($Config.manualPayment) {
+    $mp = $Config.manualPayment
+    if ($mp.accountName) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_ACCOUNT_NAME' $mp.accountName }
+    if ($mp.iban) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_IBAN' $mp.iban }
+    if ($mp.bank) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_BANK' $mp.bank }
+    if ($mp.swift) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_SWIFT' $mp.swift }
+    if ($mp.currency) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_CURRENCY' $mp.currency }
+    if ($mp.note) { Set-EnvLineInDeployFile $atinaEnv 'MANUAL_PAYMENT_NOTE' $mp.note }
+  }
+
+  if ($Config.stripeSecretKey) {
+    Set-EnvLineInDeployFile $atinaEnv 'STRIPE_SECRET_KEY' $Config.stripeSecretKey.Trim()
+    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MODE' 'live'
+    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MANUAL_ENABLED' 'false'
+    if ($Config.stripePublishableKey) { Set-EnvLineInDeployFile $atinaEnv 'STRIPE_PUBLISHABLE_KEY' $Config.stripePublishableKey.Trim() }
+    if ($Config.stripeWebhookSecret) { Set-EnvLineInDeployFile $atinaEnv 'STRIPE_WEBHOOK_SECRET' $Config.stripeWebhookSecret.Trim() }
+    if ($Config.starterPriceId) { Set-EnvLineInDeployFile $atinaEnv 'STARTER_PRICE_ID' $Config.starterPriceId.Trim() }
+    if ($Config.proPriceId) { Set-EnvLineInDeployFile $atinaEnv 'PRO_PRICE_ID' $Config.proPriceId.Trim() }
+    if ($Config.enterprisePriceId) { Set-EnvLineInDeployFile $atinaEnv 'ENTERPRISE_PRICE_ID' $Config.enterprisePriceId.Trim() }
+  }
+
+  if ($Config.smtp -and $Config.smtp.enabled -eq $true) {
+    Set-EnvLineInDeployFile $atinaEnv 'SMTP_ENABLED' 'true'
+    if ($Config.smtp.host) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_HOST' $Config.smtp.host }
+    if ($Config.smtp.port) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_PORT' "$($Config.smtp.port)" }
+    if ($null -ne $Config.smtp.secure) {
+      Set-EnvLineInDeployFile $atinaEnv 'SMTP_SECURE' ($(if ($Config.smtp.secure) { 'true' } else { 'false' }))
+    }
+    if ($Config.smtp.user) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_USER' $Config.smtp.user }
+    if ($Config.smtp.password) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_PASS' $Config.smtp.password }
+    if ($Config.smtp.from) { Set-EnvLineInDeployFile $atinaEnv 'EMAIL_FROM' $Config.smtp.from }
+  }
+
+  if ($Config.resend) {
+    if ($Config.resend.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'RESEND_API_KEY' $Config.resend.apiKey.Trim() }
+    if ($Config.resend.contactFrom) { Set-EnvLineInDeployFile $atinaEnv 'CONTACT_EMAIL_FROM' $Config.resend.contactFrom.Trim() }
+    if ($Config.resend.contactTo) { Set-EnvLineInDeployFile $atinaEnv 'CONTACT_EMAIL_TO' $Config.resend.contactTo.Trim() }
+  }
+
+  if ($Config.instantly) {
+    if ($Config.instantly.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'INSTANTLY_API_KEY' $Config.instantly.apiKey.Trim() }
+    if ($Config.instantly.campaignId) { Set-EnvLineInDeployFile $atinaEnv 'INSTANTLY_CAMPAIGN_ID' $Config.instantly.campaignId.Trim() }
+    if ($Config.instantly.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_EMAIL_PROVIDER' 'instantly' }
+  }
+
+  foreach ($entry in (Get-DeployConfigWebEnvPatches $Config $SiteDomain).GetEnumerator()) {
+    Set-EnvLineInDeployFile $webEnv $entry.Key $entry.Value
+  }
+
+  Set-EnvLineInDeployFile $atinaEnv 'PHASE' $Phase
+  Set-EnvLineInDeployFile $rootEnv 'PHASE' $Phase
+}
+
+function Invoke-DeployConfigProdPipeline {
+  param(
+    [object]$Config,
+    [string]$RepoRoot,
+    [string]$SiteDomain,
+    [string]$ApiDomain,
+    [string]$Phase,
+    [string]$ProdMode,
+    [string]$FactoryPhase,
+    [int]$MonthlyBudgetEur
+  )
+
+  Apply-DeployConfigProdEnvFiles -Config $Config -RepoRoot $RepoRoot -SiteDomain $SiteDomain -ApiDomain $ApiDomain -Phase $Phase
+
+  if (Get-Command Apply-LeanProdEnvFiles -ErrorAction SilentlyContinue) {
+    if (Test-IsLeanProdMode $ProdMode) {
+      Apply-LeanProdEnvFiles $RepoRoot
+      Write-Host 'Lean prod env applied (base safety flags)' -ForegroundColor DarkGray
+    }
+  }
+
+  if (Get-Command Apply-BudgetProdEnvFiles -ErrorAction SilentlyContinue) {
+    Apply-BudgetProdEnvFiles $RepoRoot $MonthlyBudgetEur
+    Write-Host "Budget profile EUR $MonthlyBudgetEur/mo applied (AI caps + retries)" -ForegroundColor DarkGray
+  }
+
+  if (Get-Command Apply-FactoryPhaseEnvFiles -ErrorAction SilentlyContinue) {
+    $deployCfg = Build-DeployConfigHashtable $Config
+    Apply-FactoryPhaseEnvFiles $RepoRoot $FactoryPhase $MonthlyBudgetEur $ProdMode $deployCfg | Out-Null
+    Write-Host "Factory phase $FactoryPhase module profile applied" -ForegroundColor Green
+  }
+
+  if (Get-Command Apply-WarmLeanInboundEnvFiles -ErrorAction SilentlyContinue) {
+    if (Test-IsLeanProdMode $ProdMode) {
+      Apply-WarmLeanInboundEnvFiles $RepoRoot $MonthlyBudgetEur
+      Write-Host 'Warm lean inbound env applied' -ForegroundColor DarkGray
+    }
+  }
+
+  Sync-RootDockerNextPublicFromWeb $RepoRoot
+  Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
+}

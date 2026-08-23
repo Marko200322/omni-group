@@ -82,6 +82,8 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
               { href: '/legal/terms', label: 'Terms of Service' },
               { href: '/legal/privacy', label: 'Privacy Policy' },
               { href: '/legal/cookies', label: 'Cookie Policy' },
+              { href: '/legal/refund', label: 'Refund Policy' },
+              { href: '/legal/impressum', label: 'Impressum' },
               { href: '/contact', label: 'Contact' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
@@ -124,6 +126,14 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
         {' · '}
         <Link href="/legal/cookies" className="hover:text-slate-400">
           Cookies
+        </Link>
+        {' · '}
+        <Link href="/legal/refund" className="hover:text-slate-400">
+          Refunds
+        </Link>
+        {' · '}
+        <Link href="/legal/impressum" className="hover:text-slate-400">
+          Impressum
         </Link>
       </motion.p>
     </motion.footer>

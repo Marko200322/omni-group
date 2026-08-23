@@ -27,7 +27,7 @@ export default async function AdminPage() {
     const [overviewRes, paymentsRes, allocationRes] = await Promise.all([
       fetchAtinaForBff<AtinaAdminOverview>('/api/v1/admin/overview', session, { method: 'GET' }),
       fetchAtinaForBff<AtinaAdminPayment[]>(
-        '/api/v1/admin/payments?status=processing&provider=manual&limit=50',
+        '/api/v1/admin/payments?status=processing&limit=50',
         session,
         { method: 'GET' },
       ),

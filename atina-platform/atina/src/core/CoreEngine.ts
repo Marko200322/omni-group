@@ -232,7 +232,8 @@ export class CoreEngine {
       legacyHeaders: false,
       // Custom bearer key — disable IPv6 keyGenerator validation (v7).
       validate: false,
-      skip: (req) => req.path === '/health' || req.path === '/api/v1/health',
+      skip: (req) =>
+        req.path === '/health' || req.path === '/api/v1/health' || req.path === '/metrics',
       keyGenerator: (req) => {
         const auth = req.get('authorization');
         if (auth && auth.startsWith('Bearer ') && auth.length > 20) {
@@ -256,6 +257,7 @@ export class CoreEngine {
           message: 'ATINA API backend. Open the web app in your browser or call API routes below.',
           links: {
             health: '/health',
+            metrics: '/metrics',
             api: '/api/v1',
             web: process.env.WEB_APP_URL ?? 'http://localhost:3010',
           },
@@ -305,6 +307,41 @@ export class CoreEngine {
         forge,
       });
     }
+    );
+
+    // Prometheus-style metrics for uptime monitors (no secrets)
+    this.app.get(
+      '/metrics',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      async (_req: Request, res: Response) => {
+        let dbUp = 1;
+        try {
+          dbUp = (await testConnection()) ? 1 : 0;
+        } catch {
+          dbUp = 0;
+        }
+        const mem = process.memoryUsage();
+        const lines = [
+          '# HELP atina_up 1 if the process is serving requests',
+          '# TYPE atina_up gauge',
+          'atina_up 1',
+          '# HELP atina_db_up 1 if database ping succeeds',
+          '# TYPE atina_db_up gauge',
+          `atina_db_up ${dbUp}`,
+          '# HELP process_uptime_seconds Process uptime in seconds',
+          '# TYPE process_uptime_seconds gauge',
+          `process_uptime_seconds ${process.uptime()}`,
+          '# HELP process_resident_memory_bytes Resident set size in bytes',
+          '# TYPE process_resident_memory_bytes gauge',
+          `process_resident_memory_bytes ${mem.rss}`,
+          '# HELP process_heap_used_bytes Heap used in bytes',
+          '# TYPE process_heap_used_bytes gauge',
+          `process_heap_used_bytes ${mem.heapUsed}`,
+          '',
+        ];
+        res.status(200).type('text/plain; version=0.0.4; charset=utf-8').send(lines.join('\n'));
+      },
     );
 
     // API info

@@ -37,6 +37,28 @@ function buildTransferReference(userId: string): string {
   return `${prefix}-${userId.slice(0, 8).toUpperCase()}-${Date.now()}`;
 }
 
+function getManualPaymentConfig() {
+  const manual = config.payments.manual;
+  const accountName = manual.accountName?.trim() ?? '';
+  const iban = manual.iban?.trim() ?? '';
+  const bankName = manual.bankName?.trim() ?? '';
+  const swift = manual.swift?.trim() ?? '';
+  const companyLegalName = manual.companyLegalName?.trim() ?? '';
+  const companyTaxId = manual.companyTaxId?.trim() ?? '';
+  const companyAddress = manual.companyAddress?.trim() ?? '';
+  return {
+    accountName,
+    iban,
+    bankName,
+    swift,
+    note: manual.note,
+    companyLegalName,
+    companyTaxId,
+    companyAddress,
+    configured: Boolean(accountName && iban),
+  };
+}
+
 function resolveCheckoutAmount(
   plan: { slug: string; price_monthly: number; price_yearly: number },
   billingCycle: 'monthly' | 'yearly',
@@ -118,14 +140,17 @@ function buildTransferInstructions(
   currency: string,
   planName: string
 ): Record<string, string> {
-  const manual = config.payments.manual;
+  const manual = getManualPaymentConfig();
+  if (!manual.configured) {
+    throw new PaymentError('Manual bank transfer details are incomplete. Set MANUAL_PAYMENT_ACCOUNT_NAME and MANUAL_PAYMENT_IBAN.');
+  }
   const displayCurrency = currency.toUpperCase();
   const money = toMoneyNumber(amount);
   return {
-    accountName: manual.accountName || '(popuni MANUAL_PAYMENT_ACCOUNT_NAME u .env)',
-    iban: manual.iban || '(popuni MANUAL_PAYMENT_IBAN u .env)',
-    bankName: manual.bankName || '(popuni MANUAL_PAYMENT_BANK u .env)',
-    swift: manual.swift || '',
+    accountName: manual.accountName,
+    iban: manual.iban,
+    bankName: manual.bankName,
+    swift: manual.swift,
     reference,
     amount: `${money.toFixed(2)} ${displayCurrency}`,
     plan: planName,
@@ -1042,14 +1067,15 @@ export class PaymentsService {
 
   getPaymentMethods() {
     const mode = config.payments.mode;
+    const manual = getManualPaymentConfig();
     const methods: Array<{ id: string; label: string; description: string; available: boolean }> = [];
 
-    if (mode === 'manual' || ((config.payments.manual.accountName || config.payments.manual.iban) && process.env.PAYMENTS_MANUAL_ENABLED !== 'false')) {
+    if (mode === 'manual' || (manual.configured && process.env.PAYMENTS_MANUAL_ENABLED !== 'false')) {
       methods.push({
         id: 'manual',
         label: 'Bank transfer',
         description: 'Pay by bank transfer — activation after admin confirmation.',
-        available: mode === 'manual' || Boolean(config.payments.manual.accountName && config.payments.manual.iban),
+        available: manual.configured,
       });
     }
 
@@ -1102,6 +1128,7 @@ export class PaymentsService {
         mode === 'manual'
           ? 'No-company mode: use bank transfer until you register a company and enable Stripe live.'
           : undefined,
+      manualSetupMissing: !manual.configured,
     };
   }
 

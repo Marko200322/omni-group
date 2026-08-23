@@ -13,6 +13,8 @@ const PUBLIC_ROUTES = [
   '/legal/terms',
   '/legal/privacy',
   '/legal/cookies',
+  '/legal/refund',
+  '/legal/impressum',
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

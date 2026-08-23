@@ -986,12 +986,24 @@ describe('PaymentsService', () => {
   describe('Manual payments (bez firme)', () => {
     beforeEach(() => {
       (config as { payments: { mode: string } }).payments.mode = 'manual';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName = 'Omni Group';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = 'RS35100000000000000000';
     });
 
     it('getPaymentMethods includes manual in manual mode', () => {
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('manual');
       expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(true);
+    });
+
+    it('marks manual as unavailable when bank details are missing', () => {
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName = '';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = '';
+
+      const out = service.getPaymentMethods();
+      const manual = out.methods.find((m: { id: string }) => m.id === 'manual');
+      expect(manual?.available).toBe(false);
+      expect(out.manualSetupMissing).toBe(true);
     });
 
     it('createManualCheckout returns bank instructions', async () => {
