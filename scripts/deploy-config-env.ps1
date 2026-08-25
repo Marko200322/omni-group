@@ -617,7 +617,11 @@ function Apply-DeployConfigProdEnvFiles {
 
   if ($Config.resend) {
     if ($Config.resend.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'RESEND_API_KEY' $Config.resend.apiKey.Trim() }
-    if ($Config.resend.contactFrom) { Set-EnvLineInDeployFile $atinaEnv 'CONTACT_EMAIL_FROM' $Config.resend.contactFrom.Trim() }
+    if ($Config.resend.contactFrom) {
+      Set-EnvLineInDeployFile $atinaEnv 'CONTACT_EMAIL_FROM' $Config.resend.contactFrom.Trim()
+      # Invoice/proforma PDF attachments go through Resend when SMTP is off
+      Set-EnvLineInDeployFile $atinaEnv 'EMAIL_FROM' $Config.resend.contactFrom.Trim()
+    }
     if ($Config.resend.contactTo) { Set-EnvLineInDeployFile $atinaEnv 'CONTACT_EMAIL_TO' $Config.resend.contactTo.Trim() }
   }
 
@@ -668,9 +672,15 @@ function Invoke-DeployConfigProdPipeline {
   }
 
   if (Get-Command Apply-WarmLeanInboundEnvFiles -ErrorAction SilentlyContinue) {
-    if (Test-IsLeanProdMode $ProdMode) {
+    # Warm lean forces M3 and kills lead DB / hunt — only for M0–M3 lean launches.
+    $phaseOrder = @('M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6')
+    $phaseIdx = [array]::IndexOf($phaseOrder, "$FactoryPhase".Trim().ToUpper())
+    if ($phaseIdx -lt 0) { $phaseIdx = 0 }
+    if ((Test-IsLeanProdMode $ProdMode) -and $phaseIdx -lt 4) {
       Apply-WarmLeanInboundEnvFiles $RepoRoot $MonthlyBudgetEur
       Write-Host 'Warm lean inbound env applied' -ForegroundColor DarkGray
+    } elseif ((Test-IsLeanProdMode $ProdMode) -and $phaseIdx -ge 4) {
+      Write-Host "Skip warm-lean wipe (factoryPhase $FactoryPhase >= M4)" -ForegroundColor DarkGray
     }
   }
 

@@ -116,20 +116,22 @@ function Get-FactoryPhaseAtinaEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetE
     $env.LEAD_DATABASE_ROLLOUT_PHASE = 'F3'
     $env.LEAD_ENRICH_ON_HUNT = 'true'
     $env.ENABLE_ANALYTICS = 'true'
-    $env.OUTREACH_WARMUP_MODE = 'false'
-    $env.OUTREACH_DOMAIN_WARMUP_COMPLETE = 'true'
+    $env.OUTREACH_WARMUP_MODE = 'true'
+    $env.OUTREACH_DOMAIN_WARMUP_COMPLETE = 'false'
     $env.OUTREACH_DAILY_CAP = '50'
     $env.SALES_MEETINGS_ENABLED = 'true'
   }
 
   if ($idx -ge 5) {
     # M5+ — autonomy reinvest (scheduler, marketing loop). Not enabled at M4.
+    # Keep AUTO_DEPLOY off; marketing spend still capped by AUTONOMY_MAX_SPEND_* + reserve.
     $env.AUTONOMY_ENABLED = 'true'
     $env.AUTONOMY_AUTO_START_SCHEDULER = 'true'
     $env.AUTONOMY_MARKETING_ENABLED = 'true'
     $env.AUTONOMY_REVENUE_REINVEST_RATE = '0.2'
     $env.AUTONOMY_MAX_SPEND_PER_TICK_USD = '1'
     $env.AUTONOMY_MIN_RESERVE_USD = '15'
+    $env.AUTONOMY_AUTO_DEPLOY = 'false'
     $env.PRODUCT_FACTORY_INTERNAL_LANE = 'true'
     $env.PRODUCT_FACTORY_MAX_INTERNAL_PER_TICK = '1'
     $env.DELIVERABLE_FULFILLMENT_LEARNING_LOOP = 'true'

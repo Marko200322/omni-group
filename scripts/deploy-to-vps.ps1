@@ -173,6 +173,34 @@ echo 'Fresh wipe done: $RemotePath'
   $session = Sync-VpsRemoteDirectory -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -LocalRoot $repoRoot -RemotePath $RemotePath -DryRun:$DryRun -Session $session
 
+  # Tar sync excludes env files — push local prepared prod env explicitly
+  if (-not $DryRun) {
+    $envUploads = @(
+      @{ Local = (Join-Path $repoRoot '.env.vps.prod'); Remote = "$RemotePath/.env.vps.prod" },
+      @{ Local = (Join-Path $atinaRoot '.env.vps.prod'); Remote = "$RemotePath/atina-platform/atina/.env.vps.prod" },
+      @{ Local = (Join-Path $repoRoot 'apps\omnigroup-web\.env.vps.production'); Remote = "$RemotePath/apps/omnigroup-web/.env.vps.production" }
+    )
+    foreach ($item in $envUploads) {
+      if (-not (Test-Path $item.Local)) { continue }
+      if ($SshKey) {
+        & scp -o StrictHostKeyChecking=accept-new -i $SshKey $item.Local "${VpsUser}@${VpsHost}:$($item.Remote)"
+        if ($LASTEXITCODE -ne 0) { throw "scp env failed: $($item.Local)" }
+      } elseif ($SshPassword) {
+        Ensure-PoshSshModule
+        if (-not $session) {
+          $session = Connect-VpsSession -VpsHost $VpsHost -VpsUser $VpsUser -SshPassword $SshPassword
+        }
+        $cred = Get-VpsCredential -User $VpsUser -Password $SshPassword
+        $remoteDir = Split-Path $item.Remote -Parent
+        Set-SCPItem -ComputerName $VpsHost -Credential $cred -AcceptKey -Path $item.Local -Destination $remoteDir -ErrorAction Stop
+      } else {
+        & scp -o StrictHostKeyChecking=accept-new $item.Local "${VpsUser}@${VpsHost}:$($item.Remote)"
+        if ($LASTEXITCODE -ne 0) { throw "scp env failed: $($item.Local)" }
+      }
+    }
+    Write-Host 'Prod env files uploaded to VPS' -ForegroundColor DarkGray
+  }
+
   $envCopy = @"
 cd $RemotePath
 cp -f .env.vps.prod .env.docker.prod
