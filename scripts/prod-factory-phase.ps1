@@ -216,7 +216,10 @@ function Set-FactoryEnvLine([string]$FilePath, [string]$Key, [string]$Value) {
     }
   }
   if (-not $found) { $out += "$Key=$Value" }
-  Set-Content -Path $FilePath -Value $out -Encoding UTF8
+  $text = ($out -join "`n") + "`n"
+  $tmp = "$FilePath.tmp.$PID"
+  [System.IO.File]::WriteAllText($tmp, $text, [System.Text.UTF8Encoding]::new($false))
+  Move-Item -LiteralPath $tmp -Destination $FilePath -Force
 }
 
 function Apply-FactoryPhaseEnvFiles(
@@ -254,7 +257,11 @@ function Apply-FactoryPhaseEnvFiles(
 
   foreach ($entry in $atinaMap.GetEnumerator()) {
     Set-FactoryEnvLine $atinaEnv $entry.Key $entry.Value
-    if ($entry.Key -eq 'FACTORY_PHASE' -or $entry.Key -eq 'OWNER_MONTHLY_BUDGET_EUR' -or $entry.Key -eq 'FACTORY_PHASE_AUTO') {
+    if ($entry.Key -in @(
+      'FACTORY_PHASE', 'OWNER_MONTHLY_BUDGET_EUR', 'FACTORY_PHASE_AUTO',
+      'AUTONOMY_ENABLED', 'AUTONOMY_AUTO_START_SCHEDULER', 'AUTONOMY_EVOLUTION_CODE_EDIT',
+      'AUTONOMY_AUTO_DEPLOY'
+    )) {
       Set-FactoryEnvLine $rootEnv $entry.Key $entry.Value
     }
   }

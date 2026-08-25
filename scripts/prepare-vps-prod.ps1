@@ -54,9 +54,7 @@ $siteUrl = "https://$SiteDomain"
 $apiUrl = "https://$ApiDomain"
 
 if (-not (Test-PublicDnsA $ApiDomain)) {
-  Write-Host "  API DNS '$ApiDomain' nije spreman - API preko https://$SiteDomain/api/v1" -ForegroundColor Yellow
-  $ApiDomain = $SiteDomain
-  $apiUrl = $siteUrl
+  Write-Host "  WARN: API DNS '$ApiDomain' nije resolvable lokalno — ostavljam API_DOMAIN=$ApiDomain (ne prepisujem na site)." -ForegroundColor Yellow
 }
 
 function New-RandomSecret([int]$Length = 40) {

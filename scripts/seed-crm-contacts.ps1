@@ -29,41 +29,55 @@ $login = Invoke-WebRequest -Uri "$web/api/auth/login" -Method POST -ContentType 
   -Body $loginBody -WebSession $session -UseBasicParsing -TimeoutSec 60
 $lj = $login.Content | ConvertFrom-Json
 if (-not $lj.ok) { throw "login failed: $($login.Content)" }
-$headers = Get-BffSmokePostHeaders -Session $session -WebBase $web
 
-$imported = 0
-$failed = 0
+$contacts = @()
 for ($i = 1; $i -le $Count; $i++) {
-  $headers = Get-BffSmokePostHeaders -Session $session -WebBase $web
   $n = '{0:D3}' -f $i
-  $body = @{
+  $contacts += @{
     firstName = 'Seed'
     lastName  = "Lead$n"
     email     = "seed.lead.$n@mailinator.com"
     company   = "Seed Co $n"
     status    = 'lead'
-    source    = 'seed-script'
-    notes     = 'Auto-seeded for M4/M5 machine closeout'
-  } | ConvertTo-Json -Compress
-  try {
-    $res = Invoke-WebRequest -Uri "$web/api/atina/crm/contacts" -Method POST -ContentType 'application/json' `
-      -Body $body -WebSession $session -Headers $headers -UseBasicParsing -TimeoutSec 60
-    $parsed = $res.Content | ConvertFrom-Json
-    if ($parsed.ok) { $imported++ } else { $failed++; Write-Host "  skip $n : $($res.Content)" -ForegroundColor Yellow }
-  } catch {
-    # duplicate email from prior runs counts as soft success if already present
-    $msg = $_.Exception.Message
-    $failed++
-    Write-Host "  skip $n : $msg" -ForegroundColor Yellow
   }
-  if (($i % 10) -eq 0) { Write-Host "  progress $i/$Count (ok=$imported fail=$failed)" -ForegroundColor DarkGray }
+}
+
+$imported = 0
+$failed = 0
+$chunkSize = 25
+for ($o = 0; $o -lt $contacts.Count; $o += $chunkSize) {
+  $headers = Get-BffSmokePostHeaders -Session $session -WebBase $web
+  $chunk = @($contacts[$o..([Math]::Min($o + $chunkSize - 1, $contacts.Count - 1))])
+  $body = @{ contacts = $chunk } | ConvertTo-Json -Depth 5 -Compress
+  try {
+    $res = Invoke-WebRequest -Uri "$web/api/atina/crm/contacts/bulk" -Method POST -ContentType 'application/json' `
+      -Body $body -WebSession $session -Headers $headers -UseBasicParsing -TimeoutSec 90
+    $parsed = $res.Content | ConvertFrom-Json
+    if ($parsed.ok) {
+      $imported += $chunk.Count
+      Write-Host "  bulk ok +$($chunk.Count)" -ForegroundColor DarkGray
+    } else {
+      $failed += $chunk.Count
+      Write-Host "  bulk fail: $($res.Content)" -ForegroundColor Yellow
+    }
+  } catch {
+    Write-Host "  bulk fallback to single POSTs: $($_.Exception.Message)" -ForegroundColor Yellow
+    foreach ($c in $chunk) {
+      $headers = Get-BffSmokePostHeaders -Session $session -WebBase $web
+      $one = $c | ConvertTo-Json -Compress
+      try {
+        $res = Invoke-WebRequest -Uri "$web/api/atina/crm/contacts" -Method POST -ContentType 'application/json' `
+          -Body $one -WebSession $session -Headers $headers -UseBasicParsing -TimeoutSec 60
+        $parsed = $res.Content | ConvertFrom-Json
+        if ($parsed.ok) { $imported++ } else { $failed++ }
+      } catch { $failed++ }
+    }
+  }
 }
 
 Write-Host "CRM seed done: ok=$imported fail=$failed via $web" -ForegroundColor Green
-# Treat duplicates from re-runs: if list shows seed contacts, OK
 $list = Invoke-WebRequest -Uri "$web/api/atina/crm/contacts?limit=50&search=seed.lead" -WebSession $session -UseBasicParsing -TimeoutSec 60
 $lj2 = $list.Content | ConvertFrom-Json
 $have = @($lj2.data).Count
 Write-Host "  CRM list search seed.lead count=$have" -ForegroundColor DarkGray
 if ($imported -lt 1 -and $have -lt 10) { throw 'CRM seed imported 0 contacts' }
-if ($imported -lt 1 -and $have -ge 10) { Write-Host 'CRM seed OK via existing contacts' -ForegroundColor Green }

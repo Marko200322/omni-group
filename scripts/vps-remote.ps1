@@ -135,7 +135,8 @@ function Sync-VpsRemoteDirectory {
     '--exclude=.env.vps.prod',
     '--exclude=atina-platform/atina/.env.docker.prod',
     '--exclude=atina-platform/atina/.env.vps.prod',
-    '--exclude=apps/omnigroup-web/.env.production'
+    '--exclude=apps/omnigroup-web/.env.production',
+    '--exclude=apps/omnigroup-web/.env.vps.production'
   )
 
   if ($DryRun) {

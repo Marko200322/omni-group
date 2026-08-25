@@ -102,7 +102,7 @@ sed -i 's/\r$//' scripts/m4-daily-hunt.sh deploy-secrets.local/m4-daily-hunt.env
 if ! command -v jq >/dev/null 2>&1; then
   apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq jq
 fi
-CRON_LINE='$CronExpr M4_CRON_ENV=$remote/deploy-secrets.local/m4-daily-hunt.env $remote/scripts/m4-daily-hunt.sh >> /var/log/m4-daily-hunt.log 2>&1'
+CRON_LINE='$CronExpr M4_CRON_ENV=$remote/deploy-secrets.local/m4-daily-hunt.env bash $remote/scripts/m4-daily-hunt.sh >> /var/log/m4-daily-hunt.log 2>&1'
 # replace previous m4-daily-hunt entries
 (crontab -l 2>/dev/null | grep -v 'm4-daily-hunt' || true; echo "`$CRON_LINE") | crontab -
 echo '--- crontab ---'

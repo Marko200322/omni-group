@@ -74,16 +74,15 @@ BODY=$(jq -nc \
   --arg v "$VERTICAL_SLUG" \
   --argjson i "$INTENSITY" \
   --arg t "$TEMPLATE_KEY" \
-  --argjson po "$PROCESS_OUTBOUND" \
-  '{verticalSlug:$v,intensity:$i,templateKey:$t,processOutbound:$po,force:false}')
+  '{verticalSlug:$v,intensity:$i,templateKey:$t,processOutbound:false,force:false}')
 
-log "pipeline/run processOutbound=$PROCESS_OUTBOUND"
+log "pipeline/run processOutbound=false (send gated separately)"
 PIPE=$(curl -fsS -X POST "$API_BASE/api/v1/client-hunter/pipeline/run" "${AUTH[@]}" -d "$BODY")
 TPL=$(echo "$PIPE" | jq -r '.data.templateKey // .data.template // empty')
 log "pipeline done templateKey=${TPL:-unknown}"
 
 if [[ "$PROCESS_OUTBOUND" == "true" ]]; then
-  log "process-send (admin)"
+  log "process-send (admin) — only when M4_OUTBOUND_SEND gated OK"
   SEND=$(curl -fsS -X POST "$API_BASE/api/v1/autonomy-loop/outbound/process-send" "${AUTH[@]}" -d '{}')
   log "process-send ok bytes=${#SEND}"
 fi

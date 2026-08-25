@@ -9,6 +9,7 @@
 #>
 param(
   [switch]$DryRun,
+  [switch]$Force,
   [int]$MonthlyBudgetEur = 150,
   [string]$ConfigPath = ''
 )
@@ -29,6 +30,12 @@ if (-not $ConfigPath) {
 if (-not (Test-Path $ConfigPath)) { throw "Missing $ConfigPath" }
 
 $config = Get-Content $ConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$currentPhase = if ($config.factoryPhase) { "$($config.factoryPhase)".Trim().ToUpper() } else { 'M0' }
+$phaseOrder = @('M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6')
+$phaseIdx = [array]::IndexOf($phaseOrder, $currentPhase)
+if ($phaseIdx -ge 4 -and -not $Force) {
+  throw "Refusing set-warm-lean-mode: factoryPhase=$currentPhase (>= M4). Pass -Force to downgrade to M3 lean."
+}
 $siteDomain = [string]$config.siteDomain
 $apiDomain = if ($config.apiDomain -and "$($config.apiDomain)".Trim()) {
   "$($config.apiDomain)".Trim()

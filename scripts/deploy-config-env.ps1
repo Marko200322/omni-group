@@ -335,7 +335,10 @@ function Set-EnvLineInDeployFile([string]$FilePath, [string]$Key, [string]$Value
     }
   }
   if (-not $found) { $out += "$Key=$Value" }
-  Set-Content -Path $FilePath -Value $out -Encoding UTF8
+  $text = ($out -join "`n") + "`n"
+  $tmp = "$FilePath.tmp.$PID"
+  [System.IO.File]::WriteAllText($tmp, $text, [System.Text.UTF8Encoding]::new($false))
+  Move-Item -LiteralPath $tmp -Destination $FilePath -Force
 }
 
 function Build-DeployConfigHashtable([object]$Config) {
@@ -611,7 +614,10 @@ function Apply-DeployConfigProdEnvFiles {
       Set-EnvLineInDeployFile $atinaEnv 'SMTP_SECURE' ($(if ($Config.smtp.secure) { 'true' } else { 'false' }))
     }
     if ($Config.smtp.user) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_USER' $Config.smtp.user }
-    if ($Config.smtp.password) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_PASS' $Config.smtp.password }
+    if ($Config.smtp.password) {
+      Set-EnvLineInDeployFile $atinaEnv 'SMTP_PASSWORD' $Config.smtp.password
+      Set-EnvLineInDeployFile $atinaEnv 'SMTP_PASS' $Config.smtp.password
+    }
     if ($Config.smtp.from) { Set-EnvLineInDeployFile $atinaEnv 'EMAIL_FROM' $Config.smtp.from }
   }
 

@@ -61,7 +61,13 @@ export class NotificationsService {
     }
 
     if (!this.isSmtpConfigured()) {
-      logger.warn('Email not sent — SMTP not configured', { to, subject });
+      const msg = attachments?.length
+        ? 'Email with attachments not sent — Resend failed and SMTP not configured'
+        : 'Email not sent — SMTP not configured';
+      logger.warn(msg, { to, subject });
+      if (attachments?.length) {
+        throw new Error(msg);
+      }
       return;
     }
     await this.transporter.sendMail({

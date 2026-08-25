@@ -191,7 +191,8 @@ echo 'Fresh wipe done: $RemotePath'
           $session = Connect-VpsSession -VpsHost $VpsHost -VpsUser $VpsUser -SshPassword $SshPassword
         }
         $cred = Get-VpsCredential -User $VpsUser -Password $SshPassword
-        $remoteDir = Split-Path $item.Remote -Parent
+        $remoteDir = ($item.Remote -replace '\\', '/')
+        if ($remoteDir -match '^(.*)/[^/]+$') { $remoteDir = $Matches[1] }
         Set-SCPItem -ComputerName $VpsHost -Credential $cred -AcceptKey -Path $item.Local -Destination $remoteDir -ErrorAction Stop
       } else {
         & scp -o StrictHostKeyChecking=accept-new $item.Local "${VpsUser}@${VpsHost}:$($item.Remote)"

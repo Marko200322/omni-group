@@ -164,7 +164,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
           verticalSlug,
           templateKey,
           intensity,
-          processOutbound: true,
+          processOutbound: false,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string; detail?: string };
