@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { AtinaFulfillmentJob, AtinaClientSite } from '@/lib/atina-live-types';
+import { describeAtinaError } from '@/lib/atina-errors';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 
 const STATUS_META: Record<
@@ -79,15 +80,23 @@ export function DeliveriesPanel({ disabled }: Props) {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading your deliveries…</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading your deliveries…
+      </p>
+    );
   }
 
   if (error) {
     return (
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
-        Could not load deliveries ({error}).{' '}
-        <button type="button" className="underline" onClick={() => void load()}>
-          Retry
+        <p>{describeAtinaError(error)}</p>
+        <button
+          type="button"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-100 underline-offset-2 hover:underline"
+          onClick={() => void load()}
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Retry
         </button>
       </div>
     );
@@ -101,7 +110,7 @@ export function DeliveriesPanel({ disabled }: Props) {
         <Package className="mx-auto h-8 w-8 text-slate-500" />
         <p className="mt-3 font-medium text-white">No deliveries yet</p>
         <p className="mt-1 text-sm text-slate-500">
-          After admin confirms your payment, deliverables appear here — documents, live sites, and software builds.
+          After we confirm your payment, deliverables appear here — documents, live sites, and software builds.
         </p>
       </div>
     );
@@ -142,9 +151,11 @@ export function DeliveriesPanel({ disabled }: Props) {
                       <Icon className={`h-4 w-4 ${job.status === 'running' ? 'animate-spin' : ''}`} />
                       {meta.label}
                     </p>
-                    {job.error && <p className="mt-2 text-xs text-rose-300/90">{job.error}</p>}
+                    {job.error && job.status === 'failed' && (
+                      <p className="mt-2 text-xs text-rose-300/90">{describeAtinaError('fulfillment_failed')}</p>
+                    )}
                     {!job.clientVisible && job.reviewStatus === 'pending_review' && (
-                      <p className="mt-2 text-xs text-violet-300">Quality review in progress — downloads unlock after admin approval.</p>
+                      <p className="mt-2 text-xs text-violet-300">Quality review in progress — downloads unlock when ready.</p>
                     )}
                   </div>
                   {job.completedAt && (

@@ -15,8 +15,19 @@ jest.mock('../../../../config', () => ({
       warmupMode: true,
       dailyCap: 20,
       fallbackNotifyEmail: 'ops@example.com',
+      devSendToFallback: false,
+      emailProvider: 'resend',
     },
+    instantly: { apiKey: '', campaignId: '', baseUrl: 'https://api.instantly.ai' },
+    autonomy: { enabled: false },
+    features: { scraper: false },
+    factoryPhase: 'M0',
+    prodMode: 'lean',
   },
+}));
+
+jest.mock('../../../../modules/billing/lib/factory-phase-guard', () => ({
+  assertFactoryModule: jest.fn(),
 }));
 
 jest.mock('../../../../modules/autonomy-loop/repository/outbound-queue.repository', () => ({

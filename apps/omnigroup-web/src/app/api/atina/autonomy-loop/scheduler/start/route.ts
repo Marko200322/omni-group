@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
@@ -15,10 +16,7 @@ export async function POST() {
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'scheduler_start_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('scheduler_start_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

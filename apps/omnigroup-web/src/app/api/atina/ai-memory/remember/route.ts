@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
-import { getServerSession } from '@/lib/auth-session';
+import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
 export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+  if (!isAdminRole(session.user.role)) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
   let body: { key?: string; value?: Record<string, unknown>; namespace?: string } = {};
@@ -37,13 +41,10 @@ export async function POST(req: Request) {
 
   if (!r.ok) {
     const unreachable = r.message?.includes('fetch') || r.status === 503;
-    return NextResponse.json(
-      {
-        ok: false,
-        error: unreachable ? 'atina_unreachable' : 'remember_failed',
-        detail: r.message,
-      },
-      { status: unreachable ? 503 : r.status || 502 },
+    return clientSafeBffError(
+      unreachable ? 'atina_unreachable' : 'remember_failed',
+      r.message,
+      unreachable ? 503 : r.status || 502,
     );
   }
 

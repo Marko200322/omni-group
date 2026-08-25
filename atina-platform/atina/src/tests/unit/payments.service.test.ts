@@ -54,11 +54,12 @@ jest.mock('stripe', () => {
 });
 
 // eslint-disable-next-line no-var
-var billingApi: { getPlanBySlug: jest.Mock; createInvoice: jest.Mock };
+var billingApi: { getPlanBySlug: jest.Mock; getPlanById: jest.Mock; createInvoice: jest.Mock };
 
 jest.mock('../../modules/billing/service/billing.service', () => {
   billingApi = {
     getPlanBySlug: jest.fn(),
+    getPlanById: jest.fn(),
     createInvoice: jest.fn().mockResolvedValue(undefined),
   };
   return {
@@ -139,6 +140,7 @@ describe('PaymentsService', () => {
     testStripeApi.subscriptions.update.mockResolvedValue({});
     testStripeApi.billingPortal.sessions.create.mockResolvedValue({ url: 'https://portal.test' });
     billingApi.getPlanBySlug.mockResolvedValue(planFull as never);
+    billingApi.getPlanById.mockResolvedValue(planFull as never);
     billingApi.createInvoice.mockResolvedValue({
       invoice_number: 'INV-202605-0001',
       amount: 29,
@@ -455,7 +457,9 @@ describe('PaymentsService', () => {
           rows: [{ user_id: 'u1', plan_id: 'p1', id: 's1' }],
           rowCount: 1,
         } as never)
-        .mockResolvedValueOnce({ rows: [{ id: 'pay_new' }], rowCount: 1 } as never);
+        .mockResolvedValueOnce({ rows: [{ id: 'pay_new' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ n: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ email: 'a@b.c', name: 'Ada' }], rowCount: 1 } as never);
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
 
@@ -490,7 +494,9 @@ describe('PaymentsService', () => {
           rows: [{ user_id: 'u1', plan_id: 'p1', id: 's1' }],
           rowCount: 1,
         } as never)
-        .mockResolvedValueOnce({ rows: [{ id: 'pay_exp' }], rowCount: 1 } as never);
+        .mockResolvedValueOnce({ rows: [{ id: 'pay_exp' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ n: '1' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [{ email: 'a@b.c', name: 'Ada' }], rowCount: 1 } as never);
 
       await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
 
@@ -980,12 +986,24 @@ describe('PaymentsService', () => {
   describe('Manual payments (bez firme)', () => {
     beforeEach(() => {
       (config as { payments: { mode: string } }).payments.mode = 'manual';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName = 'Omni Group';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = 'RS35100000000000000000';
     });
 
     it('getPaymentMethods includes manual in manual mode', () => {
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('manual');
       expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(true);
+    });
+
+    it('marks manual as unavailable when bank details are missing', () => {
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName = '';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = '';
+
+      const out = service.getPaymentMethods();
+      const manual = out.methods.find((m: { id: string }) => m.id === 'manual');
+      expect(manual?.available).toBe(false);
+      expect(out.manualSetupMissing).toBe(true);
     });
 
     it('createManualCheckout returns bank instructions', async () => {

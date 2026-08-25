@@ -15,7 +15,9 @@ param(
   [string]$AtinaBase = 'http://127.0.0.1:3000',
   [string]$Email = 'admin@atina.io',
   [string]$Password = '',
-  [switch]$SkipEnsureWeb
+  [switch]$SkipEnsureWeb,
+  [switch]$SkipEnsureAtina,
+  [int]$HealthTimeoutSec = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,20 +28,30 @@ $repoRoot = Split-Path $scriptsDir -Parent
 . (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
 
 if (-not $Password) {
-  $creds = Get-AdminCredentials -RepoRoot $repoRoot
+  $useProdCreds = Test-ProdWebBase $web
+  $creds = Get-AdminCredentials -RepoRoot $repoRoot -Prod:$useProdCreds
   $Email = $creds.Email
   $Password = $creds.Password
+  if ($useProdCreds) {
+    Write-Host "  Using prod admin credentials ($Email)" -ForegroundColor DarkGray
+  }
 }
 $BffTimeoutSec = 45
+if ($HealthTimeoutSec -le 0) {
+  $HealthTimeoutSec = if ($web -match '^https://' -and $web -notmatch 'localhost|127\.0\.0\.1') { 90 } else { 15 }
+}
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'bff-smoke-headers.ps1')
 
 if (-not $SkipEnsureWeb) {
   & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-& (Join-Path $scriptsDir 'ensure-atina-api.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $SkipEnsureAtina) {
+  & (Join-Path $scriptsDir 'ensure-atina-api.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 function Invoke-BffLogin {
   param(
@@ -59,8 +71,8 @@ $h = Invoke-WithRateLimitRetry -Label 'Atina /health' -Action {
 if ($h.StatusCode -ne 200) { throw "Atina health HTTP $($h.StatusCode)" }
 Write-Host "  OK" -ForegroundColor Green
 
-Write-Host "== Web /api/health ==" -ForegroundColor Cyan
-$wh = Invoke-QuickWebGet -Uri "$web/api/health" -TimeoutSec 15
+Write-Host "== Web /api/health (timeout ${HealthTimeoutSec}s) ==" -ForegroundColor Cyan
+$wh = Invoke-QuickWebGet -Uri "$web/api/health" -TimeoutSec $HealthTimeoutSec
 if ($wh.StatusCode -ne 200) { throw "Web health HTTP $($wh.StatusCode)" }
 Write-Host "  OK" -ForegroundColor Green
 
@@ -70,11 +82,12 @@ $body = @{ email = $Email; password = $Password } | ConvertTo-Json -Compress
 $lj = Invoke-BffLogin -Session $session -LoginBody $body
 if (-not $lj.ok) { throw "BFF login failed" }
 Write-Host "  OK user=$($lj.user.email) redirect=$($lj.redirectTo)" -ForegroundColor Green
+$postHeaders = Get-BffSmokePostHeaders -Session $session -WebBase $web
 
 Write-Host "== Web BFF ai-memory ==" -ForegroundColor Cyan
 $memBody = '{"key":"smoke","value":{"ts":"' + (Get-Date -Format o) + '"},"namespace":"global"}'
 Invoke-WithRateLimitRetry -Label 'ai-memory remember' -Action {
-  $rem = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/remember" -Method POST -ContentType 'application/json' -Body $memBody -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  $rem = Invoke-WebRequest -Uri "$web/api/atina/ai-memory/remember" -Method POST -ContentType 'application/json' -Body $memBody -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec $BffTimeoutSec
   $rj = $rem.Content | ConvertFrom-Json
   if (-not $rj.ok) { throw "remember failed: $($rem.Content)" }
   return $rj
@@ -120,7 +133,7 @@ Write-Host "  OK billing summary" -ForegroundColor Green
 
 $coBody = '{"planSlug":"starter","billingCycle":"monthly"}'
 $cj2 = Invoke-WithRateLimitRetry -Label 'manual checkout' -Action {
-  $co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  $co = Invoke-WebRequest -Uri "$web/api/atina/payments/manual/checkout" -Method POST -ContentType 'application/json' -Body $coBody -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec $BffTimeoutSec
   $parsed = $co.Content | ConvertFrom-Json
   if (-not $parsed.ok -or -not $parsed.data.paymentId) { throw "manual checkout failed: $($co.Content)" }
   return $parsed
@@ -140,23 +153,48 @@ Write-Host "== Web BFF avatar agents ==" -ForegroundColor Cyan
 $agents = Invoke-WebRequest -Uri "$web/api/atina/video-meetings/support/agents" -UseBasicParsing -TimeoutSec $BffTimeoutSec
 $agj = $agents.Content | ConvertFrom-Json
 if (-not $agj.ok) { throw "support/agents failed: $($agents.Content)" }
-Write-Host "  OK agents=$($agj.data.agents.Count)" -ForegroundColor Green
+$agentCount = @($agj.data.agents).Count
+if ($agentCount -eq 0) {
+  Write-Host "  OK agents=0 (lean prod - avatar disabled)" -ForegroundColor Green
+} else {
+  Write-Host "  OK agents=$agentCount" -ForegroundColor Green
+}
 
+if ($agentCount -gt 0) {
 Write-Host "== Web BFF avatar session ==" -ForegroundColor Cyan
 $agentId = $agj.data.agents[0].id
 $sBody = ('{"agentId":"' + $agentId + '"}')
 try {
-  $av = Invoke-WebRequest -Uri "$web/api/atina/video-meetings/support/avatar/session" -Method POST -ContentType 'application/json' -Body $sBody -WebSession $session -UseBasicParsing -TimeoutSec 60
+  $av = Invoke-WebRequest -Uri "$web/api/atina/video-meetings/support/avatar/session" -Method POST -ContentType 'application/json' -Body $sBody -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec 60
   $avj = $av.Content | ConvertFrom-Json
   if (-not $avj.ok) { throw "avatar session failed: $($av.Content)" }
   Write-Host "  OK sessionId=$($avj.data.sessionId)" -ForegroundColor Green
+  Write-Host "== Web BFF avatar chat ==" -ForegroundColor Cyan
+  $chatBody = ('{"sessionId":"' + $avj.data.sessionId + '","message":"Where is billing in the portal?"}')
+  $ch = Invoke-WebRequest -Uri "$web/api/atina/video-meetings/support/avatar/chat" -Method POST -ContentType 'application/json' -Body $chatBody -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec 90
+  $chj = $ch.Content | ConvertFrom-Json
+  if (-not $chj.ok -or -not $chj.data.message.text) { throw "avatar chat failed: $($ch.Content)" }
+  Write-Host "  OK reply=$($chj.data.message.text.Substring(0, [Math]::Min(80, $chj.data.message.text.Length)))..." -ForegroundColor Green
 } catch {
   Write-Host "  WARN avatar session slow/failed (AI aggregator optional): $($_.Exception.Message)" -ForegroundColor Yellow
+}
+} else {
+  Write-Host "== Web BFF avatar session ==" -ForegroundColor Cyan
+  Write-Host "  SKIP (no agents in lean prod)" -ForegroundColor DarkGray
+}
+
+Write-Host "== Live call avatar smoke ==" -ForegroundColor Cyan
+try {
+  & (Join-Path $scriptsDir 'smoke-live-call-avatar.ps1') -WebBase $web -AtinaBase $atina -Email $Email -Password $Password
+  if ($LASTEXITCODE -ne 0) { throw 'smoke-live-call-avatar failed' }
+} catch {
+  Write-Host "  WARN live-call smoke: $($_.Exception.Message)" -ForegroundColor Yellow
 }
 
 Write-Host "== Web BFF admin payments ==" -ForegroundColor Cyan
 $plj = Invoke-WithRateLimitRetry -Label 'admin/payments' -Action {
-  $payList = Invoke-WebRequest -Uri "$web/api/atina/admin/payments?status=processing&provider=manual&limit=5" -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+  $paymentsUri = "$web/api/atina/admin/payments" + '?status=processing&provider=manual&limit=5'
+  $payList = Invoke-WebRequest -Uri $paymentsUri -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
   $parsed = $payList.Content | ConvertFrom-Json
   if (-not $parsed.ok) { throw "admin/payments failed: $($payList.Content)" }
   return $parsed

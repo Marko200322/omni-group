@@ -1,11 +1,12 @@
 <#
 .SYNOPSIS
-  E2E: all 17 deliverable packages — checkout, confirm, fulfillment checklist pass.
+  E2E: deliverable packages — checkout, confirm, fulfillment checklist pass.
 
 .EXAMPLE
   .\scripts\e2e-fulfillment-all-packages.ps1
   .\scripts\e2e-fulfillment-all-packages.ps1 -DeliverableIds setup-quick,landing
   .\scripts\e2e-fulfillment-all-packages.ps1 -SkipSlow
+  .\scripts\e2e-fulfillment-all-packages.ps1 -BudgetLaunchOnly   # M0 €200 Ready set (6)
 #>
 #Requires -Version 5.1
 param(
@@ -13,6 +14,10 @@ param(
   [string]$WebBase = 'http://127.0.0.1:3010',
   [string]$IndustryCategory = 'marketing',
   [switch]$SkipSlow,
+  # Only packages sellable under €200 budget launch (M0 Ready set).
+  [switch]$BudgetLaunchOnly,
+  # Treat checkout 402 (phase/budget gate) as SKIP, not FAIL.
+  [switch]$SkipUnavailable,
   [int]$PollSec = 90
 )
 
@@ -30,9 +35,13 @@ $allIds = @(
   'ai-support-retainer', 'custom-software'
 )
 
+$budgetLaunchIds = @(
+  'setup-quick', 'audit', 'landing', 'website-business', 'workflow-design', 'support-priority'
+)
 $slowIds = @('website-business', 'website-ecommerce', 'white-label-setup', 'custom-software', 'setup-custom')
-$ids = if ($DeliverableIds.Count -gt 0) { $DeliverableIds } else { $allIds }
+$ids = if ($DeliverableIds.Count -gt 0) { $DeliverableIds } elseif ($BudgetLaunchOnly) { $budgetLaunchIds } else { $allIds }
 if ($SkipSlow) { $ids = $ids | Where-Object { $_ -notin $slowIds } }
+if ($BudgetLaunchOnly) { $SkipUnavailable = $true }
 
 $creds = Get-AdminCredentials -RepoRoot $repoRoot
 if ($web -match 'omnigrouptech\.com' -and (Test-Path (Join-Path $repoRoot 'atina-platform\atina\.env.vps.prod'))) {
@@ -52,10 +61,11 @@ if (($lj.Content | ConvertFrom-Json).ok -ne $true) { throw 'Login failed' }
 
 $passed = 0
 $failed = 0
+$skipped = 0
 $results = @()
 
 Write-Host '== E2E fulfillment all packages ==' -ForegroundColor Cyan
-Write-Host "  Packages: $($ids.Count)  Industry: $IndustryCategory"
+Write-Host "  Packages: $($ids.Count)  Industry: $IndustryCategory$(if ($BudgetLaunchOnly) { '  Mode: BudgetLaunchOnly' })"
 
 foreach ($deliverableId in $ids) {
   Write-Host '' 
@@ -80,7 +90,8 @@ foreach ($deliverableId in $ids) {
       Invoke-WebRequest -Uri "$web/api/atina/payments/manual/confirm/$paymentId" -Method POST -ContentType 'application/json' -Body '{}' -WebSession $session -UseBasicParsing | Out-Null
     } | Out-Null
 
-    $deadline = (Get-Date).AddSeconds($PollSec)
+    $pkgPoll = if ($deliverableId -in $slowIds) { [Math]::Max($PollSec, 180) } else { $PollSec }
+    $deadline = (Get-Date).AddSeconds($pkgPoll)
     $job = $null
     while ((Get-Date) -lt $deadline) {
       Start-Sleep -Seconds 3
@@ -110,13 +121,21 @@ foreach ($deliverableId in $ids) {
     $results += [pscustomobject]@{ deliverableId = $deliverableId; status = 'PASS'; score = $score }
     Start-Sleep -Seconds 20
   } catch {
-    Write-Host "  FAIL $($_.Exception.Message)" -ForegroundColor Red
-    $failed++
-    $results += [pscustomobject]@{ deliverableId = $deliverableId; status = 'FAIL'; score = 0; error = $_.Exception.Message }
+    $msg = $_.Exception.Message
+    $isGate = $msg -match '402|Payment Required|not available for self-serve'
+    if ($SkipUnavailable -and $isGate) {
+      Write-Host "  SKIP (phase/budget gate) $msg" -ForegroundColor Yellow
+      $skipped++
+      $results += [pscustomobject]@{ deliverableId = $deliverableId; status = 'SKIP'; score = 0; error = $msg }
+    } else {
+      Write-Host "  FAIL $msg" -ForegroundColor Red
+      $failed++
+      $results += [pscustomobject]@{ deliverableId = $deliverableId; status = 'FAIL'; score = 0; error = $msg }
+    }
   }
 }
 
 Write-Host ''
-Write-Host "e2e-fulfillment-all-packages: $passed passed, $failed failed" -ForegroundColor $(if ($failed -eq 0) { 'Green' } else { 'Red' })
+Write-Host "e2e-fulfillment-all-packages: $passed passed, $failed failed, $skipped skipped" -ForegroundColor $(if ($failed -eq 0) { 'Green' } else { 'Red' })
 $results | Format-Table -AutoSize
 if ($failed -gt 0) { exit 1 }

@@ -24,6 +24,7 @@ import { BillingModule } from '../modules/billing/billing.module';
 import { SubscriptionsModule } from '../modules/subscriptions/subscriptions.module';
 import { PaymentsModule } from '../modules/payments/payments.module';
 import { VideoMeetingsModule } from '../modules/video-meetings/video-meetings.module';
+import { LiveCallAvatarModule } from '../modules/live-call-avatar/live-call-avatar.module';
 import { TasksModule } from '../modules/tasks/tasks.module';
 import { AutomationModule } from '../modules/automation/automation.module';
 import { CrmModule } from '../modules/crm/crm.module';
@@ -34,6 +35,7 @@ import { ClientHunterModule } from '../modules/client-hunter/client-hunter.modul
 import { LeadScoringModule } from '../modules/lead-scoring/lead-scoring.module';
 import { ProxyRotationModule } from '../modules/proxy-rotation/proxy-rotation.module';
 import { OutreachModule } from '../modules/outreach/outreach.module';
+import { MarketingGrowthModule } from '../modules/marketing-growth/marketing-growth.module';
 import { ContractsModule } from '../modules/contracts/contracts.module';
 import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { ScraperModule } from '../modules/scraper/scraper.module';
@@ -125,6 +127,7 @@ export class CoreEngine {
     moduleRegistry.register(new SubscriptionsModule());
     moduleRegistry.register(new PaymentsModule());
     moduleRegistry.register(new VideoMeetingsModule());
+    moduleRegistry.register(new LiveCallAvatarModule());
     moduleRegistry.register(new TasksModule());
     if (config.features.crm) moduleRegistry.register(new CrmModule());
     moduleRegistry.register(new TemplateEngineModule());
@@ -137,6 +140,7 @@ export class CoreEngine {
     moduleRegistry.register(new LeadScoringModule());
     moduleRegistry.register(new ProxyRotationModule());
     moduleRegistry.register(new OutreachModule());
+    moduleRegistry.register(new MarketingGrowthModule());
     moduleRegistry.register(new ContractsModule());
     if (config.features.analytics) moduleRegistry.register(new AnalyticsModule());
     moduleRegistry.register(new NotificationsModule());
@@ -219,13 +223,24 @@ export class CoreEngine {
       stream: { write: (msg: string) => logger.info(msg.trim()) },
     }));
 
-    // Rate limiting
+    // Rate limiting — key by bearer token when present so BFF traffic from the
+    // shared web container IP does not collapse all users into one bucket.
     const limiter = rateLimit({
       windowMs: config.rateLimit.windowMs,
       max: config.rateLimit.max,
       standardHeaders: true,
       legacyHeaders: false,
-      skip: (req) => req.path === '/health',
+      // Custom bearer key — disable IPv6 keyGenerator validation (v7).
+      validate: false,
+      skip: (req) =>
+        req.path === '/health' || req.path === '/api/v1/health' || req.path === '/metrics',
+      keyGenerator: (req) => {
+        const auth = req.get('authorization');
+        if (auth && auth.startsWith('Bearer ') && auth.length > 20) {
+          return `bearer:${auth.slice(7, 55)}`;
+        }
+        return req.ip || req.socket.remoteAddress || 'unknown';
+      },
       message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' } },
     });
     this.app.use(limiter);
@@ -242,6 +257,7 @@ export class CoreEngine {
           message: 'ATINA API backend. Open the web app in your browser or call API routes below.',
           links: {
             health: '/health',
+            metrics: '/metrics',
             api: '/api/v1',
             web: process.env.WEB_APP_URL ?? 'http://localhost:3010',
           },
@@ -255,6 +271,12 @@ export class CoreEngine {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       async (_req: Request, res: Response) => {
+      let dbHealthy = true;
+      try {
+        dbHealthy = await testConnection();
+      } catch {
+        dbHealthy = false;
+      }
       let forge = {
         vaultPath: null as string | null,
         vaultSignal: 'unavailable' as 'available' | 'unavailable',
@@ -275,8 +297,9 @@ export class CoreEngine {
         // Keep /health resilient even if forge diagnostics fail unexpectedly.
       }
 
-      res.json({
-        status: 'ok',
+      res.status(dbHealthy ? 200 : 503).json({
+        status: dbHealthy ? 'ok' : 'degraded',
+        db: dbHealthy ? 'up' : 'down',
         version: '1.0.0',
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
@@ -284,6 +307,41 @@ export class CoreEngine {
         forge,
       });
     }
+    );
+
+    // Prometheus-style metrics for uptime monitors (no secrets)
+    this.app.get(
+      '/metrics',
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      async (_req: Request, res: Response) => {
+        let dbUp = 1;
+        try {
+          dbUp = (await testConnection()) ? 1 : 0;
+        } catch {
+          dbUp = 0;
+        }
+        const mem = process.memoryUsage();
+        const lines = [
+          '# HELP atina_up 1 if the process is serving requests',
+          '# TYPE atina_up gauge',
+          'atina_up 1',
+          '# HELP atina_db_up 1 if database ping succeeds',
+          '# TYPE atina_db_up gauge',
+          `atina_db_up ${dbUp}`,
+          '# HELP process_uptime_seconds Process uptime in seconds',
+          '# TYPE process_uptime_seconds gauge',
+          `process_uptime_seconds ${process.uptime()}`,
+          '# HELP process_resident_memory_bytes Resident set size in bytes',
+          '# TYPE process_resident_memory_bytes gauge',
+          `process_resident_memory_bytes ${mem.rss}`,
+          '# HELP process_heap_used_bytes Heap used in bytes',
+          '# TYPE process_heap_used_bytes gauge',
+          `process_heap_used_bytes ${mem.heapUsed}`,
+          '',
+        ];
+        res.status(200).type('text/plain; version=0.0.4; charset=utf-8').send(lines.join('\n'));
+      },
     );
 
     // API info
@@ -359,6 +417,15 @@ export class CoreEngine {
       logger.info(`📖 Health check: http://localhost:${port}/health`);
       logger.info(`📡 API root: http://localhost:${port}/api/v1`);
     });
+
+    try {
+      const { factoryPhaseAutoService } = await import(
+        '../modules/billing/service/factory-phase-auto.service'
+      );
+      factoryPhaseAutoService.startPeriodicEvaluation();
+    } catch (error) {
+      logger.warn('Factory phase AUTO evaluator not started', { error });
+    }
 
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));
     process.on('SIGINT', () => this.shutdown('SIGINT'));

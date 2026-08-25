@@ -5,7 +5,7 @@
 
 .EXAMPLE
   .\scripts\deploy-from-local-secrets.ps1 -Bootstrap
-  .\scripts\deploy-from-local-secrets.ps1
+  .\scripts\deploy-from-local-secrets.ps1 -SafeDeploy
   .\scripts\deploy-from-local-secrets.ps1 -DryRun
 #>
 param(
@@ -13,6 +13,8 @@ param(
   [switch]$SkipBuild,
   [switch]$FreshWipe,
   [switch]$RotateSecrets,
+  [switch]$SafeDeploy,
+  [switch]$SkipSeed,
   [switch]$DryRun,
   [string]$ConfigPath = ''
 )
@@ -54,124 +56,28 @@ $apiDomain = if ($config.apiDomain -and $config.apiDomain.Trim()) {
 }
 
 $phase = if ($config.phase) { $config.phase } else { 'v6' }
+$prodMode = if ($config.prodMode -and $config.prodMode.Trim()) { $config.prodMode.Trim().ToLower() } else { 'lean' }
 $sshKey = if ($config.sshKeyPath) { $config.sshKeyPath.Trim() } else { '' }
 $sshPassword = if ($config.sshPassword) { $config.sshPassword } else { '' }
 $remotePath = if ($config.remotePath) { $config.remotePath.Trim() } else { '/opt/omni-group' }
 
 . (Join-Path $scriptsDir 'vps-remote.ps1')
+. (Join-Path $scriptsDir 'prod-lean-profile.ps1')
+. (Join-Path $scriptsDir 'prod-budget-profile.ps1')
+. (Join-Path $scriptsDir 'prod-factory-phase.ps1')
+. (Join-Path $scriptsDir 'deploy-config-env.ps1')
+. (Join-Path $scriptsDir 'warm-lean-profile.ps1')
 
-function Set-EnvLine([string]$FilePath, [string]$Key, [string]$Value) {
-  if (-not (Test-Path $FilePath)) { return }
-  if ([string]::IsNullOrWhiteSpace($Value)) { return }
-  $escaped = $Key -replace '([\[\].^$|?*+(){}\\])', '\$1'
-  $lines = Get-Content $FilePath
-  $found = $false
-  $out = foreach ($line in $lines) {
-    if ($line -match "^\s*$escaped\s*=") {
-      $found = $true
-      "$Key=$Value"
-    } else {
-      $line
-    }
-  }
-  if (-not $found) { $out += "$Key=$Value" }
-  Set-Content -Path $FilePath -Value $out -Encoding UTF8
-}
-
-function Patch-ProdEnvFiles {
-  $rootEnv = Join-Path $repoRoot '.env.vps.prod'
-  $atinaEnv = Join-Path $repoRoot 'atina-platform\atina\.env.vps.prod'
-  $webEnv = Join-Path $repoRoot 'apps\omnigroup-web\.env.vps.production'
-
-  if ($config.adminEmail) {
-    Set-EnvLine $atinaEnv 'ADMIN_EMAIL' $config.adminEmail.Trim()
-  }
-  if ($config.paymentNotifyEmail) {
-    Set-EnvLine $atinaEnv 'PAYMENT_NOTIFY_EMAIL' $config.paymentNotifyEmail.Trim()
-  }
-  if ($config.openRouterApiKey) {
-    Set-EnvLine $atinaEnv 'OPENROUTER_API_KEY' $config.openRouterApiKey.Trim()
-    Set-EnvLine $atinaEnv 'AI_KEY' $config.openRouterApiKey.Trim()
-  }
-  if ($config.elevenLabsApiKey) {
-    Set-EnvLine $atinaEnv 'ELEVENLABS_API_KEY' $config.elevenLabsApiKey.Trim()
-  }
-  if ($config.heygenApiKey) {
-    Set-EnvLine $atinaEnv 'HEYGEN_API_KEY' $config.heygenApiKey.Trim()
-  }
-  if ($config.didApiKey) {
-    Set-EnvLine $atinaEnv 'DID_API_KEY' $config.didApiKey.Trim()
-  }
-  if ($config.slackWebhookUrl) {
-    Set-EnvLine $atinaEnv 'SLACK_WEBHOOK_URL' $config.slackWebhookUrl.Trim()
-  }
-  if ($config.stripeSecretKey) {
-    Set-EnvLine $atinaEnv 'STRIPE_SECRET_KEY' $config.stripeSecretKey.Trim()
-  }
-  if ($config.stripeWebhookSecret) {
-    Set-EnvLine $atinaEnv 'STRIPE_WEBHOOK_SECRET' $config.stripeWebhookSecret.Trim()
-  }
-
-  if ($config.manualPayment) {
-    $mp = $config.manualPayment
-    if ($mp.accountName) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_ACCOUNT_NAME' $mp.accountName }
-    if ($mp.iban) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_IBAN' $mp.iban }
-    if ($mp.bank) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_BANK' $mp.bank }
-    if ($mp.swift) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_SWIFT' $mp.swift }
-    if ($mp.currency) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_CURRENCY' $mp.currency }
-    if ($mp.note) { Set-EnvLine $atinaEnv 'MANUAL_PAYMENT_NOTE' $mp.note }
-  }
-
-  if ($config.smtp -and $config.smtp.enabled -eq $true) {
-    Set-EnvLine $atinaEnv 'SMTP_ENABLED' 'true'
-    if ($config.smtp.host) { Set-EnvLine $atinaEnv 'SMTP_HOST' $config.smtp.host }
-    if ($config.smtp.port) { Set-EnvLine $atinaEnv 'SMTP_PORT' "$($config.smtp.port)" }
-    if ($null -ne $config.smtp.secure) { Set-EnvLine $atinaEnv 'SMTP_SECURE' ($(if ($config.smtp.secure) { 'true' } else { 'false' })) }
-    if ($config.smtp.user) { Set-EnvLine $atinaEnv 'SMTP_USER' $config.smtp.user }
-    if ($config.smtp.password) { Set-EnvLine $atinaEnv 'SMTP_PASS' $config.smtp.password }
-    if ($config.smtp.from) { Set-EnvLine $atinaEnv 'EMAIL_FROM' $config.smtp.from }
-  }
-
-  if ($config.resend) {
-    if ($config.resend.apiKey) {
-      Set-EnvLine $webEnv 'RESEND_API_KEY' $config.resend.apiKey
-    }
-    if ($config.resend.contactFrom) {
-      Set-EnvLine $webEnv 'CONTACT_EMAIL_FROM' $config.resend.contactFrom
-    }
-    if ($config.resend.contactTo) {
-      Set-EnvLine $webEnv 'CONTACT_EMAIL_TO' $config.resend.contactTo
-    }
-  }
-
-  $crmEmail = if ($config.contactCrmIngressEmail) {
-    $config.contactCrmIngressEmail.Trim()
-  } elseif ($config.adminEmail) {
-    $config.adminEmail.Trim()
-  } else {
-    ''
-  }
-  $crmPassword = if ($config.contactCrmIngressPassword) {
-    $config.contactCrmIngressPassword
-  } elseif ($config.adminPassword) {
-    $config.adminPassword
-  } else {
-    ''
-  }
-  if ($crmEmail) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_EMAIL' $crmEmail }
-  if ($crmPassword) { Set-EnvLine $webEnv 'CONTACT_CRM_INGRESS_PASSWORD' $crmPassword.Trim() }
-
-  if ($config.contactSlackWebhookUrl) {
-    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.contactSlackWebhookUrl.Trim()
-  } elseif ($config.slackWebhookUrl) {
-    Set-EnvLine $webEnv 'CONTACT_SLACK_WEBHOOK_URL' $config.slackWebhookUrl.Trim()
-  }
-
-  Set-EnvLine $webEnv 'NEXT_PUBLIC_ATINA_API_BASE' "https://$apiDomain"
-  Set-EnvLine $webEnv 'NEXT_PUBLIC_SITE_URL' "https://$siteDomain"
-
-  Set-EnvLine $atinaEnv 'PHASE' $phase
-  Set-EnvLine $rootEnv 'PHASE' $phase
+$monthlyBudgetEur = Resolve-MonthlyBudgetEur $config.monthlyBudgetEur
+$factoryPhaseRaw = if ($config.factoryPhase) { $config.factoryPhase } else { 'M0' }
+$factoryAuto = $false
+if ($config.factoryPhaseAuto -eq $true) { $factoryAuto = $true }
+if ("$($config.factoryPhase)".Trim().ToUpper() -eq 'AUTO') { $factoryAuto = $true; $factoryPhaseRaw = 'M6' }
+$factoryPhase = Resolve-FactoryPhase $factoryPhaseRaw
+if ($factoryPhase -eq 'AUTO') { $factoryPhase = 'M6'; $factoryAuto = $true }
+if (($factoryPhase -eq 'M6' -or $factoryAuto) -and $prodMode -eq 'lean') {
+  Write-Host 'M6/AUTO factory: auto-switch prodMode lean -> full (Stripe + premium modules when keys present)' -ForegroundColor Yellow
+  $prodMode = 'full'
 }
 
 Write-Host '=== deploy-from-local-secrets ===' -ForegroundColor Cyan
@@ -179,7 +85,10 @@ Write-Host "  Config: $ConfigPath"
 Write-Host "  Host:   $($config.vpsUser)@$($config.vpsHost)"
 Write-Host "  Site:   https://$siteDomain"
 Write-Host "  API:    https://$apiDomain"
-if ($FreshWipe) { Write-Host '  Mode:   FRESH WIPE (brise postojeci stack pre upload-a)' -ForegroundColor Yellow }
+Write-Host "  Mode:   $prodMode$(if (Test-IsLeanProdMode $prodMode) { ' (minimal spend)' } else { '' })"
+Write-FactoryPhaseSummary $factoryPhase $monthlyBudgetEur
+Write-BudgetPlanSummary $monthlyBudgetEur
+if ($FreshWipe) { Write-Host '  Wipe:   FRESH WIPE (brise postojeci stack pre upload-a)' -ForegroundColor Yellow }
 Write-Host ''
 
 if ($Bootstrap) {
@@ -200,9 +109,12 @@ if ($Bootstrap) {
 
 Write-Host '== prepare-vps-prod ==' -ForegroundColor Cyan
 $prepArgs = @{
-  SiteDomain = $siteDomain
-  ApiDomain  = $apiDomain
-  Phase      = $phase
+  SiteDomain        = $siteDomain
+  ApiDomain         = $apiDomain
+  Phase             = $phase
+  ProdMode          = $prodMode
+  FactoryPhase      = $factoryPhase
+  MonthlyBudgetEur  = $monthlyBudgetEur
 }
 if ($DryRun) { $prepArgs.DryRun = $true }
 if ($FreshWipe -or $RotateSecrets) { $prepArgs.RotateSecrets = $true }
@@ -210,8 +122,9 @@ if ($FreshWipe -or $RotateSecrets) { $prepArgs.RotateSecrets = $true }
 if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $DryRun) {
-  Patch-ProdEnvFiles
-  Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
+  Invoke-DeployConfigProdPipeline -Config $config -RepoRoot $repoRoot -SiteDomain $siteDomain `
+    -ApiDomain $apiDomain -Phase $phase -ProdMode $prodMode -FactoryPhase $factoryPhase `
+    -MonthlyBudgetEur $monthlyBudgetEur
 }
 
 $deployArgs = @{
@@ -226,6 +139,8 @@ if ($sshKey) { $deployArgs.SshKey = $sshKey }
 if ($sshPassword) { $deployArgs.SshPassword = $sshPassword }
 if ($SkipBuild) { $deployArgs.SkipBuild = $true }
 if ($FreshWipe) { $deployArgs.FreshWipe = $true }
+if ($SafeDeploy) { $deployArgs.SafeDeploy = $true }
+if ($SkipSeed) { $deployArgs.SkipSeed = $true }
 if ($DryRun) { $deployArgs.DryRun = $true }
 
 & (Join-Path $scriptsDir 'deploy-to-vps.ps1') @deployArgs

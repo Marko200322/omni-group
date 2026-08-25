@@ -122,7 +122,7 @@ export const config = {
   aggregators: {
     ai: {
       url: optional('AI_URL', ''),
-      key: optional('AI_KEY', ''),
+      key: envFirst('AI_KEY', 'OPENROUTER_API_KEY'),
     },
     aiModel: optional('AI_MODEL', 'openrouter/auto'),
     businessDev: {
@@ -166,6 +166,23 @@ export const config = {
   },
   phase: {
     env: optional('PHASE', ''),
+  },
+  factory: {
+    phase: (() => {
+      const raw = optional('FACTORY_PHASE', 'M0').trim().toUpperCase();
+      if (raw === 'AUTO') return 'M6' as const;
+      const allowed = ['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6'] as const;
+      return (allowed.includes(raw as (typeof allowed)[number]) ? raw : 'M0') as
+        | 'M0'
+        | 'M1'
+        | 'M2'
+        | 'M3'
+        | 'M4'
+        | 'M5'
+        | 'M6';
+    })(),
+    autoEnabled: optionalBool('FACTORY_PHASE_AUTO', false) || optional('FACTORY_PHASE', '').trim().toUpperCase() === 'AUTO',
+    monthlyBudgetEur: optionalNumber('OWNER_MONTHLY_BUDGET_EUR', 200),
   },
   pipelines: {
     youtubeWorkerUrl: optional('YOUTUBE_PIPELINE_URL', ''),
@@ -260,6 +277,9 @@ export const config = {
         'MANUAL_PAYMENT_NOTE',
         'Uključi referencu u opis uplate. Pretplata se aktivira nakon potvrde admina (do 24h).'
       ),
+      companyLegalName: optional('COMPANY_LEGAL_NAME', ''),
+      companyTaxId: optional('COMPANY_TAX_ID', ''),
+      companyAddress: optional('COMPANY_ADDRESS', ''),
     },
   },
   smtp: {
@@ -269,8 +289,12 @@ export const config = {
     secure: optionalBool('SMTP_SECURE', false),
     user: optional('SMTP_USER', ''),
     password: optional('SMTP_PASSWORD', ''),
-    from: optional('EMAIL_FROM', 'noreply@atina.io'),
+    from: optional('EMAIL_FROM', optional('CONTACT_EMAIL_FROM', 'noreply@atina.io')),
     fromName: optional('EMAIL_FROM_NAME', 'ATINA'),
+  },
+  resend: {
+    apiKey: optional('RESEND_API_KEY', ''),
+    from: optional('CONTACT_EMAIL_FROM', optional('EMAIL_FROM', 'noreply@atina.io')),
   },
   admin: {
     email: optional('ADMIN_EMAIL', 'admin@atina.io'),
@@ -283,7 +307,7 @@ export const config = {
     salesEnabled: optionalBool('SALES_MEETINGS_ENABLED', false),
     supportAvatarEnabled: optionalBool('SUPPORT_AVATAR_ENABLED', true),
     salesAvatarEnabled: optionalBool('SALES_AVATAR_ENABLED', true),
-    avatarUseAiAggregator: optionalBool('AVATAR_USE_AI_AGGREGATOR', true),
+    avatarUseAiAggregator: optionalBool('AVATAR_USE_AI_AGGREGATOR', false),
     supportAgentsJson: optional('SUPPORT_AGENTS_JSON', ''),
     salesAgentsJson: optional('SALES_AGENTS_JSON', ''),
     defaultDurationMinutes: optionalNumber('MEETING_DEFAULT_DURATION_MIN', 30),
@@ -327,7 +351,7 @@ export const config = {
   },
   rateLimit: {
     windowMs: optionalNumber('RATE_LIMIT_WINDOW_MS', 900000),
-    max: optionalNumber('RATE_LIMIT_MAX', 100),
+    max: optionalNumber('RATE_LIMIT_MAX', 2000),
   },
   logging: {
     level: optional('LOG_LEVEL', 'info'),
@@ -386,11 +410,11 @@ export const config = {
       },
     },
     tierMultipliers: {
-      budget: optionalNumber('PRICING_TIER_BUDGET', 0.75),
-      standard: optionalNumber('PRICING_TIER_STANDARD', 1),
-      premium: optionalNumber('PRICING_TIER_PREMIUM', 1.35),
-      regulated: optionalNumber('PRICING_TIER_REGULATED', 1.65),
-      nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.6),
+      budget: optionalNumber('PRICING_TIER_BUDGET', 0.7),
+      standard: optionalNumber('PRICING_TIER_STANDARD', 0.92),
+      premium: optionalNumber('PRICING_TIER_PREMIUM', 1.22),
+      regulated: optionalNumber('PRICING_TIER_REGULATED', 1.5),
+      nonprofit: optionalNumber('PRICING_TIER_NONPROFIT', 0.58),
     },
   },
   /** Split client payments: resources, tax reserve, fees, owner net, system reinvest. */
@@ -446,6 +470,48 @@ export const config = {
     fallbackNotifyEmail: optional('OUTREACH_FALLBACK_EMAIL', optional('ADMIN_EMAIL', '')),
     /** Dev: šalji draftove na fallback email bez domain warmup (ne za produkciju). */
     devSendToFallback: optionalBool('OUTREACH_DEV_SEND_TO_FALLBACK', false),
+    /** resend = direct SMTP/Resend send · instantly = push leads to Instantly campaign */
+    emailProvider: optional('OUTREACH_EMAIL_PROVIDER', 'resend'),
+  },
+  instantly: {
+    apiKey: optional('INSTANTLY_API_KEY', ''),
+    campaignId: optional('INSTANTLY_CAMPAIGN_ID', ''),
+    baseUrl: optional('INSTANTLY_API_BASE', 'https://api.instantly.ai'),
+  },
+  hunt: {
+    /** Comma list of JobBoardKind to skip (default: government). */
+    excludePlatformKinds: parseCsvList(optional('HUNT_EXCLUDE_PLATFORM_KINDS', 'government'), [
+      'government',
+    ]),
+    /** Only create outbound/CRM rows with company (non-free-mail) emails. */
+    companyEmailsOnly: optionalBool('HUNT_COMPANY_EMAILS_ONLY', true),
+  },
+  /**
+   * External AI vendor stack (Clay, Intercom, Make, Jasper, Devin, …).
+   * Keys + connection URLs only — product adapters land later.
+   * Catalog/status: modules/billing/lib/external-ai-stack.ts
+   */
+  externalAiStack: {
+    clayApiKey: optional('CLAY_API_KEY', ''),
+    salesforgeApiKey: optional('SALESFORGE_API_KEY', ''),
+    intercomApiKey: optional('INTERCOM_API_KEY', ''),
+    intercomAppId: optional('INTERCOM_APP_ID', ''),
+    sierraApiKey: optional('SIERRA_API_KEY', ''),
+    makeApiKey: optional('MAKE_API_KEY', ''),
+    makeWebhookUrl: optional('MAKE_WEBHOOK_URL', ''),
+    n8nApiKey: optional('N8N_API_KEY', ''),
+    n8nBaseUrl: optional('N8N_BASE_URL', ''),
+    rampApiKey: optional('RAMP_API_KEY', ''),
+    vicAiApiKey: optional('VIC_AI_API_KEY', ''),
+    jasperApiKey: optional('JASPER_API_KEY', ''),
+    predisApiKey: optional('PREDIS_API_KEY', ''),
+    devinApiKey: optional('DEVIN_API_KEY', ''),
+    replitAgentApiKey: optional('REPLIT_AGENT_API_KEY', ''),
+    crewaiApiKey: optional('CREWAI_API_KEY', ''),
+    crewaiBaseUrl: optional('CREWAI_BASE_URL', ''),
+    langchainApiKey: optional('LANGCHAIN_API_KEY', ''),
+    langchainProject: optional('LANGCHAIN_PROJECT', ''),
+    instantlyApiKey: optional('INSTANTLY_API_KEY', ''),
   },
   /** B2B lead baze (Apollo, Hunter, …) + email verify — fazno paljenje LEAD_DATABASE_ROLLOUT_PHASE F0–F5 */
   leadDatabases: {
@@ -478,6 +544,29 @@ export const config = {
     enabled: optionalBool('RETAINER_SCHEDULER_ENABLED', true),
     /** Daily check for monthly lead-gen retainer runs */
     intervalMs: optionalNumber('RETAINER_SCHEDULER_INTERVAL_MS', 86_400_000),
+  },
+  liveCallAvatar: {
+    enabled: optionalBool('LIVE_CALL_AVATAR_ENABLED', false),
+    allowStub: optionalBool('LIVE_CALL_AVATAR_ALLOW_STUB', true),
+    providerChain: optional('LIVE_AVATAR_PROVIDER_CHAIN', 'heygen,d-id,stub'),
+    maxDurationMinutes: optionalNumber('LIVE_CALL_MAX_MINUTES', 30),
+    humanHandoffEnabled: optionalBool('LIVE_CALL_HUMAN_HANDOFF_ENABLED', true),
+    heygenLiveApiKey: optional('HEYGEN_LIVE_API_KEY', ''),
+    heygenDefaultAvatarId: optional('HEYGEN_DEFAULT_AVATAR_ID', ''),
+    didAgentsApiKey: optional('DID_AGENTS_API_KEY', ''),
+    didDefaultAgentId: optional('DID_DEFAULT_AGENT_ID', ''),
+    didAgentIdByPersona: {
+      mila: optional('DID_AGENT_ID_MILA', ''),
+      stefan: optional('DID_AGENT_ID_STEFAN', ''),
+      nikola: optional('DID_AGENT_ID_NIKOLA', ''),
+    },
+    recallApiKey: optional('RECALL_API_KEY', ''),
+    recallApiBase: optional('RECALL_API_BASE', 'https://api.recall.ai/api/v1'),
+    recallWebhookUrl: optional('RECALL_WEBHOOK_URL', ''),
+    recallWebhookSecret: optional('RECALL_WEBHOOK_SECRET', ''),
+    deepgramApiKey: optional('DEEPGRAM_API_KEY', ''),
+    sttProvider: optional('LIVE_STT_PROVIDER', 'deepgram'),
+    ttsStreaming: optionalBool('LIVE_TTS_STREAMING', true),
   },
 };
 

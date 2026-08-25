@@ -67,7 +67,7 @@ export const RunHuntingPipelineDto = z.preprocess(
       verticalName: z.string().trim().max(200).optional(),
       intensity: z.number().int().min(1).max(100).default(60),
       templateKey: z.enum(['nurture-loop', 'client-acquisition-pipeline', 'lead-proxy-acquisition-pipeline']).default('nurture-loop'),
-      processOutbound: z.boolean().default(true),
+      processOutbound: z.boolean().default(false),
       force: z.boolean().default(false),
     })
     .strict()

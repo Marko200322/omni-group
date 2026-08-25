@@ -6,6 +6,8 @@ import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 import type { SolutionDetail } from '@/lib/public-site-api';
 import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
+import { getPackageAvailability, canCheckoutPackage, getPackageAnchorEur } from '@/lib/package-delivery-spec';
+import { buildLoginNextForQuote } from '@/lib/checkout-navigation';
 
 type Props = {
   solution: SolutionDetail;
@@ -17,6 +19,13 @@ function deliverableDisplayName(id: string, fallback: string) {
 
 export function VerticalLanding({ solution }: Props) {
   const pack = solution.deliveryPack;
+  const verticalAvailability = getPackageAvailability('vertical-package');
+  const verticalReady = canCheckoutPackage('vertical-package');
+  const verticalBuyHref = buildLoginNextForQuote({
+    service: 'vertical-package',
+    category: solution.category,
+    vertical: solution.slug,
+  });
 
   return (
     <div className="px-4 py-16">
@@ -50,20 +59,42 @@ export function VerticalLanding({ solution }: Props) {
             initial={{ opacity: 0, y: 8 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="rounded-2xl border border-violet-500/25 bg-violet-500/10 p-6"
+            className={`rounded-2xl border p-6 ${
+              verticalReady
+                ? 'border-violet-500/25 bg-violet-500/10'
+                : 'border-amber-500/25 bg-amber-500/5'
+            }`}
           >
-            <div className="flex items-center gap-2 text-violet-200">
+            <div className="flex flex-wrap items-center gap-2 text-violet-200">
               <Sparkles className="h-5 w-5" />
               <h2 className="font-display text-xl font-semibold">Vertical package</h2>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${
+                  verticalReady ? 'bg-emerald-500/20 text-emerald-200' : 'bg-amber-500/20 text-amber-100'
+                }`}
+              >
+                {verticalAvailability.badge}
+              </span>
             </div>
             <p className="mt-3 text-3xl font-bold text-white">{formatEur(pack.verticalPackageQuoteEur)}/mo</p>
             <p className="mt-2 text-sm text-slate-400">CRM, automations, and AI support tailored to the niche.</p>
-            <Link
-              href={`/contact?service=vertical-package&vertical=${solution.slug}`}
-              className="btn-primary mt-6 inline-flex items-center gap-2 text-sm"
-            >
-              Request a quote <ArrowRight className="h-4 w-4" />
-            </Link>
+            {!verticalReady && (
+              <p className="mt-3 text-sm text-amber-100">
+                Currently under construction. This industry package is not for sale yet — it opens automatically when the factory reaches the required phase.
+              </p>
+            )}
+            {verticalReady ? (
+              <Link href={verticalBuyHref} className="btn-primary mt-6 inline-flex items-center gap-2 text-sm">
+                Buy now <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href={`/contact?service=vertical-package&vertical=${solution.slug}`}
+                className="btn-glass mt-6 inline-flex items-center gap-2 text-sm"
+              >
+                Notify me when ready <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </motion.section>
 
           <motion.section
@@ -74,12 +105,47 @@ export function VerticalLanding({ solution }: Props) {
           >
             <h2 className="font-display text-xl font-semibold text-white">Recommended deliverables</h2>
             <ul className="mt-4 space-y-3">
-              {pack.recommendedDeliverables.slice(0, 5).map((d) => (
-                <li key={d.id} className="flex items-start justify-between gap-3 text-sm">
-                  <span className="text-slate-300">{deliverableDisplayName(d.id, d.name ?? d.nameSr ?? d.id)}</span>
-                  <span className="shrink-0 font-medium text-violet-200">{formatEur(d.clientPriceEur)}</span>
-                </li>
-              ))}
+              {(pack.recommendedDeliverables.length
+                ? pack.recommendedDeliverables
+                : DELIVERABLE_CATALOG.map((d) => ({
+                    id: d.id,
+                    name: d.name,
+                    nameSr: d.nameSr,
+                    clientPriceEur: 0,
+                    billing: d.billing,
+                  }))
+              ).map((d) => {
+                const ready = canCheckoutPackage(d.id);
+                const availability = getPackageAvailability(d.id);
+                const href = buildLoginNextForQuote({
+                  service: d.id,
+                  category: solution.category,
+                  vertical: solution.slug,
+                });
+                const price = formatEur(
+                  d.clientPriceEur > 0 ? d.clientPriceEur : getPackageAnchorEur(d.id),
+                );
+                return (
+                  <li key={d.id} className="flex items-start justify-between gap-3 text-sm">
+                    <span className="text-slate-300">
+                      {deliverableDisplayName(d.id, d.name ?? d.nameSr ?? d.id)}
+                      {!ready && (
+                        <span className="mt-0.5 block text-[11px] text-amber-200/90">
+                          {availability.badge}
+                        </span>
+                      )}
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block font-medium text-violet-200">{price}</span>
+                      {ready ? (
+                        <Link href={href} className="text-[11px] text-emerald-300 hover:text-white">
+                          Buy
+                        </Link>
+                      ) : null}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </motion.section>
         </div>

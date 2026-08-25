@@ -8,8 +8,21 @@ import { fadeUp } from '@/lib/animations';
 import { getIndustryCategory } from '@/lib/category-pricing';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 import { deliverableLabel } from '@/lib/display-text';
+import { LAUNCH_BUNDLE_SPECS } from '@/lib/launch-bundles';
 
-function buildDefaultMessage(serviceId: string, categorySlug: string): string {
+function topicLabel(topic: string): string {
+  const bundle = LAUNCH_BUNDLE_SPECS.find((b) => b.contactTopic === topic);
+  if (bundle) return bundle.title;
+  if (topic === 'regulated-founding-partner') return 'Regulated founding partner';
+  return topic.replace(/-/g, ' ');
+}
+
+function buildDefaultMessage(
+  serviceId: string,
+  categorySlug: string,
+  verticalSlug: string,
+  topic: string,
+): string {
   const lines: string[] = [];
   const deliverable = serviceId ? getDeliverable(serviceId) : null;
   if (deliverable) {
@@ -17,9 +30,15 @@ function buildDefaultMessage(serviceId: string, categorySlug: string): string {
   } else if (serviceId) {
     lines.push(`I'm interested in: ${serviceId.replace(/-/g, ' ')}.`);
   }
+  if (topic) {
+    lines.push(`Topic: ${topicLabel(topic)}.`);
+  }
   const categoryMeta = categorySlug ? getIndustryCategory(categorySlug) : null;
   if (categoryMeta) {
     lines.push(`Industry: ${categoryMeta.name}.`);
+  }
+  if (verticalSlug) {
+    lines.push(`Vertical niche: ${verticalSlug.replace(/-/g, ' ')}.`);
   }
   lines.push('', 'Project details / timeline:');
   return lines.join('\n');
@@ -29,13 +48,16 @@ export function ContactForm() {
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('service') ?? '';
   const categorySlug = searchParams.get('category') ?? '';
+  const verticalSlug = searchParams.get('vertical') ?? '';
+  const topicRaw = searchParams.get('topic') ?? '';
+  const topic = /^[a-z0-9_-]{1,64}$/.test(topicRaw) ? topicRaw : '';
 
   const deliverable = serviceId ? getDeliverable(serviceId) : null;
   const categoryMeta = categorySlug ? getIndustryCategory(categorySlug) : null;
 
   const defaultMessage = useMemo(
-    () => buildDefaultMessage(serviceId, categorySlug),
-    [serviceId, categorySlug],
+    () => buildDefaultMessage(serviceId, categorySlug, verticalSlug, topic),
+    [serviceId, categorySlug, verticalSlug, topic],
   );
 
   const [message, setMessage] = useState(defaultMessage);
@@ -73,6 +95,8 @@ export function ContactForm() {
           message: String(fd.get('message') || message),
           ...(serviceId ? { service: serviceId } : {}),
           ...(categorySlug ? { category: categorySlug } : {}),
+          ...(verticalSlug ? { vertical: verticalSlug } : {}),
+          ...(topic ? { topic } : {}),
         };
         try {
           const res = await fetch('/api/contact', {
@@ -92,21 +116,17 @@ export function ContactForm() {
           if (!res.ok || !data.ok) {
             setStatus('err');
             const err = data.error || `HTTP ${res.status}`;
-            if (err === 'contact_email_env_incomplete') {
-              setErrMsg('email configuration incomplete (FROM/TO)');
+            if (err === 'contact_email_env_incomplete' || err === 'contact_delivery_unconfigured') {
+              setErrMsg('email delivery is temporarily unavailable — please email us directly');
             } else if (err === 'email_provider_error' || err === 'email_send_failed') {
-              setErrMsg('Resend failed — check your API key');
+              setErrMsg('email delivery failed — please try again shortly');
             } else {
-              setErrMsg(err);
+              setErrMsg('please try again shortly');
             }
             return;
           }
           setStatus('ok');
-          setOkMsg(
-            data.message === 'sent_via_resend'
-              ? 'Message sent by email. We will get back to you soon.'
-              : 'Message received (dev mode — set RESEND_API_KEY for live email).',
-          );
+          setOkMsg('Message received. We will get back to you soon.');
           e.currentTarget.reset();
           setMessage(defaultMessage);
         } catch {
@@ -115,17 +135,29 @@ export function ContactForm() {
         }
       }}
     >
-      {(serviceLabel || categoryMeta) && (
+      {(serviceLabel || categoryMeta || verticalSlug || topic) && (
         <p className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm text-violet-100">
           {serviceLabel && (
             <>
               <span className="text-slate-400">Service:</span> {serviceLabel}
             </>
           )}
-          {serviceLabel && categoryMeta && ' · '}
+          {serviceLabel && (categoryMeta || verticalSlug || topic) && ' · '}
+          {topic && (
+            <>
+              <span className="text-slate-400">Topic:</span> {topicLabel(topic)}
+            </>
+          )}
+          {topic && (categoryMeta || verticalSlug) && ' · '}
           {categoryMeta && (
             <>
               <span className="text-slate-400">Industry:</span> {categoryMeta.name}
+            </>
+          )}
+          {categoryMeta && verticalSlug && ' · '}
+          {verticalSlug && (
+            <>
+              <span className="text-slate-400">Vertical:</span> {verticalSlug.replace(/-/g, ' ')}
             </>
           )}
         </p>

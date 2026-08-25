@@ -97,6 +97,7 @@ function Invoke-VpsRemoteBashScript {
     [string]$SshKey = '',
     [string]$SshPassword = '',
     [string]$ScriptContent,
+    [int]$TimeOutSeconds = 7200,
     [switch]$DryRun,
     [object]$Session = $null
   )
@@ -104,7 +105,7 @@ function Invoke-VpsRemoteBashScript {
   $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($ScriptContent))
   $cmd = "echo $b64 | base64 -d | bash"
   return Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
-    -SshPassword $SshPassword -Command $cmd -DryRun:$DryRun -Session $Session
+    -SshPassword $SshPassword -Command $cmd -TimeOutSeconds $TimeOutSeconds -DryRun:$DryRun -Session $Session
 }
 
 function Sync-VpsRemoteDirectory {
@@ -129,7 +130,13 @@ function Sync-VpsRemoteDirectory {
     '--exclude=dist',
     '--exclude=.next',
     '--exclude=deploy-secrets.local',
-    '--exclude=omni-shared-vault'
+    '--exclude=omni-shared-vault',
+    '--exclude=.env.docker.prod',
+    '--exclude=.env.vps.prod',
+    '--exclude=atina-platform/atina/.env.docker.prod',
+    '--exclude=atina-platform/atina/.env.vps.prod',
+    '--exclude=apps/omnigroup-web/.env.production',
+    '--exclude=apps/omnigroup-web/.env.vps.production'
   )
 
   if ($DryRun) {
@@ -159,7 +166,7 @@ function Sync-VpsRemoteDirectory {
     if ($LASTEXITCODE -ne 0) { throw 'scp upload failed' }
   }
 
-  $extract = "mkdir -p $RemotePath && tar -xzf $remoteTar -C $RemotePath && rm -f $remoteTar"
+  $extract = "mkdir -p $RemotePath && tar -xzf $remoteTar -C $RemotePath && rm -f $remoteTar && (chmod +x $RemotePath/scripts/*.sh || true)"
   $Session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $extract -Session $Session
 
@@ -169,7 +176,7 @@ function Sync-VpsRemoteDirectory {
 
 function Close-VpsSession {
   param([object]$Session)
-  if ($Session) {
+  if ($Session -and $Session.PSObject.Properties['SessionId']) {
     Remove-SSHSession -SessionId $Session.SessionId -ErrorAction SilentlyContinue | Out-Null
   }
 }

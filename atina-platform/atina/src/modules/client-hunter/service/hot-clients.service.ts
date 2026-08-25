@@ -1,6 +1,8 @@
 import type { JobBoardPlatform } from '../data/job-board-catalog';
 import { getJobBoardPlatform } from '../data/job-board-catalog';
+import { config } from '../../../config';
 import { computeJobHuntEconomics } from '../lib/job-hunt-copy';
+import { extractHotClientContactEmail, passesHotClientPersistGate } from '../lib/company-email';
 import { HotClientsRepository, type InsertHotClientInput } from '../repository/hot-clients.repository';
 
 export type HotClientHeatInput = {
@@ -20,6 +22,7 @@ export type HotClientHeatInput = {
   sourceRunId?: string | null;
   crmContactId?: string | null;
   outboundMessageId?: string | null;
+  contactEmail?: string | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -32,8 +35,10 @@ export function computeHeatScore(input: HotClientHeatInput, platform?: JobBoardP
   if (input.city) score += 4;
   if (input.hasEmail) score += 18;
   if (input.jobUrl) score += 5;
-  if (platform?.kind === 'government') score += 8;
-  else if (platform?.kind === 'job_board') score += 5;
+  if (platform?.kind === 'job_board') score += 5;
+  else if (platform?.kind === 'freelance') score += 4;
+  else if (platform?.kind === 'aggregator') score += 3;
+  // government platforms are excluded from commercial hunts — no heat boost
   if (input.huntIntensity) score += Math.min(12, Math.round(input.huntIntensity / 8));
   return Math.min(100, Math.max(0, score));
 }
@@ -50,7 +55,31 @@ export class HotClientsService {
 
   async recordFromHunt(input: HotClientHeatInput) {
     const platform = getJobBoardPlatform(input.platformSlug);
-    const heatScore = computeHeatScore(input, platform);
+    const platformKind =
+      platform?.kind ?? (typeof input.metadata?.platform_kind === 'string' ? input.metadata.platform_kind : null);
+    const contactEmail = extractHotClientContactEmail(input);
+    if (
+      !passesHotClientPersistGate(
+        {
+          platformKind,
+          contactEmail,
+          hasEmail: input.hasEmail,
+          metadata: input.metadata,
+        },
+        {
+          excludePlatformKinds: config.hunt.excludePlatformKinds,
+          companyEmailsOnly: config.hunt.companyEmailsOnly,
+        },
+      )
+    ) {
+      return null;
+    }
+
+    const heatInput: HotClientHeatInput = {
+      ...input,
+      hasEmail: contactEmail ? true : input.hasEmail,
+    };
+    const heatScore = computeHeatScore(heatInput, platform);
     const heatBand = resolveHeatBand(heatScore);
     const salary = input.salaryGrossMonthlyEur ?? null;
     const atinaMonthlyEur = salary ? computeJobHuntEconomics(salary).atinaMonthlyEur : null;
@@ -76,7 +105,8 @@ export class HotClientsService {
       sourceRunId: input.sourceRunId,
       metadata: {
         ...(input.metadata ?? {}),
-        platform_kind: platform?.kind ?? 'job_board',
+        platform_kind: platformKind ?? platform?.kind ?? 'job_board',
+        ...(contactEmail ? { contact_email: contactEmail } : {}),
       },
     };
 

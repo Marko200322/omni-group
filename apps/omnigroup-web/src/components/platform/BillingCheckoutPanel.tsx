@@ -11,6 +11,11 @@ import {
   getPlanPriceForCategory,
   type PlanSlug,
 } from '@/lib/category-pricing';
+import { describeAtinaError } from '@/lib/atina-errors';
+
+function atinaCheckoutError(json: { error?: string; detail?: string }, fallback: string): string {
+  return describeAtinaError(json.error ?? fallback);
+}
 
 type PaymentMethod = {
   id: string;
@@ -78,6 +83,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') ?? '';
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [methodsLoaded, setMethodsLoaded] = useState(false);
   const [mode, setMode] = useState<string>('manual');
   const [planSlug, setPlanSlug] = useState('pro');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -128,6 +134,8 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         setMethods(json.data.methods ?? []);
       } catch {
         if (!cancelled) setError('Unable to load payment methods.');
+      } finally {
+        if (!cancelled) setMethodsLoaded(true);
       }
     })();
     return () => {
@@ -152,7 +160,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; data?: KriptomanCheckout; error?: string; detail?: string };
       if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.detail ?? json.error ?? 'kriptoman_checkout_failed');
+        throw new Error(atinaCheckoutError(json, 'kriptoman_checkout_failed'));
       }
       setKriptomanCheckout(json.data);
       if (json.data.paymentUrl?.startsWith('http')) {
@@ -180,7 +188,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         detail?: string;
       };
       if (!res.ok || !json.ok) {
-        throw new Error(json.detail ?? json.error ?? 'sync_failed');
+        throw new Error(atinaCheckoutError(json, 'sync_failed'));
       }
       if (json.data?.activated) setSent(true);
       else setError('Payment is not confirmed on the network yet. Wait a few minutes and try again.');
@@ -211,7 +219,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; data?: { url?: string | null }; detail?: string; error?: string };
       if (!res.ok || !json.ok || !json.data?.url) {
-        throw new Error(json.detail ?? json.error ?? 'stripe_checkout_failed');
+        throw new Error(atinaCheckoutError(json, 'stripe_checkout_failed'));
       }
       window.location.href = json.data.url;
     } catch (err) {
@@ -237,7 +245,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         error?: string;
       };
       if (!res.ok || !json.ok || !json.data?.approveUrl) {
-        throw new Error(json.detail ?? json.error ?? 'paypal_order_failed');
+        throw new Error(atinaCheckoutError(json, 'paypal_order_failed'));
       }
       window.location.href = json.data.approveUrl;
     } catch (err) {
@@ -261,7 +269,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; data?: WiseCheckout; detail?: string; error?: string };
       if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.detail ?? json.error ?? 'wise_transfer_failed');
+        throw new Error(atinaCheckoutError(json, 'wise_transfer_failed'));
       }
       setWiseCheckout(json.data);
     } catch (err) {
@@ -288,7 +296,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; data?: ManualCheckout; error?: string; detail?: string };
       if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.detail ?? json.error ?? 'checkout_failed');
+        throw new Error(atinaCheckoutError(json, 'checkout_failed'));
       }
       setCheckout(json.data);
     } catch (err) {
@@ -308,7 +316,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!res.ok || !json.ok) {
-        throw new Error(json.detail ?? json.error ?? 'mark_sent_failed');
+        throw new Error(atinaCheckoutError(json, 'mark_sent_failed'));
       }
       setSent(true);
     } catch (err) {
@@ -323,9 +331,16 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const stripeAvailable = methods.some((m) => m.id === 'stripe' && m.available);
   const paypalAvailable = methods.some((m) => m.id === 'paypal' && m.available);
   const wiseAvailable = methods.some((m) => m.id === 'wise' && m.available);
+  const ibanPrimary = mode === 'manual' && manualAvailable;
 
   return (
     <motion.div className="mt-4 space-y-4">
+      {!methodsLoaded && (
+        <p className="flex items-center gap-2 text-sm text-slate-400" aria-live="polite">
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-400" />
+          Loading payment options…
+        </p>
+      )}
       {purchase?.subscription?.status === 'active' && (
         <motion.div
           className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 text-sm text-slate-200"
@@ -367,9 +382,19 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         </motion.div>
       )}
 
-      {mode === 'manual' && (
+      {ibanPrimary && (
+        <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
+          <span className="font-medium text-white">Active payment method: Bank transfer (IBAN)</span>
+          <span className="mt-1 block text-emerald-200/90">
+            Generate instructions below, pay using the reference on your proforma, then confirm when sent. Card and
+            crypto are not enabled for this account.
+          </span>
+        </p>
+      )}
+
+      {mode === 'manual' && !ibanPrimary && (
         <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-          Sole proprietor mode — bank transfer. Price depends on industry category; same amount shown on /pricing.
+          Bank transfer billing — price depends on industry category; same amount shown on /pricing.
         </p>
       )}
 
@@ -492,26 +517,32 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             onClick={startWiseCheckout}
             disabled={disabled || loading}
           >
-            Wise transfer
+            International transfer (Wise)
           </button>
         )}
         {manualAvailable && (
           <button
             type="button"
-            className="btn-glass text-sm disabled:opacity-50"
+            className={`text-sm disabled:opacity-50 ${ibanPrimary ? 'btn-primary' : 'btn-glass'}`}
             onClick={startManualCheckout}
             disabled={disabled || loading}
           >
-            Bank transfer (manual)
+            {loading ? 'Generating…' : 'Bank transfer (IBAN)'}
           </button>
         )}
       </div>
 
-      {!stripeAvailable && !paypalAvailable && !wiseAvailable && !manualAvailable && !kriptomanAvailable && (
-        <p className="text-sm text-amber-400/90">
-          No payment methods are configured — set PAYMENTS/STRIPE/PAYPAL in Atina .env.
-        </p>
-      )}
+      {methodsLoaded &&
+        !stripeAvailable &&
+        !paypalAvailable &&
+        !wiseAvailable &&
+        !manualAvailable &&
+        !kriptomanAvailable && (
+          <p className="text-sm text-amber-400/90">
+            Online payment is being set up. Please contact us and we&apos;ll send you payment
+            instructions to complete your order.
+          </p>
+        )}
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
@@ -565,7 +596,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Wise instructions</p>
+          <p className="font-medium text-white">International transfer instructions</p>
           <ul className="mt-3 space-y-1 font-mono text-xs">
             <li>Reference: {wiseCheckout.reference}</li>
             <li>
@@ -579,7 +610,10 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               ) : null
             )}
           </ul>
-          <p className="mt-4 text-xs text-slate-400">Admin confirms payment after verifying the Wise transfer.</p>
+          <p className="mt-4 text-xs text-slate-400">
+            Send the transfer using the details above. An admin confirms payment after verifying it on the bank
+            statement — same process as IBAN checkout.
+          </p>
         </motion.div>
       )}
 
@@ -589,7 +623,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Payment instructions</p>
+          <p className="font-medium text-white">Bank transfer (IBAN) instructions</p>
           <p className="mt-2 text-xs text-slate-400">
             Purchasing: <span className="text-white">{planSlug}</span> · {formatCycle(billingCycle)}
             {categoryMeta ? ` · ${categoryMeta.name}` : ''}

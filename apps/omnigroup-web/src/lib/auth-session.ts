@@ -147,7 +147,11 @@ function sessionCookieSecure(): boolean {
   if (flag === 'false' || flag === '0') return false;
   if (flag === 'true' || flag === '1') return true;
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? '').trim().toLowerCase();
-  return site.startsWith('https://');
+  if (site.startsWith('https://')) return true;
+  if (site.startsWith('http://')) return false;
+  // Default to secure in production so the session cookie is never sent over
+  // plain HTTP when the site URL is misconfigured/unset.
+  return process.env.NODE_ENV === 'production';
 }
 
 export async function setSessionCookie(session: AuthSession): Promise<void> {

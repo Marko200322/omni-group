@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -22,8 +22,8 @@ export class ClientHunterModule implements IModule {
 
   async initialize(): Promise<void> {
     this.router.get('/readiness', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.readiness);
-    this.router.post('/bootstrap', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.bootstrap);
-    this.router.post('/pipeline/run', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(RunHuntingPipelineDto), this.controller.runPipeline);
+    this.router.post('/bootstrap', authenticate, requireAdmin, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.bootstrap);
+    this.router.post('/pipeline/run', authenticate, requireAdmin, validateQuery(StrictEmptyQueryDto), validateBody(RunHuntingPipelineDto), this.controller.runPipeline);
     this.router.post(
       '/preview/german-job-email',
       authenticate,

@@ -41,6 +41,19 @@ type RolloutSummary = {
   nextCategoryName?: string | null;
 };
 
+type HuntingLive = {
+  score?: number;
+  ready?: boolean;
+  outbound?: {
+    sentToday?: number;
+    remainingToday?: number;
+    warmupComplete?: boolean;
+    byStatus?: { draft?: number; queued?: number; sent?: number };
+  };
+};
+
+type CardKey = 'rollout' | 'autonomy' | 'hunting' | 'factory' | 'payments';
+
 type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionEmail: string;
@@ -81,33 +94,60 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
   const [factoryStats, setFactoryStats] = useState<FactoryStats | null>(null);
   const [autonomy, setAutonomy] = useState<AutonomyStatus | null>(null);
   const [rollout, setRollout] = useState<RolloutSummary | null>(null);
+  const [hunting, setHunting] = useState<HuntingLive | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [cardErrors, setCardErrors] = useState<Partial<Record<CardKey, string>>>({});
 
   const metrics = buildAdminMetrics(snapshot, overview);
 
   const loadExtras = useCallback(async () => {
     setRefreshing(true);
     setError(null);
-    try {
-      const [fs, as, rs, pr] = await Promise.all([
-        fetch('/api/atina/product-factory/stats').then((r) => r.json()),
-        fetch('/api/atina/autonomy-loop/status').then((r) => r.json()),
-        fetch('/api/atina/autonomy-loop/categories/status').then((r) => r.json()),
-        fetch('/api/atina/admin/payments?status=processing&provider=manual&limit=50').then((r) => r.json()),
-      ]);
-      if (fs.ok) setFactoryStats(fs.data as FactoryStats);
-      if (as.ok) setAutonomy(as.data as AutonomyStatus);
-      if (rs.ok) setRollout(rs.data as RolloutSummary);
-      if (pr.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
-    } finally {
-      setRefreshing(false);
+    const nextCardErrors: Partial<Record<CardKey, string>> = {};
+    // Fetch each source independently so one failing endpoint can't blank the
+    // whole dashboard — each card keeps its own live/loading/fallback state.
+    const readJson = async (url: string): Promise<{ ok?: boolean; data?: unknown } | null> => {
+      try {
+        const r = await fetch(url);
+        return (await r.json()) as { ok?: boolean; data?: unknown };
+      } catch {
+        return null;
+      }
+    };
+
+    const [fs, as, rs, pr, hr] = await Promise.all([
+      readJson('/api/atina/product-factory/stats'),
+      readJson('/api/atina/autonomy-loop/status'),
+      readJson('/api/atina/autonomy-loop/categories/status'),
+      readJson('/api/atina/admin/payments?status=processing&limit=50'),
+      readJson('/api/atina/hunting/readiness'),
+    ]);
+
+    if (fs?.ok) setFactoryStats(fs.data as FactoryStats);
+    else nextCardErrors.factory = 'Factory stats unavailable';
+
+    if (as?.ok) setAutonomy(as.data as AutonomyStatus);
+    else nextCardErrors.autonomy = 'Autonomy status unavailable';
+
+    if (rs?.ok) setRollout(rs.data as RolloutSummary);
+    else nextCardErrors.rollout = 'Rollout status unavailable';
+
+    if (pr?.ok) setPayments((pr.data as AtinaAdminPayment[]) ?? []);
+    else nextCardErrors.payments = 'Payments list unavailable';
+
+    if (hr?.ok) setHunting(hr.data as HuntingLive);
+    else nextCardErrors.hunting = 'Hunting readiness unavailable';
+
+    setCardErrors(nextCardErrors);
+
+    if (!fs && !as && !rs && !pr && !hr) {
+      setError('Live data unavailable — check the connection and retry.');
     }
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -137,12 +177,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     }
   };
 
-  const confirmPayment = async (paymentId: string) => {
+  const confirmPayment = async (paymentId: string, provider: string) => {
     setBusy(paymentId);
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/manual/confirm/${paymentId}`, { method: 'POST' });
+      const res = await fetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
+        method: 'POST',
+      });
       const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'confirm_failed');
       setPayments((prev) => prev.filter((p) => p.id !== paymentId));
@@ -194,7 +236,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
               <StatTile label="Users" value={metrics.activeUsers} accent="violet" />
               <StatTile label="MRR" value={metrics.mrr} accent="cyan" />
             </div>
-            <Card title="Category rollout">
+            <Card title="Category rollout" error={cardErrors.rollout}>
               <p className="text-2xl font-bold text-white">
                 {rollout?.overallCompletionPct ?? '—'}%
               </p>
@@ -203,13 +245,29 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                 {rollout?.nextCategoryName ? ` · next: ${rollout.nextCategoryName}` : ''}
               </p>
             </Card>
-            <Card title="Autonomy">
+            <Card title="Autonomy" error={cardErrors.autonomy}>
               <p className="text-sm text-slate-300">
                 Scheduler: {autonomy?.scheduler?.running ? 'running' : 'stopped'}
               </p>
               <p className="text-sm text-slate-400">
                 Budget: ${autonomy?.budget?.balanceUsd?.toFixed(0) ?? '—'}
                 {autonomy?.budget?.hardStop ? ' · HARD STOP' : ''}
+              </p>
+            </Card>
+            <Card title="Lead machine (live)" error={cardErrors.hunting}>
+              <p className="text-2xl font-bold text-white">
+                {hunting?.score != null ? `${hunting.score}%` : '—'}
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  {hunting?.ready ? 'ready' : hunting ? 'not ready' : 'loading…'}
+                </span>
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Today: {hunting?.outbound?.sentToday ?? '—'} sent · {hunting?.outbound?.remainingToday ?? '—'} left
+              </p>
+              <p className="text-sm text-slate-400">
+                Drafts: {hunting?.outbound?.byStatus?.draft ?? '—'}
+                {' · '}queued: {hunting?.outbound?.byStatus?.queued ?? '—'}
+                {hunting?.outbound?.warmupComplete ? ' · warmup OK' : ''}
               </p>
             </Card>
             {!pushEnabled && (
@@ -232,9 +290,14 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'uplate' && (
           <div className="space-y-3">
+            {cardErrors.payments ? (
+              <Card title="Pending payments" error={cardErrors.payments}>
+                <p className="text-sm text-slate-400">Showing last loaded list — pull to refresh.</p>
+              </Card>
+            ) : null}
             {payments.length === 0 ? (
               <Card title="No pending payments">
-                <p className="text-sm text-slate-400">All manual payments have been processed.</p>
+                <p className="text-sm text-slate-400">All pending payments have been processed.</p>
               </Card>
             ) : (
               payments.map((p) => {
@@ -244,12 +307,13 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
                   <div key={p.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                     <p className="font-semibold text-white">{formatAmount(p.amount, p.currency)}</p>
                     <p className="mt-1 text-sm text-slate-400">{p.email ?? p.user_name ?? p.user_id}</p>
+                    <p className="mt-1 text-xs text-violet-300">Provider: {p.provider}</p>
                     {deliverable && <p className="text-xs text-violet-300">{deliverable}</p>}
                     {p.description && <p className="mt-1 text-xs text-slate-500">{p.description}</p>}
                     <button
                       type="button"
                       disabled={busy === p.id}
-                      onClick={() => void confirmPayment(p.id)}
+                      onClick={() => void confirmPayment(p.id, p.provider)}
                       className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-medium text-white active:bg-emerald-500 disabled:opacity-50"
                     >
                       {busy === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -264,13 +328,13 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
 
         {tab === 'fabrika' && (
           <div className="space-y-3">
-            <Card title="Client orders">
+            <Card title="Client orders" error={cardErrors.factory}>
               <p className="text-2xl font-bold">{factoryStats?.clientOrders?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
                 In progress: {factoryStats?.clientOrders?.building ?? 0} · Ready: {factoryStats?.clientOrders?.ready ?? 0}
               </p>
             </Card>
-            <Card title="Internal SaaS">
+            <Card title="Internal SaaS" error={cardErrors.factory}>
               <p className="text-2xl font-bold">{factoryStats?.internalProducts?.total ?? '—'}</p>
               <p className="text-sm text-slate-400">
                 In progress: {factoryStats?.internalProducts?.building ?? 0} · Ready: {factoryStats?.internalProducts?.ready ?? 0}
@@ -390,10 +454,11 @@ function StatTile({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, error }: { title: string; children: React.ReactNode; error?: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <p className="text-xs uppercase tracking-wider text-slate-500">{title}</p>
+      {error ? <p className="mt-1 text-xs text-rose-300">{error}</p> : null}
       <div className="mt-2">{children}</div>
     </div>
   );

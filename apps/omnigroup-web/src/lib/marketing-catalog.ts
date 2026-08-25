@@ -20,6 +20,11 @@ import {
   type PlanSlug,
 } from './category-pricing';
 import { getDeliverable } from './deliverable-catalog';
+import {
+  getPackageAnchorEur,
+  getPackageAvailability,
+  getPackageDeliverySpec,
+} from './package-delivery-spec';
 
 /** Services with a deliverable go to /pricing checkout; others stay on /contact. */
 export function serviceCatalogHref(serviceId: string): string {
@@ -39,6 +44,7 @@ export type CatalogItem = {
   includedIn?: ('starter' | 'pro' | 'enterprise')[];
   href: string;
   badge?: string;
+  badgeVariant?: 'available' | 'upcoming' | 'contact';
 };
 
 export type CatalogCategory = {
@@ -74,12 +80,12 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         href: '/dashboard#billing',
       },
       {
-        id: 'admin-ops',
-        name: 'Operator console',
-        description: 'Admin overview of users, payments, workflow stats, and modules.',
+        id: 'team-access',
+        name: 'Team access',
+        description: 'Invite colleagues to your workspace — roles and permissions for larger teams.',
         priceLabel: 'from €99/mo (Growth)',
         includedIn: ['pro', 'enterprise'],
-        href: '/admin',
+        href: '/contact',
       },
       {
         id: 'notifications',
@@ -113,7 +119,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Lead generation, follow-up sequences, and deal closing.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#sales',
+        href: '/dashboard#consultation',
       },
       {
         id: 'contracts',
@@ -121,7 +127,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Create, track, and digital signature workflows.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#sales',
+        href: '/dashboard#consultation',
       },
       {
         id: 'sales-avatar',
@@ -129,7 +135,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: '4 sales agents — chat and voice for lead qualification.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#sales',
+        href: '/dashboard#consultation',
       },
     ],
   },
@@ -145,7 +151,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Workflow chains, onboarding pipelines, and recurring jobs.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#automations',
+        href: '/pricing?plan=pro',
       },
       {
         id: 'tasks',
@@ -153,7 +159,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Job queue, statuses, and real-time execution tracking.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#automations',
+        href: '/dashboard#projects',
       },
       {
         id: 'scraper',
@@ -161,7 +167,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Collect web data via Apify/Bright Data integration.',
         priceLabel: 'from €99/mo + API costs',
         includedIn: ['pro', 'enterprise'],
-        href: '/contact',
+        href: '/pricing?plan=pro',
       },
       {
         id: 'craftor',
@@ -169,7 +175,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'AI assistant for freelance platforms — proposals, hunting, deploy.',
         priceLabel: 'from €99/mo',
         includedIn: ['pro', 'enterprise'],
-        href: '/contact',
+        href: '/pricing?plan=pro',
         badge: 'Pro',
       },
     ],
@@ -210,7 +216,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Search documentation and context for AI answers.',
         priceLabel: 'from €249/mo',
         includedIn: ['enterprise'],
-        href: '/contact',
+        href: '/dashboard#account',
       },
     ],
   },
@@ -227,7 +233,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         priceLabel: 'from €249/mo',
         priceMonthly: 249,
         includedIn: ['enterprise'],
-        href: '/contact',
+        href: '/pricing?plan=enterprise',
       },
       {
         id: 'omnitube',
@@ -235,7 +241,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Automated pipeline for video channels and content.',
         priceLabel: 'from €99/mo + production',
         includedIn: ['pro', 'enterprise'],
-        href: '/contact',
+        href: '/pricing?plan=pro',
       },
       {
         id: 'omnigame',
@@ -243,7 +249,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Validation and pipeline for game projects (Steam integration).',
         priceLabel: 'from €249/mo',
         includedIn: ['enterprise'],
-        href: '/contact',
+        href: '/pricing?plan=pro',
       },
       {
         id: 'dominus360',
@@ -251,7 +257,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Risk intelligence, KPIs, and resource management for larger teams.',
         priceLabel: 'from €249/mo',
         includedIn: ['enterprise'],
-        href: '/admin',
+        href: '/pricing?plan=enterprise',
       },
     ],
   },
@@ -392,10 +398,47 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
 ];
 
 export const MODULE_STACK = [
-  { name: 'Atina', role: 'API core', icon: Cloud, href: '/admin#system' },
-  { name: 'Astra', role: 'Automation', icon: Zap, href: '/dashboard#automations' },
-  { name: 'Titan', role: 'Operations', icon: Sparkles, href: '/admin#workflows' },
+  { name: 'Atina', role: 'API core', icon: Cloud, href: '/services' },
+  { name: 'Astra', role: 'Automation', icon: Zap, href: '/products' },
+  { name: 'Titan', role: 'Operations', icon: Sparkles, href: '/products' },
 ] as const;
+
+/** Honest descriptions + phase-aware prices from package-delivery-spec. */
+export function withPhaseServiceCatalog(categories: CatalogCategory[]): CatalogCategory[] {
+  return categories.map((cat) => ({
+    ...cat,
+    items: cat.items.map((item) => {
+      const spec = getPackageDeliverySpec(item.id);
+      const deliverable = getDeliverable(item.id);
+      const anchor = getPackageAnchorEur(item.id);
+      let next = { ...item };
+      if (spec) next = { ...next, description: spec.description };
+      if (anchor > 0 && deliverable) {
+        if (deliverable.billing === 'monthly') {
+          next = { ...next, priceLabel: `${formatEur(anchor)}/mo`, priceMonthly: anchor };
+        } else {
+          next = { ...next, priceLabel: formatEur(anchor), priceOnce: anchor };
+        }
+      }
+      if (deliverable) {
+        const availability = getPackageAvailability(item.id);
+        if (!availability.checkoutAllowed || availability.badgeTone === 'available') {
+          next = {
+            ...next,
+            badge: availability.badge,
+            badgeVariant: availability.badgeTone,
+          };
+        }
+      }
+      return next;
+    }),
+  }));
+}
+
+/** @deprecated Use withPhaseServiceCatalog — kept as alias */
+export function withHonestServiceDescriptions(categories: CatalogCategory[]): CatalogCategory[] {
+  return withPhaseServiceCatalog(categories);
+}
 
 /** Apply industry-category pricing labels to catalog (once-off service prices stay fixed). */
 export function withCatalogPricing(

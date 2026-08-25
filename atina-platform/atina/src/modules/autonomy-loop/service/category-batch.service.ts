@@ -5,6 +5,7 @@ import { getCategoryDeliveryProfile } from '../lib/vertical-delivery-profiles';
 import { AutonomyLoopRepository } from '../repository/autonomy-loop.repository';
 import { MarketResearchService } from './market-research.service';
 import { ModuleGeneratorService } from './module-generator.service';
+import { AutonomyVerticalRagService } from './autonomy-vertical-rag.service';
 
 export type CategoryBatchMode = 'research' | 'generate' | 'full';
 
@@ -25,6 +26,7 @@ export class CategoryBatchService {
   private readonly repo = new AutonomyLoopRepository();
   private readonly research = new MarketResearchService();
   private readonly generator = new ModuleGeneratorService();
+  private readonly verticalRag = new AutonomyVerticalRagService();
 
   async processCategory(
     userId: string | null,
@@ -99,6 +101,10 @@ export class CategoryBatchService {
           if (genResult.outboundDraft) {
             entry.outboundDraftId = genResult.outboundDraft.id;
             entry.outboundStatus = genResult.outboundDraft.status;
+          }
+          const rag = await this.verticalRag.ingestVertical(userId, slug);
+          if (rag.ingested) {
+            entry.ragChunks = rag.chunks ?? 0;
           }
         }
 

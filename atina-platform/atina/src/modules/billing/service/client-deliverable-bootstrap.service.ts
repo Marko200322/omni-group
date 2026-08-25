@@ -13,6 +13,7 @@ import { config } from '../../../config';
 import logger from '../../../utils/logger';
 import { isHeygenConfigured } from '../../video-meetings/providers/heygen-video.provider';
 import { isDidConfigured } from '../../video-meetings/providers/did-video.provider';
+import { getAvatarAgentAsync } from '../../video-meetings/avatar/avatar-agent.config';
 import { getSlackNotifier } from '../../../utils/slack-notifier.service';
 
 export type CrmBootstrapResult = {
@@ -466,6 +467,7 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     const memoryKey = input.paymentId.slice(0, 8);
     const agentCfg =
       input.agentType === 'support' ? config.videoMeetings.support : config.videoMeetings.sales;
+    const rosterAgent = await getAvatarAgentAsync(input.agentType).catch(() => null);
 
     const provision = {
       clientName: input.clientName,
@@ -474,9 +476,11 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
       heygenConfigured: heygen,
       didConfigured: did,
       voiceProvider: 'elevenlabs',
-      voiceId: agentCfg.voiceId || null,
-      avatarUrl: agentCfg.agentAvatarUrl || null,
-      heygenAvatarId: heygen ? agentCfg.agentAvatarUrl || 'default-roster' : null,
+      voiceId: rosterAgent?.voiceId || agentCfg.voiceId || null,
+      avatarUrl: rosterAgent?.avatarUrl || agentCfg.agentAvatarUrl || null,
+      photoUrl: rosterAgent?.photoUrl || null,
+      heygenAvatarId: rosterAgent?.heygenAvatarId || null,
+      heygenVoiceId: rosterAgent?.heygenVoiceId || null,
       dashboardUrl: `${config.app.webUrl.replace(/\/$/, '')}/dashboard#${input.agentType === 'support' ? 'support' : 'sales'}`,
       provisionedAt: new Date().toISOString(),
     };

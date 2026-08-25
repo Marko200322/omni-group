@@ -1,0 +1,150 @@
+{
+  "_comment": "Kopiraj u deploy.config.json i popuni. Ne commit-uj deploy.config.json. factoryPhase M0-M6 pali module preko prod-factory-phase.ps1.",
+
+  "vpsHost": "123.456.789.0",
+  "vpsUser": "root",
+  "sshKeyPath": "",
+  "sshPassword": "root-lozinka-servera",
+  "remotePath": "/opt/omni-group",
+
+  "siteDomain": "tvojdomen.com",
+  "apiDomain": "api.tvojdomen.com",
+
+  "phase": "v2",
+  "prodMode": "lean",
+  "factoryPhase": "M3",
+  "factoryPhaseAuto": false,
+  "monthlyBudgetEur": 200,
+  "runPhaseBootAfterDeploy": false,
+
+  "adminEmail": "admin@atina.io",
+  "adminPassword": "jaka-lozinka-min-16",
+  "paymentNotifyEmail": "ti@tvojdomen.com",
+  "contactCrmIngressEmail": "",
+  "contactCrmIngressPassword": "",
+  "supportGoogleMeetUrl": "",
+  "salesGoogleMeetUrl": "",
+  "companyLegalName": "",
+  "_companyLegalName_comment": "Popuni sutra posle LLC: pun naziv firme na fakturi",
+  "companyTaxId": "",
+  "_companyTaxId_comment": "EIN (US LLC) ili PIB/MB posle registracije u RS",
+  "companyAddress": "",
+  "_companyAddress_comment": "Registrovana adresa firme (ulica, grad, država)",
+  "registrationEnabled": false,
+  "_registrationEnabled_comment": "false = samo invite/admin kreira naloge u prod",
+
+  "foundingClientPromo": false,
+  "_foundingClientPromo_comment": "NEXT_PUBLIC_FOUNDING_CLIENT_PROMO na /pricing (build-time env)",
+  "foundingClientDiscountPct": 15,
+  "foundingClientMaxSlots": 50,
+  "foundingClientLockMonths": 12,
+
+  "manualPayment": {
+    "accountName": "Omni Group DOO",
+    "iban": "RS00...",
+    "bank": "Naziv banke",
+    "swift": "XXXXRSBG",
+    "currency": "EUR",
+    "note": "U uplati navedite referencu iz proforme."
+  },
+
+  "smtp": {
+    "enabled": false,
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "user": "",
+    "password": "",
+    "from": "noreply@tvojdomen.com"
+  },
+
+  "resend": {
+    "apiKey": "re_...",
+    "contactFrom": "noreply@tvojdomen.com",
+    "contactTo": "ti@tvojdomen.com"
+  },
+
+  "openRouterApiKey": "sk-or-v1-...",
+  "elevenLabsApiKey": "",
+
+  "scraperUrl": "",
+  "scraperKey": "",
+
+  "heygenApiKey": "",
+  "didApiKey": "",
+
+  "_liveCallAvatar_comment": "Real-time avatar u Zoom/Meet (Recall + HeyGen Live / D-ID Agents). Odvojeno od async HEYGEN_API_KEY.",
+  "liveCallAvatarEnabled": false,
+  "liveCallAvatarAllowStub": true,
+  "liveAvatarProviderChain": "heygen,d-id,stub",
+  "liveCallMaxMinutes": 30,
+  "liveCallHumanHandoffEnabled": true,
+  "heygenLiveApiKey": "",
+  "heygenDefaultAvatarId": "",
+  "didAgentsApiKey": "",
+  "didDefaultAgentId": "",
+  "didAgentIdMila": "",
+  "didAgentIdStefan": "",
+  "didAgentIdNikola": "",
+  "recallApiKey": "",
+  "recallApiBase": "https://api.recall.ai/api/v1",
+  "recallWebhookUrl": "",
+  "_recallWebhookUrl_comment": "Prazno = auto https://api.{siteDomain}/api/v1/live-call-avatar/recall/webhook",
+  "recallWebhookSecret": "",
+  "deepgramApiKey": "",
+  "liveSttProvider": "deepgram",
+  "liveTtsStreaming": true,
+
+  "_instantly_comment": "Cold outbound — posle prve prodaje + domain warmup",
+  "instantly": {
+    "apiKey": "",
+    "campaignId": ""
+  },
+
+  "hunterApiKey": "",
+  "neverbounceApiKey": "",
+  "zerobounceApiKey": "",
+
+  "stripeSecretKey": "",
+  "stripePublishableKey": "",
+  "stripeWebhookSecret": "",
+  "starterPriceId": "",
+  "proPriceId": "",
+  "enterprisePriceId": "",
+
+  "slackWebhookUrl": "",
+  "contactSlackWebhookUrl": "",
+
+  "telegramBotToken": "",
+  "telegramChatId": "",
+  "adminTelegramNotify": true,
+
+  "businessAndDevUrl": "",
+  "businessAndDevKey": "",
+  "commsUrl": "",
+  "commsKey": "",
+  "vapidPublicKey": "",
+  "vapidPrivateKey": "",
+  "vapidSubject": "",
+
+  "_externalAiStack": "M4/M5 vendor keys — popuni samo što koristiš; status: GET /api/v1/billing/factory-phase/status → externalAiStack",
+  "clayApiKey": "",
+  "salesforgeApiKey": "",
+  "intercomApiKey": "",
+  "intercomAppId": "",
+  "sierraApiKey": "",
+  "makeApiKey": "",
+  "makeWebhookUrl": "",
+  "n8nApiKey": "",
+  "n8nBaseUrl": "",
+  "rampApiKey": "",
+  "vicAiApiKey": "",
+  "jasperApiKey": "",
+  "predisApiKey": "",
+  "devinApiKey": "",
+  "replitAgentApiKey": "",
+  "crewaiApiKey": "",
+  "crewaiBaseUrl": "",
+  "langchainApiKey": "",
+  "langchainProject": ""
+}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
@@ -25,14 +26,7 @@ export async function POST(_req: Request, { params }: Params) {
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: 'confirm_failed',
-        detail: r.message ?? 'confirm_failed',
-      },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('confirm_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true });

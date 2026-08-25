@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { notifyContactSlack } from '@/lib/contact-slack-notify';
+import { notifyContactTelegram } from '@/lib/contact-telegram-notify';
 import { pushContactToCrm } from '@/lib/contact-crm-ingress';
 
 const MESSAGE_MAX_LEN = 5000;
+
+function slugParam(value: unknown): string | undefined {
+  return typeof value === 'string' && /^[a-z0-9_-]{1,64}$/.test(value) ? value : undefined;
+}
 
 /** Accepts contact form JSON; optional Resend when RESEND_API_KEY is set (server-only). */
 export async function POST(req: Request) {
@@ -15,10 +20,10 @@ export async function POST(req: Request) {
   const email = typeof body.email === 'string' ? body.email : '';
   const name = typeof body.name === 'string' ? body.name : '';
   const company = typeof body.company === 'string' ? body.company.trim() : '';
-  const service =
-    typeof body.service === 'string' && /^[a-z0-9_-]{1,64}$/.test(body.service) ? body.service : undefined;
-  const category =
-    typeof body.category === 'string' && /^[a-z0-9_-]{1,64}$/.test(body.category) ? body.category : undefined;
+  const service = slugParam(body.service);
+  const category = slugParam(body.category);
+  const vertical = slugParam(body.vertical);
+  const topic = slugParam(body.topic);
   if (!email || !name) {
     return NextResponse.json({ ok: false, error: 'name_and_email_required' }, { status: 400 });
   }
@@ -45,6 +50,8 @@ export async function POST(req: Request) {
     message: messageText,
     service,
     category,
+    vertical,
+    topic,
   });
 
   const slack = await notifyContactSlack({
@@ -54,15 +61,38 @@ export async function POST(req: Request) {
     message: messageText,
     service,
     category,
+    vertical,
+    topic,
   });
 
-  const apiKey = process.env.RESEND_API_KEY;
+  const telegram = await notifyContactTelegram({
+    name,
+    email,
+    company: company || undefined,
+    message: messageText,
+    service,
+    category,
+    vertical,
+    topic,
+  });
+
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const isProd = process.env.NODE_ENV === 'production';
+  const hasAlternateDelivery = crm.ok || slack.ok || telegram.ok;
+
   if (!apiKey) {
+    if (isProd && !hasAlternateDelivery) {
+      return NextResponse.json(
+        { ok: false, error: 'contact_delivery_unconfigured' },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({
       ok: true,
       message: 'queued_local_stub',
       crm: crm.skipped ? 'skipped' : crm.ok ? 'ok' : 'failed',
       slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+      telegram: telegram.skipped ? 'skipped' : telegram.ok ? 'ok' : 'failed',
     });
   }
 
@@ -72,21 +102,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'contact_email_env_incomplete' }, { status: 500 });
   }
 
-  const subject = service
-    ? `Contact: ${name} — ${service}`
-    : `Contact: ${name} <${email}>`;
+  const subject = topic
+    ? `Contact: ${name} — ${topic}`
+    : service
+      ? `Contact: ${name} — ${service}`
+      : `Contact: ${name} <${email}>`;
   const companyLine = company ? `Company: ${company}` : '';
   const serviceLine = service ? `Service: ${service}` : '';
+  const topicLine = topic ? `Topic: ${topic}` : '';
   const categoryLine = category ? `Category: ${category}` : '';
-  const text = [`Name: ${name}`, `Email: ${email}`, companyLine, serviceLine, categoryLine, '', 'Message:', messageText]
+  const verticalLine = vertical ? `Vertical: ${vertical}` : '';
+  const text = [
+    `Name: ${name}`,
+    `Email: ${email}`,
+    companyLine,
+    serviceLine,
+    topicLine,
+    categoryLine,
+    verticalLine,
+    '',
+    'Message:',
+    messageText,
+  ]
     .filter(Boolean)
     .join('\n');
   const companyHtml = company
     ? `<p><strong>Company:</strong> ${escapeHtml(company)}</p>`
     : '';
   const serviceHtml = service ? `<p><strong>Service:</strong> ${escapeHtml(service)}</p>` : '';
+  const topicHtml = topic ? `<p><strong>Topic:</strong> ${escapeHtml(topic)}</p>` : '';
   const categoryHtml = category ? `<p><strong>Category:</strong> ${escapeHtml(category)}</p>` : '';
-  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${categoryHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
+  const verticalHtml = vertical ? `<p><strong>Vertical:</strong> ${escapeHtml(vertical)}</p>` : '';
+  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${topicHtml}${categoryHtml}${verticalHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
 
   let res: Response;
   try {
@@ -105,6 +152,15 @@ export async function POST(req: Request) {
       }),
     });
   } catch {
+    if (crm.ok) {
+      return NextResponse.json({
+        ok: true,
+        message: 'crm_ok_email_failed',
+        error: 'email_send_failed',
+        crm: 'ok',
+        slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+      });
+    }
     return NextResponse.json({ ok: false, error: 'email_send_failed' }, { status: 502 });
   }
 
@@ -124,6 +180,7 @@ export async function POST(req: Request) {
         error: 'email_provider_error',
         crm: crm.skipped ? 'skipped' : crm.ok ? 'ok' : 'failed',
         slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+        telegram: telegram.skipped ? 'skipped' : telegram.ok ? 'ok' : 'failed',
       },
       { status: 502 },
     );
@@ -143,6 +200,7 @@ export async function POST(req: Request) {
     id: providerId,
     crm: crm.skipped ? 'skipped' : crm.ok ? 'ok' : 'failed',
     slack: slack.skipped ? 'skipped' : slack.ok ? 'ok' : 'failed',
+    telegram: telegram.skipped ? 'skipped' : telegram.ok ? 'ok' : 'failed',
   });
 }
 
@@ -153,4 +211,3 @@ function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-

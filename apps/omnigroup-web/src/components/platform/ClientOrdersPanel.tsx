@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Clock, Hammer, Package, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Hammer, Package, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 
 type Project = {
   id: string;
@@ -73,14 +73,25 @@ export function ClientOrdersPanel({ disabled }: Props) {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading your orders…</p>;
+    return (
+      <p className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading your orders…
+      </p>
+    );
   }
 
   if (error) {
     return (
-      <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
-        We couldn&apos;t load orders right now. Try again or contact support.
-      </p>
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
+        <p>We couldn&apos;t load your orders right now. Please try again or contact support.</p>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-100 underline-offset-2 hover:underline"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Retry
+        </button>
+      </div>
     );
   }
 

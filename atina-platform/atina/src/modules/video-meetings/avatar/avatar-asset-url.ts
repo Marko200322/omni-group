@@ -18,3 +18,15 @@ export function rosterAssetPaths() {
     appUrl: config.app.url,
   };
 }
+
+/** Absolute raster URL for HeyGen/D-ID (PNG/JPG — not SVG). */
+export function resolveAvatarPhotoUrl(avatarUrl: string, explicitPhotoUrl?: string): string {
+  if (explicitPhotoUrl?.trim()) return resolveAvatarAssetUrl(explicitPhotoUrl);
+  const trimmed = avatarUrl.trim();
+  if (!trimmed) return '';
+  if (/\.(png|jpe?g|webp)(\?|$)/i.test(trimmed)) return resolveAvatarAssetUrl(trimmed);
+  if (/\.svg(\?|$)/i.test(trimmed)) {
+    return resolveAvatarAssetUrl(trimmed.replace(/\.svg(\?.*)?$/i, '.png$1'));
+  }
+  return resolveAvatarAssetUrl(trimmed);
+}

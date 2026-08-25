@@ -7,6 +7,8 @@ import { config } from '../../../config';
 import { resolveIndustryContext } from '../../../shared/industry/industry-catalog';
 import { type PricingTier } from './category-pricing';
 import { getDeliverable, listDeliverables, type DeliverableBilling, type DeliverableDefinition } from './deliverable-catalog';
+import { usesFixedPhasePricing } from './factory-phase';
+import { getPackageAnchorEur } from './package-delivery-spec';
 import { getCategoryMarketIndex } from './market-pricing';
 
 export type PaymentProviderId = 'manual' | 'kriptoman' | 'stripe' | 'paypal' | 'wise';
@@ -149,9 +151,10 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
   const provider = input.paymentProvider ?? (config.payments.mode === 'live' ? 'stripe' : 'manual');
   const subtypeIntensityBoost = ctx.vertical ? 1.04 : 1;
 
+  const effectiveAnchor = getPackageAnchorEur(deliverable.id) || deliverable.anchorEur;
   const resourceCostEur = computeResourceCostEur(deliverable.resources, billing);
   const { marketEur, factors } = computeMarketValueEur({
-    anchorEur: deliverable.anchorEur,
+    anchorEur: effectiveAnchor,
     pricingTier,
     industryCategory: input.industryCategory,
     tamEstimateUsd: input.tamEstimateUsd,
@@ -161,9 +164,12 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
 
   const marginPct = getPricingConfig().targetMarginPct / 100;
   const costFloor = resourceCostEur * (1 + marginPct);
-  const subtotalEur = roundPriceEur(
-    Math.max(marketEur, costFloor, deliverable.anchorEur * factors.tierMultiplier * 0.65) * subtypeIntensityBoost,
-  );
+  const subtotalEur = usesFixedPhasePricing()
+    ? roundPriceEur(effectiveAnchor)
+    : roundPriceEur(
+        Math.max(marketEur, costFloor, effectiveAnchor * factors.tierMultiplier * 0.65) *
+          subtypeIntensityBoost,
+      );
   const marginEur = roundPriceEur(Math.max(0, subtotalEur - resourceCostEur));
 
   const { feeEur, clientEur } = applyPaymentFees(subtotalEur, provider);
@@ -173,7 +179,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     deliverableName: deliverable.nameSr,
     billing,
     currency: 'EUR',
-    anchorEur: deliverable.anchorEur,
+    anchorEur: effectiveAnchor,
     resourceCostEur,
     marketValueEur: roundPriceEur(marketEur),
     marginEur,
@@ -193,16 +199,22 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     const yearlyResources = { ...deliverable.resources };
     const yearlyResourceCost = computeResourceCostEur(yearlyResources, 'yearly');
     const yearlyMarket = computeMarketValueEur({
-      anchorEur: deliverable.anchorEur * 10,
+      anchorEur: effectiveAnchor * 10,
       pricingTier,
       industryCategory: input.industryCategory,
       tamEstimateUsd: input.tamEstimateUsd,
       competitionScore: input.competitionScore,
       marketIntensity: input.marketIntensity,
     });
-    const yearlySubtotal = roundPriceEur(
-      Math.max(yearlyMarket.marketEur, yearlyResourceCost * (1 + marginPct), deliverable.anchorEur * 10 * factors.tierMultiplier * 0.6),
-    );
+    const yearlySubtotal = usesFixedPhasePricing()
+      ? roundPriceEur(effectiveAnchor * 10)
+      : roundPriceEur(
+          Math.max(
+            yearlyMarket.marketEur,
+            yearlyResourceCost * (1 + marginPct),
+            effectiveAnchor * 10 * factors.tierMultiplier * 0.6,
+          ),
+        );
     quote.clientPriceYearlyEur = applyPaymentFees(yearlySubtotal, provider).clientEur;
   }
 

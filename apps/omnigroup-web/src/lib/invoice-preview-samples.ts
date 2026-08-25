@@ -9,10 +9,10 @@ import {
 } from './invoice-email-template';
 
 const brand = {
-  name: 'Omni Group',
-  url: 'https://omnigroup.io',
-  tagline: 'Digital platform for growth and automation',
-  supportEmail: 'billing@omnigroup.io',
+  name: 'Omni Group Tech',
+  url: 'https://omnigrouptech.com',
+  tagline: 'Custom digital delivery',
+  supportEmail: 'hello@omnigrouptech.com',
 };
 
 const issueDate = '2026-05-27T10:30:00.000Z';
@@ -41,11 +41,11 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     reference: 'ATINA-MK7F2A9B',
     proformaNumber: 'PRO-202605-MK7F2A9B',
     instructions: {
-      accountName: 'Marko Kosic pr Omni Group',
-      iban: 'RS35260000556211337868',
-      bankName: 'Raiffeisen banka a.d. Beograd',
-      swift: 'RZBSRSBG',
-      note: 'Enter reference ATINA-MK7F2A9B exactly in the payment reference field. Payments without a reference cannot be matched automatically.',
+      accountName: 'Omni Group Tech (sample account)',
+      iban: 'RS00 0000 0000 0000 0000 00',
+      bankName: 'Sample Bank a.d. (example only)',
+      swift: 'XXXXXXXX',
+      note: 'Enter reference ATINA-MK7F2A9B exactly in the payment reference field. Payments without a reference cannot be matched automatically. (Bank details shown here are placeholders — real details are sent with your actual invoice.)',
     },
     issueDate,
   });
@@ -69,7 +69,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     periodStart: '2026-05-27T00:00:00.000Z',
     periodEnd: '2027-05-27T00:00:00.000Z',
     purchasedAt: issueDate,
-    billingUrl: 'https://omnigroup.io/dashboard#billing',
+    billingUrl: 'https://omnigrouptech.com/dashboard#billing',
   });
 
   const admin = renderAdminPendingEmail({
@@ -82,7 +82,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     currency: 'EUR',
     reference: 'ATINA-MK7F2A9B',
     paymentId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    dashboardUrl: 'https://omnigroup.io/admin',
+    dashboardUrl: 'https://omnigrouptech.com/admin',
     issueDate,
   });
 

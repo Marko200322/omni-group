@@ -26,7 +26,7 @@ export function ModulesSection() {
             Three modules, <span className="text-gradient">one brand</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Omni Group is the brand. Atina, Astra, and Titan are product modules covering API, automation, and
+            Omni Group Tech is the brand. Atina, Astra, and Titan are product modules covering API, automation, and
             operations.
           </p>
         </motion.div>

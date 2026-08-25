@@ -74,6 +74,11 @@ services:
       dockerfile: Dockerfile
       target: production
     restart: unless-stopped
+    # NOTE (cold-start hardening): the autonomy scheduler in this service is the
+    # RAM spiker that starves `web`. Once you know the VPS total RAM, cap it here
+    # so web's reservation is actually protected, e.g. on a 2GB box:
+    #   mem_limit: 1200m
+    # Left uncapped by default to avoid throttling the backend unexpectedly.
     env_file:
       - ./atina-platform/atina/.env.docker.prod
     environment:
@@ -85,7 +90,12 @@ services:
       AUTONOMY_AUTO_START_SCHEDULER: ${AUTONOMY_AUTO_START_SCHEDULER:-true}
       AUTONOMY_ROLLOUT_SEGMENT: ${AUTONOMY_ROLLOUT_SEGMENT:-freelance}
       AUTONOMY_EVOLUTION_CODE_EDIT: ${AUTONOMY_EVOLUTION_CODE_EDIT:-false}
-      PHASE: v2
+      AUTONOMY_GIT_REPO_PATH: ${AUTONOMY_GIT_REPO_PATH:-/repo}
+      PHASE: ${PHASE:-v2}
+      FORGE_VAULT_PATH: /var/omni/forge/vault.db
+    volumes:
+      - forge_data:/var/omni/forge
+      - ${AUTONOMY_REPO_MOUNT:-./}:/repo:ro
     ports:
       - '${ATINA_PORT:-3000}:3000'
     depends_on:
@@ -104,17 +114,51 @@ services:
     build:
       context: ./apps/omnigroup-web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_FACTORY_PHASE: ${NEXT_PUBLIC_FACTORY_PHASE:-M3}
+        NEXT_PUBLIC_FACTORY_PHASE_AUTO: ${NEXT_PUBLIC_FACTORY_PHASE_AUTO:-false}
+        NEXT_PUBLIC_PROD_MODE: ${NEXT_PUBLIC_PROD_MODE:-full}
+        NEXT_PUBLIC_MONTHLY_BUDGET_EUR: ${NEXT_PUBLIC_MONTHLY_BUDGET_EUR:-550}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://omnigrouptech.com}
+        NEXT_PUBLIC_ATINA_API_BASE: ${NEXT_PUBLIC_ATINA_API_BASE:-https://api.omnigrouptech.com}
+        NEXT_PUBLIC_FOUNDING_CLIENT_PROMO: ${NEXT_PUBLIC_FOUNDING_CLIENT_PROMO:-false}
+        NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT: ${NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT:-15}
+        NEXT_PUBLIC_FOUNDING_CLIENT_MAX_SLOTS: ${NEXT_PUBLIC_FOUNDING_CLIENT_MAX_SLOTS:-50}
+        NEXT_PUBLIC_FOUNDING_CLIENT_LOCK_MONTHS: ${NEXT_PUBLIC_FOUNDING_CLIENT_LOCK_MONTHS:-12}
+        NEXT_PUBLIC_REGISTRATION_ENABLED: ${NEXT_PUBLIC_REGISTRATION_ENABLED:-false}
     restart: unless-stopped
     env_file:
       - ./apps/omnigroup-web/.env.production
     environment:
       NODE_ENV: production
-      PORT: 3010
+      UPLOAD_STORAGE: local
+      UPLOAD_DIR: /var/omni/uploads
+      # Keep the web heap bounded so it fits under mem_limit below and never
+      # competes unbounded with atina-api. Matches the Dockerfile default.
+      NODE_OPTIONS: --max-old-space-size=512
+    volumes:
+      - upload_data:/var/omni/uploads
     ports:
       - '${WEB_PORT:-3010}:3000'
+    # Memory guardrails (defense-in-depth only). NOTE: the "cold start" we chased
+    # was NOT memory — the host has 48GB free, web uses <100MB, 0 OOM kills, 0
+    # restarts. Root cause was a dead AAAA/IPv6 DNS record black-holing clients.
+    # Keep a floor so web stays warm; keep the ceiling generous so a real traffic
+    # spike is never OOM-killed on this large host.
+    mem_reservation: 256m
+    mem_limit: 1536m
     depends_on:
       atina-api:
         condition: service_healthy
+    healthcheck:
+      # Probe the light /api/health route, not the heavy marketing homepage.
+      # The homepage cold-render can exceed the 10s timeout and mark the
+      # container unhealthy while it is actually still booting.
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     networks: [omni_net]
 
   caddy:
@@ -134,6 +178,11 @@ services:
       - web
       - atina-api
     networks: [omni_net]
+    # DEPLOY FOOTGUN: caddy is the ONLY TLS/HTTPS entrypoint but sits behind the
+    # `tls` profile, so a plain `docker compose up -d` starts web+api WITHOUT the
+    # reverse proxy (no HTTPS). Always bring it up explicitly:
+    #   docker compose -f docker-compose.prod.yml --profile tls up -d caddy
+    # (scripts/deploy-to-vps.ps1 already does this — only bare manual `up` is at risk.)
     profiles: [tls]
 
 volumes:
@@ -141,6 +190,8 @@ volumes:
   redis_data:
   caddy_data:
   caddy_config:
+  upload_data:
+  forge_data:
 
 networks:
   omni_net:

@@ -1,24 +1,87 @@
 import { getAiClient } from '../../../integrations';
 import type { AgentType } from '../avatar/avatar-agent.personas';
 import {
+  CLIENT_PORTAL_AI_CONTEXT,
   DEFAULT_SALES_PERSONA,
   DEFAULT_SUPPORT_PERSONA,
+  PUBLIC_SITE_AI_CONTEXT,
+  PUBLIC_SITE_PERSONA,
 } from '../avatar/avatar-agent.personas';
 
 export type ChatTurn = { role: 'user' | 'assistant'; content: string };
+export type ChatAudience = 'public' | 'portal';
 
 function normalize(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
 }
 
-function fallbackReply(agentType: AgentType, userMessage: string, history: ChatTurn[]): string {
+function fallbackReply(
+  agentType: AgentType,
+  userMessage: string,
+  history: ChatTurn[],
+  audience: ChatAudience,
+): string {
   const msg = normalize(userMessage);
-  const isSupport = agentType === 'support';
+  const isPublic = audience === 'public';
+  const isSupport = agentType === 'support' && !isPublic;
+
+  if (isPublic) {
+    if (/^(zdravo|cao|hej|hello|hi|hey|good morning|good afternoon)/.test(msg)) {
+      return "Glad you're here! I can walk you through packages, pricing, or how to start a project.";
+    }
+    if (
+      msg.includes('price') ||
+      msg.includes('cost') ||
+      msg.includes('plan') ||
+      msg.includes('cena') ||
+      msg.includes('pricing')
+    ) {
+      return 'See live packages on /pricing and /products. If you want a tailored quote, use /contact and the team will follow up.';
+    }
+    if (msg.includes('contact') || msg.includes('human') || msg.includes('call') || msg.includes('kontakt')) {
+      return 'The fastest way to reach us is /contact. You can also sign in at /login if you already have a client account.';
+    }
+    if (msg.includes('login') || msg.includes('register') || msg.includes('account') || msg.includes('nalog')) {
+      return 'Existing clients sign in at /login. New accounts are invite-only — use /contact and we will set you up.';
+    }
+    return `I can help with that — "${userMessage.slice(0, 100)}". Check /pricing, /products, or /solutions, or send a note via /contact.`;
+  }
 
   if (/^(zdravo|cao|hej|hello|hi|hey|good morning|good afternoon)/.test(msg)) {
     return isSupport
-      ? 'Glad you\'re here! Describe the issue in one sentence — I\'ll suggest a fix right away.'
+      ? 'Glad you\'re here! Ask me where to find billing, orders, or uploads — I\'ll point you to the right sidebar section.'
       : 'Glad to connect! Tell me if you\'re looking for a plan for yourself or a team — I can compare Starter, Pro, and Enterprise.';
+  }
+
+  if (
+    msg.includes('order') ||
+    msg.includes('delivery') ||
+    msg.includes('status') ||
+    msg.includes('narudz') ||
+    msg.includes('porudz') ||
+    msg.includes('isporuk')
+  ) {
+    return isSupport
+      ? 'Open Orders in the sidebar for live status, or Deliveries when files are ready to download.'
+      : 'Tell me your team size and I\'ll suggest the right package — you can order from New order in the portal.';
+  }
+
+  if (
+    msg.includes('upload') ||
+    msg.includes('document') ||
+    msg.includes('file') ||
+    msg.includes('brief') ||
+    msg.includes('dokument')
+  ) {
+    return isSupport
+      ? 'Go to Documents in the sidebar to upload briefs, logos, or contracts for your project team.'
+      : 'We collect files in the client portal under Documents after you start a project.';
+  }
+
+  if (msg.includes('where') || msg.includes('how do i') || msg.includes('kako') || msg.includes('gde')) {
+    return isSupport
+      ? 'Use the sidebar: Billing for payments, New order for packages, Orders for status, Documents for uploads, Support for live help. Which one do you need?'
+      : 'I can walk you through plans on /pricing or book a consultation from the portal.';
   }
 
   if (
@@ -36,7 +99,7 @@ function fallbackReply(agentType: AgentType, userMessage: string, history: ChatT
 
   if (msg.includes('api') || msg.includes('integrac') || msg.includes('token') || msg.includes('deploy')) {
     return isSupport
-      ? 'For API issues: check that `NEXT_PUBLIC_ATINA_API_BASE` is correct and you\'re signed in (not a demo session). If you see 401, sign in again. Want to schedule a screen-share call?'
+      ? 'For technical issues, open Support in the sidebar — you can chat here or schedule a live call with our team.'
       : 'Integrations are included in Pro and Enterprise. I can recommend a plan based on API call volume and modules you need.';
   }
 
@@ -50,7 +113,7 @@ function fallbackReply(agentType: AgentType, userMessage: string, history: ChatT
     msg.includes('faktur')
   ) {
     return isSupport
-      ? 'Manual bank transfer: under Billing on the dashboard, generate payment instructions, send the transfer, then an admin confirms. You\'ll get an email with the reference and invoice after confirmation.'
+      ? 'Open Billing in the sidebar to pay or view invoices. For a new package, use New order. Card and bank transfer options appear at checkout.'
       : 'We can start with manual bank transfer until Stripe is set up. Want a side-by-side plan comparison before you decide?';
   }
 
@@ -78,13 +141,25 @@ export async function generateAgentReply(input: {
   history: ChatTurn[];
   userMessage: string;
   clientMemoryContext?: string;
+  audience?: ChatAudience;
 }): Promise<{ content: string; source: 'ai' | 'fallback' }> {
+  const audience: ChatAudience = input.audience ?? 'portal';
   const basePersona =
     input.systemPersona.trim() ||
-    (input.agentType === 'support' ? DEFAULT_SUPPORT_PERSONA : DEFAULT_SALES_PERSONA);
-  const system = input.clientMemoryContext?.trim()
-    ? `${basePersona}\n\n${input.clientMemoryContext.trim()}`
-    : basePersona;
+    (audience === 'public'
+      ? PUBLIC_SITE_PERSONA
+      : input.agentType === 'support'
+        ? DEFAULT_SUPPORT_PERSONA
+        : DEFAULT_SALES_PERSONA);
+  const extraContext =
+    audience === 'public'
+      ? PUBLIC_SITE_AI_CONTEXT
+      : input.agentType === 'support'
+        ? CLIENT_PORTAL_AI_CONTEXT
+        : '';
+  const system = [basePersona, extraContext, input.clientMemoryContext?.trim()]
+    .filter(Boolean)
+    .join('\n\n');
 
   const ai = getAiClient();
   if (ai.isConfigured()) {
@@ -100,7 +175,7 @@ export async function generateAgentReply(input: {
   }
 
   return {
-    content: fallbackReply(input.agentType, input.userMessage, input.history),
+    content: fallbackReply(input.agentType, input.userMessage, input.history, audience),
     source: 'fallback',
   };
 }

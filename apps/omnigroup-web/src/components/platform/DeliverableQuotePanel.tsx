@@ -9,9 +9,14 @@ import { deliverableLabel } from '@/lib/display-text';
 import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
 import {
+  canCheckoutPackage,
+  listCheckoutPackages,
+} from '@/lib/package-delivery-spec';
+import { getClientOffer } from '@/lib/client-offers';
+import { isLeanProdMode } from '@/lib/prod-mode';
+import {
   calculateDeliverableQuote,
   formatBillingLabel,
-  type PaymentProviderId,
 } from '@/lib/dynamic-pricing';
 
 type ManualCheckout = {
@@ -26,58 +31,113 @@ type Props = {
   disabled?: boolean;
 };
 
-const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
-  { id: 'manual', label: 'Bank transfer' },
-  { id: 'kriptoman', label: 'Kriptoman' },
-  { id: 'stripe', label: 'Stripe' },
-];
+const PAYMENT_METHOD_LABEL_MANUAL = 'Bank transfer (IBAN)';
+const PAYMENT_METHOD_LABEL_STRIPE = 'Card (Stripe)';
 
 export function DeliverableQuotePanel({ disabled }: Props) {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') ?? '';
-  const initialService = searchParams.get('service') ?? 'vertical-package';
+  const initialVertical = searchParams.get('vertical') ?? '';
+  const initialService = searchParams.get('service') ?? '';
+  const leanDefault = listCheckoutPackages()[0] ?? 'setup-quick';
+  const resolvedInitial =
+    initialService && DELIVERABLE_CATALOG.some((d) => d.id === initialService)
+      ? initialService
+      : leanDefault;
 
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
-  const [deliverableId, setDeliverableId] = useState(
-    DELIVERABLE_CATALOG.some((d) => d.id === initialService) ? initialService : 'vertical-package',
-  );
-  const [paymentProvider, setPaymentProvider] = useState<PaymentProviderId>('manual');
+  const verticalSlug = initialVertical;
+  const [deliverableId, setDeliverableId] = useState(resolvedInitial);
   const [intensity] = useState(55);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [stripePreferred, setStripePreferred] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/atina/payments/methods');
+        const json = (await res.json()) as {
+          ok?: boolean;
+          data?: { mode?: string; methods?: Array<{ id: string; available: boolean }> };
+        };
+        if (!cancelled && json.ok && json.data?.methods) {
+          const stripeOn = json.data.methods.some((m) => m.id === 'stripe' && m.available);
+          setStripePreferred(stripeOn && json.data.mode !== 'manual');
+        }
+      } catch {
+        /* keep manual default */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const deliverable = DELIVERABLE_CATALOG.find((d) => d.id === deliverableId);
+  const clientOffer = getClientOffer(deliverableId);
+  const checkoutAllowed = canCheckoutPackage(deliverableId);
+  const checkoutIds = listCheckoutPackages();
+  const catalogOrdered = [
+    ...DELIVERABLE_CATALOG.filter((d) => checkoutIds.includes(d.id)),
+    ...DELIVERABLE_CATALOG.filter((d) => !checkoutIds.includes(d.id)),
+  ];
 
   const quote = useMemo(() => {
     if (!deliverable) return null;
     return calculateDeliverableQuote({
       deliverableId,
       industryCategory: industryCategory || null,
-      paymentProvider,
+      verticalSlug: verticalSlug || null,
+      paymentProvider: stripePreferred ? 'stripe' : 'manual',
       marketIntensity: intensity,
       tamEstimateUsd: 50_000 + intensity * 1200,
       competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
     });
-  }, [deliverable, deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverable, deliverableId, industryCategory, verticalSlug, intensity, stripePreferred]);
 
   useEffect(() => {
     setCheckout(null);
     setSent(false);
-  }, [deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug, intensity]);
 
   const startCheckout = useCallback(async () => {
+    if (!checkoutAllowed) {
+      setError('This package is currently available by request — use “Ask before buying” or Contact and our team will set it up for you.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      if (stripePreferred) {
+        const res = await fetch('/api/atina/payments/stripe/deliverable-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deliverableId,
+            industryCategory: industryCategory || undefined,
+            marketIntensity: intensity,
+          }),
+        });
+        const json = (await res.json()) as { ok?: boolean; data?: { url?: string | null }; error?: string; detail?: string };
+        if (!res.ok || !json.ok || !json.data?.url) {
+          const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+          throw new Error(human ?? 'Card checkout is unavailable right now. Try again or contact us.');
+        }
+        window.location.href = json.data.url;
+        return;
+      }
+
       const res = await fetch('/api/atina/payments/manual/deliverable-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           deliverableId,
           industryCategory: industryCategory || undefined,
-          paymentProvider,
+          paymentProvider: 'manual',
           marketIntensity: intensity,
         }),
       });
@@ -88,15 +148,20 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         detail?: string;
       };
       if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.detail ?? json.error ?? 'checkout_failed');
+        const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+        throw new Error(human ?? 'We couldn\u2019t create your payment instructions right now. Please try again shortly.');
       }
       setCheckout(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create payment.');
+      setError(
+        err instanceof Error && /\s/.test(err.message)
+          ? err.message
+          : 'We couldn\u2019t create your payment instructions right now. Please try again shortly.',
+      );
     } finally {
       setLoading(false);
     }
-  }, [deliverableId, industryCategory, paymentProvider, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug, intensity, checkoutAllowed, stripePreferred]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -108,11 +173,16 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       });
       const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!res.ok || !json.ok) {
-        throw new Error(json.detail ?? json.error ?? 'mark_sent_failed');
+        const human = json.detail && /\s/.test(json.detail) ? json.detail : null;
+        throw new Error(human ?? 'We couldn\u2019t record your payment just now. Please try again shortly.');
       }
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(
+        err instanceof Error && /\s/.test(err.message)
+          ? err.message
+          : 'We couldn\u2019t record your payment just now. Please try again shortly.',
+      );
     } finally {
       setLoading(false);
     }
@@ -123,7 +193,12 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   return (
     <motion.div className="mt-4 space-y-4">
       <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-        You&apos;re buying a deliverable the platform produces — not platform access. Price = market + resources + fees.
+        You&apos;re buying a deliverable the platform produces — scope is listed below. Not platform access.
+        {isLeanProdMode() && (
+          <span className="mt-1 block text-amber-200/90">
+            Some packages are currently available by request — use “Ask before buying” and our team will set them up for you.
+          </span>
+        )}
       </p>
 
       <label className="block text-sm">
@@ -134,13 +209,37 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           onChange={(e) => setDeliverableId(e.target.value)}
           disabled={disabled || loading}
         >
-          {DELIVERABLE_CATALOG.map((d) => (
-            <option key={d.id} value={d.id}>
-              {deliverableLabel(d)}
-            </option>
-          ))}
+          {catalogOrdered.map((d) => {
+            const ok = canCheckoutPackage(d.id);
+            return (
+              <option key={d.id} value={d.id}>
+                {deliverableLabel(d)}
+                {!ok ? ' (not open yet)' : ''}
+              </option>
+            );
+          })}
         </select>
       </label>
+
+      {clientOffer && (
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-slate-400">
+          <p className="font-medium text-emerald-300">{clientOffer.promise}</p>
+          <p className="mt-1 text-xs leading-relaxed">{clientOffer.summary}</p>
+          <ul className="mt-2 space-y-1 text-xs">
+            {clientOffer.youGet.map((line) => (
+              <li key={line}>✓ {line}</li>
+            ))}
+          </ul>
+          {clientOffer.notIncluded.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+              {clientOffer.notIncluded.map((line) => (
+                <li key={line}>✕ {line}</li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-2 text-xs text-slate-500">{clientOffer.when}</p>
+        </div>
+      )}
 
       <IndustryCategorySelect
         value={industryCategory}
@@ -148,29 +247,24 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
       />
 
-      <label className="block text-sm">
-        <span className="text-slate-400">Payment</span>
-        <select
-          className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
-          value={paymentProvider}
-          onChange={(e) => setPaymentProvider(e.target.value as PaymentProviderId)}
-          disabled={disabled || loading}
-        >
-          {PAYMENT_OPTIONS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
+        <span className="text-slate-400">Payment method: </span>
+        <span className="font-medium text-white">
+          {stripePreferred ? PAYMENT_METHOD_LABEL_STRIPE : PAYMENT_METHOD_LABEL_MANUAL}
+        </span>
+        <span className="mt-1 block text-xs text-emerald-200/80">
+          {stripePreferred
+            ? 'Pay by card — fulfillment starts automatically after Stripe confirms payment.'
+            : 'Pay by bank transfer — activation after admin confirms your payment.'}
+        </span>
+      </div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm">
         <span className="text-slate-400">Quoted price: </span>
         <span className="text-xl font-bold text-white">{formatEur(quote.clientPriceEur)}</span>
         <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
         <span className="mt-1 block text-xs text-slate-500">
-          Resources {formatEur(quote.resourceCostEur)} · market {formatEur(quote.marketValueEur)} · fees{' '}
-          {formatEur(quote.paymentFeeEur)}
+          {clientOffer?.when ?? 'After payment confirmation'}
         </span>
       </p>
 
@@ -179,9 +273,17 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           type="button"
           className="btn-primary text-sm disabled:opacity-50"
           onClick={startCheckout}
-          disabled={disabled || loading}
+          disabled={disabled || loading || !checkoutAllowed}
         >
-          {loading ? 'Generating…' : 'Generate payment instructions'}
+          {loading
+            ? stripePreferred
+              ? 'Redirecting…'
+              : 'Generating…'
+            : checkoutAllowed
+              ? stripePreferred
+                ? 'Pay with card'
+                : 'Generate payment instructions'
+              : 'Available on request'}
         </button>
         <Link
           href={`/contact?service=${encodeURIComponent(deliverableId)}${industryCategory ? `&category=${encodeURIComponent(industryCategory)}` : ''}`}

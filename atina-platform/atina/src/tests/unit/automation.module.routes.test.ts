@@ -12,6 +12,14 @@ jest.mock('../../database/connection');
 jest.mock('../../queue/queue', () => ({
   addJob: jest.fn().mockResolvedValue(undefined),
 }));
+// http_request workflow steps must not hit the real network in unit tests
+// (the sample workflow points at api.example, which otherwise hangs on DNS).
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    request: jest.fn().mockResolvedValue({ status: 200, data: {} }),
+  },
+}));
 
 let autoAuthOn = true;
 jest.mock('../../api/middleware/auth.middleware', () => ({

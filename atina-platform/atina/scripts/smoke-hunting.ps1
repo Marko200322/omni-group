@@ -16,6 +16,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$repoRoot = (Resolve-Path (Join-Path $here '..\..\..')).Path
+. (Join-Path $repoRoot 'scripts\resolve-admin-credentials.ps1')
+$creds = Get-AdminCredentials -RepoRoot $repoRoot
+if ($Email -eq 'admin@atina.io') { $Email = $creds.Email }
+if ($Password -eq 'Admin@123456') { $Password = $creds.Password }
+
 $base = $BaseUrl.Trim().TrimEnd('/')
 $t30 = @{ TimeoutSec = 30 }
 $t120 = @{ TimeoutSec = 120 }

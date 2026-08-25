@@ -10,6 +10,31 @@ jest.mock('../../../../modules/autonomy-loop/service/category-rollout.service', 
   })),
 }));
 
+jest.mock('../../../../modules/autonomy-loop/repository/autonomy-rollout-job.repository', () => ({
+  AutonomyRolloutJobRepository: jest.fn().mockImplementation(() => ({
+    insert: jest.fn().mockResolvedValue(undefined),
+    markCompleted: jest.fn().mockResolvedValue(undefined),
+    markFailed: jest.fn().mockResolvedValue(undefined),
+    getActive: jest.fn().mockResolvedValue(null),
+    getLatest: jest.fn().mockResolvedValue(null),
+  })),
+}));
+
+async function waitForJob(
+  svc: CategoryRolloutJobService,
+  predicate: (status: string | undefined) => boolean,
+  timeoutMs = 2000,
+): Promise<void> {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const last = await svc.getLastJob();
+    if (predicate(last?.status)) return;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  const last = await svc.getLastJob();
+  throw new Error(`Timed out waiting for job status (last=${last?.status ?? 'null'})`);
+}
+
 describe('category-rollout-job.service', () => {
   beforeEach(() => {
     resetRolloutJobsForTests();
@@ -24,12 +49,12 @@ describe('category-rollout-job.service', () => {
       processAllVerticals: false,
     });
     expect(job.status).toBe('running');
-    expect(svc.getActiveJob()?.id).toBe(job.id);
+    expect((await svc.getActiveJob())?.id).toBe(job.id);
 
-    await new Promise((r) => setTimeout(r, 50));
-    const last = svc.getLastJob();
+    await waitForJob(svc, (status) => status === 'completed');
+    const last = await svc.getLastJob();
     expect(last?.status).toBe('completed');
-    expect(svc.getActiveJob()).toBeNull();
+    expect(await svc.getActiveJob()).toBeNull();
   });
 
   it('returns same active job while running', () => {

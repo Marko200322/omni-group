@@ -5,11 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   LayoutDashboard,
-  Users,
   CreditCard,
-  Workflow,
-  Settings,
-  Bell,
   Search,
   Menu,
   X,
@@ -17,47 +13,35 @@ import {
   ChevronRight,
   FolderKanban,
   LifeBuoy,
-  Bot,
   MessageCircle,
   UserCircle,
-  Activity,
   Shield,
-  Factory,
   Package,
-  ShoppingCart,
+  FileText,
+  Truck,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
-import type { LucideIcon } from 'lucide-react';
 import { fadeUp, staggerContainer, tapScale } from '@/lib/animations';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
+import { NotificationBell } from '@/components/platform/NotificationBell';
+import { buildAdminNavItems, type PlatformNavItem } from '@/lib/platform-nav';
+import { getFactoryPhase } from '@/lib/factory-phase';
+import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
+import { isLeanProdMode } from '@/lib/prod-mode';
 
 export type PlatformVariant = 'admin' | 'client';
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
-
-const adminNav: NavItem[] = [
-  { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard', label: 'Client portal', icon: FolderKanban },
-  { href: '/admin#factory', label: 'Product Factory', icon: Factory },
-  { href: '/admin#resources', label: 'Resources', icon: ShoppingCart },
-  { href: '/admin#autonomy', label: 'Autonomy Loop', icon: Bot },
-  { href: '/admin#workflows', label: 'Workflows', icon: Workflow },
-  { href: '/admin#users', label: 'Users', icon: Users },
-  { href: '/admin#billing', label: 'Billing', icon: CreditCard },
-  { href: '/admin#system', label: 'System', icon: Activity },
-  { href: '/admin#settings', label: 'Settings', icon: Settings },
-];
-
-const clientNav: NavItem[] = [
+const clientNav: PlatformNavItem[] = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard#orders', label: 'Orders', icon: Package },
+  { href: '/dashboard#deliveries', label: 'Deliveries', icon: Truck },
   { href: '/dashboard#projects', label: 'Projects', icon: FolderKanban },
   { href: '/dashboard#quote', label: 'New order', icon: CreditCard },
   { href: '/dashboard#billing', label: 'Billing', icon: CreditCard },
-  { href: '/dashboard#automations', label: 'Automations', icon: Workflow },
+  { href: '/dashboard#documents', label: 'Documents', icon: FileText },
   { href: '/dashboard#support', label: 'Support', icon: LifeBuoy },
-  { href: '/dashboard#sales', label: 'Sales', icon: MessageCircle },
+  { href: '/dashboard#consultation', label: 'Consultations', icon: MessageCircle },
   { href: '/dashboard#account', label: 'Account', icon: UserCircle },
 ];
 
@@ -68,6 +52,8 @@ type Props = {
   badge?: React.ReactNode;
   sessionUser?: { name: string; email: string } | null;
   isDemo?: boolean;
+  /** Admin only — omit to use default client nav; pass from AdminClient for phase-aware links. */
+  navItems?: PlatformNavItem[];
   children: React.ReactNode;
 };
 
@@ -104,15 +90,24 @@ export function PlatformShell({
   badge,
   sessionUser,
   isDemo = false,
+  navItems,
   children,
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const routeHash = useRouteHash();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const nav = variant === 'admin' ? adminNav : clientNav;
+  const defaultAdminNav = useMemo(() => {
+    const phase = getFactoryPhase();
+    return buildAdminNavItems({
+      leanProd: isLeanProdMode(),
+      hunterAllowed: isFactoryModuleAllowed('hunter', phase),
+      autonomyAllowed: isFactoryModuleAllowed('autonomy', phase),
+    });
+  }, []);
+  const nav = variant === 'admin' ? (navItems ?? defaultAdminNav) : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
-  const brand = variant === 'admin' ? 'Omni Group Ops' : 'Client Portal';
+  const brand = variant === 'admin' ? 'Omni Group Tech Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
 
   async function handleLogout() {
@@ -135,7 +130,7 @@ export function PlatformShell({
           </div>
           <div className="min-w-0">
             <p className={`truncate font-display text-sm font-bold ${accent}`}>{brand}</p>
-            <p className="truncate text-[10px] uppercase tracking-widest text-slate-500">Omni Group</p>
+            <p className="truncate text-[10px] uppercase tracking-widest text-slate-500">Omni Group Tech</p>
           </div>
         </div>
         <motion.nav
@@ -262,36 +257,23 @@ export function PlatformShell({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="hidden flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 md:flex md:max-w-md">
-            <Search className="h-4 w-4 text-slate-500" />
+          <div
+            className="hidden flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 md:flex md:max-w-md"
+            title="Global search is not available yet"
+          >
+            <Search className="h-4 w-4 text-slate-600" aria-hidden />
             <input
               type="search"
               placeholder="Search (coming soon)"
-              readOnly
+              disabled
+              tabIndex={-1}
+              aria-disabled="true"
               aria-label="Search — coming soon"
-              className="w-full cursor-not-allowed bg-transparent text-sm text-slate-500 outline-none placeholder:text-slate-600"
+              className="w-full cursor-not-allowed bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-600"
             />
           </div>
           <div className="flex flex-1 items-center justify-end gap-3 lg:flex-none">
-            <motion.button
-              type="button"
-              className="relative rounded-xl p-2 text-slate-400 hover:bg-white/5 hover:text-white"
-              aria-label="Notifications"
-              whileHover={{ scale: 1.08 }}
-              whileTap={tapScale}
-            >
-              <motion.div
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 6 }}
-              >
-                <Bell className="h-5 w-5" />
-              </motion.div>
-              <motion.span
-                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500"
-                animate={{ scale: [1, 1.3, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-              />
-            </motion.button>
+            <NotificationBell disabled={isDemo || !sessionUser} />
             <div className="hidden h-8 w-px bg-white/10 sm:block" />
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-white">{sessionUser?.name ?? title}</p>

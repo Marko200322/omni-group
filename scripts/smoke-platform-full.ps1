@@ -66,24 +66,27 @@ function Test-BffPostJson {
   )
   try {
     $json = $Body | ConvertTo-Json -Compress
-    $params = @{
-      Uri = $Uri
-      Method = 'POST'
-      ContentType = 'application/json'
-      Body = $json
-      UseBasicParsing = $true
-      TimeoutSec = $TimeoutSec
-    }
-    if ($Session) { $params.WebSession = $Session }
-    $r = Invoke-WebRequest @params
-    $j = $r.Content | ConvertFrom-Json
-    if (-not $j.ok) {
-      $snippet = $r.Content.Substring(0, [Math]::Min(200, $r.Content.Length))
-      throw "ok=false: $snippet"
+    $result = Invoke-WithRateLimitRetry -Label $Label -Action {
+      $params = @{
+        Uri = $Uri
+        Method = 'POST'
+        ContentType = 'application/json'
+        Body = $json
+        UseBasicParsing = $true
+        TimeoutSec = $TimeoutSec
+      }
+      if ($Session) { $params.WebSession = $Session }
+      $r = Invoke-WebRequest @params
+      $j = $r.Content | ConvertFrom-Json
+      if (-not $j.ok) {
+        $snippet = $r.Content.Substring(0, [Math]::Min(200, $r.Content.Length))
+        throw "ok=false: $snippet"
+      }
+      return $j
     }
     Write-Host "  PASS $Label" -ForegroundColor Green
     $script:passed++
-    return $j
+    return $result
   } catch {
     Write-Host "  FAIL $Label - $($_.Exception.Message)" -ForegroundColor Red
     $script:failed++
@@ -99,17 +102,20 @@ function Test-BffJson {
     [int]$TimeoutSec = 45
   )
   try {
-    $params = @{ Uri = $Uri; UseBasicParsing = $true; TimeoutSec = $TimeoutSec }
-    if ($Session) { $params.WebSession = $Session }
-    $r = Invoke-WebRequest @params
-    $j = $r.Content | ConvertFrom-Json
-    if (-not $j.ok) {
-      $snippet = $r.Content.Substring(0, [Math]::Min(200, $r.Content.Length))
-      throw "ok=false: $snippet"
+    $result = Invoke-WithRateLimitRetry -Label $Label -Action {
+      $params = @{ Uri = $Uri; UseBasicParsing = $true; TimeoutSec = $TimeoutSec }
+      if ($Session) { $params.WebSession = $Session }
+      $r = Invoke-WebRequest @params
+      $j = $r.Content | ConvertFrom-Json
+      if (-not $j.ok) {
+        $snippet = $r.Content.Substring(0, [Math]::Min(200, $r.Content.Length))
+        throw "ok=false: $snippet"
+      }
+      return $j
     }
     Write-Host "  PASS $Label" -ForegroundColor Green
     $script:passed++
-    return $j
+    return $result
   } catch {
     Write-Host "  FAIL $Label - $($_.Exception.Message)" -ForegroundColor Red
     $script:failed++
@@ -166,6 +172,7 @@ $bffRoutes = @(
 )
 foreach ($route in $bffRoutes) {
   Test-BffJson -Label $route -Uri "$web$route" -Session $session | Out-Null
+  Start-Sleep -Milliseconds 250
 }
 Test-BffPostJson -Label '/api/atina/billing/quote (POST)' -Uri "$web/api/atina/billing/quote" -Session $session -Body @{
   deliverableId = 'setup-quick'

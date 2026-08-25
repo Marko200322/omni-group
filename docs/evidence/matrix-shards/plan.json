@@ -1,0 +1,50 @@
+[
+    {
+        "agent":  0,
+        "industries":  "finance_accounting,video_animation,education,manufacturing,entertainment",
+        "cellCount":  85,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-0.csv"
+    },
+    {
+        "agent":  1,
+        "industries":  "hr_recruiting,web3,finance,technology",
+        "cellCount":  69,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-1.csv"
+    },
+    {
+        "agent":  2,
+        "industries":  "legal_services,writing_translation,logistics,media",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-2.csv"
+    },
+    {
+        "agent":  3,
+        "industries":  "localization,healthcare,beauty,nonprofit",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-3.csv"
+    },
+    {
+        "agent":  4,
+        "industries":  "photography,legal,fitness,government",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-4.csv"
+    },
+    {
+        "agent":  5,
+        "industries":  "product_project_management,retail,agriculture,energy",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-5.csv"
+    },
+    {
+        "agent":  6,
+        "industries":  "real_estate_services,hospitality,automotive,travel",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-6.csv"
+    },
+    {
+        "agent":  7,
+        "industries":  "sales,construction,real-estate,professional",
+        "cellCount":  68,
+        "csv":  "docs\\evidence\\matrix-shards\\agent-7.csv"
+    }
+]

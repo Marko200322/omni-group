@@ -38,7 +38,7 @@ export const CATEGORY_MARKET_INDEX: Record<string, number> = {
   logistics: 1.15,
   beauty: 0.9,
   fitness: 0.92,
-  agriculture: 0.95,
+  agriculture: 0.8,
   automotive: 1.08,
   'real-estate': 1.2,
   manufacturing: 1.18,

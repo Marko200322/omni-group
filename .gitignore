@@ -31,8 +31,32 @@ scripts/.cache/
 .tmp/
 .local-workspace/
 deploy-secrets.local/deploy.config.json
+deploy-secrets.local/budget-burn-ledger.json
 deploy-secrets.local/*.pem
 deploy-secrets.local/*.key
 deploy-secrets.local/id_*
 atina-platform/atina/KLJUCEVI-POPUNI.local.txt
 .docker-wsl/
+
+# Local key drop-ins / owner config (do not commit)
+atina-platform/atina/kljucevi*.txt
+admin-config.local.json
+atina-platform/atina/config/avatar-premium.local.json
+
+
+# Local secrets / DNS proof (never commit)
+deploy-secrets.local/resend-dkim*.txt
+deploy-secrets.local/*.txt
+!deploy-secrets.local/deploy.config.template.json
+!deploy-secrets.local/budget-burn-ledger.template.json
+!deploy-secrets.local/README.md
+
+# Nested clutter / desktop mirror
+/omni group/
+
+# Local deploy run logs
+docs/_deploy-*.txt
+
+# Jest dump artifacts
+atina-platform/atina/jest-final.json
+atina-platform/atina/jest-results.json

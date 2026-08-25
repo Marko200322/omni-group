@@ -8,6 +8,19 @@ const SKIP_DOMAINS = new Set([
   'facebook.com',
   'twitter.com',
   'x.com',
+  // Government / public employment boards — not company domains for B2B enrich
+  'arbeitsagentur.de',
+  'francetravail.fr',
+  'pole-emploi.fr',
+  'emploi-store.fr',
+  'arbetsformedlingen.se',
+  'indeed.com',
+  'stepstone.de',
+  'xing.com',
+  'glassdoor.com',
+  'monster.com',
+  'monster.de',
+  'ziprecruiter.com',
 ]);
 
 export function extractDomainFromUrl(url: string): string | null {

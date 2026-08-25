@@ -6,8 +6,10 @@ import { PaymentsRepository } from '../repository/payments.repository';
 import { PaymentError, NotFoundError } from '../../../utils/errors';
 import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
-import { getIndustryCategory, getPlanPriceForCategory, type PlanSlug } from '../../billing/lib/category-pricing';
+import { getIndustryCategory, getPlanPriceForCategory, resolvePricingTier, type PlanSlug } from '../../billing/lib/category-pricing';
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
+import { canCheckoutPackage } from '../../billing/lib/package-delivery-spec';
+import { resolvePlanDeliverableId } from '../../billing/lib/plan-deliverable-map';
 import {
   calculateDeliverableQuote,
   type PaymentProviderId,
@@ -35,16 +37,65 @@ function buildTransferReference(userId: string): string {
   return `${prefix}-${userId.slice(0, 8).toUpperCase()}-${Date.now()}`;
 }
 
+function getManualPaymentConfig() {
+  const manual = config.payments.manual;
+  const accountName = manual.accountName?.trim() ?? '';
+  const iban = manual.iban?.trim() ?? '';
+  const bankName = manual.bankName?.trim() ?? '';
+  const swift = manual.swift?.trim() ?? '';
+  const companyLegalName = manual.companyLegalName?.trim() ?? '';
+  const companyTaxId = manual.companyTaxId?.trim() ?? '';
+  const companyAddress = manual.companyAddress?.trim() ?? '';
+  return {
+    accountName,
+    iban,
+    bankName,
+    swift,
+    note: manual.note,
+    companyLegalName,
+    companyTaxId,
+    companyAddress,
+    configured: Boolean(accountName && iban),
+  };
+}
+
 function resolveCheckoutAmount(
   plan: { slug: string; price_monthly: number; price_yearly: number },
   billingCycle: 'monthly' | 'yearly',
   industryCategory?: string | null
 ): number {
   const slug = plan.slug as PlanSlug;
-  if (['starter', 'pro', 'enterprise'].includes(slug) && industryCategory?.trim()) {
-    return getPlanPriceForCategory(slug, billingCycle, industryCategory);
-  }
-  return toMoneyNumber(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
+  const list =
+    ['starter', 'pro', 'enterprise'].includes(slug) && industryCategory?.trim()
+      ? getPlanPriceForCategory(slug, billingCycle, industryCategory)
+      : toMoneyNumber(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
+  return applyFoundingPromoDiscount(list, industryCategory);
+}
+
+function envFlagOn(value: string | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase();
+  return v === 'true' || v === '1' || v === 'yes';
+}
+
+function isFoundingPromoEnabled(): boolean {
+  return envFlagOn(process.env.FOUNDING_CLIENT_PROMO) || envFlagOn(process.env.NEXT_PUBLIC_FOUNDING_CLIENT_PROMO);
+}
+
+function foundingDiscountPct(): number {
+  const n = Number(
+    process.env.FOUNDING_CLIENT_DISCOUNT_PCT || process.env.NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT || 15,
+  );
+  return Number.isFinite(n) && n > 0 && n < 100 ? n : 15;
+}
+
+function isFoundingPromoActive(industryCategory?: string | null): boolean {
+  if (!isFoundingPromoEnabled()) return false;
+  return resolvePricingTier(industryCategory) !== 'regulated';
+}
+
+function applyFoundingPromoDiscount(amount: number, industryCategory?: string | null): number {
+  if (!isFoundingPromoActive(industryCategory)) return amount;
+  return Math.max(9, Math.round(amount * (1 - foundingDiscountPct() / 100)));
 }
 
 function categoryCheckoutLabel(industryCategory?: string | null): string {
@@ -89,18 +140,24 @@ function buildTransferInstructions(
   currency: string,
   planName: string
 ): Record<string, string> {
-  const manual = config.payments.manual;
+  const manual = getManualPaymentConfig();
+  if (!manual.configured) {
+    throw new PaymentError('Manual bank transfer details are incomplete. Set MANUAL_PAYMENT_ACCOUNT_NAME and MANUAL_PAYMENT_IBAN.');
+  }
   const displayCurrency = currency.toUpperCase();
   const money = toMoneyNumber(amount);
   return {
-    accountName: manual.accountName || '(popuni MANUAL_PAYMENT_ACCOUNT_NAME u .env)',
-    iban: manual.iban || '(popuni MANUAL_PAYMENT_IBAN u .env)',
-    bankName: manual.bankName || '(popuni MANUAL_PAYMENT_BANK u .env)',
-    swift: manual.swift || '',
+    accountName: manual.accountName,
+    iban: manual.iban,
+    bankName: manual.bankName,
+    swift: manual.swift,
     reference,
     amount: `${money.toFixed(2)} ${displayCurrency}`,
     plan: planName,
     note: manual.note,
+    companyLegalName: manual.companyLegalName || '',
+    companyTaxId: manual.companyTaxId || '',
+    companyAddress: manual.companyAddress || '',
   };
 }
 const billingService = new BillingService();
@@ -164,6 +221,14 @@ function dispatchAutoFulfillment(input: {
   deliverableFulfillment.dispatchAfterPaymentConfirm(input);
 }
 
+function dispatchFactoryPhaseAutoEvaluate(): void {
+  void import('../../billing/service/factory-phase-auto.service')
+    .then(({ factoryPhaseAutoService }) => factoryPhaseAutoService.evaluate({ notify: true }))
+    .catch((error) => {
+      logger.warn('Factory phase AUTO evaluate after payment failed', { error });
+    });
+}
+
 /** N3-E1: Stripe may send `subscription` as an id string or an expanded object; DB queries need the id. */
 function stripeSubscriptionId(ref: string | Stripe.Subscription | null | undefined): string | null {
   if (ref == null) return null;
@@ -186,7 +251,7 @@ export class PaymentsService {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amountEur = resolveCheckoutAmount(plan, billingCycle, industryCategory);
     const priceId = resolveStripePriceId(plan, planSlug, billingCycle);
-    const useDynamicPrice = Boolean(industryCategory?.trim()) || !priceId;
+    const useDynamicPrice = Boolean(industryCategory?.trim()) || !priceId || isFoundingPromoActive(industryCategory);
 
     const { rows: userRows } = await this.db.getUserWithStripeCustomer(userId);
 
@@ -229,9 +294,15 @@ export class PaymentsService {
         planSlug,
         billingCycle,
         industryCategory: industryCategory ?? '',
+        ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
       },
       subscription_data: {
-        metadata: { userId, planSlug, industryCategory: industryCategory ?? '' },
+        metadata: {
+          userId,
+          planSlug,
+          industryCategory: industryCategory ?? '',
+          ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
+        },
         trial_period_days: planSlug === 'starter' ? 14 : 0,
       },
     });
@@ -316,6 +387,11 @@ export class PaymentsService {
       return;
     }
 
+    if (session.metadata?.purchaseType === 'deliverable' && session.mode === 'payment') {
+      await this.handleDeliverableStripeCheckoutCompleted(session);
+      return;
+    }
+
     const { userId, planSlug, billingCycle } = session.metadata || {};
     if (!userId || !planSlug) return;
 
@@ -385,6 +461,9 @@ export class PaymentsService {
       stripeInvoiceId: invoice.id,
     });
 
+    const { rows: paidCountRows } = await this.db.countCompletedPaymentsForSubscription(subRows[0].id);
+    const completedPaidCount = Number(paidCountRows[0]?.n ?? 0);
+
     // Create invoice record
     const lineItems = invoice.lines.data.map(line => ({
       description: line.description || 'Subscription',
@@ -402,6 +481,48 @@ export class PaymentsService {
       stripeInvoiceId: invoice.id,
     });
 
+    let planSlug =
+      typeof invoice.subscription === 'object' && invoice.subscription && 'metadata' in invoice.subscription
+        ? String((invoice.subscription as Stripe.Subscription).metadata?.planSlug ?? '')
+        : '';
+    try {
+      const plan = await billingService.getPlanById(subRows[0].plan_id);
+      if (!planSlug) planSlug = plan.slug;
+      const { rows: userRows } = await this.db.getUserById(subRows[0].user_id);
+      const client = userRows[0];
+      if (client?.email && invoice.amount_paid > 0) {
+        const periodStart = invoice.lines.data[0]?.period?.start
+          ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
+          : new Date().toISOString();
+        const periodEnd = invoice.lines.data[0]?.period?.end
+          ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
+          : new Date().toISOString();
+        dispatchPaymentSideEffect(
+          paymentNotifications.sendInvoiceConfirmationToClient({
+            toEmail: client.email,
+            toName: client.name,
+            invoiceNumber: invoice.number || invoice.id,
+            planName: plan.name,
+            planSlug: plan.slug,
+            billingCycle: (subRows[0] as { billing_cycle?: string }).billing_cycle ?? 'monthly',
+            amount: invoice.amount_paid / 100,
+            total: invoice.amount_paid / 100,
+            currency: invoice.currency.toUpperCase(),
+            paymentId: paymentRows[0].id,
+            lineItems,
+            periodStart,
+            periodEnd,
+            purchasedAt: invoice.created
+              ? new Date(invoice.created * 1000).toISOString()
+              : new Date().toISOString(),
+          }),
+          'stripe_invoice_email',
+        );
+      }
+    } catch (err) {
+      logger.warn('Stripe invoice confirmation email skipped', { error: err, invoiceId: invoice.id });
+    }
+
     dispatchRevenueAllocation({
       paymentId: paymentRows[0].id,
       userId: subRows[0].user_id,
@@ -410,10 +531,23 @@ export class PaymentsService {
       provider: 'stripe',
       metadata: {
         purchaseType: 'platform_plan',
-        planSlug: '',
+        planSlug,
         billingCycle: (subRows[0] as { billing_cycle?: string }).billing_cycle ?? 'monthly',
       },
     });
+
+    const isFirstPaid =
+      invoice.amount_paid > 0 &&
+      (invoice.billing_reason === 'subscription_create' || completedPaidCount === 1);
+    if (isFirstPaid) {
+      dispatchAutoFulfillment({
+        paymentId: paymentRows[0].id,
+        userId: subRows[0].user_id,
+        purchaseType: 'platform_plan',
+        planSlug: planSlug || null,
+        deliverableId: planSlug ? resolvePlanDeliverableId(planSlug) : null,
+      });
+    }
   }
 
   private async handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
@@ -695,7 +829,7 @@ export class PaymentsService {
   async confirmPendingPayment(
     paymentId: string,
     adminId: string,
-    provider: 'wise' | 'manual' | 'kriptoman' = 'manual'
+    provider: 'wise' | 'manual' | 'kriptoman' | 'stripe' = 'manual'
   ): Promise<void> {
     const { rows } = await this.db.getPaymentForConfirm(paymentId, provider);
 
@@ -793,6 +927,7 @@ export class PaymentsService {
         clientName: client?.name ?? null,
         clientEmail: client?.email ?? null,
       });
+      dispatchFactoryPhaseAutoEvaluate();
       return;
     }
 
@@ -923,6 +1058,7 @@ export class PaymentsService {
       clientName: client?.name ?? null,
       clientEmail: client?.email ?? null,
     });
+    dispatchFactoryPhaseAutoEvaluate();
   }
 
   // ========================
@@ -931,14 +1067,15 @@ export class PaymentsService {
 
   getPaymentMethods() {
     const mode = config.payments.mode;
+    const manual = getManualPaymentConfig();
     const methods: Array<{ id: string; label: string; description: string; available: boolean }> = [];
 
-    if (mode === 'manual' || config.payments.manual.accountName || config.payments.manual.iban) {
+    if (mode === 'manual' || (manual.configured && process.env.PAYMENTS_MANUAL_ENABLED !== 'false')) {
       methods.push({
         id: 'manual',
         label: 'Bank transfer',
-        description: 'Pay to a personal or business account — activation after admin confirmation (no Stripe/PayPal account required).',
-        available: true,
+        description: 'Pay by bank transfer — activation after admin confirmation.',
+        available: manual.configured,
       });
     }
 
@@ -961,11 +1098,15 @@ export class PaymentsService {
     }
 
     if (mode !== 'manual') {
+      const finance = getFinanceClient();
+      const wiseConfigured = finance.isConfigured();
       methods.push({
         id: 'wise',
-        label: 'Wise / international transfer',
-        description: 'Transfer instructions + manual confirmation.',
-        available: true,
+        label: 'International transfer (Wise)',
+        description: wiseConfigured
+          ? 'Wise transfer via finance integration — manual confirmation after funds arrive.'
+          : 'Not configured — use bank transfer (IBAN) instead.',
+        available: wiseConfigured,
       });
     }
 
@@ -987,6 +1128,7 @@ export class PaymentsService {
         mode === 'manual'
           ? 'No-company mode: use bank transfer until you register a company and enable Stripe live.'
           : undefined,
+      manualSetupMissing: !manual.configured,
     };
   }
 
@@ -1081,6 +1223,11 @@ export class PaymentsService {
 
     const deliverable = getDeliverable(input.deliverableId);
     if (!deliverable) throw new PaymentError('Unknown deliverable');
+    if (!canCheckoutPackage(input.deliverableId)) {
+      throw new PaymentError(
+        'This package is not available for self-serve checkout at the current budget/production profile. Contact sales.',
+      );
+    }
 
     const quote = calculateDeliverableQuote({
       deliverableId: input.deliverableId,
@@ -1158,6 +1305,116 @@ export class PaymentsService {
         clientPriceEur: quote.clientPriceEur,
       },
     };
+  }
+
+  async createDeliverableStripeCheckout(
+    userId: string,
+    input: {
+      deliverableId: string;
+      industryCategory?: string;
+      marketIntensity?: number;
+      tamEstimateUsd?: number;
+      competitionScore?: number;
+    }
+  ) {
+    if (!config.stripe.secretKey) {
+      throw new PaymentError('Stripe is not configured. Add STRIPE_SECRET_KEY and set PAYMENTS_MODE=live.');
+    }
+    if (config.payments.mode === 'manual') {
+      throw new PaymentError('Card checkout is disabled. Set PAYMENTS_MODE=live in production.');
+    }
+
+    const deliverable = getDeliverable(input.deliverableId);
+    if (!deliverable) throw new PaymentError('Unknown deliverable');
+    if (!canCheckoutPackage(input.deliverableId)) {
+      throw new PaymentError(
+        'This package is not available for self-serve checkout at the current budget/production profile. Contact sales.',
+      );
+    }
+
+    const quote = calculateDeliverableQuote({
+      deliverableId: input.deliverableId,
+      industryCategory: input.industryCategory ?? null,
+      billingCycle: deliverable.billing,
+      paymentProvider: 'stripe',
+      marketIntensity: input.marketIntensity ?? 55,
+      tamEstimateUsd: input.tamEstimateUsd,
+      competitionScore: input.competitionScore,
+    });
+
+    const amount = applyFoundingPromoDiscount(quote.clientPriceEur, input.industryCategory);
+    const currency = 'EUR';
+    const categoryLabel = categoryCheckoutLabel(input.industryCategory);
+
+    const { rows } = await this.db.insertStripePendingPayment({
+      userId,
+      amount,
+      currency,
+      description: `Deliverable — ${deliverable.name}${categoryLabel}`,
+      metadataJson: JSON.stringify({
+        purchaseType: 'deliverable',
+        deliverableId: deliverable.id,
+        industryCategory: input.industryCategory ?? null,
+        billing: deliverable.billing,
+        quotedSubtotalEur: quote.subtotalEur,
+        paymentFeeEur: quote.paymentFeeEur,
+        foundingPromo: isFoundingPromoActive(input.industryCategory) || undefined,
+      }),
+    });
+
+    const paymentId = rows[0].id;
+    const { rows: userRows } = await this.db.getUserById(userId);
+    const session = await requireStripe().checkout.sessions.create({
+      customer_email: userRows[0]?.email ?? undefined,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `${deliverable.name}${categoryLabel}`,
+              description: deliverable.description.slice(0, 200),
+            },
+            unit_amount: Math.round(amount * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: webAppUrl(`/dashboard?payment=success&deliverable=${encodeURIComponent(deliverable.id)}`),
+      cancel_url: webAppUrl('/pricing?payment=cancel'),
+      metadata: {
+        purchaseType: 'deliverable',
+        paymentId,
+        userId,
+        deliverableId: deliverable.id,
+        industryCategory: input.industryCategory ?? '',
+      },
+    });
+
+    await this.db.updateProviderPaymentId(paymentId, session.id);
+
+    logger.info('Stripe deliverable checkout created', { paymentId, deliverableId: deliverable.id, sessionId: session.id });
+
+    return {
+      paymentId,
+      sessionId: session.id,
+      url: session.url,
+      amount,
+      currency,
+    };
+  }
+
+  private async handleDeliverableStripeCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    const paymentId = session.metadata?.paymentId;
+    if (!paymentId || session.payment_status !== 'paid') return;
+    try {
+      await this.confirmPendingPayment(paymentId, 'stripe-webhook', 'stripe');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('already confirmed')) return;
+      throw err;
+    }
   }
 
   async markManualPaymentSent(paymentId: string, userId: string): Promise<void> {

@@ -5,31 +5,26 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   FolderKanban,
-  Workflow,
   Crown,
   Play,
   CheckCircle2,
   Clock,
   ArrowUpRight,
   Headphones,
-  ShoppingBag,
-  Shield,
+  Package,
 } from 'lucide-react';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
 import type { AtinaDashboardLive } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
-import { isAdminRole } from '@/lib/auth-roles';
 import { buildClientMetrics } from '@/lib/platform-metrics';
 import { describeAtinaError } from '@/lib/atina-errors';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { CrmContactsPanel } from '@/components/platform/CrmContactsPanel';
-import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
-import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel';
 import { DeliverableQuotePanel } from '@/components/platform/DeliverableQuotePanel';
 import { DeliveriesPanel } from '@/components/platform/DeliveriesPanel';
 import { ClientOrdersPanel } from '@/components/platform/ClientOrdersPanel';
+import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel';
 import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
 import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
 import { FileUploadPanel } from '@/components/platform/FileUploadPanel';
@@ -50,6 +45,17 @@ const taskStatus = {
   done: { label: 'Completed', color: 'text-emerald-400', icon: CheckCircle2 },
 };
 
+const GENERIC_UNAVAILABLE = 'This section is temporarily unavailable.';
+
+/** Guard against internal/dev phrasing reaching clients (e.g. .env, ports, backend hints). */
+function clientSafeMessage(input: string | undefined): string {
+  const msg = describeAtinaError(input);
+  if (/\.env|localhost|port\s*\d|backend|stub|undefined|atina api|access token/i.test(msg)) {
+    return GENERIC_UNAVAILABLE;
+  }
+  return msg;
+}
+
 export default function DashboardClient({
   snapshot,
   live,
@@ -58,7 +64,6 @@ export default function DashboardClient({
   unreadCount,
   unreadError,
 }: Props) {
-  const isAdmin = sessionUser ? isAdminRole(sessionUser.role) : false;
   const metrics = buildClientMetrics(snapshot, live, { authenticated: !isDemo && Boolean(sessionUser) });
   const status =
     live?.me || live?.tasks.length ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
@@ -72,7 +77,7 @@ export default function DashboardClient({
       subtitle={
         isDemo
           ? 'Demo preview — sign in to place real orders, get support, and track delivery status.'
-          : 'Your client portal — track projects, orders, and communication with our team.'
+          : 'Track your orders, deliveries, billing, and support in one place.'
       }
       badge={<StatusPill status={status} />}
       sessionUser={sessionUser}
@@ -91,38 +96,24 @@ export default function DashboardClient({
         </div>
       )}
 
-      {isAdmin && !isDemo && (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-500/25 bg-violet-500/10 px-4 py-3 text-sm">
-          <p className="flex items-center gap-2 text-violet-100">
-            <Shield className="h-4 w-4 text-violet-300" />
-            You have operator access — Autonomy and factory tools are in the{' '}
-            <Link href="/admin" className="font-medium text-white underline-offset-2 hover:underline">
-              admin console
-            </Link>
-            .
-          </p>
-        </div>
-      )}
-
       {!isDemo && (live?.errors?.length || unreadError) ? (
         <div className="mb-6 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-          <p className="font-medium">Live data is partially unavailable</p>
+          <p className="font-medium">Some information is temporarily unavailable</p>
           {live?.errors?.length ? (
             <ul className="mt-2 list-inside list-disc text-rose-300/90">
               {live.errors.map((e, i) => (
-                <li key={i}>{describeAtinaError(e)}</li>
+                <li key={i}>{clientSafeMessage(e)}</li>
               ))}
             </ul>
           ) : null}
-          {unreadError ? <p className="mt-2 text-rose-300/90">{unreadError}</p> : null}
+          {unreadError ? <p className="mt-2 text-rose-300/90">{clientSafeMessage(unreadError)}</p> : null}
           <p className="mt-2 text-xs text-rose-300/80">
-            Use the web app at <strong>http://localhost:3010</strong> and ensure the API is running on port{' '}
-            <strong>3000</strong> (<code className="text-rose-200">.\scripts\ensure-dev-stack.ps1</code>).
+            Try again in a few minutes or contact our support team.
           </p>
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Active projects"
           value={metrics.projectsActive}
@@ -132,47 +123,33 @@ export default function DashboardClient({
           delay={0}
         />
         <StatCard
-          label="Automations"
-          value={metrics.automationsRun}
-          sub="last 30 days"
-          icon={ShoppingBag}
-          accent="cyan"
-          delay={0.05}
-        />
-        <StatCard
           label="Notifications"
-          value={unreadCount !== null ? String(unreadCount) : metrics.notifications.length > 0 ? String(metrics.notifications.filter((n) => !n.read).length) : '0'}
+          value={
+            unreadCount !== null
+              ? String(unreadCount)
+              : metrics.notifications.length > 0
+                ? String(metrics.notifications.filter((n) => !n.read).length)
+                : '0'
+          }
           sub="unread"
           icon={Headphones}
           accent="violet"
-          delay={0.1}
+          delay={0.05}
         />
         <StatCard
           label="Your plan"
           value={metrics.planName}
           icon={Crown}
           accent="rose"
-          delay={0.15}
+          delay={0.1}
         />
       </div>
 
-      <section id="deliveries" className="mt-6">
-        <GlassCard delay={0.16}>
-          <h2 className="font-display text-lg font-semibold text-white">Your deliveries</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Real output after payment — PDF documents, live websites, and software builds from the fulfillment engine.
-          </p>
-          <div className="mt-4">
-            <DeliveriesPanel disabled={isDemo || !sessionUser} />
-          </div>
-        </GlassCard>
-      </section>
-
-      <section id="orders" className="mt-6">
-        <GlassCard delay={0.18}>
+      <section id="orders" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.12}>
           <h2 className="font-display text-lg font-semibold text-white">Your orders</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Custom software — each order is fully isolated, built from scratch, and tested before delivery.
+            Status of your custom software requests — built and tested before delivery.
           </p>
           <div className="mt-4">
             <ClientOrdersPanel disabled={isDemo || !sessionUser} />
@@ -180,54 +157,21 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="documents" className="mt-6">
-        <GlassCard delay={0.2}>
-          <h2 className="font-display text-lg font-semibold text-white">Documents</h2>
+      <section id="deliveries" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.14}>
+          <h2 className="font-display text-lg font-semibold text-white">Your deliveries</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Upload briefs, contracts, or reference files for your project team.
+            Documents, live websites, and software builds ready for download after payment confirmation.
           </p>
           <div className="mt-4">
-            <FileUploadPanel disabled={isDemo || !sessionUser} />
+            <DeliveriesPanel disabled={isDemo || !sessionUser} />
           </div>
         </GlassCard>
       </section>
 
-      <section id="automations" className="mt-6 scroll-mt-24">
-        <GlassCard delay={0.21}>
-          <h2 className="font-display text-lg font-semibold text-white">Automations &amp; tasks</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Workflow runs and queued jobs from your workspace — {metrics.automationsRun} in the last 30 days.
-          </p>
-          {metrics.tasks.length === 0 ? (
-            <p className="mt-4 rounded-lg border border-dashed border-white/10 p-6 text-center text-sm text-slate-500">
-              No active automations — order a vertical package or book onboarding to activate workflows.
-            </p>
-          ) : (
-            <ul className="mt-4 space-y-2">
-              {metrics.tasks.slice(0, 5).map((task) => (
-                <li
-                  key={task.id}
-                  className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-2 text-sm"
-                >
-                  <span className="flex items-center gap-2 text-white">
-                    <Workflow className="h-3.5 w-3.5 text-cyan-400" />
-                    {task.title}
-                  </span>
-                  <span className="text-xs capitalize text-slate-500">{task.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {isAdmin && !isDemo && (
-            <Link href="/admin#workflows" className="btn-glass mt-4 inline-block text-sm">
-              Open workflow console
-            </Link>
-          )}
-        </GlassCard>
-      </section>
-
       <section id="projects" className="mt-6 scroll-mt-24">
-        <GlassCard delay={0.22}>
+        <span id="automations" className="block scroll-mt-24" aria-hidden="true" />
+        <GlassCard delay={0.16}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold text-white">Project status</h2>
             <Link href="/contact" className="btn-ghost flex items-center gap-1 text-emerald-300">
@@ -236,10 +180,11 @@ export default function DashboardClient({
           </div>
           {metrics.tasks.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
-              <p className="text-sm text-slate-400">
+              <Package className="mx-auto h-8 w-8 text-slate-500" />
+              <p className="mt-3 text-sm text-slate-400">
                 {isDemo
                   ? 'No active projects in demo mode.'
-                  : 'No active projects — book a consultation or submit a new delivery request.'}
+                  : 'No active projects yet — submit a new order or book a consultation.'}
               </p>
               <Link href="/pricing" className="btn-primary mt-4 inline-block text-sm">
                 View pricing
@@ -280,46 +225,14 @@ export default function DashboardClient({
               })}
             </div>
           )}
-          {sessionUser && !isDemo && (
-            <div className="mt-8 border-t border-white/5 pt-6">
-              <h3 className="font-display text-base font-semibold text-white">CRM contacts</h3>
-              <p className="mt-1 text-sm text-slate-500">Leads and clients linked to your account.</p>
-              <div className="mt-4">
-                <CrmContactsPanel />
-              </div>
-            </div>
-          )}
         </GlassCard>
       </section>
 
-      <section id="billing" className="mt-6 scroll-mt-24">
-        <GlassCard delay={0.26}>
-          <h2 className="font-display text-lg font-semibold text-white">Subscription &amp; billing</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Starter, Pro, or Enterprise — pay by card, PayPal, crypto, Wise, or bank transfer. Price adjusts by
-            industry category.
-          </p>
-          {sessionUser && !isDemo ? (
-            <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading billing…</p>}>
-              <BillingCheckoutPanel plans={snapshot.plans} />
-            </Suspense>
-          ) : (
-            <p className="mt-4 text-sm text-slate-500">
-              <Link href="/login?next=/dashboard%23billing" className="text-violet-300 underline">
-                Sign in
-              </Link>{' '}
-              to subscribe or renew your plan.
-            </p>
-          )}
-        </GlassCard>
-      </section>
-
-      <section id="quote" className="mt-6">
-        <GlassCard delay={0.28}>
+      <section id="quote" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.18}>
           <h2 className="font-display text-lg font-semibold text-white">New order</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Choose a deliverable — pricing is transparent (market, resources, payment method). You pay for what
-            you receive, not platform access.
+            Choose a deliverable — transparent pricing by industry and payment method.
           </p>
           {sessionUser && !isDemo ? (
             <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading calculator…</p>}>
@@ -339,11 +252,45 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="support" className="mt-6">
-        <GlassCard delay={0.32}>
+      <section id="billing" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.2}>
+          <h2 className="font-display text-lg font-semibold text-white">Billing &amp; payments</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Your subscription, invoices, and payment history. Primary method: bank transfer (IBAN). Card, PayPal, and
+            crypto appear only when enabled for your account.
+          </p>
+          {sessionUser && !isDemo ? (
+            <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Loading billing…</p>}>
+              <BillingCheckoutPanel plans={snapshot.plans} />
+            </Suspense>
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">
+              <Link href="/login?next=/dashboard%23billing" className="text-violet-300 underline">
+                Sign in
+              </Link>{' '}
+              to view billing and make a payment.
+            </p>
+          )}
+        </GlassCard>
+      </section>
+
+      <section id="documents" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.22}>
+          <h2 className="font-display text-lg font-semibold text-white">Documents</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Upload briefs, contracts, or reference files for your project team.
+          </p>
+          <div className="mt-4">
+            <FileUploadPanel disabled={isDemo || !sessionUser} />
+          </div>
+        </GlassCard>
+      </section>
+
+      <section id="support" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.24}>
           <h2 className="font-display text-lg font-semibold text-white">Support</h2>
           <p className="mt-2 text-sm text-slate-400">
-            AI assistant or live call with our team — response within your plan&apos;s support window.
+            Omi or live call with our team — response within your plan&apos;s support window.
           </p>
           {sessionUser && !isDemo ? (
             <SupportMeetingPanel />
@@ -360,12 +307,13 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="sales" className="mt-6 scroll-mt-24">
-        <span id="consultation" className="sr-only" aria-hidden />
-        <GlassCard delay={0.36}>
-          <h2 className="font-display text-lg font-semibold text-white">Sales &amp; consultations</h2>
+      <section id="consultation" className="mt-6 scroll-mt-24">
+        <span id="sales" className="block scroll-mt-24" aria-hidden="true" />
+        <GlassCard delay={0.26}>
+          <h2 className="font-display text-lg font-semibold text-white">Consultations</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Book a call with our sales team — we&apos;ll define scope, timelines, and the right delivery package.
+            Chat with our sales AI or send a project brief — we&apos;ll define scope, timelines, and the right delivery
+            package.
           </p>
           {sessionUser && !isDemo ? (
             <SalesMeetingPanel />
@@ -377,8 +325,8 @@ export default function DashboardClient({
         </GlassCard>
       </section>
 
-      <section id="account" className="mt-6">
-        <GlassCard delay={0.4}>
+      <section id="account" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.28}>
           <h2 className="font-display text-lg font-semibold text-white">Your account</h2>
           {sessionUser ? (
             <dl className="mt-4 space-y-2 text-sm">
@@ -397,18 +345,6 @@ export default function DashboardClient({
             </dl>
           ) : (
             <p className="mt-2 text-sm text-slate-400">You are not signed in.</p>
-          )}
-          {!isDemo && unreadError && (
-            <p className="mt-3 text-xs text-slate-500">{unreadError}</p>
-          )}
-          {sessionUser && !isDemo && (
-            <div className="mt-6 border-t border-white/5 pt-6">
-              <h3 className="font-display text-base font-semibold text-white">AI memory</h3>
-              <p className="mt-1 text-sm text-slate-500">Remember context for your team and AI assistants.</p>
-              <div className="mt-4">
-                <AiMemoryPanel />
-              </div>
-            </div>
           )}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/pricing" className="btn-glass text-sm">
