@@ -1,6 +1,7 @@
 # CEO sekcije A–H — matrica (celokupan workspace, Omni Group)
 
 > **Kanonska lista (P0–P3):** [`docs/STATUS-KANON.md`](./docs/STATUS-KANON.md) · snapshot [`docs/REPO-STATUS-NOW.md`](./docs/REPO-STATUS-NOW.md)  
+> **2026-09-17:** P1 = **8/8 DONE** (agent). P0 = **7× TI** (DNS/UI/inbox/legal). P2 = **NA KRAJU**. Live audit: `.\scripts\audit-prod-autonomous.ps1` → `/dev/status`.  
 > Ako se CEO checkboxi ispod razlikuju od kanonske liste — **pobedi STATUS-KANON** (ovaj fajl je šira CEO matrica + istorija).
 
 **Master lista — spoj svih lista (celokupan projekat, `[x]`/`[ ]`, red rada):** [`docs/MASTER-WORK-LIST.md`](./docs/MASTER-WORK-LIST.md).

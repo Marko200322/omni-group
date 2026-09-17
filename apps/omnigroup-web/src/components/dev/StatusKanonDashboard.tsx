@@ -11,10 +11,15 @@ import {
 
 type EmptyKeyRow = { name: string; source: string };
 
+type ProdAuditRow = { id: string; check: string; status: string; note: string };
+
 type Props = {
   emptyKeys: EmptyKeyRow[];
   emptyCount: number;
   setCount: number;
+  prodAudit?: ProdAuditRow[];
+  prodAuditSummary?: string;
+  prodAuditGenerated?: string;
 };
 
 const STATUS_STYLE: Record<KanonStatus, string> = {
@@ -55,7 +60,22 @@ function ItemRow({ item }: { item: KanonItem }) {
   );
 }
 
-export function StatusKanonDashboard({ emptyKeys, emptyCount, setCount }: Props) {
+const AUDIT_STATUS_STYLE: Record<string, string> = {
+  PASS: 'text-emerald-400',
+  FAIL: 'text-red-400',
+  TI: 'text-amber-400',
+  PARTIAL: 'text-violet-400',
+  DEFERRED: 'text-slate-500',
+};
+
+export function StatusKanonDashboard({
+  emptyKeys,
+  emptyCount,
+  setCount,
+  prodAudit = [],
+  prodAuditSummary = '',
+  prodAuditGenerated = '',
+}: Props) {
   const stats = countByStatus(KANON_SECTIONS);
   const p0Total = KANON_SECTIONS.find((s) => s.id === 'p0')?.items.length ?? 7;
   const p1Total = KANON_SECTIONS.find((s) => s.id === 'p1')?.items.length ?? 8;
@@ -105,6 +125,42 @@ export function StatusKanonDashboard({ emptyKeys, emptyCount, setCount }: Props)
             <p className="text-xs text-slate-500">EMPTY ključeva ({setCount} SET)</p>
           </div>
         </div>
+
+        {/* Prod audit (auto) */}
+        {prodAudit.length > 0 && (
+          <section className="mb-8 rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-4">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-cyan-300">Prod audit (agent)</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              {prodAuditGenerated && <>Generated {prodAuditGenerated} · </>}
+              {prodAuditSummary && <span>{prodAuditSummary} · </>}
+              <code className="text-cyan-400">.\scripts\audit-prod-autonomous.ps1</code>
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-slate-500">
+                    <th className="pb-2 pr-3 font-medium">ID</th>
+                    <th className="pb-2 pr-3 font-medium">Check</th>
+                    <th className="pb-2 pr-3 font-medium">Status</th>
+                    <th className="pb-2 font-medium">Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prodAudit.map((row) => (
+                    <tr key={`${row.id}-${row.check}`} className="border-t border-white/5">
+                      <td className="py-2 pr-3 font-mono text-[10px] text-slate-600">{row.id}</td>
+                      <td className="py-2 pr-3 text-slate-300">{row.check}</td>
+                      <td className={`py-2 pr-3 font-bold ${AUDIT_STATUS_STYLE[row.status] ?? 'text-slate-400'}`}>
+                        {row.status}
+                      </td>
+                      <td className="py-2 text-slate-500">{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* P0 highlight */}
         {stats.p0Open > 0 && (

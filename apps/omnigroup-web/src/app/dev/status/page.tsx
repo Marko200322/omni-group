@@ -46,7 +46,50 @@ function loadEmptyKeys() {
   return { rows: [], empty: 0, set: 0 };
 }
 
+export type ProdAuditRow = { id: string; check: string; status: string; note: string };
+
+function parseProdAuditFile(mdPath: string): { rows: ProdAuditRow[]; summary: string; generated: string } {
+  if (!fs.existsSync(mdPath)) {
+    return { rows: [], summary: '', generated: '' };
+  }
+  const text = fs.readFileSync(mdPath, 'utf8');
+  const generated = text.match(/\*\*Generated:\*\*\s*(.+)/)?.[1]?.trim() ?? '';
+  const summary = text.match(/\*\*Summary:\*\*\s*(.+)/)?.[1]?.trim() ?? '';
+  const rows: ProdAuditRow[] = [];
+  const re = /^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*\*\*([^*]+)\*\*\s*\|\s*([^|]+?)\s*\|/gm;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const id = m[1].trim();
+    if (id === 'ID' || id.startsWith('---')) continue;
+    rows.push({ id, check: m[2].trim(), status: m[3].trim(), note: m[4].trim() });
+  }
+  return { rows, summary, generated };
+}
+
+function loadProdAudit() {
+  const candidates = [
+    path.join(process.cwd(), 'src', 'data', 'prod-audit.md'),
+    path.resolve(process.cwd(), '..', '..', 'docs', 'generated', 'PROD-AUDIT.md'),
+  ];
+  for (const mdPath of candidates) {
+    if (fs.existsSync(mdPath)) {
+      return parseProdAuditFile(mdPath);
+    }
+  }
+  return { rows: [], summary: '', generated: '' };
+}
+
 export default function DevStatusPage() {
   const { rows, empty, set } = loadEmptyKeys();
-  return <StatusKanonDashboard emptyKeys={rows} emptyCount={empty} setCount={set} />;
+  const prodAudit = loadProdAudit();
+  return (
+    <StatusKanonDashboard
+      emptyKeys={rows}
+      emptyCount={empty}
+      setCount={set}
+      prodAudit={prodAudit.rows}
+      prodAuditSummary={prodAudit.summary}
+      prodAuditGenerated={prodAudit.generated}
+    />
+  );
 }

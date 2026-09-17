@@ -1,6 +1,6 @@
 # EMPTY / SET keys (auto-generated)
 
-**Generated:** 2026-09-17 20:07
+**Generated:** 2026-09-17 20:48
 **Command:** ``.\scripts\audit-empty-keys.ps1``
 **Rule:** vrednosti se **nikad** ne ispisuju - samo SET / EMPTY.
 

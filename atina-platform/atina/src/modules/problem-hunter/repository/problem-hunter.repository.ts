@@ -3,6 +3,7 @@ import { query } from '../../../database/connection';
 import type { NormalizedProblemSignal } from '../lib/problem-normalizer';
 import type { LeadScoreResult } from '../lib/signal-scoring-engine';
 import { buildCompanyIdentityHash, normalizeDomain, resolveCanonicalName } from '../lib/company-resolver';
+import { problemDedupPrefix } from '../lib/signal-dedup';
 
 export class ProblemHunterRepository {
   async listSources() {
@@ -29,6 +30,38 @@ export class ProblemHunterRepository {
     return rows[0]?.id ?? null;
   }
 
+  async findDuplicateOf(
+    userId: string,
+    companyId: string | null,
+    normalized: NormalizedProblemSignal,
+  ): Promise<string | null> {
+    if (companyId && normalized.problemCategory) {
+      const { rows } = await query<{ id: string }>(
+        `SELECT id FROM problem_hunter_signals
+         WHERE user_id = $1 AND company_id = $2 AND problem_category = $3 AND duplicate_of IS NULL
+         ORDER BY lead_score DESC, discovered_at ASC
+         LIMIT 1`,
+        [userId, companyId, normalized.problemCategory],
+      );
+      if (rows[0]?.id) return rows[0].id;
+    }
+    if (companyId) {
+      const prefix = problemDedupPrefix(normalized.detectedProblem);
+      if (prefix.length >= 20) {
+        const { rows } = await query<{ id: string }>(
+          `SELECT id FROM problem_hunter_signals
+           WHERE user_id = $1 AND company_id = $2 AND duplicate_of IS NULL
+             AND LOWER(LEFT(detected_problem, 120)) = $3
+           ORDER BY discovered_at ASC
+           LIMIT 1`,
+          [userId, companyId, prefix],
+        );
+        if (rows[0]?.id) return rows[0].id;
+      }
+    }
+    return null;
+  }
+
   async createSignal(
     userId: string,
     sourceId: string,
@@ -37,14 +70,15 @@ export class ProblemHunterRepository {
     companyId: string | null,
     industryCategory?: string,
   ) {
-    const { rows } = await query<{ id: string }>(
+    const duplicateOf = await this.findDuplicateOf(userId, companyId, normalized);
+    const { rows } = await query<{ id: string; duplicate_of: string | null }>(
       `INSERT INTO problem_hunter_signals (
         user_id, company_id, source_id, source_url, industry_category,
         detected_problem, problem_category, original_context,
         evidence, fact_lines, inference_lines, unknown_lines,
-        urgency, confidence_score, lead_score, score_reasons, matched_deliverable_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-      RETURNING id`,
+        urgency, confidence_score, lead_score, score_reasons, matched_deliverable_id, duplicate_of
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      RETURNING id, duplicate_of`,
       [
         userId,
         companyId,
@@ -63,6 +97,7 @@ export class ProblemHunterRepository {
         scored.score,
         JSON.stringify(scored.reasons),
         scored.matchedDeliverableId,
+        duplicateOf,
       ],
     );
     return rows[0];

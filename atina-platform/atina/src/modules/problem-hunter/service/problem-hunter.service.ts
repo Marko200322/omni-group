@@ -59,7 +59,7 @@ export class ProblemHunterService {
           industryCategory: dto.industryCategory,
         });
         const row = await this.repo.createSignal(userId, dto.sourceId, normalized, scored, companyId, dto.industryCategory);
-        if (row?.id) {
+        if (row?.id && !row.duplicate_of) {
           signals.push({ id: row.id, leadScore: scored.score, matchedDeliverableId: scored.matchedDeliverableId });
         }
       }

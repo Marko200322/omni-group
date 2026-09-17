@@ -3,7 +3,7 @@
 **Datum:** 2026-09-17 (P1 zatvoren 19:57)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
-**Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1`.
+**Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.
 
 **Indeks (ne dupliraj stavke drugde):**
 
@@ -130,7 +130,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 
 | ID | Stavka | Status | Doc |
 |----|--------|--------|-----|
-| P3-E01 | Problem Hunter cross-source dedup (Faza 7) | PARTIAL | [`OMNI-PHASE-1-8-STATUS.md`](./OMNI-PHASE-1-8-STATUS.md) |
+| P3-E01 | Problem Hunter cross-source dedup (Faza 7) | DONE | company+category + text prefix · 2026-09-17 |
 | P3-E02 | F4-6 AI / email / upload proširenja | DEFERRED | [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md) |
 | P3-E03 | Faza 6 K8s / observability / vector DB / GPU | DEFERRED | [`FAZA-6-BACKLOG.md`](./FAZA-6-BACKLOG.md) |
 | P3-E04 | Nivo 3 vision / PDF aligned review | DEFERRED | [`NIVO-3-MASTER-CHECKLIST.md`](../NIVO-3-MASTER-CHECKLIST.md) |
@@ -143,7 +143,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 |----|--------|--------|
 | P3-F01 | Obriši `scripts/_tmp_nb_profile*` (temp) | DONE | 2026-09-17 |
 | P3-F02 | Disk C: ≥5 GB za pun `verify-monorepo` | DEFERRED — lokalno |
-| P3-F03 | CEO checklist zastareli `[ ]` → uskladiti | DEFERRED | vidi napomenu ispod |
+| P3-F03 | CEO checklist zastareli `[ ]` → uskladiti | DONE | kanon banner u CHECKLIST-CEO · 2026-09-17 |
 
 ### P3-G · Otkazano
 

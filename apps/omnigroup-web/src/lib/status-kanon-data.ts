@@ -18,7 +18,7 @@ export type KanonSection = {
   items: KanonItem[];
 };
 
-export const STATUS_KANON_UPDATED = '2026-09-17 19:57';
+export const STATUS_KANON_UPDATED = '2026-09-17 20:50';
 
 export const KANON_SECTIONS: KanonSection[] = [
   {
@@ -112,7 +112,7 @@ export const KANON_SECTIONS: KanonSection[] = [
     id: 'p3-product',
     title: 'P3 — Product backlog',
     items: [
-      { id: 'P3-E01', title: 'Problem Hunter dedup (Faza 7)', status: 'PARTIAL' },
+      { id: 'P3-E01', title: 'Problem Hunter dedup (Faza 7)', status: 'DONE', note: 'company+category cross-source' },
       { id: 'P3-E02', title: 'F4-6 AI / email / upload', status: 'DEFERRED' },
       { id: 'P3-E03', title: 'Faza 6 K8s epic', status: 'DEFERRED' },
       { id: 'P3-F01', title: 'Obriši scripts/_tmp_nb_profile*', status: 'DONE', note: '2026-09-17' },

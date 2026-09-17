@@ -21,7 +21,7 @@
 - `problem_hunter_search_runs`
 - `problem_hunter_search_cache`
 
-**TI:** pokreni migracije na prod VPS pre korišćenja API-ja.
+**DONE** — migracija 037 applied na prod 2026-09-17.
 
 ## Faza 4 — Source connector framework
 
@@ -47,9 +47,9 @@
 
 ## Faza 7 — Company resolution + dedup
 
-**PARTIAL**
+**COMPLETE**
 - `company-resolver.ts` + `identity_hash` unique per user
-- **MISSING:** cross-source duplicate signal merge (duplicate_of column ready)
+- Cross-source dedup: `duplicate_of` na insert (company + category / problem prefix)
 
 ## Faza 8 — Lead scoring sa objašnjenjem
 
