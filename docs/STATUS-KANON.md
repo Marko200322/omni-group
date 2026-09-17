@@ -1,6 +1,6 @@
 # STATUS-KANON — jedna lista za ceo projekat
 
-**Datum:** 2026-09-17  
+**Datum:** 2026-09-17 (P1 zatvoren 19:57)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
 **Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1`.
@@ -50,27 +50,29 @@
 | P0-03 | Instantly UI: potvrdi **warmup** | TI | Ti | cold outbound | Instantly dashboard (flag `OUTREACH_DOMAIN_WARMUP_COMPLETE=true` u env) |
 | P0-04 | **Slack** webhook — kontakt form | TI | Ti | notify | `CONTACT_SLACK_WEBHOOK_URL` · [`KLJUCEVI-JEDAN-IZVOR.md`](./KLJUCEVI-JEDAN-IZVOR.md) |
 | P0-05 | **Slack** webhook — ops (uplate/fulfillment) | TI | Ti | notify | `SLACK_WEBHOOK_URL` |
-| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | TI | Ti | invoice E2E dokaz | factory smoke + portal checkout |
+| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | TI | Ti | invoice E2E dokaz | auto: `e2e-billing-prod` PASS (fulfillment); **ti:** proveri PDF u inboxu |
 | P0-07 | **Legal counsel** sign-off | TI | Ti | formalni go-live | stranice već u kodu |
 
 **P0 progress:** 0 / 7 DONE
 
 ---
 
-## P1 — Kod spreman, čeka commit / deploy / migraciju
+## P1 — Deploy queue (agent zatvorio)
 
 | ID | Stavka | Status | Owner | Blokira | Napomena |
 |----|--------|--------|-------|---------|----------|
-| P1-01 | Paketi × industrije (`package-industry-problems`) | READY | JA | industry-aware quote | lokalno, nije commit |
-| P1-02 | Maintenance tier-i + Stripe checkout linija | READY | JA | one-time + recurring | testovi prolaze |
-| P1-03 | BFF `package-context` + `DeliverableQuotePanel` | READY | JA | portal quote UX | deployovan na prod u sesiji; proveri git |
-| P1-04 | `InvoiceHistoryPanel` + BFF `/billing/invoices` | READY | JA | invoice history UI | untracked |
-| P1-05 | **Problem Hunter** modul (API MVP) | READY | JA | admin search/signals | untracked |
-| P1-06 | Migracija **`037_problem_hunter.sql`** na prod VPS | BLOCKED | TI+JA | Problem Hunter API | posle deploy |
-| P1-07 | **Git commit + push** svih P1 izmena | TI | Ti | evidencija | reci „commit“ |
-| P1-08 | **Deploy** na prod posle commita | TI | Ti | LIVE sync | `.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy` |
+| P1-01 | Paketi × industrije (`package-industry-problems`) | DONE | JA | — | commit `c9f32d9` |
+| P1-02 | Maintenance tier-i + Stripe checkout linija | DONE | JA | — | testovi prolaze |
+| P1-03 | BFF `package-context` + `DeliverableQuotePanel` | DONE | JA | — | prod 2026-09-17 |
+| P1-04 | `InvoiceHistoryPanel` + BFF `/billing/invoices` | DONE | JA | — | prod 2026-09-17 |
+| P1-05 | **Problem Hunter** modul (API MVP) | DONE | JA | — | `/api/v1/problem-hunter/*` |
+| P1-06 | Migracija **`037_problem_hunter.sql`** na prod VPS | DONE | JA | — | applied 2026-09-17 17:56 UTC |
+| P1-07 | **Git commit + push** svih P1 izmena | DONE | JA | — | `c9f32d9` → origin |
+| P1-08 | **Deploy** na prod | DONE | JA | — | SafeDeploy + migrate rebuild |
 
-**P1 progress:** 0 / 8 DONE (kod READY, ciklus nije zatvoren)
+**P1 progress:** 8 / 8 DONE
+
+**Dashboard:** https://omnigrouptech.com/dev/status (admin login)
 
 ---
 
@@ -139,7 +141,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 
 | ID | Stavka | Status |
 |----|--------|--------|
-| P3-F01 | Obriši `scripts/_tmp_nb_profile*` (temp) | DEFERRED |
+| P3-F01 | Obriši `scripts/_tmp_nb_profile*` (temp) | DONE | 2026-09-17 |
 | P3-F02 | Disk C: ≥5 GB za pun `verify-monorepo` | DEFERRED — lokalno |
 | P3-F03 | CEO checklist zastareli `[ ]` → uskladiti | DEFERRED | vidi napomenu ispod |
 
@@ -167,7 +169,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 ## Brzi redosled rada
 
 ```
-P0 (ti, DNS/UI)  →  P1 (commit + deploy + migracija 037)  →  P2 (firma + live plaćanja)
+P1 DONE (2026-09-17)  →  P0 (ti: DNS/UI/E2E inbox)  →  P2 (firma + live plaćanja)
 P3 — paralelno, po potrebi, nikad ne blokira prod
 ```
 

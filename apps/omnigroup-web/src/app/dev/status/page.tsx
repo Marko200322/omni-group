@@ -10,8 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function parseEmptyKeys(repoRoot: string): { rows: { name: string; source: string }[]; empty: number; set: number } {
-  const mdPath = path.join(repoRoot, 'docs', 'generated', 'EMPTY-KEYS.md');
+function parseEmptyKeysFile(mdPath: string): { rows: { name: string; source: string }[]; empty: number; set: number } {
   if (!fs.existsSync(mdPath)) {
     return { rows: [], empty: 0, set: 0 };
   }
@@ -34,9 +33,20 @@ function parseEmptyKeys(repoRoot: string): { rows: { name: string; source: strin
   return { rows, empty, set };
 }
 
-export default function DevStatusPage() {
-  const repoRoot = path.resolve(process.cwd(), '..', '..');
-  const { rows, empty, set } = parseEmptyKeys(repoRoot);
+function loadEmptyKeys() {
+  const candidates = [
+    path.join(process.cwd(), 'src', 'data', 'empty-keys.md'),
+    path.resolve(process.cwd(), '..', '..', 'docs', 'generated', 'EMPTY-KEYS.md'),
+  ];
+  for (const mdPath of candidates) {
+    if (fs.existsSync(mdPath)) {
+      return parseEmptyKeysFile(mdPath);
+    }
+  }
+  return { rows: [], empty: 0, set: 0 };
+}
 
+export default function DevStatusPage() {
+  const { rows, empty, set } = loadEmptyKeys();
   return <StatusKanonDashboard emptyKeys={rows} emptyCount={empty} setCount={set} />;
 }

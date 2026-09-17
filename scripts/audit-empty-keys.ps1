@@ -8,13 +8,15 @@
 #>
 param(
   [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot),
-  [string]$OutFile = ''
+  [string]$OutFile = '',
+  [switch]$SkipWebCopy
 )
 
 $ErrorActionPreference = 'Stop'
 if (-not $OutFile) {
   $OutFile = Join-Path $RepoRoot 'docs\generated\EMPTY-KEYS.md'
 }
+$webCopy = Join-Path $RepoRoot 'apps\omnigroup-web\src\data\empty-keys.md'
 
 $kljuceviPath = Join-Path $RepoRoot 'atina-platform\atina\KLJUCEVI-POPUNI.local.txt'
 $deployPath = Join-Path $RepoRoot 'deploy-secrets.local\deploy.config.json'
@@ -114,5 +116,12 @@ foreach ($e in $set) {
   [void]$sb.AppendLine("| ``$($e.Name)`` | $($e.Source) |")
 }
 
-[System.IO.File]::WriteAllText($OutFile, $sb.ToString(), [System.Text.UTF8Encoding]::new($false))
+$content = $sb.ToString()
+[System.IO.File]::WriteAllText($OutFile, $content, [System.Text.UTF8Encoding]::new($false))
 Write-Host "Wrote $OutFile ($($empty.Count) EMPTY, $($set.Count) SET)"
+if (-not $SkipWebCopy) {
+  $webDir = Split-Path -Parent $webCopy
+  if (-not (Test-Path $webDir)) { New-Item -ItemType Directory -Path $webDir -Force | Out-Null }
+  [System.IO.File]::WriteAllText($webCopy, $content, [System.Text.UTF8Encoding]::new($false))
+  Write-Host "Wrote $webCopy (bundled for /dev/status on prod)"
+}

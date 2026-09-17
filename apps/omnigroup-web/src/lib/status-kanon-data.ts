@@ -18,7 +18,7 @@ export type KanonSection = {
   items: KanonItem[];
 };
 
-export const STATUS_KANON_UPDATED = '2026-09-17';
+export const STATUS_KANON_UPDATED = '2026-09-17 19:57';
 
 export const KANON_SECTIONS: KanonSection[] = [
   {
@@ -58,16 +58,16 @@ export const KANON_SECTIONS: KanonSection[] = [
   {
     id: 'p1',
     title: 'P1 — Deploy queue',
-    subtitle: 'Kod spreman — commit · deploy · migracija',
+    subtitle: 'Zatvoreno 2026-09-17 — commit c9f32d9 · prod · migracija 037',
     items: [
-      { id: 'P1-01', title: 'Paketi × industrije (package-industry-problems)', status: 'READY', owner: 'Agent' },
-      { id: 'P1-02', title: 'Maintenance tier-i + Stripe checkout', status: 'READY', owner: 'Agent' },
-      { id: 'P1-03', title: 'BFF package-context + DeliverableQuotePanel', status: 'READY', owner: 'Agent' },
-      { id: 'P1-04', title: 'InvoiceHistoryPanel + BFF /billing/invoices', status: 'READY', owner: 'Agent' },
-      { id: 'P1-05', title: 'Problem Hunter modul (API MVP)', status: 'READY', owner: 'Agent' },
-      { id: 'P1-06', title: 'Migracija 037_problem_hunter.sql na prod', status: 'BLOCKED', owner: 'Agent+Ti', note: 'Posle deploy' },
-      { id: 'P1-07', title: 'Git commit + push P1 izmena', status: 'READY', owner: 'Agent' },
-      { id: 'P1-08', title: 'Deploy na prod (SafeDeploy)', status: 'BLOCKED', owner: 'Agent', note: 'Posle commit' },
+      { id: 'P1-01', title: 'Paketi × industrije (package-industry-problems)', status: 'DONE', owner: 'Agent' },
+      { id: 'P1-02', title: 'Maintenance tier-i + Stripe checkout', status: 'DONE', owner: 'Agent' },
+      { id: 'P1-03', title: 'BFF package-context + DeliverableQuotePanel', status: 'DONE', owner: 'Agent' },
+      { id: 'P1-04', title: 'InvoiceHistoryPanel + BFF /billing/invoices', status: 'DONE', owner: 'Agent' },
+      { id: 'P1-05', title: 'Problem Hunter modul (API MVP)', status: 'DONE', owner: 'Agent' },
+      { id: 'P1-06', title: 'Migracija 037_problem_hunter.sql na prod', status: 'DONE', owner: 'Agent', note: 'Applied 17:56 UTC' },
+      { id: 'P1-07', title: 'Git commit + push P1 izmena', status: 'DONE', owner: 'Agent', note: 'c9f32d9' },
+      { id: 'P1-08', title: 'Deploy na prod (SafeDeploy)', status: 'DONE', owner: 'Agent' },
     ],
   },
   {
@@ -115,6 +115,7 @@ export const KANON_SECTIONS: KanonSection[] = [
       { id: 'P3-E01', title: 'Problem Hunter dedup (Faza 7)', status: 'PARTIAL' },
       { id: 'P3-E02', title: 'F4-6 AI / email / upload', status: 'DEFERRED' },
       { id: 'P3-E03', title: 'Faza 6 K8s epic', status: 'DEFERRED' },
+      { id: 'P3-F01', title: 'Obriši scripts/_tmp_nb_profile*', status: 'DONE', note: '2026-09-17' },
       { id: 'P3-G01', title: 'Redizajn UI', status: 'CANCELLED' },
     ],
   },
