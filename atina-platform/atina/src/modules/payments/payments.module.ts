@@ -20,6 +20,9 @@ const CheckoutDto = z
       .max(64)
       .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
       .optional(),
+    buyerCompany: z.string().trim().min(1).max(120).optional(),
+    buyerVatId: z.string().trim().min(1).max(64).optional(),
+    buyerBillingAddress: z.string().trim().min(1).max(240).optional(),
   })
   .strict();
 
@@ -41,6 +44,7 @@ const DeliverableCheckoutDto = z
     marketIntensity: z.number().min(0).max(100).optional(),
     tamEstimateUsd: z.number().finite().optional(),
     competitionScore: z.number().min(0).max(100).optional(),
+    maintenanceTierId: z.enum(['essential', 'professional', 'premium']).optional(),
   })
   .strict();
 

@@ -117,7 +117,7 @@
 
   "telegramBotToken": "",
   "telegramChatId": "",
-  "adminTelegramNotify": true,
+  "adminTelegramNotify": false,
 
   "businessAndDevUrl": "",
   "businessAndDevKey": "",

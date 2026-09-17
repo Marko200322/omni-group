@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
 
 import { DevDocsSections, type DocSection } from './DevDocsSections';
@@ -24,6 +25,10 @@ const sections: DocSection[] = [
       'CONTRIBUTING.md',
       'SYSTEM-MAP.md',
       'AGENT-RADNI-PLAN.md',
+      'docs/STATUS-KANON.md',
+      'docs/ADMIN-JEDNA-LISTA.md',
+      'docs/REPO-STATUS-NOW.md',
+      'docs/generated/EMPTY-KEYS.md',
       'docs/MASTER-WORK-LIST.md',
       'docs/EVIDENCE-INDEX.md',
       'docs/NIVO-1-DRYRUN-LOG.md',
@@ -271,6 +276,12 @@ export default function DevDocsPage() {
     <div className="px-4 py-16">
       <div className="mx-auto max-w-3xl">
         <h1 className="text-4xl font-bold text-gradient">Dev — repo docs</h1>
+        <Link
+          href="/dev/status"
+          className="mt-4 inline-flex rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-500/20"
+        >
+          → STATUS-KANON dashboard (P0–P3 · šta fali)
+        </Link>
         <p className="mt-4 text-sm text-gray-500">
           List source: <code className="text-violet-400">src/app/dev/docs/page.tsx</code> — split by
           sections; search in <code className="text-violet-400">DevDocsSections.tsx</code> filters

@@ -1,8 +1,9 @@
-﻿# Evidencija — CEO sekcija G (Atina SaaS produkcioni gate)
+# Evidencija — CEO sekcija G (Atina SaaS produkcioni gate)
 
 **Poslednji pregled (2026-08-04, gap-scan):** lokalni preduslov PASS · **prod `smoke:all` PASS** na `https://api.omnigrouptech.com` · ostale CEO-G stavke još otvorene / N/A.
 
-**Status:** _delimičan prod sign-off — smoke + admin monitoring PASS; Stripe/SMTP/staging/rollback owner još otvoreno_
+**Status:** _delimičan prod sign-off — smoke + admin monitoring PASS; Stripe **test** SET; SMTP invoice path SET (`SMTP_ENABLED=true` + Resend attachments); rollback owner DONE; staging VPS još N/A; Stripe **live** još open_
+
 
 **Glavni runbook:** [`atina-platform/atina/docs/operations/release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md)  
 **Staging:** [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) · [`STAGING-MIRROR-PROD.md`](./STAGING-MIRROR-PROD.md)  

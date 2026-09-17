@@ -1,5 +1,9 @@
 # Master lista — spoj svih lista (celokupan Omni Group monorepo)
 
+> **Kanonska lista (P0–P3):** [`STATUS-KANON.md`](./STATUS-KANON.md)  
+> **Snapshot:** [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) · [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) · [`FACTORY-MACHINE-JA-CLOSEOUT.md`](./FACTORY-MACHINE-JA-CLOSEOUT.md)  
+> Ako se ovaj fajl (CEO A–H istorija) razlikuje od `STATUS-KANON.md` — **pobedi STATUS-KANON**.
+
 **Jedan fajl za pregled:** šta je zatvoreno (`[x]`) i šta fali (`[ ]`) u kompletnom projektu po **matrici CEO sekcija A–H**, Nivo 1–3, planu faza i akcionom planu.
 
 **Monorepo evidencija (indeks + dry-run):** [`EVIDENCE-INDEX.md`](./EVIDENCE-INDEX.md) · [`NIVO-1-DRYRUN-LOG.md`](./NIVO-1-DRYRUN-LOG.md).
@@ -40,10 +44,14 @@ Rad **ovim redosledom** (sledeći korak kad je prethodni završen ili jasno **N/
 
 *(Ovo **nije** checkbox za gate; služi da očekivanja budu jasna — vlasnik zatvara ono što zahteva nalog/host.)*
 
-- Nije zatvoreno **10** otvorenih `- [ ]` u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) (**CEO sekcija A**, **CEO sekcija C** prod, ceo blok **CEO sekcije G**).
-- Nije [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) / [`TYPEORM-PROD-EVIDENCE-LATEST.md`](./TYPEORM-PROD-EVIDENCE-LATEST.md) / [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md) stavljeno na **Pass** — ostaje na tebi posle Git / DB / deploy koraka.
-- Nije garantovan **pun** lokalni prolaz monorepo gate skripte ako Postgres za Nest nije čist ili **`POSTGRES_PORT`** nije usklađen — vidi [`scripts/README.md`](../scripts/README.md) (**Port mismatch**); reset šeme ili druga baza.
-- Nisu podešeni **GitHub** branch protection, **live** Stripe/PayPal/Wise, **SMTP** u prod, **DNS/TLS** — van pristupa agenta.
+**Live market/factory (provereno 2026-09-06):** vidi [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) — M6 + Stripe **test** + Instantly SET + fulfillment 850/850; **fali** LLC polja, Stripe **live**, Slack/Lusha/Snov, invoice PDF E2E, cold-send potvrda, n8n live.
+
+**CEO A–H istorijski checkboxi** u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) mogu biti zastareli:
+- GitHub branch protection `main` — **DONE** ([`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md)).
+- Nest TypeORM prod — **N/A** (Nest nije u live Docker).
+- DNS/TLS za omnigrouptech.com + api. — **radi** (live).
+- Stripe/PayPal/Wise **live**, SMTP invoice, rollback owner — **još TI**.
+- Pun lokalni monorepo gate i dalje može pasti na Nest Postgres port mismatch — [`scripts/README.md`](../scripts/README.md).
 ## 0.0b Šta agent **nije hteo** / **nije smeo** da doda u projekat
 
 **Nije hteo (kvalitet, posledice):**
@@ -82,7 +90,7 @@ Rad **ovim redosledom** (sledeći korak kad je prethodni završen ili jasno **N/
 
 | # | Šta fali | Vlasnik | Dokaz / šablon | Status |
 |---|----------|---------|----------------|--------|
-| 1 | **`main` zaštićen**, obavezni PR | Vlasnik | [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md) | `[ ]` čeka [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) |
+| 1 | **`main` zaštićen**, obavezni PR | Vlasnik | [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md) | `[x]` 2026-08-05 — [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) (approvals OFF; CI required checks opciono) |
 | 2 | **CI monorepo zelen na svakom merge-u na `main`** (ako GitHub) | Tim | [`CI-GREEN-ON-MAIN.md`](./CI-GREEN-ON-MAIN.md) · [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md) red **0.3** | `[ ]` |
 | 3 | **Nest prod:** `TYPEORM_SYNC=false` + migracije na **pravoj** bazi | Vlasnik | [`TYPEORM-PRODUCTION-CHECKLIST.md`](../atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md) | `[ ]` |
 | 4 | **Node `npm run build`** u produkciji | Vlasnik | [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) (**CEO sekcija G**) | `[ ]` |

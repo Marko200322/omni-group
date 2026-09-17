@@ -67,8 +67,12 @@ function Invoke-VpsRemoteCommand {
   }
 
   if ($SshKey) {
-    & ssh -o StrictHostKeyChecking=accept-new -i $SshKey "${VpsUser}@${VpsHost}" $Command
-    if ($LASTEXITCODE -ne 0) { throw "SSH failed: $Command" }
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & ssh -o StrictHostKeyChecking=accept-new -i $SshKey "${VpsUser}@${VpsHost}" $Command 2>&1 | ForEach-Object { Write-Host $_ }
+    $exit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    if ($exit -ne 0) { throw "SSH failed: $Command" }
     return $Session
   }
 
@@ -166,7 +170,7 @@ function Sync-VpsRemoteDirectory {
     if ($LASTEXITCODE -ne 0) { throw 'scp upload failed' }
   }
 
-  $extract = "mkdir -p $RemotePath && tar -xzf $remoteTar -C $RemotePath && rm -f $remoteTar && (chmod +x $RemotePath/scripts/*.sh || true)"
+  $extract = "mkdir -p $RemotePath && tar --warning=no-unknown-keyword -xzf $remoteTar -C $RemotePath && rm -f $remoteTar && (chmod +x $RemotePath/scripts/*.sh || true)"
   $Session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $extract -Session $Session
 

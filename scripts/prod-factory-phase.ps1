@@ -83,13 +83,15 @@ function Get-FactoryPhaseAtinaEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetE
     DELIVERABLE_FULFILLMENT_LEARNING_LOOP      = 'false'
     DELIVERABLE_FULFILLMENT_MAX_RETRY_ATTEMPTS   = '2'
     DELIVERABLE_FULFILLMENT_MAX_CHECKLIST_RETRIES = '2'
-    SMTP_ENABLED                               = 'false'
-    ADMIN_TELEGRAM_NOTIFY                      = 'true'
+    # SMTP_ENABLED owned by deploy.config.smtp (Resend is primary; SMTP is optional fallback)
+    ADMIN_TELEGRAM_NOTIFY                      = 'false'
+    AUTONOMY_TELEGRAM_NOTIFY                   = 'false'
   }
 
   if ($idx -ge 1) {
     # M1 inbound - CRM + notifications; Resend/Slack keys from deploy.config
-    $env.SMTP_ENABLED = 'false'
+    # Omi public/portal text chat (OpenRouter) — not premium HeyGen/D-ID video (M6)
+    $env.SUPPORT_AVATAR_ENABLED = 'true'
   }
 
   if ($idx -ge 2) {

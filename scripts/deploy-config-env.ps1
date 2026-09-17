@@ -25,11 +25,18 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'APOLLO_API_KEY' (Get-DeployConfigTrim $Config 'apolloApiKey')
   & $set 'HEYGEN_API_KEY' (Get-DeployConfigTrim $Config 'heygenApiKey')
   & $set 'DID_API_KEY' (Get-DeployConfigTrim $Config 'didApiKey')
+  & $set 'CARTESIA_API_KEY' (Get-DeployConfigTrim $Config 'cartesiaApiKey')
+  & $set 'CARTESIA_VOICE_ID' (Get-DeployConfigTrim $Config 'cartesiaVoiceId')
+  & $set 'APIFY_API_TOKEN' (Get-DeployConfigTrim $Config 'apifyApiToken')
   & $set 'SCRAPER_KEY' (Get-DeployConfigTrim $Config 'scraperKey')
   & $set 'SCRAPER_URL' (Get-DeployConfigTrim $Config 'scraperUrl')
   & $set 'HUNTER_API_KEY' (Get-DeployConfigTrim $Config 'hunterApiKey')
   & $set 'NEVERBOUNCE_API_KEY' (Get-DeployConfigTrim $Config 'neverbounceApiKey')
   & $set 'ZEROBOUNCE_API_KEY' (Get-DeployConfigTrim $Config 'zerobounceApiKey')
+  & $set 'LUSHA_API_KEY' (Get-DeployConfigTrim $Config 'lushaApiKey')
+  & $set 'SNOV_API_KEY' (Get-DeployConfigTrim $Config 'snovApiKey')
+  & $set 'SNOV_USER_ID' (Get-DeployConfigTrim $Config 'snovUserId')
+  & $set 'CONTACT_SLACK_WEBHOOK_URL' (Get-DeployConfigTrim $Config 'contactSlackWebhookUrl')
   & $set 'STRIPE_SECRET_KEY' (Get-DeployConfigTrim $Config 'stripeSecretKey')
   & $set 'STRIPE_PUBLISHABLE_KEY' (Get-DeployConfigTrim $Config 'stripePublishableKey')
   & $set 'STRIPE_WEBHOOK_SECRET' (Get-DeployConfigTrim $Config 'stripeWebhookSecret')
@@ -267,6 +274,7 @@ function Get-DeployConfigWebEnvPatches([object]$Config, [string]$SiteDomain) {
   if ($tgToken) { $patches['TELEGRAM_BOT_TOKEN'] = $tgToken }
   if ($tgChat) { $patches['TELEGRAM_CHAT_ID'] = $tgChat }
   $patches['ADMIN_TELEGRAM_NOTIFY'] = if ($Config.adminTelegramNotify -eq $false) { 'false' } else { 'true' }
+  $patches['AUTONOMY_TELEGRAM_NOTIFY'] = if ($Config.adminTelegramNotify -eq $false) { 'false' } else { 'true' }
   if ($SiteDomain) {
     $patches['NEXT_PUBLIC_SITE_URL'] = "https://$SiteDomain"
   }
@@ -353,6 +361,9 @@ function Build-DeployConfigHashtable([object]$Config) {
     resendApiKey        = if ($Config.resend -and $Config.resend.apiKey) { "$($Config.resend.apiKey)".Trim() } else { '' }
     hunterApiKey        = Get-DeployConfigTrim $Config 'hunterApiKey'
     scraperKey          = Get-DeployConfigTrim $Config 'scraperKey'
+    lushaApiKey         = Get-DeployConfigTrim $Config 'lushaApiKey'
+    snovApiKey          = Get-DeployConfigTrim $Config 'snovApiKey'
+    snovUserId          = Get-DeployConfigTrim $Config 'snovUserId'
     factoryPhaseAuto    = if ($Config.factoryPhaseAuto -eq $true -or "$($Config.factoryPhase)".Trim().ToUpper() -eq 'AUTO') { $true } else { $false }
     companyLegalName    = Get-DeployConfigTrim $Config 'companyLegalName'
     companyTaxId        = Get-DeployConfigTrim $Config 'companyTaxId'
@@ -365,6 +376,9 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     APOLLO_API_KEY           = 'apolloApiKey'
     HEYGEN_API_KEY           = 'heygenApiKey'
     DID_API_KEY              = 'didApiKey'
+    CARTESIA_API_KEY         = 'cartesiaApiKey'
+    CARTESIA_VOICE_ID        = 'cartesiaVoiceId'
+    APIFY_API_TOKEN          = 'apifyApiToken'
     STRIPE_SECRET_KEY        = 'stripeSecretKey'
     STRIPE_PUBLISHABLE_KEY   = 'stripePublishableKey'
     STRIPE_WEBHOOK_SECRET    = 'stripeWebhookSecret'
@@ -374,6 +388,9 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     HUNTER_API_KEY           = 'hunterApiKey'
     NEVERBOUNCE_API_KEY      = 'neverbounceApiKey'
     ZEROBOUNCE_API_KEY       = 'zerobounceApiKey'
+    LUSHA_API_KEY            = 'lushaApiKey'
+    SNOV_API_KEY             = 'snovApiKey'
+    SNOV_USER_ID             = 'snovUserId'
     STARTER_PRICE_ID         = 'starterPriceId'
     PRO_PRICE_ID             = 'proPriceId'
     ENTERPRISE_PRICE_ID      = 'enterprisePriceId'
@@ -474,11 +491,17 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     APOLLO_API_KEY               = Get-DeployConfigTrim $Config 'apolloApiKey'
     HEYGEN_API_KEY               = Get-DeployConfigTrim $Config 'heygenApiKey'
     DID_API_KEY                  = Get-DeployConfigTrim $Config 'didApiKey'
+    CARTESIA_API_KEY             = Get-DeployConfigTrim $Config 'cartesiaApiKey'
+    CARTESIA_VOICE_ID            = Get-DeployConfigTrim $Config 'cartesiaVoiceId'
+    APIFY_API_TOKEN              = Get-DeployConfigTrim $Config 'apifyApiToken'
     SCRAPER_KEY                  = Get-DeployConfigTrim $Config 'scraperKey'
     SCRAPER_URL                  = Get-DeployConfigTrim $Config 'scraperUrl'
     HUNTER_API_KEY               = Get-DeployConfigTrim $Config 'hunterApiKey'
     NEVERBOUNCE_API_KEY          = Get-DeployConfigTrim $Config 'neverbounceApiKey'
     ZEROBOUNCE_API_KEY           = Get-DeployConfigTrim $Config 'zerobounceApiKey'
+    LUSHA_API_KEY                = Get-DeployConfigTrim $Config 'lushaApiKey'
+    SNOV_API_KEY                 = Get-DeployConfigTrim $Config 'snovApiKey'
+    SNOV_USER_ID                 = Get-DeployConfigTrim $Config 'snovUserId'
     STRIPE_SECRET_KEY            = Get-DeployConfigTrim $Config 'stripeSecretKey'
     STRIPE_PUBLISHABLE_KEY       = Get-DeployConfigTrim $Config 'stripePublishableKey'
     STRIPE_WEBHOOK_SECRET        = Get-DeployConfigTrim $Config 'stripeWebhookSecret'
@@ -598,7 +621,8 @@ function Apply-DeployConfigProdEnvFiles {
   if ($Config.stripeSecretKey) {
     Set-EnvLineInDeployFile $atinaEnv 'STRIPE_SECRET_KEY' $Config.stripeSecretKey.Trim()
     Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MODE' 'live'
-    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MANUAL_ENABLED' 'false'
+    # Keep IBAN/manual for admin confirm + fulfillment matrix E2E (Stripe is primary, not exclusive)
+    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MANUAL_ENABLED' 'true'
     if ($Config.stripePublishableKey) { Set-EnvLineInDeployFile $atinaEnv 'STRIPE_PUBLISHABLE_KEY' $Config.stripePublishableKey.Trim() }
     if ($Config.stripeWebhookSecret) { Set-EnvLineInDeployFile $atinaEnv 'STRIPE_WEBHOOK_SECRET' $Config.stripeWebhookSecret.Trim() }
     if ($Config.starterPriceId) { Set-EnvLineInDeployFile $atinaEnv 'STARTER_PRICE_ID' $Config.starterPriceId.Trim() }
@@ -606,7 +630,11 @@ function Apply-DeployConfigProdEnvFiles {
     if ($Config.enterprisePriceId) { Set-EnvLineInDeployFile $atinaEnv 'ENTERPRISE_PRICE_ID' $Config.enterprisePriceId.Trim() }
   }
 
-  if ($Config.smtp -and $Config.smtp.enabled -eq $true) {
+  $smtpOn = $false
+  if ($Config.smtp) {
+    $smtpOn = ($Config.smtp.enabled -eq $true) -or ("$($Config.smtp.enabled)" -match '^(true|1|yes)$')
+  }
+  if ($smtpOn) {
     Set-EnvLineInDeployFile $atinaEnv 'SMTP_ENABLED' 'true'
     if ($Config.smtp.host) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_HOST' $Config.smtp.host }
     if ($Config.smtp.port) { Set-EnvLineInDeployFile $atinaEnv 'SMTP_PORT' "$($Config.smtp.port)" }

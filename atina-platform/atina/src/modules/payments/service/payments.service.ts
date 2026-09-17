@@ -9,6 +9,8 @@ import { BillingService } from '../../billing/service/billing.service';
 import { getIndustryCategory, getPlanPriceForCategory, resolvePricingTier, type PlanSlug } from '../../billing/lib/category-pricing';
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
 import { canCheckoutPackage } from '../../billing/lib/package-delivery-spec';
+import { resolveOptionalMaintenanceTier } from '../../billing/lib/package-maintenance-tiers';
+import { buildDeliverableStripeSessionParams } from '../lib/deliverable-stripe-checkout';
 import { resolvePlanDeliverableId } from '../../billing/lib/plan-deliverable-map';
 import {
   calculateDeliverableQuote,
@@ -101,6 +103,21 @@ function applyFoundingPromoDiscount(amount: number, industryCategory?: string | 
 function categoryCheckoutLabel(industryCategory?: string | null): string {
   const cat = getIndustryCategory(industryCategory);
   return cat ? ` · ${cat.name}` : '';
+}
+
+export type BuyerBillingInput = {
+  buyerCompany?: string;
+  buyerVatId?: string;
+  buyerBillingAddress?: string;
+};
+
+function buyerBillingMeta(buyer?: BuyerBillingInput | null): Record<string, string> {
+  if (!buyer) return {};
+  const out: Record<string, string> = {};
+  if (buyer.buyerCompany?.trim()) out.buyerCompany = buyer.buyerCompany.trim();
+  if (buyer.buyerVatId?.trim()) out.buyerVatId = buyer.buyerVatId.trim();
+  if (buyer.buyerBillingAddress?.trim()) out.buyerBillingAddress = buyer.buyerBillingAddress.trim();
+  return out;
 }
 
 function toMoneyNumber(value: unknown): number {
@@ -247,11 +264,13 @@ export class PaymentsService {
     planSlug: string,
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
+    buyer?: BuyerBillingInput | null,
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amountEur = resolveCheckoutAmount(plan, billingCycle, industryCategory);
     const priceId = resolveStripePriceId(plan, planSlug, billingCycle);
     const useDynamicPrice = Boolean(industryCategory?.trim()) || !priceId || isFoundingPromoActive(industryCategory);
+    const buyerMeta = buyerBillingMeta(buyer);
 
     const { rows: userRows } = await this.db.getUserWithStripeCustomer(userId);
 
@@ -294,6 +313,7 @@ export class PaymentsService {
         planSlug,
         billingCycle,
         industryCategory: industryCategory ?? '',
+        ...buyerMeta,
         ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
       },
       subscription_data: {
@@ -301,6 +321,7 @@ export class PaymentsService {
           userId,
           planSlug,
           industryCategory: industryCategory ?? '',
+          ...buyerMeta,
           ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
         },
         trial_period_days: planSlug === 'starter' ? 14 : 0,
@@ -387,7 +408,7 @@ export class PaymentsService {
       return;
     }
 
-    if (session.metadata?.purchaseType === 'deliverable' && session.mode === 'payment') {
+    if (session.metadata?.purchaseType === 'deliverable') {
       await this.handleDeliverableStripeCheckoutCompleted(session);
       return;
     }
@@ -611,9 +632,11 @@ export class PaymentsService {
     planSlug: string,
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
+    buyer?: BuyerBillingInput | null,
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
+    const buyerMeta = buyerBillingMeta(buyer);
 
     const finance = getFinanceClient();
     if (finance.isConfigured()) {
@@ -638,6 +661,7 @@ export class PaymentsService {
             industryCategory: industryCategory ?? null,
             orderId: remote.orderId,
             via: 'finance_aggregator',
+            ...buyerMeta,
           }),
         });
         return { orderId: remote.orderId, approveUrl: remote.approveUrl ?? '' };
@@ -680,6 +704,7 @@ export class PaymentsService {
         billingCycle,
         industryCategory: industryCategory ?? null,
         orderId: order.id,
+        ...buyerMeta,
       }),
     });
 
@@ -772,11 +797,13 @@ export class PaymentsService {
     planSlug: string,
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
+    buyer?: BuyerBillingInput | null,
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
     const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
     const currency = config.payments.manual.currency || 'USD';
     const reference = buildTransferReference(userId);
+    const buyerMeta = buyerBillingMeta(buyer);
 
     const finance = getFinanceClient();
     if (finance.isConfigured()) {
@@ -810,6 +837,7 @@ export class PaymentsService {
         industryCategory: industryCategory ?? null,
         reference,
         instructions: 'pending_manual_verification',
+        ...buyerMeta,
       }),
     });
 
@@ -1136,7 +1164,8 @@ export class PaymentsService {
     userId: string,
     planSlug: string,
     billingCycle: 'monthly' | 'yearly',
-    industryCategory?: string
+    industryCategory?: string,
+    buyer?: BuyerBillingInput | null,
   ) {
     const methods = this.getPaymentMethods();
     if (!methods.methods.some((m) => m.id === 'manual' && m.available)) {
@@ -1148,6 +1177,7 @@ export class PaymentsService {
     const currency = config.payments.manual.currency || 'USD';
     const reference = buildTransferReference(userId);
     const categoryLabel = categoryCheckoutLabel(industryCategory);
+    const buyerMeta = buyerBillingMeta(buyer);
 
     const { rows } = await this.db.insertManualPendingPayment({
       userId,
@@ -1159,6 +1189,7 @@ export class PaymentsService {
         billingCycle,
         reference,
         ...(industryCategory ? { industryCategory } : {}),
+        ...buyerMeta,
       }),
     });
 
@@ -1214,6 +1245,7 @@ export class PaymentsService {
       marketIntensity?: number;
       tamEstimateUsd?: number;
       competitionScore?: number;
+      maintenanceTierId?: string;
     }
   ) {
     const methods = this.getPaymentMethods();
@@ -1239,6 +1271,17 @@ export class PaymentsService {
       competitionScore: input.competitionScore,
     });
 
+    let maintenanceTier: ReturnType<typeof resolveOptionalMaintenanceTier> = null;
+    try {
+      maintenanceTier = resolveOptionalMaintenanceTier(
+        deliverable.id,
+        deliverable.billing,
+        input.maintenanceTierId,
+      );
+    } catch (err) {
+      throw new PaymentError(err instanceof Error ? err.message : 'Invalid maintenance tier');
+    }
+
     const amount = quote.clientPriceEur;
     const currency = config.payments.manual.currency || 'EUR';
     const reference = buildTransferReference(userId);
@@ -1257,6 +1300,9 @@ export class PaymentsService {
         reference,
         quotedSubtotalEur: quote.subtotalEur,
         paymentFeeEur: quote.paymentFeeEur,
+        maintenanceTierId: maintenanceTier?.id ?? null,
+        maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
+        maintenanceLabel: maintenanceTier?.label ?? null,
       }),
     });
 
@@ -1315,6 +1361,7 @@ export class PaymentsService {
       marketIntensity?: number;
       tamEstimateUsd?: number;
       competitionScore?: number;
+      maintenanceTierId?: string;
     }
   ) {
     if (!config.stripe.secretKey) {
@@ -1342,6 +1389,17 @@ export class PaymentsService {
       competitionScore: input.competitionScore,
     });
 
+    let maintenanceTier: ReturnType<typeof resolveOptionalMaintenanceTier> = null;
+    try {
+      maintenanceTier = resolveOptionalMaintenanceTier(
+        deliverable.id,
+        deliverable.billing,
+        input.maintenanceTierId,
+      );
+    } catch (err) {
+      throw new PaymentError(err instanceof Error ? err.message : 'Invalid maintenance tier');
+    }
+
     const amount = applyFoundingPromoDiscount(quote.clientPriceEur, input.industryCategory);
     const currency = 'EUR';
     const categoryLabel = categoryCheckoutLabel(input.industryCategory);
@@ -1359,28 +1417,30 @@ export class PaymentsService {
         quotedSubtotalEur: quote.subtotalEur,
         paymentFeeEur: quote.paymentFeeEur,
         foundingPromo: isFoundingPromoActive(input.industryCategory) || undefined,
+        maintenanceTierId: maintenanceTier?.id ?? null,
+        maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
+        maintenanceLabel: maintenanceTier?.label ?? null,
       }),
     });
 
     const paymentId = rows[0].id;
     const { rows: userRows } = await this.db.getUserById(userId);
+    const checkoutParams = buildDeliverableStripeSessionParams({
+      deliverable,
+      amountEur: amount,
+      categoryLabel,
+      maintenanceTier,
+      paymentId,
+      userId,
+      industryCategory: input.industryCategory,
+    });
+
     const session = await requireStripe().checkout.sessions.create({
       customer_email: userRows[0]?.email ?? undefined,
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `${deliverable.name}${categoryLabel}`,
-              description: deliverable.description.slice(0, 200),
-            },
-            unit_amount: Math.round(amount * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
+      line_items: checkoutParams.lineItems,
+      mode: checkoutParams.mode,
+      ...(checkoutParams.subscriptionData ? { subscription_data: checkoutParams.subscriptionData } : {}),
       success_url: webAppUrl(`/dashboard?payment=success&deliverable=${encodeURIComponent(deliverable.id)}`),
       cancel_url: webAppUrl('/pricing?payment=cancel'),
       metadata: {
@@ -1389,6 +1449,8 @@ export class PaymentsService {
         userId,
         deliverableId: deliverable.id,
         industryCategory: input.industryCategory ?? '',
+        maintenanceTierId: maintenanceTier?.id ?? '',
+        checkoutMode: checkoutParams.mode,
       },
     });
 
@@ -1408,6 +1470,15 @@ export class PaymentsService {
   private async handleDeliverableStripeCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
     const paymentId = session.metadata?.paymentId;
     if (!paymentId || session.payment_status !== 'paid') return;
+
+    const subscriptionId = stripeSubscriptionId(session.subscription as string | Stripe.Subscription | null);
+    if (subscriptionId) {
+      await this.db.patchPaymentMetadata(paymentId, {
+        stripeSubscriptionId: subscriptionId,
+        maintenanceTierId: session.metadata?.maintenanceTierId || null,
+      });
+    }
+
     try {
       await this.confirmPendingPayment(paymentId, 'stripe-webhook', 'stripe');
     } catch (err) {
@@ -1512,7 +1583,8 @@ export class PaymentsService {
     planSlug: string,
     billingCycle: 'monthly' | 'yearly',
     cryptoCurrency?: string,
-    industryCategory?: string
+    industryCategory?: string,
+    buyer?: BuyerBillingInput | null,
   ) {
     const client = getKriptomanClient();
     if (!config.kriptoman.enabled || !client.isConfigured()) {
@@ -1526,6 +1598,7 @@ export class PaymentsService {
     const currency = config.payments.manual.currency || 'EUR';
     const asset = (cryptoCurrency ?? config.kriptoman.defaultCrypto).toUpperCase();
     const categoryLabel = categoryCheckoutLabel(industryCategory);
+    const buyerMeta = buyerBillingMeta(buyer);
 
     const { rows } = await this.db.insertKriptomanPendingPayment({
       userId,
@@ -1537,6 +1610,7 @@ export class PaymentsService {
         billingCycle,
         cryptoCurrency: asset,
         ...(industryCategory ? { industryCategory } : {}),
+        ...buyerMeta,
       }),
     });
 

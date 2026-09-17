@@ -172,7 +172,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Live connection to client Stripe/ERP/CRM',
       'OAuth app registration on third-party tools',
     ],
-    anchorByPhase: { M2: 790, M4: 1190, M6: 1490 },
+    anchorByPhase: { M2: 990, M4: 1490, M6: 1990 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -183,7 +183,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Workflow i SOP PDF: mapa procesa, koraci automatizacije, uloge, KPI, plan uvođenja.',
     includes: ['Workflow design PDF', 'SOP sections per process step', 'Module mapping'],
     excludes: ['Building automations in client tools (add Setup or Integration)'],
-    anchorByPhase: { M0: 549, M2: 649, M4: 649, M6: 890 },
+    anchorByPhase: { M0: 590, M2: 690, M4: 790, M6: 990 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -200,9 +200,14 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Monthly retainer: welcome PDF, support queue with 24h SLA task, portal modules — human replies by our team.',
     descriptionSr:
       'Mesečni retainer: welcome PDF, support queue SLA 24h, moduli na portalu — odgovori našeg tima.',
-    includes: ['Welcome PDF', 'Support automation task (SLA 24h)', 'Modules: notifications, support-avatar, AI-RAG'],
-    excludes: ['Unlimited dev hours', 'Emergency weekend SLA'],
-    anchorByPhase: { M0: 149, M2: 149, M4: 149, M6: 349 },
+    includes: [
+      'Welcome PDF',
+      'Support automation task (SLA 24h)',
+      'Modules: notifications, support-avatar, AI-RAG',
+      'Maintenance & support included in monthly subscription price',
+    ],
+    excludes: ['Unlimited dev hours', 'Emergency weekend SLA', 'Separate maintenance invoice (already included)'],
+    anchorByPhase: { M0: 199, M2: 249, M4: 299, M6: 399 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -244,9 +249,10 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'SLA 8h support queue',
       'Video meetings module',
       'Monthly health-check task',
+      'Maintenance, monitoring & support included in monthly price',
     ],
     excludes: ['Private Slack channel setup on client workspace (we notify via webhook)'],
-    anchorByPhase: { M2: 349, M4: 490, M6: 890 },
+    anchorByPhase: { M2: 449, M4: 690, M6: 1190 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -351,9 +357,14 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     deliverableId: 'vertical-package',
     description: 'Monthly: vertical brief PDF, CRM seed, CRM + automation + billing modules for your industry.',
     descriptionSr: 'Mesečno: vertical brief PDF, CRM seed, moduli CRM + automation + billing.',
-    includes: ['Vertical solution PDF', 'CRM pipeline seeded', 'Modules: CRM, automation, billing'],
+    includes: [
+      'Vertical solution PDF',
+      'CRM pipeline seeded',
+      'Modules: CRM, automation, billing',
+      'Ongoing maintenance & vertical updates included monthly',
+    ],
     excludes: ['Video avatar (needs AI-support retainer + HeyGen)', 'Outbound lead hunting in lean mode'],
-    anchorByPhase: { M2: 179, M4: 299, M6: 399 },
+    anchorByPhase: { M2: 349, M4: 549, M6: 790 },
     minCheckoutPhase: 'M2',
     phaseUnlocks: [
       {
@@ -375,9 +386,10 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'CRM + hunter/titanis/outreach modules',
       'Lead report artifact',
       'Monthly cron tick',
+      'Pipeline maintenance & outreach ops included in subscription',
     ],
     excludes: ['Guaranteed qualified meetings', 'Works fully in lean prod (scraper/outbound off)'],
-    anchorByPhase: { M4: 499, M6: 699 },
+    anchorByPhase: { M4: 690, M6: 990 },
     minCheckoutPhase: 'M4',
     phaseUnlocks: [
       {
@@ -404,9 +416,10 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'AI memory / RAG seed',
       'Modules: support-avatar, video-meetings, ai-rag',
       'Avatar provisioning artifact',
+      'AI support maintenance & knowledge updates included monthly',
     ],
     excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],
-    anchorByPhase: { M3: 199, M4: 349, M5: 399, M6: 449 },
+    anchorByPhase: { M3: 349, M4: 490, M5: 590, M6: 690 },
     minCheckoutPhase: 'M3',
     phaseUnlocks: [
       {

@@ -1,0 +1,564 @@
+{
+  "name": "Omni Double-Agent Outreach Engine",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      },
+      "id": "trig-schedule",
+      "name": "Cron Every 20m",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "siteUrl",
+              "value": "={{$env.MY_WEBSITE_API_URL || 'https://omnigrouptech.com'}}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "atinaUrl",
+              "value": "={{$env.ATINA_API_URL || 'https://api.omnigrouptech.com'}}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "checkoutBase",
+              "value": "={{$env.CHECKOUT_BASE_URL || 'https://omnigrouptech.com/pricing'}}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "outreachEnabled",
+              "value": "={{($env.OUTREACH_ENABLED || 'false').toLowerCase() === 'true'}}",
+              "type": "boolean"
+            },
+            {
+              "id": "a5",
+              "name": "outreachMode",
+              "value": "={{$env.OUTREACH_MODE || 'draft'}}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "agent1Model",
+              "value": "={{$env.AGENT1_MODEL || 'gpt-4o-mini'}}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "agent2Model",
+              "value": "={{$env.AGENT2_MODEL || 'gpt-4o'}}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "delayMin",
+              "value": "={{Number($env.DELAY_MIN_SECONDS || 240)}}",
+              "type": "number"
+            },
+            {
+              "id": "a9",
+              "name": "delayMax",
+              "value": "={{Number($env.DELAY_MAX_SECONDS || 1080)}}",
+              "type": "number"
+            },
+            {
+              "id": "a10",
+              "name": "runId",
+              "value": "={{$now.toISO()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-env",
+      "name": "Load Env (no secrets in graph)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"{{$env.TAVILY_API_KEY}}\",\n  \"query\": \"looking for custom client portal OR \\\"B2B API integrations\\\" OR \\\"turnkey SaaS\\\" OR \\\"alternative to\\\" CRM automation site:reddit.com OR site:news.ycombinator.com\",\n  \"search_depth\": \"basic\",\n  \"include_answer\": false,\n  \"max_results\": 8\n}",
+        "options": {
+          "timeout": 30000,
+          "proxy": "={{($env.PROXY_ENABLED || 'false').toLowerCase() === 'true' ? ($env.HTTPS_PROXY || $env.HTTP_PROXY || '') : ''}}"
+        }
+      },
+      "id": "http-tavily",
+      "name": "Tavily Discovery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{$json.atinaUrl}}/api/v1/billing/deliverables",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "http-truth",
+      "name": "Fetch Source of Truth",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [700, 180],
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Load Env (no secrets in graph)').first().json;\nconst tavily = $('Tavily Discovery').first().json;\nconst truthRaw = $input.first().json;\n\nfunction arr(x) {\n  if (Array.isArray(x)) return x;\n  if (x && Array.isArray(x.data)) return x.data;\n  if (x && x.data && Array.isArray(x.data.deliverables)) return x.data.deliverables;\n  if (x && Array.isArray(x.deliverables)) return x.deliverables;\n  return [];\n}\n\nconst fallbackPkgs = [\n  {id:'setup-quick',name:'Quick setup',description:'Portal, login, payments, contact.',billing:'one_time',anchorEur:549},\n  {id:'integration',name:'Custom integration',description:'API, AI, email, payments connected to your tools.',billing:'one_time',anchorEur:1190},\n  {id:'workflow-design',name:'Workflow design',description:'Process mapping into automations and SOP documentation.',billing:'one_time',anchorEur:690},\n  {id:'audit',name:'Technical audit',description:'Security review, stack assessment, migration plan.',billing:'one_time',anchorEur:590},\n  {id:'lead-gen-retainer',name:'Lead gen retainer',description:'Leads, outreach, and CRM pipeline every month.',billing:'monthly',anchorEur:499},\n  {id:'custom-software',name:'Software starter kit',description:'Starter Node API + SPA scaffold — not unlimited custom build.',billing:'one_time',anchorEur:4900}\n];\n\nlet packages = arr(truthRaw).map(p => ({\n  id: String(p.id || p.deliverableId || ''),\n  name: String(p.name || ''),\n  description: String(p.description || ''),\n  billing: String(p.billing || 'one_time'),\n  anchorEur: Number(p.anchorEur || p.priceEur || 0) || null,\n  includes: Array.isArray(p.includes) ? p.includes : [],\n  excludes: Array.isArray(p.excludes) ? p.excludes : []\n})).filter(p => p.id);\n\nif (!packages.length) packages = fallbackPkgs;\n\nconst results = Array.isArray(tavily.results) ? tavily.results : [];\nconst emailRe = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/gi;\nconst phoneRe = /\\+?\\d[\\d\\s().-]{7,}\\d/g;\n\nfunction redact(s) {\n  return String(s || '').replace(emailRe, '[REDACTED_EMAIL]').replace(phoneRe, '[REDACTED_PHONE]').slice(0, 2500);\n}\n\nfunction host(u) {\n  try { return new URL(u).hostname; } catch { return ''; }\n}\n\nconst leads = results.map((r, i) => ({\n  id: `tv-${Date.now()}-${i}`,\n  source: (String(r.url||'').includes('reddit') ? 'reddit' : (String(r.url||'').includes('ycombinator') ? 'hackernews' : 'web')),\n  title: redact(r.title || 'untitled').slice(0, 500),\n  bodyExcerpt: redact(r.content || r.snippet || ''),\n  urlHost: host(r.url),\n  url: r.url || null,\n  discoveredAt: new Date().toISOString()\n})).filter(l => l.bodyExcerpt.length > 40);\n\nif (!leads.length) {\n  return [{ json: { skip: true, reason: 'no_leads', runId: cfg.runId } }];\n}\n\nconst truth = {\n  fetchedAt: new Date().toISOString(),\n  brandName: 'Omni Group Tech',\n  publicSiteUrl: cfg.siteUrl,\n  checkoutBaseUrl: cfg.checkoutBase,\n  packages,\n  modules: [\n    {id:'atina',name:'Atina',tagline:'API & SaaS core',description:'Auth, billing, catalog'},\n    {id:'astra',name:'Astra',tagline:'Automation & workflows',description:'Pipelines and observability'},\n    {id:'titan',name:'Titan',tagline:'Operations & integrations',description:'Ops and integrations'}\n  ],\n  terms: {\n    disclaimerFooter: '— Omni Group Tech · Packages & pricing: https://omnigrouptech.com/pricing · Terms: https://omnigrouptech.com/legal/terms · This is not a binding offer; checkout confirms scope.',\n    forbiddenClaims: ['100% money-back','guaranteed ROI','unlimited custom']\n  }\n};\n\nreturn leads.map(lead => ({\n  json: {\n    ...cfg,\n    lead,\n    truth,\n    skip: false\n  }\n}));"
+      },
+      "id": "code-normalize",
+      "name": "Normalize Leads + Truth (PII strip)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c-skip",
+              "leftValue": "={{$json.skip}}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-leads",
+      "name": "Has Leads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1160, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "split-leads",
+      "name": "One Lead at a Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1380, 220]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst min = Number(item.delayMin || 240);\nconst max = Number(item.delayMax || 1080);\nconst delaySec = Math.floor(min + Math.random() * (Math.max(max, min) - min + 1));\nreturn [{ json: { ...item, humanDelaySec: delaySec, humanDelayMinutes: Math.round(delaySec / 60) } }];"
+      },
+      "id": "code-delay",
+      "name": "Compute Human Delay",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1600, 220]
+    },
+    {
+      "parameters": {
+        "amount": "={{$json.humanDelaySec}}",
+        "unit": "seconds"
+      },
+      "id": "wait-human",
+      "name": "Humanized Wait 4–18m",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1820, 220],
+      "webhookId": "omni-outreach-wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{$json.agent1Model}}\",\n  \"temperature\": 0.4,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{JSON.stringify(`You are Agent 1 — Sales Scout for Omni Group Tech. Score 1-10; discard if <7. Recommend ONLY package ids from catalog. Human technical founder tone. Never invent prices/discounts/SLA/payment links. Return ONLY JSON: relevanceScore,discard,discardReason,recommendedPackageId,recommendedModule,subject,draftMessage,checkoutPackageId,claimedFeatures,claimedPriceEur,claimedDeliveryDays.\\n\\nCatalog:\\n${$json.truth.packages.map(p=>`- ${p.id}: ${p.name} (${p.billing}) ~€${p.anchorEur||'?'} — ${p.description}`).join('\\\\n')}`)}}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{JSON.stringify(`source=${$json.lead.source} host=${$json.lead.urlHost||'n/a'}\\ntitle=${$json.lead.title}\\n\\n${$json.lead.bodyExcerpt}`)}}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "http-agent1",
+      "name": "Agent 1 Scout (OpenAI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2060, 220],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENAI_HEADER_AUTH",
+          "name": "OpenAI Header Auth"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('Compute Human Delay').item.json;\nconst resp = $input.first().json;\nlet agent1 = null;\nlet parseError = null;\ntry {\n  const content = resp.choices?.[0]?.message?.content || resp.message?.content || '';\n  agent1 = JSON.parse(content);\n} catch (e) {\n  parseError = String(e.message || e);\n}\nconst score = Number(agent1?.relevanceScore || 0);\nconst discard = Boolean(agent1?.discard) || score < 7 || !agent1;\nconst pkgId = agent1?.checkoutPackageId || agent1?.recommendedPackageId || null;\nconst checkoutUrl = pkgId ? `${String(prev.checkoutBase).replace(/\\/$/,'')}?package=${encodeURIComponent(pkgId)}` : null;\nreturn [{\n  json: {\n    ...prev,\n    agent1,\n    agent1ParseError: parseError,\n    passScout: !discard && !parseError,\n    platformCheckoutUrl: checkoutUrl\n  }\n}];"
+      },
+      "id": "code-parse-a1",
+      "name": "Parse Agent 1 + Score Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2280, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c-scout",
+              "leftValue": "={{$json.passScout}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-scout",
+      "name": "Scout Pass (>=7)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2500, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{$json.agent2Model}}\",\n  \"temperature\": 0.1,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": {{JSON.stringify(`You are Agent 2 — Legal & Brand Supervisor for Omni Group Tech. Zero tolerance for hallucinated features, wrong prices, unauthorized discounts, hard delivery guarantees, money-back claims, or invented payment links. Checkout must be null or official ${$json.checkoutBase}?package=<id>. Return ONLY JSON: status(APPROVED|REJECTED|REWRITTEN),reasons[],rewrittenMessage,finalMessage,factualityScore(0-1),checklist{featureMatching,pricingIntegrity,guaranteesAndSla,spamTone,checkoutLinkValid},approvedCheckoutUrl.\\nPackages:\\n${JSON.stringify($json.truth.packages)}\\nDisclaimer to append if approved: ${$json.truth.terms.disclaimerFooter}`)}}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{JSON.stringify(`proposedCheckoutUrl=${$json.platformCheckoutUrl}\\nAgent1=${JSON.stringify($json.agent1)}\\nDraft=${$json.agent1.draftMessage}`)}}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "http-agent2",
+      "name": "Agent 2 Supervisor (OpenAI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2740, 120],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENAI_HEADER_AUTH",
+          "name": "OpenAI Header Auth"
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('Parse Agent 1 + Score Gate').item.json;\nconst resp = $input.first().json;\nlet agent2 = null;\nlet parseError = null;\ntry {\n  const content = resp.choices?.[0]?.message?.content || '';\n  agent2 = JSON.parse(content);\n} catch (e) {\n  parseError = String(e.message || e);\n}\n\nconst draft = String(agent2?.finalMessage || agent2?.rewrittenMessage || prev.agent1?.draftMessage || '');\nconst findings = [];\nconst blocked = [\n  [/100%\\s*money[- ]back/i, 'guarantee_money_back'],\n  [/guaranteed\\s+(leads|roi|revenue|results)/i, 'guarantee_results'],\n  [/unlimited\\s+custom/i, 'unlimited_custom'],\n  [/buy\\.stripe\\.com|checkout\\.stripe\\.com|paddle\\.com\\/checkout/i, 'fake_processor_link'],\n  [/\\d{1,2}%\\s*off|discount code/i, 'unauthorized_discount'],\n  [/\\biban\\b|send crypto to/i, 'bank_details']\n];\nfor (const [re, code] of blocked) {\n  if (re.test(draft)) findings.push({ code, severity: 'block' });\n}\n\nconst pkgId = prev.agent1?.checkoutPackageId || prev.agent1?.recommendedPackageId;\nconst pkg = (prev.truth.packages || []).find(p => p.id === pkgId);\nif (pkgId && !pkg) findings.push({ code: 'unknown_package_id', severity: 'block' });\n\nif (prev.agent1?.claimedPriceEur != null && pkg?.anchorEur != null) {\n  if (Math.abs(Number(prev.agent1.claimedPriceEur) - Number(pkg.anchorEur)) > 1) {\n    findings.push({ code: 'price_mismatch', severity: 'block' });\n  }\n}\n\nlet checkoutOk = true;\nlet checkoutUrl = prev.platformCheckoutUrl || agent2?.approvedCheckoutUrl || null;\nif (checkoutUrl) {\n  try {\n    const u = new URL(checkoutUrl);\n    const base = new URL(prev.checkoutBase);\n    if (u.origin !== base.origin) { checkoutOk = false; findings.push({ code: 'checkout_wrong_origin', severity: 'block' }); }\n    if (/stripe\\.com|paddle\\.com|lemonsqueezy\\.com/.test(u.hostname)) {\n      checkoutOk = false; findings.push({ code: 'checkout_processor_host', severity: 'block' });\n    }\n  } catch {\n    checkoutOk = false; findings.push({ code: 'checkout_unparseable', severity: 'block' });\n  }\n}\n\nconst blocks = findings.filter(f => f.severity === 'block').length;\nlet factuality = Math.max(0, 1 - blocks * 0.25);\nif (typeof agent2?.factualityScore === 'number') {\n  factuality = Math.min(factuality, agent2.factualityScore);\n}\n\nconst supervisorRejected = agent2?.status === 'REJECTED' || parseError;\nconst ok = !supervisorRejected && blocks === 0 && factuality >= 0.85;\n\nlet finalMessage = '';\nif (ok) {\n  finalMessage = draft.trim();\n  const footer = prev.truth.terms.disclaimerFooter;\n  if (footer && !finalMessage.includes('omnigrouptech.com/legal/terms')) {\n    finalMessage += '\\n\\n' + footer;\n  }\n  if (checkoutUrl && !finalMessage.includes(checkoutUrl)) {\n    finalMessage += '\\n\\nOfficial checkout: ' + checkoutUrl;\n  }\n}\n\nconst audit = {\n  leadId: prev.lead.id,\n  title: prev.lead.title,\n  score: prev.agent1?.relevanceScore,\n  packageId: pkgId || null,\n  status: ok ? (agent2?.status === 'REWRITTEN' ? 'REWRITTEN' : 'APPROVED') : 'REJECTED',\n  factualityScore: Number(factuality.toFixed(3)),\n  findings,\n  parseError,\n  at: new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    ...prev,\n    agent2,\n    guardrail: {\n      ok,\n      status: audit.status,\n      factualityScore: audit.factualityScore,\n      findings,\n      finalMessage,\n      approvedCheckoutUrl: ok ? checkoutUrl : null\n    },\n    audit\n  }\n}];"
+      },
+      "id": "code-guardrail",
+      "name": "Security Guardrail + Factuality",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2980, 120]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c-ok",
+              "leftValue": "={{$json.guardrail.ok}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-approved",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3200, 120]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c-send",
+              "leftValue": "={{$json.outreachEnabled === true && $json.outreachMode === 'email'}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-send",
+      "name": "Live Email Dispatch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3420, 40]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{$env.DISPATCH_FROM_EMAIL}}\",\n  \"to\": [\"{{$env.DISPATCH_REVIEW_INBOX || $env.DISPATCH_FROM_EMAIL}}\"],\n  \"subject\": {{JSON.stringify(($json.agent1.subject || 'Omni outreach draft') + ' [APPROVED]')}},\n  \"text\": {{JSON.stringify($json.guardrail.finalMessage)}}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "http-resend",
+      "name": "Resend Dispatch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3660, -40],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RESEND_HEADER_AUTH",
+          "name": "Resend Header Auth"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "Default safe path: send to review inbox, not public social APIs. Set OUTREACH_ENABLED=true only after legal sign-off."
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst fs = require('fs');\nconst path = '/home/node/outreach-data/audit-log.jsonl';\nconst row = {\n  stage: item.guardrail?.ok ? 'dispatched_or_queued' : 'rejected',\n  outreachEnabled: item.outreachEnabled,\n  outreachMode: item.outreachMode,\n  audit: item.audit,\n  messagePreview: (item.guardrail?.finalMessage || '').slice(0, 280),\n  checkout: item.guardrail?.approvedCheckoutUrl || null\n};\ntry {\n  fs.appendFileSync(path, JSON.stringify(row) + '\\n');\n} catch (e) {\n  // sandbox may block fs — still return audit in item\n  row.fsError = String(e.message || e);\n}\nreturn [{ json: { ...item, logged: true, logRow: row } }];"
+      },
+      "id": "code-audit",
+      "name": "Audit Trail Append",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3660, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: {\n  stage: 'rejected_or_low_score',\n  leadId: item.lead?.id,\n  reason: item.guardrail?.findings || item.agent1?.discardReason || 'scout_fail',\n  factualityScore: item.guardrail?.factualityScore ?? null,\n  at: new Date().toISOString()\n}}];"
+      },
+      "id": "code-reject-log",
+      "name": "Log Rejection (no send)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3420, 280]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [0, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $input.first().json;\nconst safe = {\n  at: new Date().toISOString(),\n  workflow: e.workflow?.name,\n  executionId: e.execution?.id,\n  node: e.node?.name,\n  message: String(e.execution?.error?.message || e.error?.message || 'unknown').slice(0, 500)\n};\ntry {\n  const fs = require('fs');\n  fs.appendFileSync('/home/node/outreach-data/errors.jsonl', JSON.stringify(safe) + '\\n');\n} catch (_) {}\nreturn [{ json: safe }];"
+      },
+      "id": "code-error-log",
+      "name": "Log Workflow Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 620]
+    },
+    {
+      "parameters": {
+        "content": "## Omni Double-Agent Outreach\n1. Cron → Tavily discovery\n2. Live catalog from Atina `/api/v1/billing/deliverables`\n3. PII strip → human delay\n4. Agent1 Scout → Agent2 Supervisor\n5. Deterministic guardrail (factuality)\n6. Dispatch ONLY if `OUTREACH_ENABLED=true` (default: draft/audit)\n\n**Secrets:** use n8n Credentials + `$env.*` only.\n**Payments:** checkout links only from `CHECKOUT_BASE_URL?package=<id>`.",
+        "height": 340,
+        "width": 420
+      },
+      "id": "note-readme",
+      "name": "README Sticky",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, 40]
+    }
+  ],
+  "connections": {
+    "Cron Every 20m": {
+      "main": [[{ "node": "Load Env (no secrets in graph)", "type": "main", "index": 0 }]]
+    },
+    "Load Env (no secrets in graph)": {
+      "main": [[{ "node": "Tavily Discovery", "type": "main", "index": 0 }]]
+    },
+    "Tavily Discovery": {
+      "main": [[{ "node": "Fetch Source of Truth", "type": "main", "index": 0 }]]
+    },
+    "Fetch Source of Truth": {
+      "main": [[{ "node": "Normalize Leads + Truth (PII strip)", "type": "main", "index": 0 }]]
+    },
+    "Normalize Leads + Truth (PII strip)": {
+      "main": [[{ "node": "Has Leads?", "type": "main", "index": 0 }]]
+    },
+    "Has Leads?": {
+      "main": [
+        [{ "node": "One Lead at a Time", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "One Lead at a Time": {
+      "main": [[{ "node": "Compute Human Delay", "type": "main", "index": 0 }]]
+    },
+    "Compute Human Delay": {
+      "main": [[{ "node": "Humanized Wait 4–18m", "type": "main", "index": 0 }]]
+    },
+    "Humanized Wait 4–18m": {
+      "main": [[{ "node": "Agent 1 Scout (OpenAI)", "type": "main", "index": 0 }]]
+    },
+    "Agent 1 Scout (OpenAI)": {
+      "main": [[{ "node": "Parse Agent 1 + Score Gate", "type": "main", "index": 0 }]]
+    },
+    "Parse Agent 1 + Score Gate": {
+      "main": [[{ "node": "Scout Pass (>=7)?", "type": "main", "index": 0 }]]
+    },
+    "Scout Pass (>=7)?": {
+      "main": [
+        [{ "node": "Agent 2 Supervisor (OpenAI)", "type": "main", "index": 0 }],
+        [{ "node": "Log Rejection (no send)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Agent 2 Supervisor (OpenAI)": {
+      "main": [[{ "node": "Security Guardrail + Factuality", "type": "main", "index": 0 }]]
+    },
+    "Security Guardrail + Factuality": {
+      "main": [[{ "node": "Approved?", "type": "main", "index": 0 }]]
+    },
+    "Approved?": {
+      "main": [
+        [{ "node": "Live Email Dispatch?", "type": "main", "index": 0 }],
+        [{ "node": "Log Rejection (no send)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Live Email Dispatch?": {
+      "main": [
+        [{ "node": "Resend Dispatch", "type": "main", "index": 0 }],
+        [{ "node": "Audit Trail Append", "type": "main", "index": 0 }]
+      ]
+    },
+    "Resend Dispatch": {
+      "main": [[{ "node": "Audit Trail Append", "type": "main", "index": 0 }]]
+    },
+    "Audit Trail Append": {
+      "main": [[{ "node": "One Lead at a Time", "type": "main", "index": 0 }]]
+    },
+    "Log Rejection (no send)": {
+      "main": [[{ "node": "One Lead at a Time", "type": "main", "index": 0 }]]
+    },
+    "Error Trigger": {
+      "main": [[{ "node": "Log Workflow Error", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "omni-outreach-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "omni-group-outreach-engine"
+  },
+  "id": "omni-double-agent-outreach",
+  "tags": [
+    {
+      "name": "omni",
+      "createdAt": "2026-09-05T00:00:00.000Z",
+      "updatedAt": "2026-09-05T00:00:00.000Z",
+      "id": "tag-omni"
+    },
+    {
+      "name": "outreach",
+      "createdAt": "2026-09-05T00:00:00.000Z",
+      "updatedAt": "2026-09-05T00:00:00.000Z",
+      "id": "tag-outreach"
+    }
+  ]
+}

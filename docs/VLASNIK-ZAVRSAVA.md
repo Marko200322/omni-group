@@ -1,5 +1,8 @@
 # Samo ti završavaš — šta automatika ne može (Faze 1–4)
 
+> **Kanonska lista:** [`STATUS-KANON.md`](./STATUS-KANON.md) · kratko [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) · snapshot [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md)  
+> CEO A (Git protection) = **DONE**. Nest prod = **N/A**. Fokus TI: LLC, Stripe **live**, invoice PDF, DMARC/warmup, Slack/Lusha/Snov (opciono).
+
 **Svrha:** jedna lista bez šume. Inženjerstvo u repou (sanitizacija, šabloni, lokalni build dokaz) je urađeno gde je moguće; **ispod su isključivo koraci koji zahtevaju tvoj nalog, server ili novac.**
 
 **Brzi paket (jedan dan, 4 koraka):** [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md) — popunjavaš šablone redom, na kraju 0 otvorenih stavki u CEO matrici.
@@ -20,9 +23,9 @@
 
 ### CEO sekcija A — Git (prvi `- [ ]` u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md))
 
-1. Na **GitHub-u** (ili drugom hostu): **Settings → Branches** — zaštiti **`main`**, uključi **Require a pull request before merging** (detalji: [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)).
+1. ~~Na **GitHub-u**: zaštiti **`main`**~~ — **DONE 2026-08-05** ([`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md)). Opciono kasnije: required CI status checks.
 2. Opciono: obavezni status checkovi iz workflow-a **CI (monorepo)** — svih **pet** jobova (vidi tabelu u [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); job **`python`** u Actions / branch protection: **`Python (Doslednost dok + pytest)`** — **Doslednost dok** doc gate (md/txt + yaml/ps1/ini), uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`**, u [`scripts/README.md`](../scripts/README.md); uklj. i job **`omnigroup-web`**).
-3. Popuni i sačuvaj [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md), pa u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) stavi **`[x]`** na stavku **CEO sekcije A**.
+3. Evidence već u [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) — u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) stavi **`[x]`** na stavku **CEO sekcije A** ako još nije.
 
 ### CEO sekcija C — Nest / TypeORM produkcija
 

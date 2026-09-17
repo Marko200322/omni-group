@@ -1,8 +1,10 @@
-﻿# Omni Group — monorepo (Nivo 1)
+# Omni Group — monorepo (Nivo 1)
 
 Ovaj folder objedinjuje **Python** (Forge / Atina worker / Astra), **Atina Node SaaS** (`atina-platform/atina`), **Nest Atina System** (`atina-system`), **Omnigroup Next.js** (`apps/omnigroup-web`) i **YouTube/Celery pipeline** (`tools/youtube-pipeline`).
 
 **Terminologija:** u [`CHECKLIST-CEO-SISTEM.md`](./CHECKLIST-CEO-SISTEM.md) **CEO sekcije A–H** čine **matricu** glavne liste (stavke `- [ ]` / `[x]`); u prozi **„ceo sistem“** = **celokupan** obuhvat — vidi odeljak 1 u [`docs/COMPLETE-SYSTEM-PLAN-AND-CHECKLIST.md`](./docs/COMPLETE-SYSTEM-PLAN-AND-CHECKLIST.md).
+
+**Gde smo SADA (live Omni / factory, 2026-09-06):** [`docs/REPO-STATUS-NOW.md`](./docs/REPO-STATUS-NOW.md) · [`docs/ADMIN-JEDNA-LISTA.md`](./docs/ADMIN-JEDNA-LISTA.md) — ako se stariji checklist razlikuje, **pobedi REPO-STATUS-NOW**.
 
 **Developer gate:** Pre merge-a pokreni [`scripts/verify-monorepo.ps1`](./scripts/verify-monorepo.ps1) (job **`python`** / required check **`Python (Doslednost dok + pytest)`** — [`docs/GIT-BRANCH-PROTECTION.md`](./docs/GIT-BRANCH-PROTECTION.md); prvi korak skripte: **Doslednost dok** doc gate (md/txt + yaml/ps1/ini), uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`** gde se indeks pominje, u [`scripts/README.md`](./scripts/README.md); **Port mismatch** Nest/pg — isti README; **LATEST verify:** [`docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./docs/NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) — **Val 360** / 2026-06-03 (D.1 resolved in code; ranije **Val 355** / 2026-05-14); **LATEST smoke** (**sekcija H**): [`docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md`](./docs/NIVO-1-SMOKE-EVIDENCE-LATEST.md) — **Val 351** / 2026-05-14). Kad su servisi podignuti: opciono [`smoke-stack.ps1`](./scripts/smoke-stack.ps1) (multi-stack; Atina Node = **GET `/health`**) · po potrebi **`npm run smoke:all`** u `atina-platform/atina` — formalni Atina release gate: [`atina-platform/atina/docs/operations/release-gate-checklist.md`](./atina-platform/atina/docs/operations/release-gate-checklist.md) (*Local notes — Smoke tests*). Prođi [`docs/NIVO-1-F4-TIM-CHECKLIST.md`](./docs/NIVO-1-F4-TIM-CHECKLIST.md) i prati [`docs/WAVE-AGENT-EXECUTION-PLAN.md`](./docs/WAVE-AGENT-EXECUTION-PLAN.md).
 

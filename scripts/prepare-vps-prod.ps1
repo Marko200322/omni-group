@@ -54,7 +54,7 @@ $siteUrl = "https://$SiteDomain"
 $apiUrl = "https://$ApiDomain"
 
 if (-not (Test-PublicDnsA $ApiDomain)) {
-  Write-Host "  WARN: API DNS '$ApiDomain' nije resolvable lokalno — ostavljam API_DOMAIN=$ApiDomain (ne prepisujem na site)." -ForegroundColor Yellow
+  Write-Host "  WARN: API DNS '$ApiDomain' nije resolvable lokalno - ostavljam API_DOMAIN=$ApiDomain (ne prepisujem na site)." -ForegroundColor Yellow
 }
 
 function New-RandomSecret([int]$Length = 40) {
@@ -81,28 +81,28 @@ $jwtRefresh = Resolve-Secret 'JWT_REFRESH_SECRET' 48 @($outAtina)
 $sessionSecret = Resolve-Secret 'SESSION_SECRET' 48 @($outWeb)
 $adminPass = Resolve-Secret 'ADMIN_PASSWORD' 20 @($outAtina)
 
-$composeAutonomy = if ($isLeanProd) {
-  (Get-ProdLeanComposeEnvLines) -join "`n"
+if ($isLeanProd) {
+  $composeAutonomy = (Get-ProdLeanComposeEnvLines) -join "`n"
 } else {
-@'
-AUTONOMY_ENABLED=true
-AUTONOMY_AUTO_START_SCHEDULER=true
-AUTONOMY_ROLLOUT_SEGMENT=freelance
-AUTONOMY_EVOLUTION_CODE_EDIT=false
-'@
+  $composeAutonomy = @(
+    'AUTONOMY_ENABLED=true',
+    'AUTONOMY_AUTO_START_SCHEDULER=true',
+    'AUTONOMY_ROLLOUT_SEGMENT=freelance',
+    'AUTONOMY_EVOLUTION_CODE_EDIT=false'
+  ) -join "`n"
 }
 
-$composeEnv = @"
-DB_NAME=atina_saas_db
-DB_USER=atina_user
-DB_PASSWORD=$dbPass
-ATINA_PORT=3000
-WEB_PORT=3010
-SITE_DOMAIN=$SiteDomain
-API_DOMAIN=$ApiDomain
-PHASE=$Phase
-$composeAutonomy
-"@
+$composeEnv = @(
+  'DB_NAME=atina_saas_db',
+  'DB_USER=atina_user',
+  "DB_PASSWORD=$dbPass",
+  'ATINA_PORT=3000',
+  'WEB_PORT=3010',
+  "SITE_DOMAIN=$SiteDomain",
+  "API_DOMAIN=$ApiDomain",
+  "PHASE=$Phase",
+  $composeAutonomy
+) -join "`n"
 
 $atinaEnv = @(
   'NODE_ENV=production',
@@ -239,7 +239,7 @@ $tgToken = Read-EnvValue $localAtinaEnv 'TELEGRAM_BOT_TOKEN'
 $tgChat = Read-EnvValue $localAtinaEnv 'TELEGRAM_CHAT_ID'
 if ($tgToken) { $webEnv += "TELEGRAM_BOT_TOKEN=$tgToken" }
 if ($tgChat) { $webEnv += "TELEGRAM_CHAT_ID=$tgChat" }
-$webEnv += 'ADMIN_TELEGRAM_NOTIFY=true'
+$webEnv += 'ADMIN_TELEGRAM_NOTIFY=false'
 $webEnv = $webEnv -join "`n"
 
 Write-Host '=== VPS produkcija - env sabloni ===' -ForegroundColor Cyan

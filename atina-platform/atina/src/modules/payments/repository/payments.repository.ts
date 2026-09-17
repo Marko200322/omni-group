@@ -399,6 +399,16 @@ export class PaymentsRepository {
     );
   }
 
+  patchPaymentMetadata(paymentId: string, patch: Record<string, unknown>) {
+    return query(
+      `UPDATE payments
+       SET metadata = metadata || $2::jsonb,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [paymentId, JSON.stringify(patch)]
+    );
+  }
+
   getKriptomanPaymentForSync(paymentId: string, userId: string) {
     return query<{ status: string; provider_payment_id: string | null }>(
       `SELECT status, provider_payment_id FROM payments

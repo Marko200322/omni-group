@@ -97,6 +97,16 @@ describe('Billing module route security', () => {
     }
   );
 
+  it('allows unauthenticated GET /billing/package-context', async () => {
+    authEnabled = false;
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/billing/package-context')
+      .query({ deliverableId: 'landing', industryCategory: 'marketing' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.primaryProblem).toMatch(/marketing/i);
+  });
+
   it('allows unauthenticated GET /billing/plans', async () => {
     authEnabled = false;
     const app = await buildApp();

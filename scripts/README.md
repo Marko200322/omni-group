@@ -6,6 +6,18 @@
 
 **Brza napomena (`verify-monorepo.ps1`):** pun mirror uključuje **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**; isti GitHub job kao **`python`**, required check **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](../docs/GIT-BRANCH-PROTECTION.md); **Port mismatch** (`POSTGRES_PORT` vs host DB port) — podnaslov **Port mismatch** u odeljku `` `verify-monorepo.ps1` `` ispod.
 
+## STATUS-KANON — `audit-empty-keys.ps1`
+
+Kanonska lista stavki: [`docs/STATUS-KANON.md`](../docs/STATUS-KANON.md).
+
+Skenira `KLJUCEVI-POPUNI.local.txt` + `deploy-secrets.local/deploy.config.json` i piše **samo** SET/EMPTY (bez vrednosti) u [`docs/generated/EMPTY-KEYS.md`](../docs/generated/EMPTY-KEYS.md):
+
+```powershell
+.\scripts\audit-empty-keys.ps1
+```
+
+Posle promene ključeva ili STATUS-KANON sesije.
+
 ## Multi-stack HTTP — `smoke-stack.ps1` · bundled Atina — `npm run smoke:all`
 
 Formalni Atina release gate (napomene za smoke — *Local notes — Smoke tests*): [`release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md).

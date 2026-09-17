@@ -37,7 +37,7 @@ function Get-WarmLeanInboundWebEnvLines([int]$MonthlyBudgetEur = 150) {
     'NEXT_PUBLIC_FOUNDING_CLIENT_PROMO=false',
     'BFF_AI_MEMORY_RATE_LIMIT_MAX=20',
     'BFF_AUTH_RATE_LIMIT_MAX=90',
-    'ADMIN_TELEGRAM_NOTIFY=true'
+    'ADMIN_TELEGRAM_NOTIFY=false'
   )
 }
 

@@ -10,6 +10,8 @@ import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dt
 import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engine';
 import { buildFactoryPhaseStatus } from '../lib/factory-phase-modules';
 import { getFactoryRuntimeSnapshot } from '../lib/factory-phase-runtime';
+import { getCatalogAuditSummary } from '../lib/package-catalog-audit';
+import { getPackageIndustryContext, listPackageIndustryMatrix } from '../lib/package-industry-problems';
 
 export class BillingController {
   private service: BillingService;
@@ -48,6 +50,26 @@ export class BillingController {
 
   getDeliverables = async (_req: Request, res: Response): Promise<void> => {
     sendSuccess(res, this.service.getDeliverableCatalog());
+  };
+
+  getCatalogQuality = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, getCatalogAuditSummary());
+  };
+
+  getPackageContext = async (req: Request, res: Response): Promise<void> => {
+    const deliverableId = String(req.query.deliverableId ?? '');
+    const industryCategory = String(req.query.industryCategory ?? '');
+    const ctx = getPackageIndustryContext(deliverableId, industryCategory);
+    if (!ctx) {
+      sendSuccess(res, { ok: false, reason: 'unknown_deliverable_or_industry' });
+      return;
+    }
+    sendSuccess(res, ctx);
+  };
+
+  getPackageMatrix = async (req: Request, res: Response): Promise<void> => {
+    const industryCategory = String(req.query.industryCategory ?? 'marketing');
+    sendSuccess(res, { industryCategory, packages: listPackageIndustryMatrix(industryCategory) });
   };
 
   getQuoteCatalog = async (req: Request, res: Response): Promise<void> => {

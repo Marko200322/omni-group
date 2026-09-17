@@ -32,6 +32,7 @@ import { TemplateEngineModule } from '../modules/template-engine/template-engine
 import { TitanScoreModule } from '../modules/titan-score/titan-score.module';
 import { ValidatorModule } from '../modules/validator/validator.module';
 import { ClientHunterModule } from '../modules/client-hunter/client-hunter.module';
+import { ProblemHunterModule } from '../modules/problem-hunter/problem-hunter.module';
 import { LeadScoringModule } from '../modules/lead-scoring/lead-scoring.module';
 import { ProxyRotationModule } from '../modules/proxy-rotation/proxy-rotation.module';
 import { OutreachModule } from '../modules/outreach/outreach.module';
@@ -137,6 +138,7 @@ export class CoreEngine {
     moduleRegistry.register(new FollowUpModule());
     moduleRegistry.register(new FollowUpAutomationModule());
     moduleRegistry.register(new ClientHunterModule());
+    moduleRegistry.register(new ProblemHunterModule());
     moduleRegistry.register(new LeadScoringModule());
     moduleRegistry.register(new ProxyRotationModule());
     moduleRegistry.register(new OutreachModule());

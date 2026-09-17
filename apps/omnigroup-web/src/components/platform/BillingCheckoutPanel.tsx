@@ -12,6 +12,8 @@ import {
   type PlanSlug,
 } from '@/lib/category-pricing';
 import { describeAtinaError } from '@/lib/atina-errors';
+import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
+import { InvoiceHistoryPanel } from '@/components/platform/InvoiceHistoryPanel';
 
 function atinaCheckoutError(json: { error?: string; detail?: string }, fallback: string): string {
   return describeAtinaError(json.error ?? fallback);
@@ -92,6 +94,9 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const [kriptomanCheckout, setKriptomanCheckout] = useState<KriptomanCheckout | null>(null);
   const [wiseCheckout, setWiseCheckout] = useState<WiseCheckout | null>(null);
   const [cryptoCurrency, setCryptoCurrency] = useState('USDT');
+  const [buyerCompany, setBuyerCompany] = useState('');
+  const [buyerVatId, setBuyerVatId] = useState('');
+  const [buyerBillingAddress, setBuyerBillingAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -143,6 +148,17 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     };
   }, []);
 
+  const buyerBillingPayload = useCallback(() => {
+    const company = buyerCompany.trim();
+    const vatId = buyerVatId.trim();
+    const address = buyerBillingAddress.trim();
+    return {
+      ...(company ? { buyerCompany: company } : {}),
+      ...(vatId ? { buyerVatId: vatId } : {}),
+      ...(address ? { buyerBillingAddress: address } : {}),
+    };
+  }, [buyerCompany, buyerVatId, buyerBillingAddress]);
+
   const startKriptomanCheckout = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -156,6 +172,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           billingCycle,
           cryptoCurrency,
           ...(industryCategory ? { industryCategory } : {}),
+          ...buyerBillingPayload(),
         }),
       });
       const json = (await res.json()) as { ok?: boolean; data?: KriptomanCheckout; error?: string; detail?: string };
@@ -171,7 +188,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [planSlug, billingCycle, cryptoCurrency, industryCategory]);
+  }, [planSlug, billingCycle, cryptoCurrency, industryCategory, buyerBillingPayload]);
 
   const syncKriptoman = useCallback(async () => {
     if (!kriptomanCheckout?.paymentId) return;
@@ -204,8 +221,9 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       planSlug,
       billingCycle,
       ...(industryCategory ? { industryCategory } : {}),
+      ...buyerBillingPayload(),
     }),
-    [planSlug, billingCycle, industryCategory],
+    [planSlug, billingCycle, industryCategory, buyerBillingPayload],
   );
 
   const startStripeCheckout = useCallback(async () => {
@@ -288,11 +306,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
       const res = await fetch('/api/atina/payments/manual/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planSlug,
-          billingCycle,
-          ...(industryCategory ? { industryCategory } : {}),
-        }),
+        body: JSON.stringify(checkoutPayload()),
       });
       const json = (await res.json()) as { ok?: boolean; data?: ManualCheckout; error?: string; detail?: string };
       if (!res.ok || !json.ok || !json.data) {
@@ -304,7 +318,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [planSlug, billingCycle, industryCategory]);
+  }, [checkoutPayload]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -360,27 +374,52 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
               <span className="text-slate-500">Valid until:</span>{' '}
               {formatDate(purchase.subscription.current_period_end)}
             </li>
-            {purchase.latestInvoice?.invoice_number && (
-              <>
-                <li>
-                  <span className="text-slate-500">Invoice:</span> {purchase.latestInvoice.invoice_number}
-                </li>
-                <li>
-                  <span className="text-slate-500">Paid:</span>{' '}
-                  {Number(purchase.latestInvoice.total_amount ?? 0).toFixed(2)}{' '}
-                  {purchase.latestInvoice.currency ?? 'EUR'}
-                </li>
-                {purchase.latestInvoice.line_items?.[0]?.description && (
-                  <li>
-                    <span className="text-slate-500">Line item:</span>{' '}
-                    {purchase.latestInvoice.line_items[0].description}
-                  </li>
-                )}
-              </>
-            )}
           </ul>
         </motion.div>
       )}
+
+      <InvoiceHistoryPanel />
+
+      <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
+        <p className="text-xs font-medium text-slate-300">Buyer billing (optional)</p>
+        <p className="text-[11px] text-slate-500">
+          Stored with the payment for invoices. Tax calculation stays platform-side; issuer company fields are
+          separate.
+        </p>
+        <label className="block text-sm">
+          <span className="text-slate-400">Company name</span>
+          <input
+            className={CHECKOUT_SELECT_CLASS}
+            value={buyerCompany}
+            onChange={(e) => setBuyerCompany(e.target.value)}
+            disabled={disabled || loading}
+            placeholder="Acme Ltd"
+            maxLength={120}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-slate-400">VAT / tax ID</span>
+          <input
+            className={CHECKOUT_SELECT_CLASS}
+            value={buyerVatId}
+            onChange={(e) => setBuyerVatId(e.target.value)}
+            disabled={disabled || loading}
+            placeholder="DE123456789"
+            maxLength={64}
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="text-slate-400">Billing address</span>
+          <input
+            className={CHECKOUT_SELECT_CLASS}
+            value={buyerBillingAddress}
+            onChange={(e) => setBuyerBillingAddress(e.target.value)}
+            disabled={disabled || loading}
+            placeholder="Street, city, country"
+            maxLength={240}
+          />
+        </label>
+      </div>
 
       {ibanPrimary && (
         <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
@@ -413,7 +452,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         <label className="block text-sm">
           <span className="text-slate-400">Plan</span>
           <select
-            className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+            className={CHECKOUT_SELECT_CLASS}
             value={planSlug}
             onChange={(e) => setPlanSlug(e.target.value)}
             disabled={disabled || loading}
@@ -444,7 +483,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         <label className="block text-sm">
           <span className="text-slate-400">Billing cycle</span>
           <select
-            className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+            className={CHECKOUT_SELECT_CLASS}
             value={billingCycle}
             onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly')}
             disabled={disabled || loading}
@@ -468,7 +507,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           <label className="block text-sm">
             <span className="text-slate-400">Currency</span>
             <select
-              className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+              className={CHECKOUT_SELECT_CLASS}
               value={cryptoCurrency}
               onChange={(e) => setCryptoCurrency(e.target.value)}
               disabled={disabled || loading}

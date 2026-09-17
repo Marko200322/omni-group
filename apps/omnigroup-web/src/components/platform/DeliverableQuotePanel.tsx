@@ -8,6 +8,7 @@ import { IndustryCategorySelect } from '@/components/marketing/IndustryCategoryS
 import { deliverableLabel } from '@/lib/display-text';
 import { formatEur } from '@/lib/category-pricing';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
+import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 import {
   canCheckoutPackage,
   listCheckoutPackages,
@@ -25,6 +26,25 @@ type ManualCheckout = {
   amount: number;
   currency: string;
   instructions: Record<string, string>;
+};
+
+type MaintenanceTier = {
+  id: string;
+  label: string;
+  monthlyEur: number;
+  includes: string[];
+  slaHours: number;
+};
+
+type PackageIndustryContext = {
+  primaryProblem: string;
+  secondaryProblems: string[];
+  businessOutcome: string;
+  industrySolutionPitch: string;
+  industryPainPoints: string[];
+  recommendedForIndustry: boolean;
+  maintenanceIncludedInPrice: boolean;
+  optionalMaintenanceTiers: MaintenanceTier[] | null;
 };
 
 type Props = {
@@ -54,6 +74,8 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [stripePreferred, setStripePreferred] = useState(false);
+  const [packageContext, setPackageContext] = useState<PackageIndustryContext | null>(null);
+  const [maintenanceTierId, setMaintenanceTierId] = useState<string>('');
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +126,33 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     setSent(false);
   }, [deliverableId, industryCategory, verticalSlug, intensity]);
 
+  useEffect(() => {
+    if (!industryCategory || !deliverableId) {
+      setPackageContext(null);
+      setMaintenanceTierId('');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const qs = new URLSearchParams({ deliverableId, industryCategory });
+        const res = await fetch(`/api/atina/billing/package-context?${qs.toString()}`);
+        const json = (await res.json()) as { ok?: boolean; data?: PackageIndustryContext };
+        if (!cancelled && json.ok && json.data?.primaryProblem) {
+          setPackageContext(json.data);
+          setMaintenanceTierId('');
+        } else if (!cancelled) {
+          setPackageContext(null);
+        }
+      } catch {
+        if (!cancelled) setPackageContext(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [deliverableId, industryCategory]);
+
   const startCheckout = useCallback(async () => {
     if (!checkoutAllowed) {
       setError('This package is currently available by request — use “Ask before buying” or Contact and our team will set it up for you.');
@@ -120,6 +169,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
             deliverableId,
             industryCategory: industryCategory || undefined,
             marketIntensity: intensity,
+            ...(maintenanceTierId ? { maintenanceTierId } : {}),
           }),
         });
         const json = (await res.json()) as { ok?: boolean; data?: { url?: string | null }; error?: string; detail?: string };
@@ -139,6 +189,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           industryCategory: industryCategory || undefined,
           paymentProvider: 'manual',
           marketIntensity: intensity,
+          ...(maintenanceTierId ? { maintenanceTierId } : {}),
         }),
       });
       const json = (await res.json()) as {
@@ -161,7 +212,15 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [deliverableId, industryCategory, verticalSlug, intensity, checkoutAllowed, stripePreferred]);
+  }, [
+    deliverableId,
+    industryCategory,
+    verticalSlug,
+    intensity,
+    checkoutAllowed,
+    stripePreferred,
+    maintenanceTierId,
+  ]);
 
   const markSent = useCallback(async () => {
     if (!checkout?.paymentId) return;
@@ -204,7 +263,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       <label className="block text-sm">
         <span className="text-slate-400">Deliverable</span>
         <select
-          className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+          className={CHECKOUT_SELECT_CLASS}
           value={deliverableId}
           onChange={(e) => setDeliverableId(e.target.value)}
           disabled={disabled || loading}
@@ -247,6 +306,59 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
       />
 
+      {packageContext && industryCategory && (
+        <div className="rounded-lg border border-white/10 bg-black/25 p-3 text-sm text-slate-300">
+          <p className="text-xs font-medium uppercase tracking-wide text-violet-300/90">
+            Problem → solution for your industry
+            {packageContext.recommendedForIndustry ? (
+              <span className="ml-2 text-emerald-400">Recommended</span>
+            ) : null}
+          </p>
+          <p className="mt-2 font-medium text-white">{packageContext.primaryProblem}</p>
+          <ul className="mt-2 space-y-1 text-xs text-slate-400">
+            {packageContext.secondaryProblems.map((p) => (
+              <li key={p}>• {p}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-emerald-200/90">Outcome: {packageContext.businessOutcome}</p>
+          {packageContext.industrySolutionPitch ? (
+            <p className="mt-2 text-xs text-slate-400">{packageContext.industrySolutionPitch}</p>
+          ) : null}
+          {packageContext.maintenanceIncludedInPrice ? (
+            <p className="mt-2 text-xs text-amber-200/90">
+              Maintenance, monitoring, and support are included in this monthly subscription — that is why the
+              recurring price is higher than a one-time project.
+            </p>
+          ) : packageContext.optionalMaintenanceTiers && packageContext.optionalMaintenanceTiers.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-slate-400">Optional maintenance after delivery (3 levels):</p>
+              <select
+                className={CHECKOUT_SELECT_CLASS}
+                value={maintenanceTierId}
+                onChange={(e) => setMaintenanceTierId(e.target.value)}
+                disabled={disabled || loading}
+              >
+                <option value="">No maintenance add-on</option>
+                {packageContext.optionalMaintenanceTiers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.label} — {formatEur(t.monthlyEur)}/mo (SLA {t.slaHours}h)
+                  </option>
+                ))}
+              </select>
+              {maintenanceTierId ? (
+                <ul className="space-y-1 text-xs text-slate-500">
+                  {packageContext.optionalMaintenanceTiers
+                    .find((t) => t.id === maintenanceTierId)
+                    ?.includes.map((line) => (
+                      <li key={line}>✓ {line}</li>
+                    ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      )}
+
       <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
         <span className="text-slate-400">Payment method: </span>
         <span className="font-medium text-white">
@@ -266,6 +378,18 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         <span className="mt-1 block text-xs text-slate-500">
           {clientOffer?.when ?? 'After payment confirmation'}
         </span>
+        {maintenanceTierId && packageContext?.optionalMaintenanceTiers ? (
+          <span className="mt-1 block text-xs text-amber-200/80">
+            + maintenance{' '}
+            {formatEur(
+              packageContext.optionalMaintenanceTiers.find((t) => t.id === maintenanceTierId)?.monthlyEur ?? 0,
+            )}
+            /mo —{' '}
+            {stripePreferred
+              ? 'Stripe subscription line item at checkout (starts after delivery payment)'
+              : 'recorded with your order; invoiced monthly after delivery'}
+          </span>
+        ) : null}
       </p>
 
       <div className="flex flex-wrap gap-2">

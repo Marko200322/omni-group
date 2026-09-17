@@ -1,0 +1,53 @@
+services:
+  n8n:
+    image: n8nio/n8n:1.72.1
+    restart: unless-stopped
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      - N8N_HOST=${N8N_HOST:-0.0.0.0}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
+      - GENERIC_TIMEZONE=Europe/Belgrade
+      - TZ=Europe/Belgrade
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE=168
+      # Outreach secrets — referenced as $env.* inside workflow (never hardcoded)
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - MY_WEBSITE_API_URL=${MY_WEBSITE_API_URL:-https://omnigrouptech.com}
+      - ATINA_API_URL=${ATINA_API_URL:-https://api.omnigrouptech.com}
+      - CHECKOUT_BASE_URL=${CHECKOUT_BASE_URL:-https://omnigrouptech.com/pricing}
+      - PUBLIC_SITE_URL=${PUBLIC_SITE_URL:-https://omnigrouptech.com}
+      - OUTREACH_ENABLED=${OUTREACH_ENABLED:-false}
+      - OUTREACH_MODE=${OUTREACH_MODE:-draft}
+      - OUTREACH_STUB_MODE=${OUTREACH_STUB_MODE:-true}
+      - DISPATCH_FROM_EMAIL=${DISPATCH_FROM_EMAIL:-outreach@omnigrouptech.com}
+      - DISPATCH_REVIEW_INBOX=${DISPATCH_REVIEW_INBOX:-}
+      - DISPATCH_WEBHOOK_URL=${DISPATCH_WEBHOOK_URL:-}
+      - AGENT1_MODEL=${AGENT1_MODEL:-gpt-4o-mini}
+      - AGENT2_MODEL=${AGENT2_MODEL:-gpt-4o}
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - SOCKS_PROXY=${SOCKS_PROXY:-}
+      - PROXY_ENABLED=${PROXY_ENABLED:-false}
+      - DELAY_MIN_SECONDS=${DELAY_MIN_SECONDS:-240}
+      - DELAY_MAX_SECONDS=${DELAY_MAX_SECONDS:-1080}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./data:/home/node/outreach-data
+    # Optional: route container egress via residential proxy sidecar
+    # network_mode / extra_hosts as needed for your proxy vendor
+
+volumes:
+  n8n_data:
