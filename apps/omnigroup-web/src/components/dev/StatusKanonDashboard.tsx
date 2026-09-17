@@ -131,8 +131,8 @@ export function StatusKanonDashboard({
           <section className="mb-8 rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-cyan-300">Prod audit (agent)</h2>
             <p className="mt-1 text-xs text-slate-500">
-              {prodAuditGenerated && <>Generated {prodAuditGenerated} · </>}
-              {prodAuditSummary && <span>{prodAuditSummary} · </>}
+              {prodAuditGenerated ? <span>Generated {prodAuditGenerated} · </span> : null}
+              {prodAuditSummary ? <span>{prodAuditSummary} · </span> : null}
               <code className="text-cyan-400">.\scripts\audit-prod-autonomous.ps1</code>
             </p>
             <div className="mt-3 overflow-x-auto">
