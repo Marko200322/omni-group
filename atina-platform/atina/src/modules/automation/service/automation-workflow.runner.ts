@@ -1,4 +1,7 @@
+import axios from 'axios';
+import { getCommsClient } from '../../../integrations';
 import logger from '../../../utils/logger';
+import { NotificationsService } from '../../notifications/service/notifications.service';
 import type { AutomationWorkflowPayload, AutomationWorkflowStep } from '../dto/automation.dto';
 import { AutomationRepository } from '../repository/automation.repository';
 
@@ -39,20 +42,50 @@ export class AutomationWorkflowRunner {
     context: Record<string, unknown>
   ): Promise<unknown> {
     switch (step.type) {
-      case 'send_email':
+      case 'send_email': {
+        const to = String(this.resolveConfigValue(step.config.to, context) ?? '').trim();
+        const subject = String(this.resolveConfigValue(step.config.subject, context) ?? 'Automation').trim();
+        const body = String(
+          this.resolveConfigValue(step.config.body ?? step.config.html, context) ?? subject
+        );
+        if (!to) {
+          return { sent: false, error: 'missing_to' };
+        }
+        const comms = getCommsClient();
+        const notifications = new NotificationsService();
+        if (!comms.isConfigured() && !notifications.isSmtpConfigured()) {
+          return { sent: false, to, subject, reason: 'email_not_configured' };
+        }
+        await notifications.sendEmail(to, subject, body.includes('<') ? body : `<p>${body}</p>`, body);
+        return { sent: true, to, subject, timestamp: new Date().toISOString() };
+      }
+      case 'http_request': {
+        const url = String(this.resolveConfigValue(step.config.url, context) ?? '').trim();
+        const method = String(step.config.method ?? 'GET').toUpperCase();
+        if (!url) {
+          return { executed: false, error: 'missing_url' };
+        }
+        const headers =
+          step.config.headers && typeof step.config.headers === 'object'
+            ? (step.config.headers as Record<string, string>)
+            : undefined;
+        const data = this.resolveConfigValue(step.config.body, context);
+        const res = await axios.request({
+          url,
+          method: method as 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+          headers,
+          data: method === 'GET' || method === 'HEAD' ? undefined : data,
+          timeout: 30_000,
+          validateStatus: () => true,
+        });
         return {
-          sent: true,
-          to: step.config.to,
-          subject: step.config.subject,
-          timestamp: new Date(),
-        };
-      case 'http_request':
-        return {
-          url: step.config.url,
-          method: step.config.method || 'GET',
-          status: 200,
+          url,
+          method,
+          status: res.status,
           executed: true,
+          data: typeof res.data === 'object' ? res.data : { body: res.data },
         };
+      }
       case 'create_task': {
         const { rows } = await this.repo.insertAutomationTask(
           context.userId as string,
@@ -81,6 +114,11 @@ export class AutomationWorkflowRunner {
       default:
         return { executed: true, type: step.type };
     }
+  }
+
+  private resolveConfigValue(value: unknown, context: Record<string, unknown>): unknown {
+    if (typeof value !== 'string') return value;
+    return value.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(context[key] ?? ''));
   }
 
   private evaluateCondition(

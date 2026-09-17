@@ -51,8 +51,23 @@ export class NotificationsService {
         return;
       }
     }
+
+    if (!attachments?.length && (await this.sendViaResend(to, subject, html, text))) {
+      return;
+    }
+
+    if (attachments?.length && (await this.sendViaResend(to, subject, html, text, attachments))) {
+      return;
+    }
+
     if (!this.isSmtpConfigured()) {
-      logger.warn('Email not sent — SMTP not configured', { to, subject });
+      const msg = attachments?.length
+        ? 'Email with attachments not sent — Resend failed and SMTP not configured'
+        : 'Email not sent — SMTP not configured';
+      logger.warn(msg, { to, subject });
+      if (attachments?.length) {
+        throw new Error(msg);
+      }
       return;
     }
     await this.transporter.sendMail({
@@ -68,6 +83,64 @@ export class NotificationsService {
       })),
     });
     logger.info('Email sent', { to, subject, attachments: attachments?.length ?? 0 });
+  }
+
+  private async sendViaResend(
+    to: string,
+    subject: string,
+    html: string,
+    text?: string,
+    attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>,
+  ): Promise<boolean> {
+    const apiKey = config.resend.apiKey?.trim();
+    const from = (config.resend.from || config.smtp.from || '').trim();
+    if (!apiKey || !from) return false;
+
+    const payload: Record<string, unknown> = {
+      from: `"${config.smtp.fromName}" <${from}>`,
+      to: [to],
+      subject,
+      html,
+      text: text || subject,
+    };
+    if (attachments?.length) {
+      payload.attachments = attachments.map((a) => ({
+        filename: a.filename,
+        content: a.content.toString('base64'),
+      }));
+    }
+
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        // Degrade to the next transport (SMTP) instead of hard-failing the caller.
+        const detail = await res.text().catch(() => '');
+        logger.warn('Resend delivery failed — falling back', {
+          to,
+          subject,
+          status: res.status,
+          detail: detail ? detail.slice(0, 200) : undefined,
+        });
+        return false;
+      }
+      logger.info('Email sent via Resend', { to, subject });
+      return true;
+    } catch (err) {
+      logger.warn('Resend request error — falling back', {
+        to,
+        subject,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return false;
+    }
   }
 
   async createNotification(data: {

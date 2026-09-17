@@ -14,6 +14,10 @@ jest.mock('../../modules/notifications/service/notifications.service', () => ({
   })),
 }));
 
+jest.mock('../../modules/admin/service/admin-ops-notifier.service', () => ({
+  adminOpsNotifier: { notify: jest.fn().mockResolvedValue(true) },
+}));
+
 describe('PaymentNotificationsService', () => {
   let service: PaymentNotificationsService;
 
@@ -208,6 +212,97 @@ describe('PaymentNotificationsService', () => {
       'billing@test.com',
       expect.any(String),
       expect.any(String),
+      expect.any(String),
+    );
+  });
+
+  it('sendDeliverableQaPendingToAdmin emails admin with optional public URL', async () => {
+    (config as { app: { webUrl?: string; url: string } }).app.webUrl = 'https://app.test/';
+
+    await service.sendDeliverableQaPendingToAdmin({
+      toEmail: 'ops@test.com',
+      clientName: 'Acme',
+      deliverableName: 'Starter site',
+      paymentId: 'pay-del-1',
+      artifactCount: 3,
+      publicUrl: 'sites/acme',
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'ops@test.com',
+      expect.stringContaining('QA pending'),
+      expect.stringContaining('https://app.test/sites/acme'),
+      expect.stringContaining('https://app.test/admin'),
+    );
+  });
+
+  it('sendDeliverableQaPendingToAdmin omits site line when publicUrl is absent', async () => {
+    await service.sendDeliverableQaPendingToAdmin({
+      toEmail: 'ops@test.com',
+      clientName: 'Acme',
+      deliverableName: 'Starter site',
+      paymentId: 'pay-del-2',
+      artifactCount: 1,
+    });
+
+    const htmlBody = sendEmail.mock.calls[0][2] as string;
+    expect(htmlBody).not.toContain('Site:');
+  });
+
+  it('sendDeliverableReadyToClient includes site, artifacts, and attachments', async () => {
+    (config as { app: { webUrl?: string; url: string } }).app.webUrl = 'https://app.test';
+
+    await service.sendDeliverableReadyToClient({
+      toEmail: 'client@test.com',
+      toName: 'Anna',
+      deliverableName: 'Growth pack',
+      deliverableId: 'del-1',
+      publicUrl: '/sites/anna',
+      paymentId: 'pay-del-3',
+      artifactLabels: ['Brief', 'Wireframe'],
+      attachments: [{ filename: 'brief.pdf', content: Buffer.from('pdf') }],
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'client@test.com',
+      expect.stringContaining('Delivered: Growth pack'),
+      expect.stringContaining('https://app.test/sites/anna'),
+      expect.stringContaining('Brief'),
+      [{ filename: 'brief.pdf', content: expect.any(Buffer) }],
+    );
+  });
+
+  it('sendDeliverableReadyToClient falls back when name and artifacts are missing', async () => {
+    await service.sendDeliverableReadyToClient({
+      toEmail: 'client@test.com',
+      toName: '',
+      deliverableName: 'Growth pack',
+      deliverableId: 'del-2',
+      paymentId: 'pay-del-4',
+    });
+
+    const textBody = sendEmail.mock.calls[0][3] as string;
+    expect(textBody).toContain('Hi there,');
+    expect(textBody).toContain('Check your dashboard for full delivery details.');
+  });
+
+  it('sendDeliverableQaPendingToAdmin uses app.url when webUrl is unset', async () => {
+    delete (config as { app: { webUrl?: string; url: string } }).app.webUrl;
+    (config as { app: { url: string } }).app.url = 'https://fallback.test/';
+
+    await service.sendDeliverableQaPendingToAdmin({
+      toEmail: 'ops@test.com',
+      clientName: 'Acme',
+      deliverableName: 'Starter site',
+      paymentId: 'pay-del-5',
+      artifactCount: 2,
+      publicUrl: 'sites/acme',
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      'ops@test.com',
+      expect.any(String),
+      expect.stringContaining('https://fallback.test/sites/acme'),
       expect.any(String),
     );
   });

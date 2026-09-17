@@ -16,7 +16,7 @@ export type IndustryCategoryMeta = {
 };
 
 export const BASE_PLAN_PRICES: Record<PlanSlug, { monthly: number; yearly: number }> = {
-  starter: { monthly: 49, yearly: 490 },
+  starter: { monthly: 39, yearly: 390 },
   pro: { monthly: 129, yearly: 1290 },
   enterprise: { monthly: 299, yearly: 2990 },
 };
@@ -28,31 +28,31 @@ export const PRICING_TIER_META: Record<
   budget: {
     label: 'Budget SMB',
     labelSr: 'Mali biznis',
-    multiplier: 0.75,
+    multiplier: 0.7,
     description: 'Salons, hospitality, retail — lower entry, same modules.',
   },
   standard: {
     label: 'Standard',
     labelSr: 'Standard',
-    multiplier: 1,
+    multiplier: 0.92,
     description: 'Typical SMB — reference prices from the site.',
   },
   premium: {
     label: 'Premium',
     labelSr: 'Premium',
-    multiplier: 1.35,
+    multiplier: 1.22,
     description: 'Finance, legal, tech — more compliance and AI quota.',
   },
   regulated: {
     label: 'Regulated',
     labelSr: 'Regulisane industrije',
-    multiplier: 1.65,
+    multiplier: 1.5,
     description: 'Healthcare, public sector, energy — SLA and audit trail.',
   },
   nonprofit: {
     label: 'Nonprofit',
     labelSr: 'NVO / neprofitne',
-    multiplier: 0.6,
+    multiplier: 0.58,
     description: 'Discount for associations, foundations, and humanitarian orgs.',
   },
 };

@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { resolveAvatarPhotoUrl } from '../avatar/avatar-asset-url';
 import type { AvatarVideoProviderId, AvatarVideoResult } from './avatar-media.types';
 import { animateAvatarSpeech, isLivePortraitConfigured } from './avatar-live-portrait.provider';
 import { isDidConfigured, renderDidTalkingVideo } from './did-video.provider';
@@ -25,7 +26,8 @@ export function listConfiguredVideoProviders(): AvatarVideoProviderId[] {
 }
 
 export function avatarVideoCapable(imageUrl: string): boolean {
-  return Boolean(imageUrl.trim()) && listConfiguredVideoProviders().length > 0;
+  const photo = resolveAvatarPhotoUrl(imageUrl);
+  return Boolean(photo.trim()) && listConfiguredVideoProviders().length > 0;
 }
 
 export async function renderAvatarVideo(input: {
@@ -33,6 +35,7 @@ export async function renderAvatarVideo(input: {
   text: string;
   voiceId?: string;
   heygenAvatarId?: string;
+  heygenVoiceId?: string;
   audioBase64?: string;
   audioMimeType?: string;
   sessionId: string;
@@ -46,6 +49,7 @@ export async function renderAvatarVideo(input: {
         text: input.text,
         voiceId: input.voiceId,
         heygenAvatarId: input.heygenAvatarId,
+        heygenVoiceId: input.heygenVoiceId,
       });
       if (result) return result;
       continue;

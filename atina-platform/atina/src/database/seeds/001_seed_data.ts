@@ -58,7 +58,7 @@ async function seedPlans(): Promise<void> {
         tasks_per_month: 500,
         team_members: 10,
         storage_gb: 25,
-        modules: ['auth', 'users', 'notifications', 'crm', 'contracts', 'analytics', 'tasks', 'automation', 'scraper', 'craftor', 'omnitube', 'titanis', 'recommendation', 'package-pricing', 'digital-signature'],
+        modules: ['auth', 'users', 'notifications', 'crm', 'contracts', 'analytics', 'tasks', 'automation', 'scraper', 'craftor', 'omnitube', 'titanis', 'titan-score', 'deal-offer', 'recommendation', 'package-pricing', 'digital-signature'],
       },
     },
     {
@@ -136,6 +136,10 @@ async function seedModules(): Promise<void> {
     { name: 'Web Scraper', slug: 'scraper', description: 'Web scraping and data extraction', is_core: false, required_plan: 'pro' },
     { name: 'Titan Master', slug: 'titan-master', description: 'Core orchestration and strategic decision engine', is_core: false, required_plan: 'enterprise' },
     { name: 'Titanis Sales Engine', slug: 'titanis', description: 'Lead generation, follow-up and close engine', is_core: false, required_plan: 'pro' },
+    { name: 'Titan Score', slug: 'titan-score', description: 'Lead and deal scoring engine for pipeline prioritization', is_core: false, required_plan: 'pro' },
+    { name: 'Deal Offer', slug: 'deal-offer', description: 'Offer drafting, negotiation, and close workflows', is_core: false, required_plan: 'pro' },
+    { name: 'Outreach', slug: 'outreach', description: 'Outbound email sequences and warmup-aware sending', is_core: false, required_plan: 'pro' },
+    { name: 'Marketing Growth', slug: 'marketing-growth', description: 'Orchestrates outreach, lead DB phase, and autonomy marketing readiness', is_core: false, required_plan: 'pro' },
     { name: 'Titanix Execution Engine', slug: 'titanix', description: 'Execution pipelines and job orchestration engine', is_core: false, required_plan: 'enterprise' },
     { name: 'Titan Monitor', slug: 'titan-monitor', description: 'Operational monitoring and system diagnostics', is_core: true, required_plan: null },
     { name: 'Phase Launch', slug: 'phase-launch', description: 'Centralized v1-v6 phase activation control', is_core: true, required_plan: null },
@@ -184,8 +188,9 @@ async function seedModules(): Promise<void> {
 async function seedAdmin(): Promise<void> {
   logger.info('Seeding admin user...');
 
-  const { rows: starterPlan } = await query<{ id: string }>(
-    'SELECT id FROM plans WHERE slug = $1', ['starter']
+  const { rows: enterprisePlan } = await query<{ id: string }>(
+    'SELECT id FROM plans WHERE slug = $1',
+    ['enterprise'],
   );
 
   const passwordHash = await bcrypt.hash(config.admin.password, 12);
@@ -194,10 +199,12 @@ async function seedAdmin(): Promise<void> {
     `INSERT INTO users (email, password_hash, name, role, is_email_verified, plan_id)
      VALUES ($1, $2, $3, 'admin', true, $4)
      ON CONFLICT (email) DO UPDATE SET
+       password_hash = EXCLUDED.password_hash,
        name = EXCLUDED.name,
        role = EXCLUDED.role,
+       plan_id = EXCLUDED.plan_id,
        updated_at = NOW()`,
-    [config.admin.email, passwordHash, config.admin.name, starterPlan[0]?.id || null]
+    [config.admin.email, passwordHash, config.admin.name, enterprisePlan[0]?.id || null],
   );
 
   logger.info(`Admin user seeded: ${config.admin.email}`);

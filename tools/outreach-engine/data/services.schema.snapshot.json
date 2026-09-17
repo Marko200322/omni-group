@@ -1,0 +1,26 @@
+{
+  "fetchedAt": "2026-09-05T00:00:00.000Z",
+  "brandName": "Omni Group Tech",
+  "publicSiteUrl": "https://omnigrouptech.com",
+  "checkoutBaseUrl": "https://omnigrouptech.com/pricing",
+  "note": "Fallback only — live workflow refreshes from ATINA /api/v1/billing/deliverables",
+  "packageIds": [
+    "setup-quick",
+    "setup-full",
+    "setup-custom",
+    "audit",
+    "integration",
+    "workflow-design",
+    "support-priority",
+    "support-dedicated",
+    "landing",
+    "website-business",
+    "website-ecommerce",
+    "white-label-setup",
+    "sales-enablement",
+    "vertical-package",
+    "lead-gen-retainer",
+    "ai-support-retainer",
+    "custom-software"
+  ]
+}

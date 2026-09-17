@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 import { getServerSession } from '@/lib/auth-session';
 
@@ -14,6 +15,9 @@ export async function POST(req: Request) {
     provider?: string;
     scheduledAt?: string;
     durationMinutes?: number;
+    hostType?: string;
+    agentId?: string;
+    liveProvider?: string;
   } = {};
   try {
     body = (await req.json()) as typeof body;
@@ -31,6 +35,8 @@ export async function POST(req: Request) {
       ? body.provider
       : 'manual';
 
+  const hostType = body.hostType === 'ai_avatar' ? 'ai_avatar' : 'human';
+
   const r = await fetchAtinaForBff<Record<string, unknown>>(
     '/api/v1/video-meetings/support/book',
     session,
@@ -43,15 +49,22 @@ export async function POST(req: Request) {
         scheduledAt: typeof body.scheduledAt === 'string' ? body.scheduledAt : undefined,
         durationMinutes:
           typeof body.durationMinutes === 'number' ? body.durationMinutes : undefined,
+        hostType,
+        agentId: typeof body.agentId === 'string' ? body.agentId : undefined,
+        liveProvider:
+          body.liveProvider === 'heygen' ||
+          body.liveProvider === 'd-id' ||
+          body.liveProvider === 'stub'
+            ? body.liveProvider
+            : hostType === 'ai_avatar'
+              ? 'auto'
+              : undefined,
       }),
     },
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'book_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('book_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

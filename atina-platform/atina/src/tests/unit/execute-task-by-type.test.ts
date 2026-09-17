@@ -35,6 +35,18 @@ describe('executeTaskByType', () => {
     expect(result.profileCount).toBe(500);
   });
 
+  it('crm_pipeline acknowledges bootstrap stage tasks', async () => {
+    const result = (await executeTaskByType('crm_pipeline', {
+      stage: 'prospect',
+      verticalSlug: 'marketing',
+      automated: true,
+    })) as { executed: boolean; stage: string; verticalSlug: string };
+
+    expect(result.executed).toBe(true);
+    expect(result.stage).toBe('prospect');
+    expect(result.verticalSlug).toBe('marketing');
+  });
+
   it('unknown type returns generic executed payload', async () => {
     const result = (await executeTaskByType('custom_unknown', {})) as { executed: boolean; type: string };
     expect(result.executed).toBe(true);

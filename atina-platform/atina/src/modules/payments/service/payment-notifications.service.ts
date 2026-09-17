@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { adminOpsNotifier } from '../../admin/service/admin-ops-notifier.service';
 import { NotificationsService } from '../../notifications/service/notifications.service';
 import logger from '../../../utils/logger';
 import {
@@ -140,8 +141,17 @@ export class PaymentNotificationsService {
 
     await this.notifications.sendEmail(adminTo, subject, html, text);
 
+    void adminOpsNotifier.notify('payment_pending', [
+      `Klijent: ${input.userName} (${input.userEmail})`,
+      `Paket: ${input.planName} · ${formatBillingCycleSr(input.billingCycle)}`,
+      `Iznos: ${formatMoney(input.amount, input.currency)}`,
+      `Referenca: ${input.reference}`,
+      `Payment ID: ${input.paymentId}`,
+    ]);
+
     try {
       const { WebPushService } = await import('../../admin/service/web-push.service');
+      const { WebPushRepository } = await import('../../admin/repository/web-push.repository');
       const push = new WebPushService();
       if (push.isConfigured()) {
         await push.notifyAdmins({
@@ -151,8 +161,27 @@ export class PaymentNotificationsService {
           tag: `payment-pending-${input.paymentId}`,
         });
       }
+      const adminIds = await new WebPushRepository().listAdminUserIds();
+      const title = 'New payment pending';
+      const message = `${input.userName} · ${formatMoney(input.amount, input.currency)} · ${input.planName}`;
+      await Promise.all(
+        adminIds.map((userId) =>
+          this.notifications.createNotification({
+            userId,
+            type: 'payment_pending',
+            title,
+            message,
+            actionUrl: '/admin#billing',
+            metadata: {
+              paymentId: input.paymentId,
+              reference: input.reference,
+              planName: input.planName,
+            },
+          }),
+        ),
+      );
     } catch {
-      /* push optional */
+      /* push / in-app optional */
     }
   }
 
@@ -175,6 +204,11 @@ export class PaymentNotificationsService {
       periodEnd: input.periodEnd,
       purchasedAt: input.purchasedAt,
       billingUrl,
+      issuer: {
+        companyLegalName: config.payments.manual.companyLegalName,
+        companyTaxId: config.payments.manual.companyTaxId,
+        companyAddress: config.payments.manual.companyAddress,
+      },
     });
 
     const pdf = await generateInvoicePdfBuffer({
@@ -191,6 +225,12 @@ export class PaymentNotificationsService {
       periodStart: input.periodStart,
       periodEnd: input.periodEnd,
       purchasedAt: input.purchasedAt,
+      issuer: {
+        companyLegalName: config.payments.manual.companyLegalName,
+        companyTaxId: config.payments.manual.companyTaxId,
+        companyAddress: config.payments.manual.companyAddress,
+        accountName: config.payments.manual.accountName,
+      },
     });
 
     await this.notifications.sendEmail(input.toEmail, subject, html, text, [
@@ -273,6 +313,14 @@ export class PaymentNotificationsService {
       body.replace(/\n/g, '<br/>'),
       body,
     );
+
+    void adminOpsNotifier.notify('fulfillment_qa', [
+      `Klijent: ${input.clientName}`,
+      `Paket: ${input.deliverableName}`,
+      `Payment: ${input.paymentId}`,
+      `Artifacts: ${input.artifactCount}`,
+      input.publicUrl ? `URL: ${webAppUrl(input.publicUrl)}` : '',
+    ]);
   }
 
   async sendDeliverableReadyToClient(input: {

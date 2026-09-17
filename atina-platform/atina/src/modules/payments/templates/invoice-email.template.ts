@@ -40,6 +40,12 @@ export type InvoiceBrand = {
   supportEmail?: string;
 };
 
+type InvoiceIssuer = {
+  companyLegalName?: string;
+  companyTaxId?: string;
+  companyAddress?: string;
+};
+
 type InvoiceShellInput = {
   brand: InvoiceBrand;
   documentTitle: string;
@@ -52,7 +58,30 @@ type InvoiceShellInput = {
   clientEmail: string;
   bodyHtml: string;
   footerNote?: string;
+  issuer?: InvoiceIssuer;
 };
+
+function issuerBlock(issuer?: InvoiceIssuer): string {
+  if (!issuer) return '';
+  const rows = [
+    issuer.companyLegalName?.trim(),
+    issuer.companyTaxId?.trim() ? `Tax ID: ${issuer.companyTaxId.trim()}` : '',
+    issuer.companyAddress?.trim(),
+  ].filter(Boolean);
+  if (!rows.length) return '';
+  return `<tr>
+          <td style="padding:0 32px 16px">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px">
+              <tr>
+                <td style="padding:16px 18px">
+                  <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b">From</p>
+                  ${rows.map((line) => `<p style="margin:0 0 2px;font-size:13px;color:#334155">${escapeHtml(line as string)}</p>`).join('')}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`;
+}
 
 function invoiceShell(input: InvoiceShellInput): string {
   const brandUrl = input.brand.url.replace(/\/+$/, '');
@@ -114,6 +143,7 @@ function invoiceShell(input: InvoiceShellInput): string {
             </table>
           </td>
         </tr>
+        ${issuerBlock(input.issuer)}
         <tr>
           <td style="padding:0 32px 28px">
             ${input.bodyHtml}
@@ -229,9 +259,22 @@ export function renderManualCheckoutInvoiceEmail(input: ManualInvoiceEmailInput)
   const bankName = input.instructions.bankName ?? '';
   const swift = input.instructions.swift ?? '';
   const note = input.instructions.note ?? '';
+  const companyLegalName = input.instructions.companyLegalName ?? '';
+  const companyTaxId = input.instructions.companyTaxId ?? '';
+  const companyAddress = input.instructions.companyAddress ?? '';
+
+  const issuerRows: Array<[string, string]> = [];
+  if (companyLegalName) issuerRows.push(['Legal name', escapeHtml(companyLegalName)]);
+  if (companyTaxId) issuerRows.push(['Tax ID / PIB', escapeHtml(companyTaxId)]);
+  if (companyAddress) issuerRows.push(['Address', escapeHtml(companyAddress)]);
 
   const bodyHtml = `
     ${lineItemsTable(lineItems, input.currency, input.amount)}
+    ${
+      issuerRows.length
+        ? paymentBox('Issuer', issuerRows)
+        : ''
+    }
     ${paymentBox(
       'Bank transfer details',
       [
@@ -294,6 +337,7 @@ export type PaidInvoiceEmailInput = {
   periodEnd: string;
   purchasedAt: string;
   billingUrl: string;
+  issuer?: InvoiceIssuer;
 };
 
 export function renderPaidInvoiceEmail(input: PaidInvoiceEmailInput): {
@@ -341,6 +385,7 @@ export function renderPaidInvoiceEmail(input: PaidInvoiceEmailInput): {
     clientEmail: input.toEmail,
     bodyHtml,
     footerNote: 'Keep this message as proof of payment. For plan and support questions, use the link above.',
+    issuer: input.issuer,
   });
 
   const subject = `Invoice ${input.invoiceNumber} — ${input.planName} · ${formatMoney(input.total, input.currency)}`;

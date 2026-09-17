@@ -30,15 +30,12 @@ export function getGeneratedVerticalsIndex(): GeneratedVerticalsIndex {
   }
 }
 
-export function listOnlineVerticalSlugs(limit = 50): string[] {
-  return getGeneratedVerticalsIndex()
-    .verticals.filter((v) => v.hasPage)
-    .slice(0, limit)
-    .map((v) => v.slug);
+export function listOnlineVerticalEntries(limit?: number): GeneratedVerticalIndexEntry[] {
+  const entries = getGeneratedVerticalsIndex().verticals.filter((v) => v.hasPage);
+  if (limit == null || limit <= 0) return entries;
+  return entries.slice(0, limit);
 }
 
-export function listOnlineVerticalEntries(limit = 50): GeneratedVerticalIndexEntry[] {
-  return getGeneratedVerticalsIndex()
-    .verticals.filter((v) => v.hasPage)
-    .slice(0, limit);
+export function listOnlineVerticalSlugs(limit?: number): string[] {
+  return listOnlineVerticalEntries(limit).map((v) => v.slug);
 }

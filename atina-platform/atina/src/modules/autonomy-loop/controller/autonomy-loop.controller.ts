@@ -66,7 +66,7 @@ export class AutonomyLoopController {
   };
 
   getCategoriesRolloutJob = async (_req: Request, res: Response): Promise<void> => {
-    sendSuccess(res, this.service.getCategoriesRolloutJob(), 'Category rollout job status');
+    sendSuccess(res, await this.service.getCategoriesRolloutJob(), 'Category rollout job status');
   };
 
   outboundStats = async (_req: Request, res: Response): Promise<void> => {

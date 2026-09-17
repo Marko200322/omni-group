@@ -30,6 +30,29 @@
 
 ---
 
+## External AI stack (M4/M5) — ključevi + svrha
+
+Popuni u `KLJUCEVI-POPUNI.local.txt` sekciju **11. EXTERNAL AI STACK**, pa:
+
+```powershell
+.\scripts\apply-integration-keys.ps1
+```
+
+| Sektor | Alati | Env | ~€/mes | Faza |
+|--------|-------|-----|--------|------|
+| Prodaja & Lead Gen | Clay, Salesforge | `CLAY_API_KEY`, `SALESFORGE_API_KEY` | 200–400 | M4 |
+| Podrška | Intercom / Sierra | `INTERCOM_API_KEY`, `SIERRA_API_KEY` | 100–300 | M4 |
+| Automatizacija | Make / n8n | `MAKE_*` / `N8N_*` (+ webhook/URL) | 20–100 | M4 |
+| Finansije | Ramp / Vic.ai | `RAMP_API_KEY`, `VIC_AI_API_KEY` | 100–250 | M5 |
+| Marketing | Jasper / Predis | `JASPER_API_KEY`, `PREDIS_API_KEY` | 60–150 | M5 |
+| Kodiranje | Devin / Replit Agent | `DEVIN_API_KEY`, `REPLIT_AGENT_API_KEY` | 100–500 | M5 |
+| Video/glas | HeyGen / ElevenLabs | već postoji | 50–150 | M4/M6 |
+| Agenti | CrewAI / LangChain | `CREWAI_*`, `LANGCHAIN_*` | 30–100 | M5 |
+
+**Ukupno:** ops ~€500–1200 + izvršni ~€200–800 — nije obavezno sve odjednom; status bez curenja tajni: `GET /api/v1/billing/factory-phase/status` → `externalAiStack`.
+
+---
+
 ## Mapa: fajl → env
 
 | Ključ u KLJUCEVI | Ide u |

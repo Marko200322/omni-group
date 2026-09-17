@@ -5,6 +5,32 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import type { CatalogCategory } from '@/lib/marketing-catalog';
 
+function badgeClasses(variant?: 'available' | 'upcoming' | 'contact'): string {
+  switch (variant) {
+    case 'available':
+      return 'bg-emerald-500/20 text-emerald-200';
+    case 'upcoming':
+      return 'bg-amber-500/20 text-amber-200';
+    case 'contact':
+      return 'bg-slate-500/25 text-slate-300';
+    default:
+      return 'bg-violet-500/20 text-violet-200';
+  }
+}
+
+function cardBorderClasses(variant?: 'available' | 'upcoming' | 'contact'): string {
+  switch (variant) {
+    case 'available':
+      return 'border-emerald-500/25 hover:border-emerald-500/40';
+    case 'upcoming':
+      return 'border-amber-500/20 hover:border-amber-500/35';
+    case 'contact':
+      return 'border-white/10 hover:border-white/20 opacity-95';
+    default:
+      return 'border-white/10 hover:border-violet-500/30';
+  }
+}
+
 type Props = {
   categories: CatalogCategory[];
   showIncluded?: boolean;
@@ -42,12 +68,14 @@ export function CatalogSection({ categories, showIncluded = false }: Props) {
               >
                 <Link
                   href={item.href}
-                  className="glass-strong group flex h-full flex-col border border-white/10 p-6 transition hover:border-violet-500/30"
+                  className={`glass-strong group flex h-full flex-col border p-6 transition ${cardBorderClasses(item.badgeVariant)}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-display text-lg font-semibold text-white">{item.name}</h3>
                     {item.badge && (
-                      <span className="shrink-0 rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-medium uppercase text-violet-200">
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${badgeClasses(item.badgeVariant)}`}
+                      >
                         {item.badge}
                       </span>
                     )}

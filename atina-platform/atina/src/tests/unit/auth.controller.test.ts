@@ -21,6 +21,10 @@ jest.mock('../../config', () => ({
       ssl: false,
       pool: { min: 2, max: 10 },
     },
+    autonomy: { enabled: false },
+    features: { scraper: false },
+    factoryPhase: 'M0',
+    prodMode: 'lean',
   },
 }));
 

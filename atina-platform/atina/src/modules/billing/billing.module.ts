@@ -15,6 +15,7 @@ import {
   BillingPlanSlugParamsDto,
   BillingPlansQueryDto,
   BillingQuoteCatalogQueryDto,
+  BillingPackageContextQueryDto,
   BillingQuoteBodyDto,
   BillingPaymentIdParamsDto,
   BillingFulfillmentJobsQueryDto,
@@ -53,6 +54,26 @@ export class BillingModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getDeliverables
+    );
+    this.router.get(
+      '/catalog-quality',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getCatalogQuality
+    );
+    this.router.get(
+      '/package-context',
+      validateQuery(BillingPackageContextQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getPackageContext
+    );
+    this.router.get(
+      '/package-matrix',
+      validateQuery(BillingPlansQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getPackageMatrix
     );
     this.router.get(
       '/quotes',
@@ -186,6 +207,14 @@ export class BillingModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(BillingFulfillmentRejectBodyDto),
       this.controller.rejectFulfillmentJob
+    );
+    this.router.get(
+      '/factory-phase/status',
+      authenticate,
+      requireAdmin,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getFactoryPhaseStatus
     );
   }
 }

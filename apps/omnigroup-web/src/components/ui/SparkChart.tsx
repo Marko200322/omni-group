@@ -14,6 +14,9 @@ type Props = {
 export function SparkChart({ data, gradientFrom, gradientTo, height = 120 }: Props) {
   const uid = useId().replace(/:/g, '');
   const fillId = `spark-fill-${uid}`;
+  if (data.length === 0) {
+    return <p className="py-8 text-center text-sm text-slate-500">No data yet</p>;
+  }
   const max = Math.max(...data.map((d) => d.value), 1);
   const w = 100 / Math.max(data.length - 1, 1);
 

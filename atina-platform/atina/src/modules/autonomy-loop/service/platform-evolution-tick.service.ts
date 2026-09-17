@@ -5,10 +5,12 @@ import { PlatformEvolutionService, type PlatformEvolutionTaskType } from './plat
 import { LocalInfrastructureService } from './local-infrastructure.service';
 import { PlatformEvolutionCodeService } from './platform-evolution-code.service';
 import { syncGeneratedVerticalsIndexFromDb } from './platform-evolution-catalog-sync.service';
+import { CursorAgentService } from '../../cursor-agent/service/cursor-agent.service';
 
 export class PlatformEvolutionTickService {
   private readonly evolution = new PlatformEvolutionService();
   private readonly code = new PlatformEvolutionCodeService();
+  private readonly cursor = new CursorAgentService();
 
   async tick(userId: string | null) {
     await this.evolution.seedDefaultTasksIfEmpty();
@@ -18,7 +20,7 @@ export class PlatformEvolutionTickService {
     for (const task of pending) {
       await this.evolution.markRunning(task.id);
       try {
-        const result = await this.executeTask(task.task_type as PlatformEvolutionTaskType, task.target_paths);
+        const result = await this.executeTask(task.task_type as PlatformEvolutionTaskType, task.target_paths, userId);
         await this.evolution.markCompleted(task.id, result);
         results.push({ id: task.id, task_type: task.task_type, status: 'completed', result });
       } catch (err) {
@@ -34,8 +36,21 @@ export class PlatformEvolutionTickService {
 
   private async executeTask(
     type: PlatformEvolutionTaskType,
-    targetPaths: string[]
+    targetPaths: string[],
+    userId: string | null,
   ): Promise<Record<string, unknown>> {
+    const cursorTypes: PlatformEvolutionTaskType[] = [
+      'ui_improvement',
+      'research_gap',
+      'test_fix',
+    ];
+    if (cursorTypes.includes(type)) {
+      const cursorRun = await this.cursor.runEvolutionTask(userId, type, targetPaths);
+      if (cursorRun.started) {
+        return { ...cursorRun, via: 'cursor_sdk' };
+      }
+    }
+
     const codeResult = this.code.apply(type, targetPaths);
     if (codeResult.applied) {
       return { ...codeResult, via: 'code_agent' };

@@ -12,6 +12,7 @@ import {
 import { JwtPayload } from '../../../api/middleware/auth.middleware';
 import logger from '../../../utils/logger';
 import type { AuthPostLoginBootstrap } from './auth-post-login-bootstrap';
+import { NotificationsService } from '../../notifications/service/notifications.service';
 
 export interface AuthServiceDeps {
   repo?: AuthRepository;
@@ -226,18 +227,32 @@ export class AuthService {
     const emailNorm = email.toLowerCase().trim();
     const user = await this.repo.findUserByEmail(emailNorm);
     if (!user) {
-      // Don't reveal whether email exists
       return 'If this email exists, a reset link was sent';
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.repo.setPasswordResetToken(user.id, token, expiresAt);
     logger.info('Password reset requested', { userId: user.id });
 
-    // In production, send email here
-    return token; // Return for development; in prod only send email
+    const resetUrl = `${config.app.webUrl.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
+    try {
+      const notifications = new NotificationsService();
+      await notifications.sendEmail(
+        user.email,
+        'Reset your Omni Group password',
+        `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset password</a></p><p>This link expires in 1 hour. If you did not request this, ignore this email.</p>`,
+        `Reset your password: ${resetUrl}`,
+      );
+    } catch (err) {
+      logger.warn('Password reset email failed', {
+        userId: user.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    return config.app.isDev ? token : 'If this email exists, a reset link was sent';
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

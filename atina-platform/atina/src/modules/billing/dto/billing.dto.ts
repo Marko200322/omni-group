@@ -48,6 +48,18 @@ export const BillingPlansQueryDto = z
   })
   .strict();
 
+export const BillingPackageContextQueryDto = z
+  .object({
+    deliverableId: z.string().trim().min(2).max(64).regex(/^[a-z0-9_-]+$/),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug'),
+  })
+  .strict();
+
 export const BillingQuoteCatalogQueryDto = z
   .object({
     industryCategory: z

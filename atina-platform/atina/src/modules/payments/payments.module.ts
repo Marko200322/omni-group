@@ -13,6 +13,16 @@ const CheckoutDto = z
   .object({
     planSlug: z.enum(['starter', 'pro', 'enterprise']),
     billingCycle: z.enum(['monthly', 'yearly']).default('monthly'),
+    industryCategory: z
+      .string()
+      .trim()
+      .min(2)
+      .max(64)
+      .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
+      .optional(),
+    buyerCompany: z.string().trim().min(1).max(120).optional(),
+    buyerVatId: z.string().trim().min(1).max(64).optional(),
+    buyerBillingAddress: z.string().trim().min(1).max(240).optional(),
   })
   .strict();
 
@@ -34,6 +44,7 @@ const DeliverableCheckoutDto = z
     marketIntensity: z.number().min(0).max(100).optional(),
     tamEstimateUsd: z.number().finite().optional(),
     competitionScore: z.number().min(0).max(100).optional(),
+    maintenanceTierId: z.enum(['essential', 'professional', 'premium']).optional(),
   })
   .strict();
 
@@ -155,6 +166,15 @@ export class PaymentsModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
       this.controller.createManualCheckout
+    );
+    this.router.post(
+      '/stripe/deliverable-checkout',
+      paymentsLimiter,
+      authenticate,
+      authSessionLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(DeliverableCheckoutDto),
+      this.controller.createDeliverableStripeCheckout
     );
     this.router.post(
       '/manual/deliverable-checkout',

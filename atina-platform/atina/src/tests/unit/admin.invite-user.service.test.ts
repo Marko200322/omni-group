@@ -2,10 +2,17 @@ import { AdminService } from '../../modules/admin/service/admin.service';
 import { AuthService } from '../../modules/auth/service/auth.service';
 
 const registerMock = jest.fn();
+const sendEmailMock = jest.fn();
 
 jest.mock('../../modules/auth/service/auth.service', () => ({
   AuthService: jest.fn().mockImplementation(() => ({
     register: registerMock,
+  })),
+}));
+
+jest.mock('../../modules/notifications/service/notifications.service', () => ({
+  NotificationsService: jest.fn().mockImplementation(() => ({
+    sendEmail: sendEmailMock,
   })),
 }));
 
@@ -67,5 +74,21 @@ describe('AdminService.inviteUser', () => {
       expect.objectContaining({ password: 'CustomPass1' })
     );
     expect(result.data.temporaryPassword).toBeNull();
+  });
+
+  it('sends welcome email when requested', async () => {
+    await service.inviteUser('admin-1', {
+      name: 'Client',
+      email: 'client@test.com',
+      timezone: 'UTC',
+      sendWelcomeEmail: true,
+    });
+
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      'client@test.com',
+      'Your Omni Group portal access is ready',
+      expect.stringContaining('/login'),
+      expect.stringContaining('Temporary password:')
+    );
   });
 });

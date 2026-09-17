@@ -14,18 +14,20 @@ export default function PayPalSuccessPage() {
   useEffect(() => {
     if (!token) {
       setStatus('err');
-      setMessage('PayPal token missing.');
+      setMessage('We could not read your PayPal confirmation. Please return to billing and try again.');
       return;
     }
     (async () => {
       try {
         const res = await fetch(`/api/atina/payments/paypal/capture/${token}`, { method: 'POST' });
         const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
-        if (!res.ok || !json.ok) throw new Error(json.detail ?? json.error ?? 'capture_failed');
+        if (!res.ok || !json.ok) throw new Error('capture_failed');
         setStatus('ok');
-      } catch (err) {
+      } catch {
         setStatus('err');
-        setMessage(err instanceof Error ? err.message : 'Capture failed');
+        setMessage(
+          "We couldn't confirm your PayPal payment automatically. If you completed the payment, it will be reconciled shortly — contact support if your plan isn't active soon.",
+        );
       }
     })();
   }, [token]);

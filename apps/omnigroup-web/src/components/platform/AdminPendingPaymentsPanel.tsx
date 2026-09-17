@@ -42,7 +42,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/atina/admin/payments?status=processing&provider=manual&limit=50');
+      const res = await fetch('/api/atina/admin/payments?status=processing&limit=50');
       const body = (await res.json()) as { ok: boolean; data?: AtinaAdminPayment[]; error?: string; detail?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'refresh_failed');
       setPayments(body.data ?? []);
@@ -53,12 +53,14 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
     }
   }, []);
 
-  const confirmPayment = async (paymentId: string) => {
+  const confirmPayment = async (paymentId: string, provider: string) => {
     setBusyId(paymentId);
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/manual/confirm/${paymentId}`, { method: 'POST' });
+      const res = await fetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
+        method: 'POST',
+      });
       const body = (await res.json()) as { ok: boolean; detail?: string; error?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'confirm_failed');
       setPayments((prev) => prev.filter((p) => p.id !== paymentId));
@@ -76,7 +78,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
         <div>
           <h2 className="font-display text-lg font-semibold text-white">Pending payments</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Manual transfers the client marked as sent — confirm after reviewing the bank statement.
+            Review and confirm pending payment providers after you verify the funds or provider status.
           </p>
         </div>
         <button
@@ -130,6 +132,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
                     <p className="mt-2 text-sm text-slate-300">
                       {formatAmount(payment.amount, payment.currency)} ·{' '}
                       <span className="text-violet-300">{productLine}</span>
+                      {payment.provider ? ` · ${payment.provider}` : null}
                       {!deliverableId && planSlug ? ` · ${billingCycle}` : null}
                     </p>
                     {industryCategory && (
@@ -142,7 +145,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
                     type="button"
                     disabled={busyId === payment.id}
                     className="btn-primary flex items-center gap-2 text-sm disabled:opacity-60"
-                    onClick={() => void confirmPayment(payment.id)}
+                    onClick={() => void confirmPayment(payment.id, payment.provider)}
                   >
                     {busyId === payment.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

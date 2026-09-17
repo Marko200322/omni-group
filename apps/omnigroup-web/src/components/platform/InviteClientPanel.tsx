@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Loader2, UserPlus } from 'lucide-react';
+import { Copy, ExternalLink, Loader2, UserPlus } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import type { AtinaInviteClientResult } from '@/lib/atina-live-types';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
@@ -211,7 +211,18 @@ export function InviteClientPanel({ disabled, plans = [] }: Props) {
         <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-50">
           <p className="font-semibold text-white">Account created — {result.name}</p>
           <ul className="mt-2 space-y-1 font-mono text-xs text-emerald-100/90">
-            <li>Login: {result.loginUrl}</li>
+            <li>
+              Login:{' '}
+              <a
+                href={result.loginUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-emerald-200 underline underline-offset-2 hover:text-white"
+              >
+                {result.loginUrl}
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            </li>
             <li>Email: {result.email}</li>
             {result.temporaryPassword && <li>Temporary password: {result.temporaryPassword}</li>}
             <li>Plan: {result.planSlug}</li>

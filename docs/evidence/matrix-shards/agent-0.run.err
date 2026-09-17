@@ -1,0 +1,8 @@
+Add-Content : The process cannot access the file 'C:\dev\omni group\docs\evidence\matrix-shards\agent-0.csv' because 
+it is being used by another process.
+At C:\dev\omni group\scripts\e2e-fulfillment-matrix-prod.ps1:299 char:3
++   Add-Content -Path $ReportCsv -Value $line -Encoding UTF8
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : WriteError: (C:\dev\omni gro...rds\agent-0.csv:String) [Add-Content], IOException
+    + FullyQualifiedErrorId : GetContentWriterIOError,Microsoft.PowerShell.Commands.AddContentCommand
+ 

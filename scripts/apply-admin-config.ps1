@@ -1,4 +1,6 @@
-# Applies admin-config.local.json to atina .env and omnigroup-web .env.local
+# DEPRECATED: admin-config.local.json duplicates KLJUCEVI-POPUNI.local.txt and
+# deploy.config.json. Use .\scripts\apply-integration-keys.ps1 instead.
+# See docs/KLJUCEVI-JEDAN-IZVOR.md. Kept only for backwards compatibility.
 # Usage: .\scripts\apply-admin-config.ps1 [-ConfigPath path\to\admin-config.local.json]
 
 param(
@@ -6,6 +8,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+Write-Host 'ZASTARELO: admin-config.local.json se vise ne koristi kao izvor.' -ForegroundColor Yellow
+Write-Host 'Koristi:  .\scripts\apply-integration-keys.ps1' -ForegroundColor Yellow
+Write-Host 'Detalji:  docs\KLJUCEVI-JEDAN-IZVOR.md' -ForegroundColor DarkGray
+Write-Host ''
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $atinaEnv = Join-Path $repoRoot 'atina-platform\atina\.env'
 $webEnv = Join-Path $repoRoot 'apps\omnigroup-web\.env.local'
@@ -65,12 +72,41 @@ $map = @{
   'outreachFallbackEmail'    = 'OUTREACH_FALLBACK_EMAIL'
   'supportGoogleMeetUrl'     = 'SUPPORT_GOOGLE_MEET_URL'
   'salesGoogleMeetUrl'       = 'SALES_GOOGLE_MEET_URL'
+  'marketingGoogleMeetUrl'   = 'MARKETING_GOOGLE_MEET_URL'
+  'supportZoomUrl'           = 'SUPPORT_ZOOM_URL'
+  'salesZoomUrl'             = 'SALES_ZOOM_URL'
+  'marketingZoomUrl'         = 'MARKETING_ZOOM_URL'
+  'zoomAccountId'            = 'ZOOM_ACCOUNT_ID'
+  'zoomClientId'             = 'ZOOM_CLIENT_ID'
+  'zoomClientSecret'         = 'ZOOM_CLIENT_SECRET'
   'cursorApiKey'             = 'CURSOR_API_KEY'
   'cursorRepoPath'           = 'CURSOR_REPO_PATH'
   'telegramBotToken'         = 'TELEGRAM_BOT_TOKEN'
   'telegramChatId'           = 'TELEGRAM_CHAT_ID'
   'heygenApiKey'             = 'HEYGEN_API_KEY'
   'didApiKey'                = 'DID_API_KEY'
+  'instantlyApiKey'            = 'INSTANTLY_API_KEY'
+  'instantlyCampaignId'        = 'INSTANTLY_CAMPAIGN_ID'
+  'outreachEmailProvider'      = 'OUTREACH_EMAIL_PROVIDER'
+  'clayApiKey'               = 'CLAY_API_KEY'
+  'salesforgeApiKey'         = 'SALESFORGE_API_KEY'
+  'intercomApiKey'           = 'INTERCOM_API_KEY'
+  'intercomAppId'            = 'INTERCOM_APP_ID'
+  'sierraApiKey'             = 'SIERRA_API_KEY'
+  'makeApiKey'               = 'MAKE_API_KEY'
+  'makeWebhookUrl'           = 'MAKE_WEBHOOK_URL'
+  'n8nApiKey'                = 'N8N_API_KEY'
+  'n8nBaseUrl'               = 'N8N_BASE_URL'
+  'rampApiKey'               = 'RAMP_API_KEY'
+  'vicAiApiKey'              = 'VIC_AI_API_KEY'
+  'jasperApiKey'             = 'JASPER_API_KEY'
+  'predisApiKey'             = 'PREDIS_API_KEY'
+  'devinApiKey'              = 'DEVIN_API_KEY'
+  'replitAgentApiKey'        = 'REPLIT_AGENT_API_KEY'
+  'crewaiApiKey'             = 'CREWAI_API_KEY'
+  'crewaiBaseUrl'            = 'CREWAI_BASE_URL'
+  'langchainApiKey'          = 'LANGCHAIN_API_KEY'
+  'langchainProject'         = 'LANGCHAIN_PROJECT'
 }
 
 foreach ($prop in $map.Keys) {

@@ -5,7 +5,7 @@
 
 **Legenda:** `[x]` gotovo · `[ ]` todo · `[~]` delimično · `[!]` blokirano spoljnim faktorom · **(V)** vlasnik/ops · **(K)** kod/inženjering
 
-**Poslednji audit:** 2026-07-02 (M0–M6 + gap register §11 u SYSTEM-INTEGRATION)
+**Poslednji audit:** 2026-07-04 (M0–M6 + gap register §11; infra PR: upload volume, PHASE, contact fail-closed, admin BFF gates)
 
 ---
 
@@ -105,10 +105,10 @@
 
 | Stavka | Gde | Status | Akcija |
 |--------|-----|--------|--------|
-| Task `send_email` | `execute-task-by-type.ts` | `[ ]` | Wire na `NotificationsService` / SMTP / COMMS |
-| Automation `send_email` | `automation-workflow.runner.ts` | `[ ]` | Isto — trenutno fake `sent: true` |
-| Automation `http_request` | `automation-workflow.runner.ts` | `[ ]` | Fake 200 — wire pravi HTTP |
-| Kontakt forma bez Resend | `apps/.../api/contact/route.ts` | `[~]` | `queued_local_stub` bez `RESEND_API_KEY` |
+| Task `send_email` | `task-executors.ts` | `[x]` | Wired via `NotificationsService` / COMMS / SMTP; soft-fail `email_not_configured` |
+| Automation `send_email` | `automation-workflow.runner.ts` | `[x]` | Isto — nije fake `sent: true` |
+| Automation `http_request` | `automation-workflow.runner.ts` | `[x]` | Real axios (30s timeout) |
+| Kontakt forma bez Resend | `apps/.../api/contact/route.ts` | `[x]` | Prod fail-closed (`503`) unless CRM/Slack/Resend; dev stub OK |
 | QA pending admin email | `deliverable-fulfillment.service.ts` | `[~]` | Zavisi od SMTP/Resend |
 
 ### 3.3 Avatar / video
@@ -296,12 +296,13 @@ Kompletan spisak **novih** rupa koje nisu pokrivene samo ključevima. Svaka stav
 - [x] **`/dashboard#billing` ne postoji** — billing je samo na `/admin#billing`; PayPal success/cancel i katalog linkuju na mrtav anchor (`DashboardClient.tsx`, `marketing-catalog.ts`)
 - [x] **Services katalog → samo `/contact`** — fiksne EUR usluge (`setup-*`, `audit`, retainers…) treba da vode na **`/pricing` checkout**, ne samo kontakt formu
 - [x] **Kontakt ignoriše `?service=` / `?category=`** — query params se ne prenose u formu ni CRM (`contact/page.tsx`)
-- [x] **Kontakt POST ne ide u Atina/CRM** — samo Resend/stub; nema lead zapisa (`api/contact/route.ts`)
+- [x] **Kontakt POST ne ide u Atina/CRM** — `pushContactToCrm()` + ingress env; prod fail-closed bez Resend/CRM/Slack
 
 ### 11.2 Web / BFF — UI obećava, backend nema put (M1–M4)
 
 - [x] **Nema BFF za CRM** — `/api/atina/crm/*` ne postoji; katalog obećava CRM na `#projects`
-- [ ] **Nema BFF za:** `titanis`, `outreach`, `deal-offer`, `titan-score`, `digital-signature`, `package-pricing`, `omnitube`
+- [x] **Nema BFF za:** `titanis`, `outreach`, `deal-offer`, `titan-score`, `digital-signature`, `package-pricing`, `omnitube`, `marketing-growth/status`
+- [x] **Operator BFF admin gate** — autonomy-loop mutations, hunting, product-factory zahtevaju admin (`requireAdminSession`)
 - [ ] **Revenue allocation BFF postoji, nema admin panela** (`/api/atina/billing/revenue-allocation/`)
 - [x] **`AiMemoryPanel` orphan** — komponenta postoji, nije u dashboardu; katalog reklamira AI memory
 - [x] **Pokvareni dashboard anchori:** `#sales` (nema sekcije), `#automations` (nema sekcije) — katalog linkuje pogrešno
@@ -310,18 +311,18 @@ Kompletan spisak **novih** rupa koje nisu pokrivene samo ključevima. Svaka stav
 
 ### 11.3 Seed / DB / migracije (M3–M4)
 
-- [ ] **`titan-score` nije u `001_seed_data.ts`** — modul registrovan, nema seed reda
-- [ ] **`deal-offer` nije u seed** — isto
+- [x] **`titan-score` u `001_seed_data.ts`**
+- [x] **`deal-offer` u seed** (+ outreach, marketing-growth)
 - [ ] **`sistem-naplate`, `atina-system` (Express modul) nisu u seed** — plan gating / admin lista modula nekompletna
 - [ ] **`MIGRATION_NOTES.md` zastareo** — dokumentuje ~019, ne 020–033 (fulfillment, shop, hot-clients…)
 - [ ] **`apply-migration-*.ps1` samo do 025** — nema helper skripti za 026–033 (koristi `migrate.ts`)
 
 ### 11.4 Kod stubovi — lažno „radi“ (Backlog-K)
 
-- [ ] **`marketing-growth/` prazni fajlovi** — 0-byte service/DTO, nema modula, nije u CoreEngine
-- [ ] **Task `send_email`** — fake sent (već u §3.2)
-- [ ] **Task `export_data` / `generate_report`** — fake payload (`execute-task-by-type.ts`)
-- [ ] **Automation `http_request`** — fake HTTP 200
+- [x] **`marketing-growth/` modul** — status orchestrator + CoreEngine + BFF `/api/atina/marketing-growth/status`
+- [x] **Task `send_email` / automation email** — wired (treba COMMS/SMTP env)
+- [x] **Automation `http_request`** — real HTTP
+- [~] **Task `export_data` / `generate_report`** — partial (tasks entity real; ostalo ograničeno)
 - [ ] **`digital-signature`** — stub ID `ds_stub_*`, nije pravni potpis
 - [ ] **`package-pricing`** — deterministički stub, nije live tržište
 - [ ] **Node `sistem-naplate` modul** — simulirana matematika; **ne poziva** Python `sistem_naplate/*.py`
@@ -330,6 +331,9 @@ Kompletan spisak **novih** rupa koje nisu pokrivene samo ključevima. Svaka stav
 
 ### 11.5 Multi-stack integracija (Infra)
 
+- [x] **Upload volume + env** — `docker-compose.prod.yml` `upload_data`; `UPLOAD_*` u web prod example + `prepare-vps-prod.ps1`
+- [x] **Forge vault volume** — `forge_data` + `FORGE_VAULT_PATH` u prod compose
+- [x] **`PHASE` iz env** — compose `${PHASE:-v6}` (ne hardcode v2)
 - [ ] **`atina-system/` Nest** — nije u `docker-compose.prod.yml` (samo dev compose)
 - [ ] **Astra Flask** — samo lokalni `docker-compose.yml`; **`MODULE_STACK` reklamira Astra** na sajtu
 - [ ] **Dva „Atina System“ koncepta** — Express modul (simulacija) vs Nest app (TypeORM) — nije dokumentovana jedna revenue putanja
@@ -340,12 +344,12 @@ Kompletan spisak **novih** rupa koje nisu pokrivene samo ključevima. Svaka stav
 
 ### 11.6 Env dokumentacija (Infra / M1)
 
-- [ ] **`SLACK_WEBHOOK_URL`** u config, nije u `.env.example`
-- [ ] **`DELIVERABLE_FULFILLMENT_*`** (QA, retry, memory) — nije u example
-- [ ] **`RETAINER_SCHEDULER_*`** — nije u example
-- [ ] **`OWNER_TAX_RESERVE_RATE`, `REVENUE_*`** — nije u example
-- [ ] **Web `UPLOAD_DIR`, `UPLOAD_STORAGE`, `UPLOAD_MAX_BYTES`** — nisu u web `.env.example`
-- [ ] **Web `ATINA_API_BASE`** — samo u `.env.production.example`, ne dev example
+- [x] **`SLACK_WEBHOOK_URL`** u `atina-platform/atina/.env.example`
+- [x] **`DELIVERABLE_FULFILLMENT_*`** (QA, retry, memory) — u `.env.example`
+- [x] **`RETAINER_SCHEDULER_*`** — u `.env.example`
+- [x] **`OWNER_TAX_RESERVE_RATE`, `REVENUE_*`** — u `.env.example`
+- [x] **Web `UPLOAD_DIR`, `UPLOAD_STORAGE`, `UPLOAD_MAX_BYTES`** — u `.env.production.example` + VPS prep
+- [x] **Web `CONTACT_CRM_INGRESS_*`, `CONTACT_SLACK_WEBHOOK_URL`** — u `.env.production.example` + `prepare-vps-prod.ps1` / `deploy-from-local-secrets.ps1`
 - [ ] **Skripta env parity** — nema automatske provere config ↔ `.env.example`
 
 ### 11.7 Marketing katalog → pogrešan flow (M0–M4)

@@ -9,11 +9,36 @@ import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
+import { safeInternalPath } from '@/lib/safe-internal-path';
+import { isPublicRegistrationOpen } from '@/lib/registration-public';
+
+function friendlyLoginError(code: string | undefined, status: number): string {
+  switch (code) {
+    case 'atina_unreachable':
+      return 'Our sign-in service is temporarily unavailable. Please try again in a moment.';
+    case 'invalid_credentials':
+      return 'Incorrect email or password. Please try again.';
+    case 'email_and_password_required':
+      return 'Please enter both your email and password.';
+    case 'rate_limited':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'server_error':
+      return 'Something went wrong on our end. Please try again shortly.';
+    case 'network':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return `Unable to sign in right now. Please try again.${status ? '' : ''}`;
+  }
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get('next');
+  const nextPath = safeInternalPath(searchParams.get('next'));
+  const registerHref = nextPath
+    ? `/register?next=${encodeURIComponent(nextPath)}`
+    : '/register';
+  const demoEnabled = process.env.NODE_ENV !== 'production';
   const [status, setStatus] = useState<'idle' | 'loading' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
@@ -29,14 +54,14 @@ function LoginForm() {
       const data = (await res.json()) as { ok?: boolean; redirectTo?: string; error?: string };
       if (!res.ok || !data.ok) {
         setStatus('err');
-        setErrMsg(data.error ?? `HTTP ${res.status}`);
+        setErrMsg(friendlyLoginError(data.error, res.status));
         return;
       }
-      router.push(data.redirectTo ?? '/dashboard');
+      router.push(nextPath ?? data.redirectTo ?? '/dashboard');
       router.refresh();
     } catch {
       setStatus('err');
-      setErrMsg('network');
+      setErrMsg(friendlyLoginError('network', 0));
     }
   }
 
@@ -68,19 +93,15 @@ function LoginForm() {
           };
           if (!res.ok || !data.ok) {
             setStatus('err');
-            if (data.error === 'atina_unreachable') {
-              setErrMsg('Atina API is unavailable — start the backend or use demo sign-in.');
-            } else {
-              setErrMsg(data.error ?? data.detail ?? `HTTP ${res.status}`);
-            }
+            setErrMsg(friendlyLoginError(data.error, res.status));
             return;
           }
-          const dest = nextPath && nextPath.startsWith('/') ? nextPath : data.redirectTo ?? '/dashboard';
+          const dest = nextPath ?? data.redirectTo ?? '/dashboard';
           router.push(dest);
           router.refresh();
         } catch {
           setStatus('err');
-          setErrMsg('network');
+          setErrMsg(friendlyLoginError('network', 0));
         }
       }}
     >
@@ -128,18 +149,39 @@ function LoginForm() {
         {status === 'loading' ? 'Signing in…' : 'Sign in'}
       </motion.button>
       <p className="text-center text-xs text-slate-500">
-        No account? <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">Contact us</Link> for access.
+        <Link href="/forgot-password" className="text-violet-300 underline-offset-2 hover:underline">
+          Forgot password?
+        </Link>
       </p>
-      <motion.button
-        type="button"
-        disabled={status === 'loading'}
-        className="btn-glass w-full text-center text-sm disabled:opacity-60"
-        whileHover={{ scale: 1.02 }}
-        whileTap={tapScale}
-        onClick={() => startDemo('client')}
-      >
-        Preview demo portal
-      </motion.button>
+      <p className="text-center text-xs text-slate-500">
+        {isPublicRegistrationOpen() ? (
+          <>
+            No account?{' '}
+            <Link href={registerHref} className="text-violet-300 underline-offset-2 hover:underline">
+              Create one
+            </Link>{' '}
+            or{' '}
+          </>
+        ) : (
+          'Need an account? '
+        )}
+        <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
+          contact us
+        </Link>{' '}
+        for enterprise access.
+      </p>
+      {demoEnabled && (
+        <motion.button
+          type="button"
+          disabled={status === 'loading'}
+          className="btn-glass w-full text-center text-sm disabled:opacity-60"
+          whileHover={{ scale: 1.02 }}
+          whileTap={tapScale}
+          onClick={() => startDemo('client')}
+        >
+          Preview demo portal
+        </motion.button>
+      )}
     </motion.form>
   );
 }
@@ -175,7 +217,7 @@ export default function LoginPage() {
             </Link>
           </motion.div>
           <motion.div variants={fadeUp}>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group</p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Omni Group Tech</p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white md:text-5xl">
               Client <span className="text-gradient animate-gradient-text">portal</span>
             </h1>

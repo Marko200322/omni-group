@@ -1,0 +1,10 @@
+﻿{
+    "total":  850,
+    "pass":  849,
+    "fail":  1,
+    "passRate":  99.88,
+    "csv":  "C:\\dev\\omni group\\artifacts\\e2e-matrix-17x50\\matrix-full-20260803-202157.csv",
+    "failedCases":  [
+                        "website-business|legal"
+                    ]
+}

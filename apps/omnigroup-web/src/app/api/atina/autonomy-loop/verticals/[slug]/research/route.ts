@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
-import { getServerSession } from '@/lib/auth-session';
+import { requireAdminSession } from '@/lib/bff-admin-gate';
 
 type RouteParams = { params: Promise<{ slug: string }> };
 
 export async function POST(req: Request, { params }: RouteParams) {
-  const session = await getServerSession();
-  if (!session || session.demo) {
-    return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
-  }
+  const gate = await requireAdminSession();
+  if ('error' in gate) return gate.error;
+  const { session } = gate;
 
   const { slug } = await params;
   let body: Record<string, unknown> = { intensity: 50 };
@@ -29,10 +29,7 @@ export async function POST(req: Request, { params }: RouteParams) {
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'research_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('research_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

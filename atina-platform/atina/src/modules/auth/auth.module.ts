@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { AuthController } from './controller/auth.controller';
 import { authenticate } from '../../api/middleware/auth.middleware';
+import { registrationGate } from '../../api/middleware/registration-gate.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -42,7 +43,7 @@ export class AuthModule implements IModule {
 
   private setupRoutes(): void {
     // Public routes
-    this.router.post('/register', authLimiter, validateQuery(StrictEmptyQueryDto), validateBody(RegisterDto), this.controller.register);
+    this.router.post('/register', authLimiter, registrationGate, validateQuery(StrictEmptyQueryDto), validateBody(RegisterDto), this.controller.register);
     this.router.post('/login', authLimiter, validateQuery(StrictEmptyQueryDto), validateBody(LoginDto), this.controller.login);
     this.router.post('/refresh', authLimiter, validateQuery(StrictEmptyQueryDto), validateBody(RefreshTokenDto), this.controller.refreshToken);
     this.router.post('/logout', authSessionLimiter, validateQuery(StrictEmptyQueryDto), validateBody(LogoutBodyDto), this.controller.logout);

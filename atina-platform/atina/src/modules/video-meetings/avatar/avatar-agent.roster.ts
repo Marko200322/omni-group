@@ -5,9 +5,16 @@ export type AvatarAgentDefinition = {
   name: string;
   title: string;
   avatarUrl: string;
+  /** Raster face photo for HeyGen/D-ID (defaults to .png sibling of avatarUrl) */
+  photoUrl?: string;
   /** WFH / home-office background behind the avatar */
   backgroundUrl: string;
+  /** ElevenLabs voice id (TTS + D-ID bridge) */
   voiceId: string;
+  /** HeyGen stock avatar id — when set, skips talking_photo */
+  heygenAvatarId?: string;
+  /** HeyGen voice id — do not pass ElevenLabs voiceId to HeyGen */
+  heygenVoiceId?: string;
   persona: string;
   greeting: string;
 };
@@ -17,6 +24,10 @@ const SALES_BG = '/avatars/backgrounds/sales-wfh.svg';
 
 function portrait(id: string) {
   return `/avatars/portraits/${id}.svg`;
+}
+
+function photoPortrait(id: string) {
+  return `/avatars/portraits/${id}.png`;
 }
 
 export const DEFAULT_SUPPORT_AGENTS: AvatarAgentDefinition[] = [

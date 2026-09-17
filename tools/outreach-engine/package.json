@@ -1,0 +1,30 @@
+{
+  "name": "@omni/outreach-engine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Double-agent B2B outreach engine — Scout + Legal Supervisor with factuality guardrails",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test:guardrails": "node --import tsx src/guardrail-validator.selftest.ts",
+    "validate-draft": "node --import tsx src/cli-validate.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^11.7.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

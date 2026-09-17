@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Crosshair, Flame, Globe2, Play, RefreshCw, Rocket, ShieldCheck, Zap } from 'lucide-react';
+import { isDevClient } from '@/lib/is-dev-client';
 
 type ReadinessCheck = {
   id: string;
@@ -17,6 +18,8 @@ type ReadinessData = {
   huntingModules?: Array<{ slug: string; registered: boolean }>;
   templates?: Array<{ key: string; available: boolean; minPhase?: string | null }>;
   outbound?: {
+    emailProvider?: string;
+    instantlyConfigured?: boolean;
     warmupComplete?: boolean;
     sentToday?: number;
     remainingToday?: number;
@@ -70,7 +73,7 @@ const TEMPLATES = [
   { key: 'lead-proxy-acquisition-pipeline', label: 'Proxy + Hunt' },
 ];
 
-const statusColor = {
+const statusColor: Record<string, string> = {
   ready: 'text-emerald-400',
   partial: 'text-amber-400',
   missing: 'text-rose-400',
@@ -161,7 +164,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
           verticalSlug,
           templateKey,
           intensity,
-          processOutbound: true,
+          processOutbound: false,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string; detail?: string };
@@ -224,9 +227,11 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {(readiness?.checks ?? []).map((check) => (
-          <div key={check.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-            <p className={`text-xs font-semibold uppercase tracking-wider ${statusColor[check.status]}`}>{check.status}</p>
+        {(readiness?.checks ?? []).map((check, idx) => (
+          <div key={check.id ?? idx} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+            <p className={`text-xs font-semibold uppercase tracking-wider ${statusColor[check.status] ?? 'text-slate-400'}`}>
+              {check.status ?? 'unknown'}
+            </p>
             <p className="mt-1 text-sm text-white">{check.label}</p>
             {check.hint && <p className="mt-1 text-xs text-slate-500">{check.hint}</p>}
           </div>
@@ -294,7 +299,11 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
         <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-slate-300">
           <Zap className="mr-1 inline h-3.5 w-3.5 text-cyan-400" />
           Outbound today: {readiness.outbound.sentToday ?? 0} sent · {readiness.outbound.remainingToday ?? 0} remaining
-          {readiness.outbound.warmupComplete ? ' · warmup OK' : ' · warmup in progress (dev: OUTREACH_DEV_SEND_TO_FALLBACK)'}
+          {readiness.outbound.emailProvider === 'instantly' && readiness.outbound.instantlyConfigured
+            ? ' · Instantly.ai'
+            : readiness.outbound.warmupComplete
+              ? ' · warmup OK'
+              : ' · warmup in progress (dev: OUTREACH_DEV_SEND_TO_FALLBACK)'}
           {readiness.outbound.byStatus && (
             <span className="ml-2 text-slate-500">
               draft: {readiness.outbound.byStatus.draft ?? 0} · sent: {readiness.outbound.byStatus.sent ?? 0}
@@ -359,7 +368,19 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
               <tbody>
                 {hotClients?.items?.map((row) => (
                   <tr key={row.id} className="border-b border-white/5">
-                    <td className="py-1.5 pr-2 text-white">{row.company_name ?? '—'}</td>
+                    <td className="py-1.5 pr-2 text-white">
+                      {row.company_name ?? '—'}
+                      {row.job_url ? (
+                        <a
+                          href={row.job_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-2 text-xs text-cyan-300 hover:underline"
+                        >
+                          View listing
+                        </a>
+                      ) : null}
+                    </td>
                     <td className="py-1.5 pr-2">
                       {row.role_title ?? '—'}
                       {row.city ? <span className="text-slate-500"> · {row.city}</span> : null}
@@ -389,7 +410,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
         )}
       </div>
 
-      {lastResult && (
+      {lastResult && isDevClient() && (
         <pre className="max-h-48 overflow-auto rounded-xl border border-white/10 bg-black/40 p-3 text-xs text-emerald-200/90">
           {JSON.stringify(lastResult, null, 2)}
         </pre>

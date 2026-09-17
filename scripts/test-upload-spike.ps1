@@ -9,7 +9,8 @@
 param(
   [string]$WebBase = 'http://127.0.0.1:3010',
   [string]$Email = '',
-  [string]$Password = ''
+  [string]$Password = '',
+  [switch]$SkipEnsureWeb
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,7 @@ $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 . (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'bff-smoke-headers.ps1')
 
 if (-not $Email -or -not $Password) {
   $creds = Get-AdminCredentials -RepoRoot $repoRoot
@@ -24,8 +26,10 @@ if (-not $Email -or -not $Password) {
   if (-not $Password) { $Password = $creds.Password }
 }
 
-& (Join-Path $scriptsDir 'ensure-web-dev.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $SkipEnsureWeb) {
+  & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 $web = $WebBase.TrimEnd('/')
 $tmp = Join-Path $env:TEMP "omni-upload-spike-$([Guid]::NewGuid().ToString('N').Substring(0, 8)).txt"
@@ -50,6 +54,7 @@ try {
   Write-Host "  GET /api/upload OK storage=$($meta.storage)" -ForegroundColor Green
 
   $auth = Get-SessionCookie
+  $postHeaders = Get-BffSmokePostHeaders -Session $auth.Session -WebBase $web
 
   $boundary = [Guid]::NewGuid().ToString('N')
   $fileBytes = [System.IO.File]::ReadAllBytes($tmp)
@@ -67,6 +72,12 @@ try {
   $req.ContentType = "multipart/form-data; boundary=$boundary"
   $req.ContentLength = $bodyBytes.Count
   $req.Headers.Add('Cookie', "og_session=$($auth.Cookie)")
+  if ($postHeaders['x-csrf-token']) {
+    $req.Headers.Add('x-csrf-token', $postHeaders['x-csrf-token'])
+  }
+  if ($postHeaders.Referer) {
+    $req.Referer = $postHeaders.Referer
+  }
   $stream = $req.GetRequestStream()
   $stream.Write($bodyBytes.ToArray(), 0, $bodyBytes.Count)
   $stream.Close()

@@ -1,0 +1,908 @@
+slug,name,category,category_name_sr,pricing_tier,market_index,market_intensity,tam_estimate_usd,competition_score,primary_deliverable_id,vertical_package_client_eur,primary_deliverable_client_eur,resource_cost_eur,owner_net_vertical_package_eur,owner_net_primary_eur,owner_net_after_quality_eur,has_page,has_outreach,href
+admin-support-administrative-support,Administrative Support (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-administrative-support
+admin-support-calendar-management,Calendar Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-calendar-management
+admin-support-crm-data-management,Crm Data Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-crm-data-management
+admin-support-data-collection,Data Collection (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-data-collection
+admin-support-data-entry,Data Entry (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-data-entry
+admin-support-document-management,Document Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-document-management
+admin-support-email-management,Email Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-email-management
+admin-support-executive-assistant,Executive Assistant (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-executive-assistant
+admin-support-market-research,Market Research (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-market-research
+admin-support-order-processing,Order Processing (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-order-processing
+admin-support-personal-assistance,Personal Assistance (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-personal-assistance
+admin-support-personal-assistant,Personal Assistant (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-personal-assistant
+admin-support-project-coordination,Project Coordination (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-project-coordination
+admin-support-spreadsheet-management,Spreadsheet Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-spreadsheet-management
+admin-support-travel-management,Travel Management (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-travel-management
+admin-support-travel-planning,Travel Planning (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-travel-planning
+admin-support-virtual-assistant,Virtual Assistant (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-virtual-assistant
+admin-support-web-research,Web Research (Admin Support),admin_support,Admin podrška,budget,0.82,42,110800,51,setup-quick,217,472,63,123,334,117,true,true,/solutions/admin-support-web-research
+agriculture-agri-insurance,Agri Insurance (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,false,/solutions/agriculture-agri-insurance
+agriculture-agritech,Agritech (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-agritech
+agriculture-apiary,Apiary (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-apiary
+agriculture-aquaculture,Aquaculture (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-aquaculture
+agriculture-cooperative,Cooperative (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-cooperative
+agriculture-crop-consulting,Crop Consulting (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-crop-consulting
+agriculture-dairy,Dairy (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-dairy
+agriculture-farm,Farm (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-farm
+agriculture-farm-equipment,Farm Equipment (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-farm-equipment
+agriculture-farm-to-table,Farm To Table (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-farm-to-table
+agriculture-fertilizer,Fertilizer (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-fertilizer
+agriculture-forestry,Forestry (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-forestry
+agriculture-greenhouse,Greenhouse (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-greenhouse
+agriculture-hydroponics,Hydroponics (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-hydroponics
+agriculture-irrigation,Irrigation (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-irrigation
+agriculture-livestock,Livestock (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-livestock
+agriculture-organic-farm,Organic Farm (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-organic-farm
+agriculture-seed-supplier,Seed Supplier (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-seed-supplier
+agriculture-soil-testing,Soil Testing (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-soil-testing
+agriculture-vineyard,Vineyard (Agriculture),agriculture,Poljoprivreda,standard,0.95,52,121200,56,vertical-package,344,344,63,225,225,214,true,true,/solutions/agriculture-vineyard
+ai-data-ai-agent-development,Ai Agent Development (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-ai-agent-development
+ai-data-ai-automation,Ai Automation (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-ai-automation
+ai-data-ai-content-creation,Ai Content Creation (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-ai-content-creation
+ai-data-ai-integration,Ai Integration (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-ai-integration
+ai-data-artificial-intelligence,Artificial Intelligence (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-artificial-intelligence
+ai-data-big-data,Big Data (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-big-data
+ai-data-business-intelligence,Business Intelligence (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-business-intelligence
+ai-data-chatbot-development,Chatbot Development (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-chatbot-development
+ai-data-computer-vision,Computer Vision (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-computer-vision
+ai-data-data-analysis,Data Analysis (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-data-analysis
+ai-data-data-engineering,Data Engineering (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-data-engineering
+ai-data-data-mining,Data Mining (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-data-mining
+ai-data-data-science,Data Science (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-data-science
+ai-data-data-visualization,Data Visualization (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-data-visualization
+ai-data-deep-learning,Deep Learning (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-deep-learning
+ai-data-fine-tuning-models,Fine Tuning Models (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-fine-tuning-models
+ai-data-generative-ai,Generative Ai (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-generative-ai
+ai-data-llm-development,Llm Development (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-llm-development
+ai-data-machine-learning,Machine Learning (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-machine-learning
+ai-data-natural-language-processing,Natural Language Processing (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-natural-language-processing
+ai-data-predictive-analytics,Predictive Analytics (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-predictive-analytics
+ai-data-prompt-engineering,Prompt Engineering (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-prompt-engineering
+ai-data-rag-systems,Rag Systems (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-rag-systems
+ai-data-statistical-analysis,Statistical Analysis (AI & Data),ai_data,AI & Data,premium,1.38,68,137200,64,integration,700,4653,63,510,3566,485,true,true,/solutions/ai-data-statistical-analysis
+audio-music-audio-cleanup,Audio Cleanup (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-audio-cleanup
+audio-music-audio-editing,Audio Editing (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-audio-editing
+audio-music-audio-mastering,Audio Mastering (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-audio-mastering
+audio-music-audio-mixing,Audio Mixing (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-audio-mixing
+audio-music-audiobook-production,Audiobook Production (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-audiobook-production
+audio-music-beat-making,Beat Making (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-beat-making
+audio-music-beat-production,Beat Production (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-beat-production
+audio-music-jingle-creation,Jingle Creation (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-jingle-creation
+audio-music-jingle-production,Jingle Production (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-jingle-production
+audio-music-music-licensing,Music Licensing (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-music-licensing
+audio-music-music-production,Music Production (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-music-production
+audio-music-narration,Narration (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-narration
+audio-music-podcast-editing,Podcast Editing (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-podcast-editing
+audio-music-podcast-production,Podcast Production (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-podcast-production
+audio-music-songwriting,Songwriting (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-songwriting
+audio-music-sound-design,Sound Design (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-sound-design
+audio-music-voice-over,Voice Over (Audio & Music),audio_music,Audio & muzika,standard,0.94,50,118800,55,landing,339,1684,63,221,1282,210,true,true,/solutions/audio-music-voice-over
+automotive-auto-finance,Auto Finance (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-auto-finance
+automotive-auto-repair,Auto Repair (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-auto-repair
+automotive-body-shop,Body Shop (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-body-shop
+automotive-car-sharing,Car Sharing (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-car-sharing
+automotive-car-wash,Car Wash (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-car-wash
+automotive-classic-cars,Classic Cars (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-classic-cars
+automotive-customs-auto,Customs Auto (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-customs-auto
+automotive-dealership,Dealership (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-dealership
+automotive-detailing,Detailing (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-detailing
+automotive-driving-instructor,Driving Instructor (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-driving-instructor
+automotive-ev-charging,Ev Charging (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-ev-charging
+automotive-fleet-service,Fleet Service (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-fleet-service
+automotive-inspection,Inspection (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-inspection
+automotive-motorcycle,Motorcycle (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-motorcycle
+automotive-parts-supplier,Parts Supplier (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-parts-supplier
+automotive-recycling-auto,Recycling Auto (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-recycling-auto
+automotive-rental,Rental (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-rental
+automotive-tire-shop,Tire Shop (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-tire-shop
+automotive-towing,Towing (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-towing
+automotive-truck-service,Truck Service (Automotive),automotive,Automobili,standard,1.08,52,120400,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/automotive-truck-service
+beauty-barber-academy,Barber Academy (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-barber-academy
+beauty-barbershop,Barbershop (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-barbershop
+beauty-bridal-beauty,Bridal Beauty (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-bridal-beauty
+beauty-brow-lash,Brow Lash (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-brow-lash
+beauty-cosmetology,Cosmetology (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-cosmetology
+beauty-hair-extensions,Hair Extensions (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-hair-extensions
+beauty-laser-clinic,Laser Clinic (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-laser-clinic
+beauty-makeup,Makeup (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,false,/solutions/beauty-makeup
+beauty-massage,Massage (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-massage
+beauty-med-spa,Med Spa (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-med-spa
+beauty-mobile-beauty,Mobile Beauty (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-mobile-beauty
+beauty-nail-studio,Nail Studio (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-nail-studio
+beauty-organic-beauty,Organic Beauty (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-organic-beauty
+beauty-perfume,Perfume (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-perfume
+beauty-salon,Salon (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-salon
+beauty-skincare,Skincare (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-skincare
+beauty-spa,Spa (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-spa
+beauty-tanning,Tanning (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-tanning
+beauty-tattoo,Tattoo (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-tattoo
+beauty-wellness,Wellness (Beauty),beauty,Lepota i wellness,budget,0.9,44,107600,52,vertical-package,238,238,63,140,140,133,true,true,/solutions/beauty-wellness
+business-consulting-business-analysis,Business Analysis (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-business-analysis
+business-consulting-business-coaching,Business Coaching (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-business-coaching
+business-consulting-business-consulting,Business Consulting (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-business-consulting
+business-consulting-business-planning,Business Planning (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-business-planning
+business-consulting-change-management,Change Management (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-change-management
+business-consulting-competitive-analysis,Competitive Analysis (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-competitive-analysis
+business-consulting-digital-transformation,Digital Transformation (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-digital-transformation
+business-consulting-feasibility-studies,Feasibility Studies (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-feasibility-studies
+business-consulting-management-consulting,Management Consulting (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-management-consulting
+business-consulting-market-research,Market Research (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-market-research
+business-consulting-operations-consulting,Operations Consulting (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-operations-consulting
+business-consulting-process-improvement,Process Improvement (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-process-improvement
+business-consulting-process-optimization,Process Optimization (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-process-optimization
+business-consulting-startup-consulting,Startup Consulting (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-startup-consulting
+business-consulting-strategy-consulting,Strategy Consulting (Business & Consulting),business_consulting,Biznis konsalting,premium,1.26,58,134800,59,audit,625,2408,63,450,1854,428,true,true,/solutions/business-consulting-strategy-consulting
+community-moderation-community-management,Community Management (Community & Moderation),community_moderation,Community & moderacija,budget,0.88,48,123600,54,ai-support-retainer,237,329,63,139,222,132,true,true,/solutions/community-moderation-community-management
+community-moderation-discord-management,Discord Management (Community & Moderation),community_moderation,Community & moderacija,budget,0.88,48,123600,54,ai-support-retainer,237,329,63,139,222,132,true,true,/solutions/community-moderation-discord-management
+community-moderation-forum-moderation,Forum Moderation (Community & Moderation),community_moderation,Community & moderacija,budget,0.88,48,123600,54,ai-support-retainer,237,329,63,139,222,132,true,true,/solutions/community-moderation-forum-moderation
+community-moderation-telegram-management,Telegram Management (Community & Moderation),community_moderation,Community & moderacija,budget,0.88,48,123600,54,ai-support-retainer,237,329,63,139,222,132,true,true,/solutions/community-moderation-telegram-management
+construction-architecture,Architecture (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-architecture
+construction-civil-engineering,Civil Engineering (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-civil-engineering
+construction-concrete,Concrete (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-concrete
+construction-demolition,Demolition (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-demolition
+construction-electrician,Electrician (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-electrician
+construction-flooring,Flooring (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-flooring
+construction-general-contractor,General Contractor (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-general-contractor
+construction-hvac,Hvac (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-hvac
+construction-insulation,Insulation (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-insulation
+construction-interior-design,Interior Design (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-interior-design
+construction-landscaping,Landscaping (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-landscaping
+construction-painting,Painting (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-painting
+construction-plumber,Plumber (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-plumber
+construction-pool-builder,Pool Builder (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-pool-builder
+construction-renovation,Renovation (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-renovation
+construction-roofing,Roofing (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-roofing
+construction-scaffolding,Scaffolding (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-scaffolding
+construction-solar-install,Solar Install (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-solar-install
+construction-surveying,Surveying (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-surveying
+construction-windows,Windows (Construction),construction,Građevina,standard,1.05,52,122000,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/construction-windows
+creator-services-newsletter-management,Newsletter Management (Creator Services),creator_services,Creator usluge,standard,0.98,62,137200,61,landing,363,1806,63,240,1379,228,true,true,/solutions/creator-services-newsletter-management
+creator-services-podcast-production,Podcast Production (Creator Services),creator_services,Creator usluge,standard,0.98,62,137200,61,landing,363,1806,63,240,1379,228,true,true,/solutions/creator-services-podcast-production
+creator-services-tiktok-management,Tiktok Management (Creator Services),creator_services,Creator usluge,standard,0.98,62,137200,61,landing,363,1806,63,240,1379,228,true,true,/solutions/creator-services-tiktok-management
+creator-services-youtube-management,Youtube Management (Creator Services),creator_services,Creator usluge,standard,0.98,62,137200,61,landing,363,1806,63,240,1379,228,true,true,/solutions/creator-services-youtube-management
+customer-service-community-support,Community Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-community-support
+customer-service-complaint-handling,Complaint Handling (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-complaint-handling
+customer-service-customer-onboarding,Customer Onboarding (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-customer-onboarding
+customer-service-customer-retention,Customer Retention (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-customer-retention
+customer-service-customer-success,Customer Success (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-customer-success
+customer-service-customer-support,Customer Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-customer-support
+customer-service-email-support,Email Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-email-support
+customer-service-help-desk-support,Help Desk Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-help-desk-support
+customer-service-live-chat-support,Live Chat Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-live-chat-support
+customer-service-phone-support,Phone Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-phone-support
+customer-service-technical-support,Technical Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-technical-support
+customer-service-ticket-support,Ticket Support (Customer Service),customer_service,Korisnička podrška,budget,0.86,52,125200,56,ai-support-retainer,234,325,63,137,218,130,true,true,/solutions/customer-service-ticket-support
+design-creative-2d-animation,2d Animation (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-2d-animation
+design-creative-3d-animation,3d Animation (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-3d-animation
+design-creative-3d-modeling,3d Modeling (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-3d-modeling
+design-creative-3d-rendering,3d Rendering (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-3d-rendering
+design-creative-banner-design,Banner Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-banner-design
+design-creative-brand-guidelines,Brand Guidelines (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-brand-guidelines
+design-creative-brand-identity,Brand Identity (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-brand-identity
+design-creative-brochure-design,Brochure Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-brochure-design
+design-creative-character-design,Character Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-character-design
+design-creative-creative-direction,Creative Direction (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-creative-direction
+design-creative-digital-art,Digital Art (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-digital-art
+design-creative-flyer-design,Flyer Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-flyer-design
+design-creative-graphic-design,Graphic Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-graphic-design
+design-creative-illustration,Illustration (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-illustration
+design-creative-infographic-design,Infographic Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-infographic-design
+design-creative-label-design,Label Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-label-design
+design-creative-logo-design,Logo Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-logo-design
+design-creative-mobile-app-design,Mobile App Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-mobile-app-design
+design-creative-motion-graphics,Motion Graphics (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-motion-graphics
+design-creative-nft-art,Nft Art (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-nft-art
+design-creative-nft-design,Nft Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-nft-design
+design-creative-packaging-design,Packaging Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-packaging-design
+design-creative-poster-design,Poster Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-poster-design
+design-creative-presentation-design,Presentation Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-presentation-design
+design-creative-print-design,Print Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-print-design
+design-creative-product-visualization,Product Visualization (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-product-visualization
+design-creative-prototyping,Prototyping (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-prototyping
+design-creative-social-media-design,Social Media Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-social-media-design
+design-creative-ui-design,Ui Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-ui-design
+design-creative-ux-design,Ux Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-ux-design
+design-creative-ux-research,Ux Research (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-ux-research
+design-creative-visual-identity,Visual Identity (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-visual-identity
+design-creative-web-design,Web Design (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-web-design
+design-creative-wireframing,Wireframing (Design & Creative),design_creative,Dizajn & kreativa,standard,1.06,55,128000,58,landing,386,1919,63,258,1470,245,true,true,/solutions/design-creative-wireframing
+development-it-ai-development,Ai Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-ai-development
+development-it-android-development,Android Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-android-development
+development-it-angular-development,Angular Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-angular-development
+development-it-api-development,Api Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-api-development
+development-it-automation-testing,Automation Testing (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-automation-testing
+development-it-aws,Aws (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-aws
+development-it-azure,Azure (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-azure
+development-it-backend-development,Backend Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-backend-development
+development-it-blockchain-development,Blockchain Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-blockchain-development
+development-it-c-development,C Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-c-development
+development-it-ci-cd,Ci Cd (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-ci-cd
+development-it-cloud-computing,Cloud Computing (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-cloud-computing
+development-it-cloud-engineering,Cloud Engineering (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-cloud-engineering
+development-it-cross-platform-development,Cross Platform Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-cross-platform-development
+development-it-cybersecurity,Cybersecurity (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-cybersecurity
+development-it-database-development,Database Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-database-development
+development-it-desktop-applications,Desktop Applications (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-desktop-applications
+development-it-devops,Devops (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-devops
+development-it-docker,Docker (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-docker
+development-it-drupal-development,Drupal Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-drupal-development
+development-it-frontend-development,Frontend Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-frontend-development
+development-it-full-stack-development,Full Stack Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-full-stack-development
+development-it-game-development,Game Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-game-development
+development-it-google-cloud,Google Cloud (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-google-cloud
+development-it-infrastructure-engineering,Infrastructure Engineering (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-infrastructure-engineering
+development-it-ios-development,Ios Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-ios-development
+development-it-java-development,Java Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-java-development
+development-it-kubernetes,Kubernetes (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-kubernetes
+development-it-laravel-development,Laravel Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-laravel-development
+development-it-low-code-development,Low Code Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-low-code-development
+development-it-magento-development,Magento Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-magento-development
+development-it-mobile-app-development,Mobile App Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-mobile-app-development
+development-it-net-development,Net Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-net-development
+development-it-network-administration,Network Administration (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-network-administration
+development-it-no-code-development,No Code Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-no-code-development
+development-it-node-js-development,Node Js Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-node-js-development
+development-it-penetration-testing,Penetration Testing (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-penetration-testing
+development-it-php-development,Php Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-php-development
+development-it-python-development,Python Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-python-development
+development-it-qa-testing,Qa Testing (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-qa-testing
+development-it-react-development,React Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-react-development
+development-it-ruby-on-rails-development,Ruby On Rails Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-ruby-on-rails-development
+development-it-shopify-development,Shopify Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-shopify-development
+development-it-software-development,Software Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-software-development
+development-it-system-administration,System Administration (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-system-administration
+development-it-vue-js-development,Vue Js Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-vue-js-development
+development-it-web-development,Web Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-web-development
+development-it-web3-development,Web3 Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-web3-development
+development-it-website-maintenance,Website Maintenance (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-website-maintenance
+development-it-woocommerce-development,Woocommerce Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-woocommerce-development
+development-it-wordpress-development,Wordpress Development (Development & IT),development_it,Development & IT,premium,1.3,62,135600,61,setup-full,651,4688,63,470,3559,447,true,true,/solutions/development-it-wordpress-development
+ecommerce-amazon-fba,Amazon Fba (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-amazon-fba
+ecommerce-amazon-ppc,Amazon Ppc (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-amazon-ppc
+ecommerce-amazon-store-management,Amazon Store Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-amazon-store-management
+ecommerce-conversion-optimization,Conversion Optimization (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-conversion-optimization
+ecommerce-dropshipping,Dropshipping (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-dropshipping
+ecommerce-e-commerce-consulting,E Commerce Consulting (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-e-commerce-consulting
+ecommerce-ebay-store-management,Ebay Store Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-ebay-store-management
+ecommerce-etsy-store-management,Etsy Store Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-etsy-store-management
+ecommerce-inventory-management,Inventory Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-inventory-management
+ecommerce-magento-store-setup,Magento Store Setup (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-magento-store-setup
+ecommerce-marketplace-management,Marketplace Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-marketplace-management
+ecommerce-order-fulfillment,Order Fulfillment (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-order-fulfillment
+ecommerce-product-listing,Product Listing (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-product-listing
+ecommerce-product-listings,Product Listings (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-product-listings
+ecommerce-product-research,Product Research (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-product-research
+ecommerce-product-sourcing,Product Sourcing (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-product-sourcing
+ecommerce-shopify-store-setup,Shopify Store Setup (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-shopify-store-setup
+ecommerce-store-management,Store Management (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-store-management
+ecommerce-tiktok-shop,Tiktok Shop (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-tiktok-shop
+ecommerce-walmart-marketplace,Walmart Marketplace (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-walmart-marketplace
+ecommerce-woocommerce-store-setup,Woocommerce Store Setup (E-commerce),ecommerce,E-commerce,standard,1.14,64,134000,62,setup-full,425,3059,63,290,2256,276,true,true,/solutions/ecommerce-woocommerce-store-setup
+education-art-school,Art School (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-art-school
+education-certification,Certification (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-certification
+education-coding-bootcamp,Coding Bootcamp (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-coding-bootcamp
+education-corporate-training,Corporate Training (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-corporate-training
+education-dance-studio,Dance Studio (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-dance-studio
+education-driving-school,Driving School (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-driving-school
+education-edtech,Edtech (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-edtech
+education-exam-prep,Exam Prep (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-exam-prep
+education-language-school,Language School (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-language-school
+education-library,Library (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-library
+education-mentorship,Mentorship (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-mentorship
+education-music-school,Music School (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-music-school
+education-online-course,Online Course (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-online-course
+education-preschool,Preschool (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-preschool
+education-research-lab,Research Lab (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-research-lab
+education-special-ed,Special Ed (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-special-ed
+education-sports-academy,Sports Academy (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-sports-academy
+education-training-academic-tutoring,Academic Tutoring (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-academic-tutoring
+education-training-business-coaching,Business Coaching (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-business-coaching
+education-training-career-coaching,Career Coaching (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-career-coaching
+education-training-coaching,Coaching (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-coaching
+education-training-corporate-training,Corporate Training (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-corporate-training
+education-training-course-creation,Course Creation (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-course-creation
+education-training-curriculum-development,Curriculum Development (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-curriculum-development
+education-training-employee-training,Employee Training (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-employee-training
+education-training-instructional-design,Instructional Design (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-instructional-design
+education-training-language-teaching,Language Teaching (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-language-teaching
+education-training-language-tutoring,Language Tutoring (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-language-tutoring
+education-training-life-coaching,Life Coaching (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-life-coaching
+education-training-mentoring,Mentoring (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-mentoring
+education-training-online-tutoring,Online Tutoring (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-online-tutoring
+education-training-stem-tutoring,Stem Tutoring (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-stem-tutoring
+education-training-test-preparation,Test Preparation (Education & Training),education_training,Obrazovanje & trening,standard,1,52,126800,56,landing,362,1800,63,239,1374,227,true,true,/solutions/education-training-test-preparation
+education-tutoring,Tutoring (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-tutoring
+education-university,University (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-university
+education-vocational,Vocational (Education),education,Obrazovanje,standard,1,52,119600,56,vertical-package,362,362,63,239,239,227,true,true,/solutions/education-vocational
+energy-battery-storage,Battery Storage (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-battery-storage
+energy-biomass,Biomass (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-biomass
+energy-carbon-credits,Carbon Credits (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-carbon-credits
+energy-energy-audit,Energy Audit (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-energy-audit
+energy-energy-consulting,Energy Consulting (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-energy-consulting
+energy-energy-insurance,Energy Insurance (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-energy-insurance
+energy-energy-trading,Energy Trading (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-energy-trading
+energy-ev-infrastructure,Ev Infrastructure (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-ev-infrastructure
+energy-fuel-supply,Fuel Supply (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-fuel-supply
+energy-geothermal,Geothermal (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-geothermal
+energy-grid-services,Grid Services (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-grid-services
+energy-hydro,Hydro (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-hydro
+energy-microgrid,Microgrid (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-microgrid
+energy-nuclear-services,Nuclear Services (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-nuclear-services
+energy-oil-gas,Oil Gas (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-oil-gas
+energy-pipeline,Pipeline (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-pipeline
+energy-smart-meter,Smart Meter (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-smart-meter
+energy-solar,Solar (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-solar
+energy-utilities,Utilities (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-utilities
+energy-wind,Wind (Energy),energy,Energija,regulated,1.48,48,112400,54,vertical-package,875,875,63,650,650,618,true,true,/solutions/energy-wind
+engineering-architecture-architecture,Architecture (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-architecture
+engineering-architecture-autocad-design,Autocad Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-autocad-design
+engineering-architecture-bim-modeling,Bim Modeling (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-bim-modeling
+engineering-architecture-cad-drafting,Cad Drafting (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-cad-drafting
+engineering-architecture-civil-engineering,Civil Engineering (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-civil-engineering
+engineering-architecture-electrical-engineering,Electrical Engineering (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-electrical-engineering
+engineering-architecture-engineering-consulting,Engineering Consulting (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-engineering-consulting
+engineering-architecture-hvac-design,Hvac Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-hvac-design
+engineering-architecture-industrial-design,Industrial Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-industrial-design
+engineering-architecture-interior-design,Interior Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-interior-design
+engineering-architecture-landscape-design,Landscape Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-landscape-design
+engineering-architecture-manufacturing-design,Manufacturing Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-manufacturing-design
+engineering-architecture-mechanical-engineering,Mechanical Engineering (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-mechanical-engineering
+engineering-architecture-product-design,Product Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-product-design
+engineering-architecture-revit-design,Revit Design (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-revit-design
+engineering-architecture-structural-engineering,Structural Engineering (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-structural-engineering
+engineering-architecture-urban-planning,Urban Planning (Engineering & Architecture),engineering_architecture,Inženjering & arhitektura,premium,1.34,56,136400,58,audit,661,2549,63,478,1966,454,true,true,/solutions/engineering-architecture-urban-planning
+engineering-science-biotechnology,Biotechnology (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-biotechnology
+engineering-science-chemistry,Chemistry (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-chemistry
+engineering-science-mathematics,Mathematics (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-mathematics
+engineering-science-physics,Physics (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-physics
+engineering-science-scientific-research,Scientific Research (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-scientific-research
+engineering-science-statistics,Statistics (Engineering & Science),engineering_science,Inženjering & nauka,premium,1.32,54,130000,57,audit,648,2499,63,468,1926,445,true,true,/solutions/engineering-science-statistics
+entertainment-amusement,Amusement (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-amusement
+entertainment-arcade,Arcade (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-arcade
+entertainment-board-games,Board Games (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-board-games
+entertainment-casino,Casino (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-casino
+entertainment-casting,Casting (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-casting
+entertainment-cinema,Cinema (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-cinema
+entertainment-comedy-club,Comedy Club (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-comedy-club
+entertainment-escape-room,Escape Room (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-escape-room
+entertainment-esports,Esports (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-esports
+entertainment-gaming-studio,Gaming Studio (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-gaming-studio
+entertainment-live-events,Live Events (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-live-events
+entertainment-museum,Museum (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-museum
+entertainment-nightlife-ent,Nightlife Ent (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-nightlife-ent
+entertainment-sports-venue,Sports Venue (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-sports-venue
+entertainment-streaming-ent,Streaming Ent (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-streaming-ent
+entertainment-talent-agency,Talent Agency (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-talent-agency
+entertainment-theme-park,Theme Park (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-theme-park
+entertainment-ticketing,Ticketing (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-ticketing
+entertainment-vr-experience,Vr Experience (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-vr-experience
+entertainment-zoo,Zoo (Entertainment),entertainment,Zabava,standard,1.08,52,122800,56,vertical-package,391,391,63,262,262,249,true,true,/solutions/entertainment-zoo
+finance-accounting,Accounting (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-accounting
+finance-accounting-accounting,Accounting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-accounting
+finance-accounting-accounts-payable,Accounts Payable (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-accounts-payable
+finance-accounting-accounts-receivable,Accounts Receivable (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-accounts-receivable
+finance-accounting-auditing,Auditing (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-auditing
+finance-accounting-bookkeeping,Bookkeeping (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-bookkeeping
+finance-accounting-budgeting,Budgeting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-budgeting
+finance-accounting-cfo-services,Cfo Services (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-cfo-services
+finance-accounting-finance-consulting,Finance Consulting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-finance-consulting
+finance-accounting-financial-analysis,Financial Analysis (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-financial-analysis
+finance-accounting-financial-modeling,Financial Modeling (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-financial-modeling
+finance-accounting-financial-planning,Financial Planning (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-financial-planning
+finance-accounting-financial-reporting,Financial Reporting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-financial-reporting
+finance-accounting-forecasting,Forecasting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-forecasting
+finance-accounting-investment-analysis,Investment Analysis (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-investment-analysis
+finance-accounting-payroll,Payroll (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-payroll
+finance-accounting-tax-consulting,Tax Consulting (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-tax-consulting
+finance-accounting-tax-preparation,Tax Preparation (Finance & Accounting),finance_accounting,Finansije & računovodstvo,premium,1.32,60,136400,60,audit,658,2535,63,476,1955,452,true,true,/solutions/finance-accounting-tax-preparation
+finance-audit,Audit (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-audit
+finance-bookkeeping,Bookkeeping (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-bookkeeping
+finance-collections,Collections (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-collections
+finance-compliance-finance,Compliance Finance (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-compliance-finance
+finance-credit-union,Credit Union (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-credit-union
+finance-crypto-advisory,Crypto Advisory (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-crypto-advisory
+finance-factoring,Factoring (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-factoring
+finance-financial-planning,Financial Planning (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-financial-planning
+finance-fintech,Fintech (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-fintech
+finance-insurance,Insurance (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-insurance
+finance-investment,Investment (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-investment
+finance-leasing,Leasing (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-leasing
+finance-microfinance,Microfinance (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-microfinance
+finance-mortgage,Mortgage (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-mortgage
+finance-payment-processing,Payment Processing (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-payment-processing
+finance-payroll,Payroll (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-payroll
+finance-tax-advisory,Tax Advisory (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-tax-advisory
+finance-treasury,Treasury (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-treasury
+finance-wealth-management,Wealth Management (Finance),finance,Finansije,premium,1.3,58,125200,59,vertical-package,645,645,63,466,466,443,true,true,/solutions/finance-wealth-management
+fitness-boxing,Boxing (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-boxing
+fitness-climbing,Climbing (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-climbing
+fitness-corporate-wellness,Corporate Wellness (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-corporate-wellness
+fitness-crossfit,Crossfit (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-crossfit
+fitness-cycling-studio,Cycling Studio (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-cycling-studio
+fitness-dance-fitness,Dance Fitness (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-dance-fitness
+fitness-golf,Golf (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-golf
+fitness-gym,Gym (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-gym
+fitness-kids-sports,Kids Sports (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-kids-sports
+fitness-martial-arts,Martial Arts (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-martial-arts
+fitness-nutrition-coach,Nutrition Coach (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-nutrition-coach
+fitness-outdoor-adventure,Outdoor Adventure (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-outdoor-adventure
+fitness-personal-trainer,Personal Trainer (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-personal-trainer
+fitness-pilates,Pilates (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-pilates
+fitness-rehab-fitness,Rehab Fitness (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-rehab-fitness
+fitness-running-club,Running Club (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-running-club
+fitness-sports-club,Sports Club (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-sports-club
+fitness-swim-school,Swim School (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-swim-school
+fitness-tennis,Tennis (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-tennis
+fitness-yoga,Yoga (Fitness),fitness,Fitnes,budget,0.92,44,108400,52,vertical-package,243,243,63,144,144,137,true,true,/solutions/fitness-yoga
+government-citizen-services,Citizen Services (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-citizen-services
+government-customs,Customs (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-customs
+government-defense-contractor,Defense Contractor (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-defense-contractor
+government-digital-gov,Digital Gov (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-digital-gov
+government-education-public,Education Public (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-education-public
+government-environment-agency,Environment Agency (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-environment-agency
+government-housing-authority,Housing Authority (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-housing-authority
+government-immigration-gov,Immigration Gov (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-immigration-gov
+government-licensing,Licensing (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-licensing
+government-municipal,Municipal (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,false,/solutions/government-municipal
+government-procurement,Procurement (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-procurement
+government-public-health,Public Health (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-public-health
+government-public-safety,Public Safety (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-public-safety
+government-smart-city,Smart City (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-smart-city
+government-social-services,Social Services (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-social-services
+government-tax-office,Tax Office (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-tax-office
+government-tourism-board,Tourism Board (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-tourism-board
+government-transport-authority,Transport Authority (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-transport-authority
+government-utilities-public,Utilities Public (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-utilities-public
+government-workforce-agency,Workforce Agency (Government),government,Javni sektor,regulated,1.5,48,115600,54,vertical-package,887,887,63,659,659,626,true,true,/solutions/government-workforce-agency
+healthcare- hospice, hospice (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare- hospice
+healthcare-chiropractic,Chiropractic (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-chiropractic
+healthcare-clinic,Clinic (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-clinic
+healthcare-dental,Dental (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-dental
+healthcare-dermatology,Dermatology (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-dermatology
+healthcare-dietitian,Dietitian (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-dietitian
+healthcare-home-care,Home Care (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-home-care
+healthcare-hospice,Hospice (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-hospice
+healthcare-medical-lab,Medical Lab (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-medical-lab
+healthcare-mental-health,Mental Health (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-mental-health
+healthcare-midwife,Midwife (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-midwife
+healthcare-nursing,Nursing (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-nursing
+healthcare-optometry,Optometry (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-optometry
+healthcare-pediatrics,Pediatrics (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-pediatrics
+healthcare-pharmacy,Pharmacy (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-pharmacy
+healthcare-physiotherapy,Physiotherapy (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-physiotherapy
+healthcare-radiology,Radiology (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-radiology
+healthcare-rehab,Rehab (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-rehab
+healthcare-surgery-center,Surgery Center (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-surgery-center
+healthcare-telemedicine,Telemedicine (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-telemedicine
+healthcare-veterinary,Veterinary (Healthcare),healthcare,Zdravstvo,regulated,1.45,48,115600,54,vertical-package,858,858,63,636,636,604,true,true,/solutions/healthcare-veterinary
+home-services-appliance-repair,Appliance Repair (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-appliance-repair
+home-services-chimney,Chimney (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-chimney
+home-services-cleaning-home,Cleaning Home (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-cleaning-home
+home-services-decluttering,Decluttering (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-decluttering
+home-services-gutter,Gutter (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-gutter
+home-services-handyman,Handyman (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-handyman
+home-services-home-automation,Home Automation (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-home-automation
+home-services-home-security,Home Security (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-home-security
+home-services-home-staging,Home Staging (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-home-staging
+home-services-inspection-home,Inspection Home (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-inspection-home
+home-services-junk-removal,Junk Removal (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-junk-removal
+home-services-lawn-care,Lawn Care (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-lawn-care
+home-services-locksmith,Locksmith (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-locksmith
+home-services-moving-home,Moving Home (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-moving-home
+home-services-organizing,Organizing (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-organizing
+home-services-pest-control,Pest Control (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-pest-control
+home-services-pool-service,Pool Service (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-pool-service
+home-services-pressure-washing,Pressure Washing (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-pressure-washing
+home-services-smart-home,Smart Home (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-smart-home
+home-services-warranty,Warranty (Home Services),home_services,Kućne usluge,budget,0.9,44,113200,52,vertical-package,240,240,63,142,142,135,true,true,/solutions/home-services-warranty
+hospitality-bakery,Bakery (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-bakery
+hospitality-banquet,Banquet (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-banquet
+hospitality-bar,Bar (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-bar
+hospitality-bbq,Bbq (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-bbq
+hospitality-brewery,Brewery (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-brewery
+hospitality-cafe,Cafe (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-cafe
+hospitality-catering,Catering (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-catering
+hospitality-event-venue,Event Venue (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-event-venue
+hospitality-fast-food,Fast Food (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-fast-food
+hospitality-fine-dining,Fine Dining (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-fine-dining
+hospitality-food-delivery,Food Delivery (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-food-delivery
+hospitality-food-truck,Food Truck (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-food-truck
+hospitality-ghost-kitchen,Ghost Kitchen (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-ghost-kitchen
+hospitality-hostel,Hostel (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-hostel
+hospitality-hotel,Hotel (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-hotel
+hospitality-nightclub,Nightclub (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-nightclub
+hospitality-resort,Resort (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-resort
+hospitality-restaurant,Restaurant (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-restaurant
+hospitality-vegan,Vegan (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-vegan
+hospitality-winery,Winery (Hospitality),hospitality,Ugostiteljstvo,budget,0.86,44,111600,52,vertical-package,229,229,63,133,133,126,true,true,/solutions/hospitality-winery
+hr-recruiting-candidate-sourcing,Candidate Sourcing (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-candidate-sourcing
+hr-recruiting-compensation-analysis,Compensation Analysis (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-compensation-analysis
+hr-recruiting-employee-onboarding,Employee Onboarding (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-employee-onboarding
+hr-recruiting-executive-search,Executive Search (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-executive-search
+hr-recruiting-hr-administration,Hr Administration (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-hr-administration
+hr-recruiting-hr-consulting,Hr Consulting (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-hr-consulting
+hr-recruiting-interview-coordination,Interview Coordination (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-interview-coordination
+hr-recruiting-interviewing,Interviewing (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-interviewing
+hr-recruiting-linkedin-recruiting,Linkedin Recruiting (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-linkedin-recruiting
+hr-recruiting-performance-management,Performance Management (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-performance-management
+hr-recruiting-recruitment,Recruitment (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-recruitment
+hr-recruiting-resume-screening,Resume Screening (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-resume-screening
+hr-recruiting-talent-acquisition,Talent Acquisition (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-talent-acquisition
+hr-recruiting-talent-sourcing,Talent Sourcing (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-talent-sourcing
+hr-recruiting-technical-recruiting,Technical Recruiting (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-technical-recruiting
+hr-recruiting-workforce-planning,Workforce Planning (HR & Recruiting),hr_recruiting,HR & regrutacija,standard,1.12,58,130000,59,lead-gen-retainer,411,802,63,278,618,264,true,true,/solutions/hr-recruiting-workforce-planning
+industrial-automation-industrial,Automation Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-automation-industrial
+industrial-construction-industrial,Construction Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-construction-industrial
+industrial-consulting-industrial,Consulting Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-consulting-industrial
+industrial-energy-industrial,Energy Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-energy-industrial
+industrial-environmental-services,Environmental Services (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-environmental-services
+industrial-heavy-machinery,Heavy Machinery (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-heavy-machinery
+industrial-industrial-cleaning,Industrial Cleaning (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-industrial-cleaning
+industrial-industrial-iot,Industrial Iot (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-industrial-iot
+industrial-industrial-safety,Industrial Safety (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-industrial-safety
+industrial-inspection-industrial,Inspection Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-inspection-industrial
+industrial-logistics-industrial,Logistics Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-logistics-industrial
+industrial-maintenance-industrial,Maintenance Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-maintenance-industrial
+industrial-mining,Mining (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-mining
+industrial-oilfield-services,Oilfield Services (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-oilfield-services
+industrial-plant-management,Plant Management (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-plant-management
+industrial-recycling-industrial,Recycling Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-recycling-industrial
+industrial-robotics,Robotics (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-robotics
+industrial-supply-industrial,Supply Industrial (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-supply-industrial
+industrial-waste-management,Waste Management (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-waste-management
+industrial-water-treatment,Water Treatment (Industrial),industrial,Industrija,regulated,1.35,48,115600,54,vertical-package,799,799,63,589,589,560,true,true,/solutions/industrial-water-treatment
+legal-arbitration,Arbitration (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-arbitration
+legal-bankruptcy,Bankruptcy (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-bankruptcy
+legal-compliance-legal,Compliance Legal (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-compliance-legal
+legal-contract-review,Contract Review (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-contract-review
+legal-corporate-law,Corporate Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-corporate-law
+legal-court-filing,Court Filing (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-court-filing
+legal-criminal-defense,Criminal Defense (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-criminal-defense
+legal-employment-law,Employment Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-employment-law
+legal-estate-planning,Estate Planning (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-estate-planning
+legal-family-law,Family Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-family-law
+legal-immigration,Immigration (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-immigration
+legal-ip-law,Ip Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-ip-law
+legal-law-firm,Law Firm (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-law-firm
+legal-legal-tech,Legal Tech (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-legal-tech
+legal-mediation,Mediation (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-mediation
+legal-notary,Notary (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-notary
+legal-paralegal,Paralegal (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-paralegal
+legal-real-estate-law,Real Estate Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-real-estate-law
+legal-services-business-law,Business Law (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-business-law
+legal-services-compliance,Compliance (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-compliance
+legal-services-contract-drafting,Contract Drafting (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-contract-drafting
+legal-services-contract-review,Contract Review (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-contract-review
+legal-services-copyright-services,Copyright Services (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-copyright-services
+legal-services-corporate-law,Corporate Law (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-corporate-law
+legal-services-employment-law,Employment Law (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-employment-law
+legal-services-gdpr-compliance,Gdpr Compliance (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-gdpr-compliance
+legal-services-intellectual-property,Intellectual Property (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-intellectual-property
+legal-services-legal-consulting,Legal Consulting (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-legal-consulting
+legal-services-legal-research,Legal Research (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-legal-research
+legal-services-patent-support,Patent Support (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-patent-support
+legal-services-privacy-gdpr,Privacy Gdpr (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-privacy-gdpr
+legal-services-privacy-policies,Privacy Policies (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-privacy-policies
+legal-services-terms-conditions,Terms Conditions (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-terms-conditions
+legal-services-trademark-services,Trademark Services (Legal Services),legal_services,Pravne usluge,premium,1.4,55,127200,58,audit,688,2653,63,500,2050,475,true,true,/solutions/legal-services-trademark-services
+legal-startup-legal,Startup Legal (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-startup-legal
+legal-tax-law,Tax Law (Legal),legal,Pravo,premium,1.38,58,123600,59,vertical-package,684,684,63,497,497,472,true,true,/solutions/legal-tax-law
+localization-app-localization,App Localization (Localization),localization,Lokalizacija,standard,1.02,50,119600,55,workflow-design,368,1622,63,244,1193,232,true,true,/solutions/localization-app-localization
+localization-game-localization,Game Localization (Localization),localization,Lokalizacija,standard,1.02,50,119600,55,workflow-design,368,1622,63,244,1193,232,true,true,/solutions/localization-game-localization
+localization-multilingual-seo,Multilingual Seo (Localization),localization,Lokalizacija,standard,1.02,50,119600,55,workflow-design,368,1622,63,244,1193,232,true,true,/solutions/localization-multilingual-seo
+localization-website-localization,Website Localization (Localization),localization,Lokalizacija,standard,1.02,50,119600,55,workflow-design,368,1622,63,244,1193,232,true,true,/solutions/localization-website-localization
+logistics-3pl,3pl (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-3pl
+logistics-air-cargo,Air Cargo (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-air-cargo
+logistics-cold-chain,Cold Chain (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-cold-chain
+logistics-courier,Courier (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-courier
+logistics-customs-broker,Customs Broker (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-customs-broker
+logistics-dispatch,Dispatch (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-dispatch
+logistics-fleet-management,Fleet Management (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-fleet-management
+logistics-freight,Freight (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-freight
+logistics-fulfillment,Fulfillment (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-fulfillment
+logistics-inventory,Inventory (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-inventory
+logistics-last-mile,Last Mile (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-last-mile
+logistics-maritime,Maritime (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-maritime
+logistics-moving-company,Moving Company (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-moving-company
+logistics-packaging,Packaging (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-packaging
+logistics-port-services,Port Services (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-port-services
+logistics-rail-logistics,Rail Logistics (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-rail-logistics
+logistics-reverse-logistics,Reverse Logistics (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-reverse-logistics
+logistics-supply-chain,Supply Chain (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-supply-chain
+logistics-trucking,Trucking (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-trucking
+logistics-warehouse,Warehouse (Logistics),logistics,Logistika,premium,1.15,58,126800,59,vertical-package,570,570,63,406,406,386,true,true,/solutions/logistics-warehouse
+manufacturing-3d-printing,3d Printing (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-3d-printing
+manufacturing-aerospace,Aerospace (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-aerospace
+manufacturing-assembly,Assembly (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-assembly
+manufacturing-automotive-mfg,Automotive Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-automotive-mfg
+manufacturing-chemical,Chemical (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-chemical
+manufacturing-cnc-machining,Cnc Machining (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-cnc-machining
+manufacturing-custom-manufacturing,Custom Manufacturing (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-custom-manufacturing
+manufacturing-electronics-mfg,Electronics Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-electronics-mfg
+manufacturing-food-processing,Food Processing (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-food-processing
+manufacturing-furniture-mfg,Furniture Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-furniture-mfg
+manufacturing-industrial-design,Industrial Design (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-industrial-design
+manufacturing-metal-fab,Metal Fab (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-metal-fab
+manufacturing-packaging-mfg,Packaging Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-packaging-mfg
+manufacturing-pharma-mfg,Pharma Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-pharma-mfg
+manufacturing-plastic-molding,Plastic Molding (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-plastic-molding
+manufacturing-prototyping,Prototyping (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-prototyping
+manufacturing-quality-control,Quality Control (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-quality-control
+manufacturing-recycling-mfg,Recycling Mfg (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-recycling-mfg
+manufacturing-textile,Textile (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-textile
+manufacturing-tooling,Tooling (Manufacturing),manufacturing,Proizvodnja,premium,1.18,58,130000,59,vertical-package,585,585,63,418,418,397,true,true,/solutions/manufacturing-tooling
+marketing-affiliate-marketing,Affiliate Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-affiliate-marketing
+marketing-brand-marketing,Brand Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-brand-marketing
+marketing-competitor-analysis,Competitor Analysis (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-competitor-analysis
+marketing-content-marketing,Content Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-content-marketing
+marketing-conversion-rate-optimization,Conversion Rate Optimization (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-conversion-rate-optimization
+marketing-digital-marketing,Digital Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-digital-marketing
+marketing-email-marketing,Email Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-email-marketing
+marketing-facebook-ads,Facebook Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-facebook-ads
+marketing-google-ads,Google Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-google-ads
+marketing-growth-marketing,Growth Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-growth-marketing
+marketing-influencer-marketing,Influencer Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-influencer-marketing
+marketing-instagram-ads,Instagram Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-instagram-ads
+marketing-keyword-research,Keyword Research (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-keyword-research
+marketing-link-building,Link Building (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-link-building
+marketing-linkedin-ads,Linkedin Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-linkedin-ads
+marketing-local-seo,Local Seo (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-local-seo
+marketing-market-research,Market Research (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-market-research
+marketing-marketing-analytics,Marketing Analytics (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-marketing-analytics
+marketing-marketing-strategy,Marketing Strategy (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-marketing-strategy
+marketing-meta-ads,Meta Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-meta-ads
+marketing-performance-marketing,Performance Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-performance-marketing
+marketing-ppc-advertising,Ppc Advertising (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-ppc-advertising
+marketing-product-marketing,Product Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-product-marketing
+marketing-public-relations,Public Relations (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-public-relations
+marketing-seo,Seo (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-seo
+marketing-sms-marketing,Sms Marketing (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-sms-marketing
+marketing-technical-seo,Technical Seo (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-technical-seo
+marketing-tiktok-ads,Tiktok Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-tiktok-ads
+marketing-x-ads,X Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-x-ads
+marketing-youtube-ads,Youtube Ads (Marketing),marketing,Marketing,standard,1.1,65,135200,63,lead-gen-retainer,410,799,63,278,616,264,true,true,/solutions/marketing-youtube-ads
+media-advertising,Advertising (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-advertising
+media-animation,Animation (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-animation
+media-content-marketing,Content Marketing (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-content-marketing
+media-creative-studio,Creative Studio (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-creative-studio
+media-event-media,Event Media (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-event-media
+media-graphic-design,Graphic Design (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-graphic-design
+media-influencer,Influencer (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-influencer
+media-music-production,Music Production (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-music-production
+media-news,News (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-news
+media-photography,Photography (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-photography
+media-podcast,Podcast (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-podcast
+media-pr-agency,Pr Agency (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-pr-agency
+media-production,Production (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-production
+media-publishing,Publishing (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-publishing
+media-social-media,Social Media (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-social-media
+media-stock-media,Stock Media (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-stock-media
+media-streaming,Streaming (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-streaming
+media-translation,Translation (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-translation
+media-video-agency,Video Agency (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-video-agency
+media-voice-over,Voice Over (Media),media,Mediji,standard,1.05,52,116400,56,vertical-package,380,380,63,254,254,241,true,true,/solutions/media-voice-over
+nonprofit-advocacy,Advocacy (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-advocacy
+nonprofit-animal-rescue,Animal Rescue (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-animal-rescue
+nonprofit-arts-npo,Arts Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-arts-npo
+nonprofit-charity,Charity (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-charity
+nonprofit-community-center,Community Center (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-community-center
+nonprofit-cultural-heritage,Cultural Heritage (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-cultural-heritage
+nonprofit-disaster-relief,Disaster Relief (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-disaster-relief
+nonprofit-education-npo,Education Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-education-npo
+nonprofit-environmental,Environmental (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-environmental
+nonprofit-foundation,Foundation (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-foundation
+nonprofit-health-npo,Health Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-health-npo
+nonprofit-humanitarian,Humanitarian (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-humanitarian
+nonprofit-micro-grant,Micro Grant (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-micro-grant
+nonprofit-ngo,Ngo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-ngo
+nonprofit-religious-org,Religious Org (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-religious-org
+nonprofit-research-npo,Research Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-research-npo
+nonprofit-senior-care-npo,Senior Care Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-senior-care-npo
+nonprofit-sports-npo,Sports Npo (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-sports-npo
+nonprofit-volunteer-network,Volunteer Network (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-volunteer-network
+nonprofit-youth-program,Youth Program (Nonprofit),nonprofit,Neprofitne org.,nonprofit,0.72,40,105200,50,vertical-package,150,150,63,70,70,67,true,true,/solutions/nonprofit-youth-program
+pets-aquarium-services,Aquarium Services (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-aquarium-services
+pets-exotic-pets,Exotic Pets (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-exotic-pets
+pets-mobile-vet,Mobile Vet (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-mobile-vet
+pets-pet-boarding,Pet Boarding (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-boarding
+pets-pet-breeding,Pet Breeding (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-breeding
+pets-pet-daycare,Pet Daycare (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-daycare
+pets-pet-events,Pet Events (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-events
+pets-pet-funeral,Pet Funeral (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-funeral
+pets-pet-grooming,Pet Grooming (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-grooming
+pets-pet-insurance,Pet Insurance (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-insurance
+pets-pet-nutrition,Pet Nutrition (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-nutrition
+pets-pet-photography,Pet Photography (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-photography
+pets-pet-rental,Pet Rental (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-rental
+pets-pet-rescue,Pet Rescue (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-rescue
+pets-pet-sitting,Pet Sitting (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-sitting
+pets-pet-supplies,Pet Supplies (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-supplies
+pets-pet-tech,Pet Tech (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-tech
+pets-pet-training,Pet Training (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-training
+pets-pet-transport,Pet Transport (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-transport
+pets-pet-walking,Pet Walking (Pets),pets,Pet industrija,budget,0.88,44,106000,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/pets-pet-walking
+photography-ai-image-enhancement,Ai Image Enhancement (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-ai-image-enhancement
+photography-background-removal,Background Removal (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-background-removal
+photography-beauty-retouching,Beauty Retouching (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-beauty-retouching
+photography-color-correction,Color Correction (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-color-correction
+photography-commercial-photo-editing,Commercial Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-commercial-photo-editing
+photography-fashion-photo-editing,Fashion Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-fashion-photo-editing
+photography-image-restoration,Image Restoration (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-image-restoration
+photography-photo-editing,Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-photo-editing
+photography-photo-manipulation,Photo Manipulation (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-photo-manipulation
+photography-product-photo-editing,Product Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-product-photo-editing
+photography-product-photography-editing,Product Photography Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-product-photography-editing
+photography-real-estate-photo-editing,Real Estate Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-real-estate-photo-editing
+photography-retouching,Retouching (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-retouching
+photography-wedding-photo-editing,Wedding Photo Editing (Photography),photography,Fotografija,budget,0.9,45,112800,53,landing,240,1192,63,142,888,135,true,true,/solutions/photography-wedding-photo-editing
+product-project-management-agile-coaching,Agile Coaching (Product & Project Management),product_project_management,Proizvod & projekti,premium,1.22,57,139200,59,workflow-design,603,2660,63,432,2023,410,true,true,/solutions/product-project-management-agile-coaching
+product-project-management-product-management,Product Management (Product & Project Management),product_project_management,Proizvod & projekti,premium,1.22,57,139200,59,workflow-design,603,2660,63,432,2023,410,true,true,/solutions/product-project-management-product-management
+product-project-management-program-management,Program Management (Product & Project Management),product_project_management,Proizvod & projekti,premium,1.22,57,139200,59,workflow-design,603,2660,63,432,2023,410,true,true,/solutions/product-project-management-program-management
+product-project-management-project-management,Project Management (Product & Project Management),product_project_management,Proizvod & projekti,premium,1.22,57,139200,59,workflow-design,603,2660,63,432,2023,410,true,true,/solutions/product-project-management-project-management
+product-project-management-scrum-master,Scrum Master (Product & Project Management),product_project_management,Proizvod & projekti,premium,1.22,57,139200,59,workflow-design,603,2660,63,432,2023,410,true,true,/solutions/product-project-management-scrum-master
+professional-business-broker,Business Broker (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-business-broker
+professional-call-center,Call Center (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-call-center
+professional-cleaning-services,Cleaning Services (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-cleaning-services
+professional-coaching,Coaching (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-coaching
+professional-consulting,Consulting (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-consulting
+professional-coworking-pro,Coworking Pro (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-coworking-pro
+professional-data-entry,Data Entry (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-data-entry
+professional-event-planning,Event Planning (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-event-planning
+professional-executive-search,Executive Search (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-executive-search
+professional-facility-mgmt,Facility Mgmt (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-facility-mgmt
+professional-franchise,Franchise (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-franchise
+professional-hr-services,Hr Services (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-hr-services
+professional-marketing-agency,Marketing Agency (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-marketing-agency
+professional-project-management,Project Management (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-project-management
+professional-recruitment,Recruitment (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-recruitment
+professional-research-firm,Research Firm (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-research-firm
+professional-security-services,Security Services (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-security-services
+professional-seo-agency,Seo Agency (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-seo-agency
+professional-translation-pro,Translation Pro (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-translation-pro
+professional-virtual-assistant-pro,Virtual Assistant Pro (Professional),professional,Profesionalne usluge,standard,1.15,52,122000,56,vertical-package,416,416,63,282,282,268,true,true,/solutions/professional-virtual-assistant-pro
+real-estate-agency,Agency (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-agency
+real-estate-appraisal,Appraisal (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-appraisal
+real-estate-brokerage,Brokerage (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-brokerage
+real-estate-cleaning-re,Cleaning Re (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-cleaning-re
+real-estate-commercial-re,Commercial Re (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-commercial-re
+real-estate-coworking,Coworking (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-coworking
+real-estate-development,Development (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-development
+real-estate-facilities,Facilities (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-facilities
+real-estate-hoa-management,Hoa Management (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-hoa-management
+real-estate-industrial-re,Industrial Re (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-industrial-re
+real-estate-land-sales,Land Sales (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-land-sales
+real-estate-mortgage-broker-re,Mortgage Broker Re (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-mortgage-broker-re
+real-estate-property-management,Property Management (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-property-management
+real-estate-property-tech,Property Tech (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-property-tech
+real-estate-reit,Reit (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-reit
+real-estate-services-property-research,Property Research (Real Estate Services),real_estate_services,Nekretnine usluge,premium,1.2,58,135600,59,lead-gen-retainer,595,1160,63,426,905,405,true,true,/solutions/real-estate-services-property-research
+real-estate-services-real-estate-crm-management,Real Estate Crm Management (Real Estate Services),real_estate_services,Nekretnine usluge,premium,1.2,58,135600,59,lead-gen-retainer,595,1160,63,426,905,405,true,true,/solutions/real-estate-services-real-estate-crm-management
+real-estate-services-real-estate-lead-generation,Real Estate Lead Generation (Real Estate Services),real_estate_services,Nekretnine usluge,premium,1.2,58,135600,59,lead-gen-retainer,595,1160,63,426,905,405,true,true,/solutions/real-estate-services-real-estate-lead-generation
+real-estate-services-real-estate-va,Real Estate Va (Real Estate Services),real_estate_services,Nekretnine usluge,premium,1.2,58,135600,59,lead-gen-retainer,595,1160,63,426,905,405,true,true,/solutions/real-estate-services-real-estate-va
+real-estate-smart-building,Smart Building (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-smart-building
+real-estate-staging,Staging (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-staging
+real-estate-storage-units,Storage Units (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-storage-units
+real-estate-tenant-screening,Tenant Screening (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-tenant-screening
+real-estate-vacation-rental,Vacation Rental (Real Estate),real-estate,Nekretnine,premium,1.2,58,128400,59,vertical-package,595,595,63,426,426,405,true,true,/solutions/real-estate-vacation-rental
+retail-automotive-parts,Automotive Parts (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-automotive-parts
+retail-bookstore,Bookstore (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-bookstore
+retail-cosmetics,Cosmetics (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-cosmetics
+retail-ecommerce,Ecommerce (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-ecommerce
+retail-electronics,Electronics (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-electronics
+retail-fashion,Fashion (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-fashion
+retail-florist,Florist (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-florist
+retail-furniture,Furniture (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-furniture
+retail-gift-shop,Gift Shop (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-gift-shop
+retail-grocery,Grocery (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-grocery
+retail-hardware,Hardware (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-hardware
+retail-jewelry,Jewelry (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-jewelry
+retail-luxury,Luxury (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-luxury
+retail-marketplace,Marketplace (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-marketplace
+retail-outlet,Outlet (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-outlet
+retail-pet-store,Pet Store (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-pet-store
+retail-pop-up,Pop Up (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-pop-up
+retail-sports-goods,Sports Goods (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-sports-goods
+retail-thrift,Thrift (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-thrift
+retail-toys,Toys (Retail),retail,Maloprodaja,budget,0.88,44,107600,52,vertical-package,232,232,63,135,135,128,true,true,/solutions/retail-toys
+sales-account-management,Account Management (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-account-management
+sales-appointment-setting,Appointment Setting (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-appointment-setting
+sales-business-development,Business Development (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-business-development
+sales-cold-calling,Cold Calling (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-cold-calling
+sales-cold-email-outreach,Cold Email Outreach (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-cold-email-outreach
+sales-crm-management,Crm Management (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-crm-management
+sales-crm-setup,Crm Setup (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-crm-setup
+sales-customer-acquisition,Customer Acquisition (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-customer-acquisition
+sales-lead-generation,Lead Generation (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-lead-generation
+sales-pipeline-management,Pipeline Management (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-pipeline-management
+sales-prospecting,Prospecting (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-prospecting
+sales-sales-consulting,Sales Consulting (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-sales-consulting
+sales-sales-development,Sales Development (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-sales-development
+sales-sales-operations,Sales Operations (Sales),sales,Prodaja,standard,1.08,70,138000,65,lead-gen-retainer,407,794,63,275,612,261,true,true,/solutions/sales-sales-operations
+technology-ai-consulting,Ai Consulting (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-ai-consulting
+technology-blockchain,Blockchain (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-blockchain
+technology-cloud-consulting,Cloud Consulting (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-cloud-consulting
+technology-crm-implementation,Crm Implementation (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-crm-implementation
+technology-cybersecurity,Cybersecurity (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-cybersecurity
+technology-data-analytics,Data Analytics (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-data-analytics
+technology-dev-agency,Dev Agency (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-dev-agency
+technology-devops,Devops (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-devops
+technology-erp-implementation,Erp Implementation (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-erp-implementation
+technology-game-dev,Game Dev (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-game-dev
+technology-hosting,Hosting (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-hosting
+technology-iot,Iot (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-iot
+technology-it-support,It Support (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-it-support
+technology-mobile-apps,Mobile Apps (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-mobile-apps
+technology-msp,Msp (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-msp
+technology-networking,Networking (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-networking
+technology-qa-services,Qa Services (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-qa-services
+technology-saas,Saas (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-saas
+technology-tech-training,Tech Training (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-tech-training
+technology-web-agency,Web Agency (Technology),technology,Tehnologija,premium,1.28,58,127600,59,vertical-package,635,635,63,458,458,435,true,true,/solutions/technology-web-agency
+travel-adventure-travel,Adventure Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-adventure-travel
+travel-airline-services,Airline Services (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-airline-services
+travel-airport-services,Airport Services (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-airport-services
+travel-business-travel,Business Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-business-travel
+travel-car-rental-travel,Car Rental Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-car-rental-travel
+travel-concierge,Concierge (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-concierge
+travel-cruise,Cruise (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-cruise
+travel-destination-mgmt,Destination Mgmt (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-destination-mgmt
+travel-eco-tourism,Eco Tourism (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-eco-tourism
+travel-group-travel,Group Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-group-travel
+travel-host-agency,Host Agency (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-host-agency
+travel-luxury-travel,Luxury Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-luxury-travel
+travel-medical-tourism,Medical Tourism (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-medical-tourism
+travel-rail-travel,Rail Travel (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-rail-travel
+travel-tour-operator,Tour Operator (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-tour-operator
+travel-travel-agency,Travel Agency (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-travel-agency
+travel-travel-content,Travel Content (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-travel-content
+travel-travel-insurance,Travel Insurance (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-travel-insurance
+travel-travel-tech,Travel Tech (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-travel-tech
+travel-visa-services,Visa Services (Travel),travel,Putovanja,standard,1.02,52,117200,56,vertical-package,369,369,63,245,245,233,true,true,/solutions/travel-visa-services
+video-animation-2d-animation,2d Animation (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-2d-animation
+video-animation-3d-animation,3d Animation (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-3d-animation
+video-animation-character-animation,Character Animation (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-character-animation
+video-animation-color-grading,Color Grading (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-color-grading
+video-animation-explainer-videos,Explainer Videos (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-explainer-videos
+video-animation-instagram-reel-editing,Instagram Reel Editing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-instagram-reel-editing
+video-animation-motion-graphics,Motion Graphics (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-motion-graphics
+video-animation-short-form-video-editing,Short Form Video Editing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-short-form-video-editing
+video-animation-short-form-videos,Short Form Videos (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-short-form-videos
+video-animation-storyboarding,Storyboarding (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-storyboarding
+video-animation-tiktok-video-editing,Tiktok Video Editing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-tiktok-video-editing
+video-animation-vfx-compositing,Vfx Compositing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-vfx-compositing
+video-animation-video-editing,Video Editing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-video-editing
+video-animation-video-marketing,Video Marketing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-video-marketing
+video-animation-video-production,Video Production (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-video-production
+video-animation-visual-effects,Visual Effects (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-visual-effects
+video-animation-whiteboard-animation,Whiteboard Animation (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-whiteboard-animation
+video-animation-youtube-video-editing,Youtube Video Editing (Video & Animation),video_animation,Video & animacija,standard,1.16,54,126800,57,landing,422,2098,63,287,1613,273,true,true,/solutions/video-animation-youtube-video-editing
+web3-crypto-consulting,Crypto Consulting (Web3),web3,Web3,premium,1.42,60,125200,60,audit,707,2727,63,515,2109,489,true,true,/solutions/web3-crypto-consulting
+web3-defi,Defi (Web3),web3,Web3,premium,1.42,60,125200,60,audit,707,2727,63,515,2109,489,true,true,/solutions/web3-defi
+web3-nft-development,Nft Development (Web3),web3,Web3,premium,1.42,60,125200,60,audit,707,2727,63,515,2109,489,true,true,/solutions/web3-nft-development
+web3-smart-contracts,Smart Contracts (Web3),web3,Web3,premium,1.42,60,125200,60,audit,707,2727,63,515,2109,489,true,true,/solutions/web3-smart-contracts
+writing-translation-article-writing,Article Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-article-writing
+writing-translation-blog-writing,Blog Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-blog-writing
+writing-translation-book-writing,Book Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-book-writing
+writing-translation-business-writing,Business Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-business-writing
+writing-translation-captioning,Captioning (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-captioning
+writing-translation-content-writing,Content Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-content-writing
+writing-translation-copy-editing,Copy Editing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-copy-editing
+writing-translation-copywriting,Copywriting (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-copywriting
+writing-translation-cover-letter-writing,Cover Letter Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-cover-letter-writing
+writing-translation-ebook-writing,Ebook Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-ebook-writing
+writing-translation-editing,Editing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-editing
+writing-translation-email-copywriting,Email Copywriting (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-email-copywriting
+writing-translation-ghostwriting,Ghostwriting (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-ghostwriting
+writing-translation-grant-writing,Grant Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-grant-writing
+writing-translation-localization,Localization (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-localization
+writing-translation-proofreading,Proofreading (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-proofreading
+writing-translation-resume-writing,Resume Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-resume-writing
+writing-translation-sales-copywriting,Sales Copywriting (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-sales-copywriting
+writing-translation-screenwriting,Screenwriting (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-screenwriting
+writing-translation-script-writing,Script Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-script-writing
+writing-translation-seo-writing,Seo Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-seo-writing
+writing-translation-subtitling,Subtitling (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-subtitling
+writing-translation-technical-writing,Technical Writing (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-technical-writing
+writing-translation-transcription,Transcription (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-transcription
+writing-translation-translation,Translation (Writing & Translation),writing_translation,Pisanje & prevod,budget,0.85,48,122800,54,landing,229,1136,63,133,843,126,true,true,/solutions/writing-translation-translation

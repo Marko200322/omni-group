@@ -31,7 +31,7 @@ export const JOB_BOARD_PLATFORMS: JobBoardPlatform[] = [
   // --- DACH (DE / AT / CH) ---
   { slug: 'stepstone_de', name: 'StepStone Germany', seedUrl: 'https://www.stepstone.de/jobs', region: 'DE', locale: 'de', kind: 'job_board', priority: 95, enabled: true },
   { slug: 'indeed_de', name: 'Indeed Germany', seedUrl: 'https://de.indeed.com/jobs', region: 'DE', locale: 'de', kind: 'aggregator', priority: 94, enabled: true },
-  { slug: 'arbeitsagentur', name: 'Bundesagentur für Arbeit', seedUrl: 'https://www.arbeitsagentur.de/jobsuche/suche', region: 'DE', locale: 'de', kind: 'government', priority: 92, enabled: true },
+  { slug: 'arbeitsagentur', name: 'Bundesagentur für Arbeit', seedUrl: 'https://www.arbeitsagentur.de/jobsuche/suche', region: 'DE', locale: 'de', kind: 'government', priority: 92, enabled: false },
   { slug: 'xing_jobs', name: 'XING Jobs', seedUrl: 'https://www.xing.com/jobs', region: 'DE', locale: 'de', kind: 'job_board', priority: 88, enabled: true },
   { slug: 'monster_de', name: 'Monster Germany', seedUrl: 'https://www.monster.de/jobs/suche/', region: 'DE', locale: 'de', kind: 'job_board', priority: 75, enabled: true },
   { slug: 'jobvector', name: 'jobvector', seedUrl: 'https://www.jobvector.de/jobs/', region: 'DE', locale: 'de', kind: 'job_board', priority: 70, enabled: true },
@@ -49,14 +49,14 @@ export const JOB_BOARD_PLATFORMS: JobBoardPlatform[] = [
 
   // --- FRANCE / BE ---
   { slug: 'indeed_fr', name: 'Indeed France', seedUrl: 'https://fr.indeed.com/jobs', region: 'FR', locale: 'fr', kind: 'aggregator', priority: 90, enabled: true },
-  { slug: 'pole_emploi', name: 'France Travail', seedUrl: 'https://candidat.francetravail.fr/offres/recherche', region: 'FR', locale: 'fr', kind: 'government', priority: 92, enabled: true },
+  { slug: 'pole_emploi', name: 'France Travail', seedUrl: 'https://candidat.francetravail.fr/offres/recherche', region: 'FR', locale: 'fr', kind: 'government', priority: 92, enabled: false },
   { slug: 'apec', name: 'APEC', seedUrl: 'https://www.apec.fr/candidat/recherche-emploi.html', region: 'FR', locale: 'fr', kind: 'job_board', priority: 85, enabled: true },
   { slug: 'meteojob', name: 'Meteojob', seedUrl: 'https://www.meteojob.com/jobs', region: 'FR', locale: 'fr', kind: 'job_board', priority: 80, enabled: true },
   { slug: 'indeed_be', name: 'Indeed Belgium', seedUrl: 'https://be.indeed.com/jobs', region: 'BE', locale: 'fr', kind: 'aggregator', priority: 78, enabled: true },
 
   // --- NORDICS ---
   { slug: 'indeed_se', name: 'Indeed Sweden', seedUrl: 'https://se.indeed.com/jobs', region: 'SE', locale: 'sv', kind: 'aggregator', priority: 82, enabled: true },
-  { slug: 'arbetsformedlingen', name: 'Arbetsförmedlingen', seedUrl: 'https://arbetsformedlingen.se/platsbanken/annonser', region: 'SE', locale: 'sv', kind: 'government', priority: 88, enabled: true },
+  { slug: 'arbetsformedlingen', name: 'Arbetsförmedlingen', seedUrl: 'https://arbetsformedlingen.se/platsbanken/annonser', region: 'SE', locale: 'sv', kind: 'government', priority: 88, enabled: false },
   { slug: 'indeed_no', name: 'Indeed Norway', seedUrl: 'https://no.indeed.com/jobs', region: 'NO', locale: 'no', kind: 'aggregator', priority: 80, enabled: true },
   { slug: 'finn_no', name: 'FINN Jobb', seedUrl: 'https://www.finn.no/job/fulltime/search.html', region: 'NO', locale: 'no', kind: 'job_board', priority: 78, enabled: true },
   { slug: 'indeed_dk', name: 'Indeed Denmark', seedUrl: 'https://dk.indeed.com/jobs', region: 'DK', locale: 'da', kind: 'aggregator', priority: 80, enabled: true },
@@ -126,6 +126,8 @@ export function listJobBoardPlatforms(filter?: {
   region?: string;
   locale?: string;
   kind?: JobBoardKind;
+  /** Exclude platform kinds (default none). Use e.g. ['government'] for commercial hunts. */
+  excludeKinds?: JobBoardKind[];
   slugs?: string[];
   enabledOnly?: boolean;
   limit?: number;
@@ -137,6 +139,10 @@ export function listJobBoardPlatforms(filter?: {
   }
   if (filter?.locale) list = list.filter((p) => p.locale === filter.locale);
   if (filter?.kind) list = list.filter((p) => p.kind === filter.kind);
+  if (filter?.excludeKinds?.length) {
+    const blocked = new Set(filter.excludeKinds);
+    list = list.filter((p) => !blocked.has(p.kind));
+  }
   if (filter?.slugs?.length) list = list.filter((p) => filter.slugs!.includes(p.slug));
   list.sort((a, b) => b.priority - a.priority);
   if (filter?.limit && filter.limit > 0) list = list.slice(0, filter.limit);

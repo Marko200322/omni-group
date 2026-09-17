@@ -1,11 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { describeAtinaError } from '@/lib/atina-errors';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Mic, Send, UserCircle2, Volume2, Users } from 'lucide-react';
 
 export type AgentType = 'support' | 'sales';
+
+/** Client-safe error copy — never surface raw internal codes to clients. */
+function friendlyAvatarError(raw: string | undefined, fallback: string): string {
+  if (raw && /\s/.test(raw) && !/\.env|localhost|port \d|stub|undefined/i.test(raw)) {
+    return raw;
+  }
+  return fallback;
+}
 
 type AgentInfo = {
   id: string;
@@ -201,7 +209,12 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
         await playResponse(json.data.greeting);
       } catch (err) {
         setPickerMode(true);
-        setError(describeAtinaError(err instanceof Error ? err.message : 'session_failed'));
+        setError(
+          friendlyAvatarError(
+            err instanceof Error ? err.message : undefined,
+            'The assistant is temporarily unavailable. Please try again or use Contact.',
+          ),
+        );
       } finally {
         setBooting(false);
       }
@@ -251,7 +264,12 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
       setMessages((prev) => [...prev, json.data!.message]);
       await playResponse(json.data.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send message.');
+      setError(
+        friendlyAvatarError(
+          err instanceof Error ? err.message : undefined,
+          'The assistant couldn\u2019t respond just now. Please try again.',
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -264,15 +282,30 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
         <motion.div className="flex items-center gap-2 text-sm text-slate-400">
           <Users className="h-4 w-4" />
-          Choose {label.toLowerCase()} ({roster.length} avatars)
-          {roster[0]?.rosterSource === 'aggregator' && (
-            <span className="text-violet-300/90">· generated via AI aggregator</span>
-          )}
+          Choose {label.toLowerCase()}
+          {roster.length > 0 ? ` (${roster.length} available)` : ''}
         </motion.div>
         {booting && roster.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading team…
           </p>
+        ) : roster.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center">
+            <UserCircle2 className="mx-auto h-8 w-8 text-slate-500" />
+            <p className="mt-3 text-sm text-slate-300">
+              Our {label.toLowerCase()} is currently offline.
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {agentType === 'support'
+                ? 'Schedule a live call below or reach us via Contact.'
+                : 'Send your brief via the contact form and we will schedule a consultation.'}
+            </p>
+            {agentType === 'sales' && (
+              <Link href="/contact" className="btn-glass mt-4 inline-block text-sm">
+                Contact sales
+              </Link>
+            )}
+          </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {roster.map((a) => (

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
-import { getServerSession } from '@/lib/auth-session';
+import { getServerSession, isAdminRole } from '@/lib/auth-session';
 
 type ContactRow = {
   id?: string;
@@ -28,6 +29,9 @@ export async function GET(req: Request) {
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
+  if (!isAdminRole(session.user.role)) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
+  }
 
   const url = new URL(req.url);
   const page = Math.max(1, Number(url.searchParams.get('page') ?? '1') || 1);
@@ -45,10 +49,7 @@ export async function GET(req: Request) {
   const r = await fetchAtinaForBff<unknown>(`/api/v1/crm/contacts?${qs}`, session, { method: 'GET' });
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'crm_list_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('crm_list_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({
@@ -62,6 +63,9 @@ export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+  if (!isAdminRole(session.user.role)) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
   let body: Record<string, unknown> = {};
@@ -93,10 +97,7 @@ export async function POST(req: Request) {
   });
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'crm_create_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('crm_create_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data }, { status: 201 });

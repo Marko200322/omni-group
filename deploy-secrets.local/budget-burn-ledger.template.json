@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "currency": "EUR",
+  "monthlyBudgetEur": 550,
+  "note": "Copy to budget-burn-ledger.json (gitignored). VPS + root domain excluded. Use scripts/m4-budget-burn-tracker.ps1",
+  "months": {}
+}

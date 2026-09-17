@@ -46,6 +46,7 @@ function Invoke-WithRateLimitRetry {
     } catch {
       $status = $null
       $detail = [string]$_.ErrorDetails.Message
+      $msg = [string]$_.Exception.Message
       if ($_.Exception.Response) {
         $status = [int]$_.Exception.Response.StatusCode
         if (-not $detail) {
@@ -61,13 +62,15 @@ function Invoke-WithRateLimitRetry {
           }
         }
       }
-      $rateLimited = ($status -eq 429) -or ($detail -and ($detail -match 'RATE_LIMIT|Too many requests|RATE_LIMIT_EXCEEDED'))
-      if ($rateLimited -and $attempt -lt $MaxAttempts) {
-        $waitSec = 90
+      $rateLimited = ($status -eq 429) -or ($detail -and ($detail -match 'RATE_LIMIT|Too many requests|RATE_LIMIT_EXCEEDED')) -or ($msg -match '429|Too Many Requests')
+      $transient = $msg -match 'connection was closed|kept alive was closed|Unable to connect|timed out|The underlying connection|NameResolutionFailure|ConnectFailure'
+      if (($rateLimited -or $transient) -and $attempt -lt $MaxAttempts) {
+        $waitSec = if ($rateLimited) { [Math]::Min(300, 60 + (30 * $attempt)) } else { [Math]::Min(60, 5 * $attempt) }
         if ($detail -match 'retryAfterSeconds["\s:]*(\d+)') {
-          $waitSec = [int]$Matches[1] + 3
+          $waitSec = [Math]::Max($waitSec, [int]$Matches[1] + 5)
         }
-        Write-Host "  $Label rate limit - cekam ${waitSec}s (pokusaj $attempt/$MaxAttempts)..." -ForegroundColor Yellow
+        $why = if ($rateLimited) { 'rate limit' } else { 'transient network' }
+        Write-Host "  $Label $why - cekam ${waitSec}s (pokusaj $attempt/$MaxAttempts)..." -ForegroundColor Yellow
         Start-Sleep -Seconds $waitSec
         continue
       }

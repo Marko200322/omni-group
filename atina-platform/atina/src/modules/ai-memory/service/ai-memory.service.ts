@@ -1,7 +1,10 @@
 import { getAiClient } from '../../../integrations';
 import logger from '../../../utils/logger';
+import { assertPlanIncludesModule } from '../../../utils/plan-module-access';
 import type { RecallQueryDtoType, RememberDtoType } from '../dto/ai-memory.dto';
 import { AiMemoryRepository } from '../repository/ai-memory.repository';
+
+const AI_MEMORY_PLAN_MESSAGE = 'AI memory requires Partner (Enterprise) plan or higher';
 
 function escapeLikeFragment(s: string): string {
   return s.replace(/!/g, '!!').replace(/%/g, '!%').replace(/_/g, '!_');
@@ -25,7 +28,12 @@ export class AiMemoryService {
     });
   }
 
+  private async assertAccess(userId: string): Promise<void> {
+    await assertPlanIncludesModule(userId, 'ai-memory', AI_MEMORY_PLAN_MESSAGE);
+  }
+
   async remember(userId: string, dto: RememberDtoType) {
+    await this.assertAccess(userId);
     const message = `memory:${dto.namespace}:${dto.key}`;
     const { rows } = await this.repo.insertRemember(userId, message, JSON.stringify(dto.value));
 
@@ -44,6 +52,7 @@ export class AiMemoryService {
   }
 
   async recall(userId: string, queryParams: RecallQueryDtoType) {
+    await this.assertAccess(userId);
     const { namespace, key } = queryParams;
     const likePattern =
       key !== undefined

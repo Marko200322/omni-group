@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientSafeBffError } from '@/lib/atina-bff-route-handlers';
 import { getServerSession } from '@/lib/auth-session';
 import { fetchAtinaForBff } from '@/lib/atina-bff';
 
@@ -22,10 +23,7 @@ export async function POST(_req: Request, { params }: Params) {
   );
 
   if (!r.ok) {
-    return NextResponse.json(
-      { ok: false, error: 'sync_failed', detail: r.message },
-      { status: r.status || 502 },
-    );
+    return clientSafeBffError('sync_failed', r.message, r.status || 502);
   }
 
   return NextResponse.json({ ok: true, data: r.data });

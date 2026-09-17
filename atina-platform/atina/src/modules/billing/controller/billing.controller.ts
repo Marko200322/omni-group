@@ -8,6 +8,10 @@ import { sendSuccess, paginate } from '../../../utils/response';
 import { NotFoundError } from '../../../utils/errors';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
 import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engine';
+import { buildFactoryPhaseStatus } from '../lib/factory-phase-modules';
+import { getFactoryRuntimeSnapshot } from '../lib/factory-phase-runtime';
+import { getCatalogAuditSummary } from '../lib/package-catalog-audit';
+import { getPackageIndustryContext, listPackageIndustryMatrix } from '../lib/package-industry-problems';
 
 export class BillingController {
   private service: BillingService;
@@ -46,6 +50,26 @@ export class BillingController {
 
   getDeliverables = async (_req: Request, res: Response): Promise<void> => {
     sendSuccess(res, this.service.getDeliverableCatalog());
+  };
+
+  getCatalogQuality = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, getCatalogAuditSummary());
+  };
+
+  getPackageContext = async (req: Request, res: Response): Promise<void> => {
+    const deliverableId = String(req.query.deliverableId ?? '');
+    const industryCategory = String(req.query.industryCategory ?? '');
+    const ctx = getPackageIndustryContext(deliverableId, industryCategory);
+    if (!ctx) {
+      sendSuccess(res, { ok: false, reason: 'unknown_deliverable_or_industry' });
+      return;
+    }
+    sendSuccess(res, ctx);
+  };
+
+  getPackageMatrix = async (req: Request, res: Response): Promise<void> => {
+    const industryCategory = String(req.query.industryCategory ?? 'marketing');
+    sendSuccess(res, { industryCategory, packages: listPackageIndustryMatrix(industryCategory) });
   };
 
   getQuoteCatalog = async (req: Request, res: Response): Promise<void> => {
@@ -150,5 +174,14 @@ export class BillingController {
     const ok = await this.fulfillmentWrite.rejectRelease(req.params.paymentId, notes);
     if (!ok) throw new NotFoundError('Fulfillment job');
     sendSuccess(res, { rejected: true });
+  };
+
+  getFactoryPhaseStatus = async (_req: Request, res: Response): Promise<void> => {
+    const { factoryPhaseAutoService } = await import('../service/factory-phase-auto.service');
+    await factoryPhaseAutoService.evaluate({ notify: true });
+    sendSuccess(res, {
+      ...buildFactoryPhaseStatus(),
+      runtime: getFactoryRuntimeSnapshot(),
+    });
   };
 }

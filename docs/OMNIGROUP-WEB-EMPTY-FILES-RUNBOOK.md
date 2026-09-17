@@ -1,9 +1,11 @@
-# Runbook — `apps/omnigroup-web` ima 6 praznih TS/TSX fajlova (D.1)
+# Runbook — `apps/omnigroup-web` prazni TS/TSX fajlovi (D.1) — **REŠENO u kodu**
+
+**Status (2026-08-03):** D.1 je **zatvoren u izvoru**. Nema `TODO[D.1-restore]` markera, nema 0 B fajlova u `apps/omnigroup-web/src/`, a `AdminClient` / `DashboardClient` su pravi PlatformShell UI (ne placeholder). Istorija ispod ostaje kao trag OneDrive dehidratacije / Val 353–355. **LATEST verify:** [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) (**Val 360** / 2026-06-03). Pre prod deploy fronta i dalje treba owner env (SESSION_SECRET, Atina base, Resend) — vidi [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) / sekcija I.
 
 **Refs:**
 
-- [`TEHNICKI-AUDIT-2026-05-13.md`](./TEHNICKI-AUDIT-2026-05-13.md) — D.1 nalaz (definicija problema)
-- [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) — **Val 353** (`-SkipOmnigroupWeb`); poslednji pun mirror je **Val 349** / 2026-05-08, pre dehidracije
+- [`TEHNICKI-AUDIT-2026-05-13.md`](./TEHNICKI-AUDIT-2026-05-13.md) — D.1 nalaz (istorijska definicija problema)
+- [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) — **LATEST Val 360**; istorija: **Val 353** (`-SkipOmnigroupWeb`), **Val 354/355** placeholder iteracije
 - [`scripts/README.md`](../scripts/README.md) — pun CI mirror (`verify-monorepo.ps1`); job **`python`** / required check **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md). Bundled Atina HTTP gate (`smoke:all`): `npm run smoke:all` u `atina-platform/atina` — formalni Atina release gate: [`release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md) (*Local notes — Smoke tests*).
 - [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md) — paket vlasnika (10 stavki, 4 koraka); **ovaj runbook = opcioni Korak 6** (D.1; pre nego što se ponovi pun verify bez `-SkipOmnigroupWeb`)
 - Apps: [`apps/omnigroup-web/tsconfig.json`](../apps/omnigroup-web/tsconfig.json) (već popravljen — broken legacy include red uklonjen)

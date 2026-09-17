@@ -10,7 +10,7 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 
 const links = [
   { href: '/', label: 'Home' },
-  { href: '/products', label: 'Solutions' },
+  { href: '/products', label: 'Packages' },
   { href: '/solutions', label: 'Industries' },
   { href: '/services', label: 'Services' },
   { href: '/pricing', label: 'Pricing' },

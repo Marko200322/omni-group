@@ -227,8 +227,8 @@ export function ClientSiteView({ site }: Props) {
               <EcommerceCatalog site={site} catalog={catalog} />
             ) : null}
             {activePage.kind === 'contact' ? (
-              <Link href="/contact" className="btn-primary mt-8 inline-flex text-sm">
-                Contact us
+              <Link href={`/contact?service=${encodeURIComponent(site.slug)}`} className="btn-primary mt-8 inline-flex text-sm">
+                Send inquiry
               </Link>
             ) : null}
           </>
@@ -238,7 +238,7 @@ export function ClientSiteView({ site }: Props) {
       </motion.main>
 
       <footer className="border-t border-white/5 px-4 py-6 text-center text-xs text-slate-600">
-        Powered by Omni Group · multi-tenant public site
+        Powered by Omni Group Tech · multi-tenant public site
       </footer>
     </div>
   );

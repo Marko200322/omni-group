@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { assertFactoryModule } from '../../billing/lib/factory-phase-guard';
 import { getAiClient } from '../../../integrations';
 import { NotFoundError } from '../../../utils/errors';
 import type {
@@ -299,6 +300,7 @@ export class AutonomyOrchestratorService {
   }
 
   async tick(userId: string | null, dto: TickAutonomyDtoType) {
+    assertFactoryModule('autonomy', 'Autonomy loop requires factory phase M5+.');
     const gate = await this.budget.canOperate();
     if (!gate.ok) {
       await this.notifier.notify({
@@ -325,7 +327,7 @@ export class AutonomyOrchestratorService {
     }
 
     if (config.autonomy.categoryRolloutEnabled) {
-      const active = this.categoryRolloutJob.getActiveJob();
+      const active = await this.categoryRolloutJob.getActiveJob();
       if (active?.status === 'running') {
         const budget = await this.budget.getStatus();
         return {

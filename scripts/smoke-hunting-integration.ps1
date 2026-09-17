@@ -16,7 +16,8 @@ param(
   [string]$Email = 'admin@atina.io',
   [string]$Password = '',
   [switch]$SkipPipeline,
-  [switch]$SkipEnsureWeb
+  [switch]$SkipEnsureWeb,
+  [switch]$SkipEnsureAtina
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,14 +33,17 @@ if (-not $Password) {
 }
 $BffTimeoutSec = 120
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'bff-smoke-headers.ps1')
 
 if (-not $SkipEnsureWeb) {
   & (Join-Path $scriptsDir 'ensure-web-dev.ps1')
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
-& (Join-Path $scriptsDir 'ensure-atina-api.ps1')
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if (-not $SkipEnsureAtina) {
+  & (Join-Path $scriptsDir 'ensure-atina-api.ps1')
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 Write-Host "== BFF login ==" -ForegroundColor Cyan
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
@@ -51,6 +55,7 @@ $lj = Invoke-WithRateLimitRetry -Label 'BFF login' -Action {
   return $parsed
 }
 Write-Host "  OK $($lj.user.email) role=$($lj.user.role)" -ForegroundColor Green
+$postHeaders = Get-BffSmokePostHeaders -Session $session -WebBase $web
 
 Write-Host "== BFF hunting readiness ==" -ForegroundColor Cyan
 $rj = Invoke-WithRateLimitRetry -Label 'hunting readiness' -Action {
@@ -63,7 +68,7 @@ Write-Host "  OK score=$($rj.data.score)" -ForegroundColor Green
 
 Write-Host "== BFF hunting bootstrap ==" -ForegroundColor Cyan
 $bj = Invoke-WithRateLimitRetry -Label 'hunting bootstrap' -Action {
-  $res = Invoke-WebRequest -Uri "$web/api/atina/hunting/bootstrap" -Method POST -WebSession $session -UseBasicParsing -TimeoutSec 45
+  $res = Invoke-WebRequest -Uri "$web/api/atina/hunting/bootstrap" -Method POST -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec 45
   $parsed = $res.Content | ConvertFrom-Json
   if (-not $parsed.ok) { throw "bootstrap failed: $($res.Content)" }
   return $parsed
@@ -85,7 +90,7 @@ if (-not $SkipPipeline) {
   Write-Host "== BFF hunting pipeline run ==" -ForegroundColor Cyan
   $pipeBody = '{"verticalSlug":"marketing","intensity":40,"templateKey":"nurture-loop","processOutbound":true}'
   $pj = Invoke-WithRateLimitRetry -Label 'hunting pipeline' -MaxAttempts 2 -Action {
-    $res = Invoke-WebRequest -Uri "$web/api/atina/hunting/pipeline/run" -Method POST -ContentType 'application/json' -Body $pipeBody -WebSession $session -UseBasicParsing -TimeoutSec $BffTimeoutSec
+    $res = Invoke-WebRequest -Uri "$web/api/atina/hunting/pipeline/run" -Method POST -ContentType 'application/json' -Body $pipeBody -WebSession $session -Headers $postHeaders -UseBasicParsing -TimeoutSec $BffTimeoutSec
     $parsed = $res.Content | ConvertFrom-Json
     if (-not $parsed.ok) { throw "pipeline failed: $($res.Content)" }
     return $parsed

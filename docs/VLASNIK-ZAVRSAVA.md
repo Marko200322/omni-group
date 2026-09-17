@@ -1,5 +1,8 @@
 # Samo ti završavaš — šta automatika ne može (Faze 1–4)
 
+> **Kanonska lista:** [`STATUS-KANON.md`](./STATUS-KANON.md) · kratko [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) · snapshot [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md)  
+> CEO A (Git protection) = **DONE**. Nest prod = **N/A**. Fokus TI: LLC, Stripe **live**, invoice PDF, DMARC/warmup, Slack/Lusha/Snov (opciono).
+
 **Svrha:** jedna lista bez šume. Inženjerstvo u repou (sanitizacija, šabloni, lokalni build dokaz) je urađeno gde je moguće; **ispod su isključivo koraci koji zahtevaju tvoj nalog, server ili novac.**
 
 **Brzi paket (jedan dan, 4 koraka):** [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md) — popunjavaš šablone redom, na kraju 0 otvorenih stavki u CEO matrici.
@@ -20,9 +23,9 @@
 
 ### CEO sekcija A — Git (prvi `- [ ]` u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md))
 
-1. Na **GitHub-u** (ili drugom hostu): **Settings → Branches** — zaštiti **`main`**, uključi **Require a pull request before merging** (detalji: [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)).
+1. ~~Na **GitHub-u**: zaštiti **`main`**~~ — **DONE 2026-08-05** ([`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md)). Opciono kasnije: required CI status checks.
 2. Opciono: obavezni status checkovi iz workflow-a **CI (monorepo)** — svih **pet** jobova (vidi tabelu u [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); job **`python`** u Actions / branch protection: **`Python (Doslednost dok + pytest)`** — **Doslednost dok** doc gate (md/txt + yaml/ps1/ini), uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`**, u [`scripts/README.md`](../scripts/README.md); uklj. i job **`omnigroup-web`**).
-3. Popuni i sačuvaj [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md), pa u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) stavi **`[x]`** na stavku **CEO sekcije A**.
+3. Evidence već u [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) — u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) stavi **`[x]`** na stavku **CEO sekcije A** ako još nije.
 
 ### CEO sekcija C — Nest / TypeORM produkcija
 
@@ -53,8 +56,8 @@ Popuni [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATES
 
 | Šta | Ti uradiš |
 |-----|-----------|
-| **P.1** `[ ]` | Ako koristiš GitHub: poveži **zelen CI na `main`** (svih **pet** jobova u **CI (monorepo)**; job **`python`** / required check **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md): **Doslednost dok** doc gate (md/txt + yaml/ps1/ini), uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`**, u [`scripts/README.md`](../scripts/README.md), zatim `pytest`; uklj. **`omnigroup-web`**) sa branch protection. Ako ne koristiš GitHub: timski dogovor da je **F.4** i dalje [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (isti red kao CI: **Doslednost dok** doc gate (md/txt + yaml/ps1/ini), uklj. par **`EVIDENCE-INDEX`** / **`NIVO-1-DRYRUN-LOG`**, u [`scripts/README.md`](../scripts/README.md)) + pytest + npm/compose; opciono **`-SkipOmnigroupWeb`** samo ako je dogovoreno; **`-SkipDocAudit`** samo lokalno; **Port mismatch** Nest/pg — [`scripts/README.md`](../scripts/README.md); **LATEST verify:** [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) (**Val 355** / 2026-05-14 (D.1 Iter 2 — vidi `D1-ITER2-PR-BODY.md`; ranije **Val 354** / 2026-05-13)) · **LATEST smoke** (**sekcija H**): [`NIVO-1-SMOKE-EVIDENCE-LATEST.md`](./NIVO-1-SMOKE-EVIDENCE-LATEST.md) (**Val 351** / 2026-05-14)) pre merge-a — pa **`[x]`** u [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md) uz kratku napomenu. |
-| **0.3** `[ ]` | Isto: obavezno zelen CI na svakom merge-u **samo ako postoji GitHub**; inače interni gate. |
+| **P.1** `[x]` | Zatvoreno u [`NIVO-2-MASTER-CHECKLIST.md`](../NIVO-2-MASTER-CHECKLIST.md) (lokalni F.4 mirror). Branch protection na GitHub `main` i dalje vidi **CEO sekcija A** / [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md). **LATEST verify:** [`NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md`](./NIVO-1-VERIFY-MONOREPO-EVIDENCE-LATEST.md) (**Val 360** / 2026-06-03). |
+| **0.3** `[x]` | Zatvoreno u N2 master listi + [`N2-0-3-EVIDENCE-LATEST.md`](./N2-0-3-EVIDENCE-LATEST.md) (Pass). Kontinuirani ritual na GitHub `main` i dalje možeš potvrditi u Actions kad koristiš host. |
 
 *(Ostali redovi N2 master liste već **`[x]`** u repou.)*
 

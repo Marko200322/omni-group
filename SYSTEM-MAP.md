@@ -67,6 +67,9 @@ See [`docs/PYTHON-ASTRA-OPS.md`](./docs/PYTHON-ASTRA-OPS.md) for manual `/api/st
 | **Nivo 2 — N2 master lista (Master Spec, talasi, E2E)** | Repo root **`NIVO-2-START.md`**, **`NIVO-2-MASTER-CHECKLIST.md`** |
 | **Nivo 3 — N3 master lista (PDF / CEO F)** | Repo root **`NIVO-3-START.md`**, **`NIVO-3-MASTER-CHECKLIST.md`** |
 | **Root Python tests (`pytest`)** | Repo root **`tests/README.md`** |
+| **Kompletan plan testiranja (L0–L4, smoke/e2e, gapovi)** | **`docs/TEST-PLAN-KOMPLETAN.md`** |
+| **Vrhunski plan marketinga / GTM (M0–M6, ICP, anti-promise)** | **`docs/MARKETING-PLAN-VRHUNSKI.md`** |
+| **Marketing & revenue fazno paljenje** | **`docs/MARKETING-REVENUE-PHASED-CHECKLIST.md`** |
 | **PR / merge redosled monorepa** | Repo root **`CONTRIBUTING.md`** |
 
 ---

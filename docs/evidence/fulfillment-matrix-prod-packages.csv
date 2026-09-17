@@ -1,0 +1,19 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+setup-quick,marketing,PASS,,2,da7c1a55-4c99-465f-b768-0ff4e5920307,"",5,2026-08-04T12:06:07.2713230+02:00
+setup-full,marketing,PASS,,4,a28c9398-6bae-43db-8786-88c90625e760,"",6,2026-08-04T12:06:13.9272073+02:00
+setup-custom,marketing,PASS,,3,def4e941-3643-4cf5-a366-4e06989a8077,"",6,2026-08-04T12:06:20.6089691+02:00
+audit,marketing,PASS,,2,e84d4de0-f701-4cfb-9557-81966d339d99,"",6,2026-08-04T12:06:28.0215418+02:00
+integration,marketing,PASS,,3,df1dbf87-d29f-446a-8464-6e8c41c88655,"",7,2026-08-04T12:06:36.3125508+02:00
+workflow-design,marketing,PASS,,2,8b410649-fe39-439f-a5ea-3e80117bf8e2,"",6,2026-08-04T12:06:43.1483148+02:00
+support-priority,marketing,PASS,,2,c4736452-31bb-42a3-ae0e-7358b7f291c1,"",6,2026-08-04T12:06:50.1793832+02:00
+support-dedicated,marketing,PASS,,2,683c3570-9660-406a-892f-49b9f919706d,"",5,2026-08-04T12:06:56.6638072+02:00
+landing,marketing,PASS,,0,c795cf6f-4aa7-4f0c-833b-06f5c3703336,"",5,2026-08-04T12:07:03.1572478+02:00
+website-business,marketing,PASS,,0,78798a27-4172-491d-94a1-9f3a2f08aaaa,"",6,2026-08-04T12:07:10.0616193+02:00
+website-ecommerce,marketing,FAIL,,0,,"The remote server returned an error: (429) Too Many Requests.",271,2026-08-04T12:11:41.8270626+02:00
+white-label-setup,marketing,PASS,,2,c6b5459a-a07f-424a-bf14-283c7796c44c,"",275,2026-08-04T12:16:17.6882699+02:00
+sales-enablement,marketing,PASS,,2,36e19e46-5b55-4179-97ab-7fb4912fecdd,"",7,2026-08-04T12:16:25.2060968+02:00
+vertical-package,marketing,PASS,,2,f8090615-8dc7-4d89-ac41-2ad08cba0971,"",5,2026-08-04T12:16:31.1677303+02:00
+lead-gen-retainer,marketing,PASS,,3,a8672ed6-b306-4cdf-907c-69ef75a08501,"",5,2026-08-04T12:16:37.2469114+02:00
+ai-support-retainer,marketing,PASS,,3,4f906308-56eb-48e8-8024-dff39d0455f1,"",5,2026-08-04T12:16:43.6054774+02:00
+custom-software,marketing,PASS,,2,65e893ea-4be8-4ede-a660-d19b745a38ee,"",6,2026-08-04T12:16:50.6509109+02:00
+website-ecommerce,marketing,PASS,,0,da2ffd08-926f-4288-8130-83cdc1423b59,"",5,2026-08-04T12:19:11.0750485+02:00

@@ -112,6 +112,14 @@ describe('CoreEngine', () => {
       });
     });
 
+    it('getApp exposes /metrics in prometheus text format', async () => {
+      const res = await request(engine.getApp()).get('/metrics');
+      expect(res.status).toBe(200);
+      expect(res.text).toContain('atina_up 1');
+      expect(res.text).toContain('atina_db_up 1');
+      expect(res.text).toContain('process_uptime_seconds');
+    });
+
     it('getApp exposes /api/v1 module index', async () => {
       const res = await request(engine.getApp()).get('/api/v1');
       expect(res.status).toBe(200);
@@ -125,6 +133,7 @@ describe('CoreEngine', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.links).toMatchObject({
         health: '/health',
+        metrics: '/metrics',
         api: '/api/v1',
       });
       expect(res.body.message).toContain('ATINA API backend');

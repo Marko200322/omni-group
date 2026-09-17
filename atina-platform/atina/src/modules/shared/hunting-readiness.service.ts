@@ -1,5 +1,5 @@
 import { config } from '../../config';
-import { getAiClient, getCommsClient, getScraperClient, getLeadDatabaseService } from '../../integrations';
+import { getAiClient, getCommsClient, getScraperClient, getLeadDatabaseService, getInstantlyClient } from '../../integrations';
 import { moduleRegistry } from '../../core/ModuleRegistry';
 import { OutboundQueueService } from '../autonomy-loop/service/outbound-queue.service';
 import { WorkflowChainService } from '../workflow-chain/service/workflow-chain.service';
@@ -47,9 +47,12 @@ export class HuntingReadinessService {
       Boolean(config.smtp.user?.trim()) &&
       Boolean(config.smtp.password?.trim());
     const scraperDirect = config.features.scraper && !scraper.isConfigured();
+    const instantly = getInstantlyClient();
+    const instantlyMode = config.outreach.emailProvider === 'instantly' && instantly.isConfigured();
     const outboundSendReady =
       outboundStats.warmupComplete ||
       config.outreach.devSendToFallback ||
+      instantlyMode ||
       smtpReady ||
       comms.isConfigured();
 
@@ -74,9 +77,11 @@ export class HuntingReadinessService {
         id: 'outbound',
         label: 'Outbound email',
         status: outboundSendReady ? 'ready' : smtpReady || comms.isConfigured() ? 'partial' : 'missing',
-        hint: outboundSendReady
-          ? 'Sending enabled'
-          : 'SMTP_* or COMMS_* + OUTREACH_DEV_SEND_TO_FALLBACK=true (dev)',
+        hint: instantlyMode
+          ? 'Instantly.ai campaign connected — leads queue into Instantly for send'
+          : outboundSendReady
+            ? 'Sending enabled'
+            : 'SMTP_* / COMMS_* / Instantly (INSTANTLY_*) or OUTREACH_DEV_SEND_TO_FALLBACK=true (dev)',
       },
       {
         id: 'ai',
@@ -93,10 +98,12 @@ export class HuntingReadinessService {
       {
         id: 'warmup',
         label: 'Domain warmup',
-        status: outboundStats.warmupComplete ? 'ready' : 'partial',
-        hint: outboundStats.warmupComplete
-          ? 'OUTREACH_DOMAIN_WARMUP_COMPLETE=true'
-          : 'Dev: OUTREACH_DEV_SEND_TO_FALLBACK=true until warmup completes',
+        status: outboundStats.warmupComplete || instantlyMode ? 'ready' : 'partial',
+        hint: instantlyMode
+          ? 'Instantly handles mailbox warmup — set {{subject}} / {{body_html}} vars in campaign template'
+          : outboundStats.warmupComplete
+            ? 'OUTREACH_DOMAIN_WARMUP_COMPLETE=true'
+            : 'Dev: OUTREACH_DEV_SEND_TO_FALLBACK=true until warmup completes',
       },
       {
         id: 'lead_database',

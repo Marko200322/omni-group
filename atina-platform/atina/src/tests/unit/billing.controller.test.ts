@@ -62,6 +62,31 @@ describe('BillingController', () => {
   const authed = (userId = 'u1'): Request =>
     ({ user: { userId, role: 'user', email: 'a@b.com' } }) as Request;
 
+  it('getPackageContext returns industry-tailored problem context', async () => {
+    const r = res();
+    await controller.getPackageContext(
+      {
+        query: { deliverableId: 'landing', industryCategory: 'marketing' },
+      } as unknown as Request,
+      r,
+    );
+    expect(r.status).toHaveBeenCalledWith(200);
+    const payload = (r.json as jest.Mock).mock.calls[0][0];
+    expect(payload.data.primaryProblem).toMatch(/marketing/i);
+    expect(payload.data.optionalMaintenanceTiers).toHaveLength(3);
+  });
+
+  it('getPackageMatrix returns 17 packages for industry', async () => {
+    const r = res();
+    await controller.getPackageMatrix(
+      { query: { industryCategory: 'marketing' } } as unknown as Request,
+      r,
+    );
+    expect(r.status).toHaveBeenCalledWith(200);
+    const payload = (r.json as jest.Mock).mock.calls[0][0];
+    expect(payload.data.packages).toHaveLength(17);
+  });
+
   it('getPlans delegates to service', async () => {
     mockService.getPlans.mockResolvedValue([{ id: 'p1' }] as never);
     const r = res();

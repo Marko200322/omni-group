@@ -3,6 +3,46 @@ import 'server-only';
 import type { AuthSession } from './auth-session';
 import { setSessionCookie } from './auth-session';
 import { atinaRefreshTokens, fetchAtinaAuthenticated, type AtinaFetchMeta } from './atina-auth';
+import { resolveAtinaApiBase } from './atina-api-base';
+
+const PUBLIC_FETCH_TIMEOUT_MS = 8000;
+
+/**
+ * BFF helper for PUBLIC (unauthenticated) upstream GETs. Always applies a bounded
+ * timeout so a hung backend cannot hang the Next.js request, and never leaks the
+ * upstream error message to the client.
+ */
+export async function fetchAtinaPublicJson<T>(
+  path: string,
+  init: RequestInit & { timeoutMs?: number } = {},
+): Promise<{ ok: boolean; status: number; data: T | null }> {
+  const { timeoutMs = PUBLIC_FETCH_TIMEOUT_MS, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${resolveAtinaApiBase()}${path}`, {
+      ...rest,
+      signal: controller.signal,
+      headers: { Accept: 'application/json', ...(rest.headers ?? {}) },
+      cache: 'no-store',
+    });
+    let body: { success?: boolean; data?: T } | null = null;
+    try {
+      body = (await res.json()) as { success?: boolean; data?: T };
+    } catch {
+      body = null;
+    }
+    return {
+      ok: res.ok && body?.success !== false,
+      status: res.status || 502,
+      data: body?.data ?? null,
+    };
+  } catch {
+    return { ok: false, status: 503, data: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /** BFF helper: retry once after refreshing JWT when Atina returns 401. */
 export async function fetchAtinaForBff<T>(

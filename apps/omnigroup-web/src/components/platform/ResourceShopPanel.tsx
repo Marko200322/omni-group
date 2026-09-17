@@ -86,12 +86,16 @@ export function ResourceShopPanel({ disabled }: Props) {
         data?: { settings?: { autoProcurementEnabled?: boolean }; wallets?: WalletRow[] };
       };
       const ordJson = (await ordRes.json()) as { ok?: boolean; data?: { orders?: OrderRow[] } };
-      if (catJson.ok && catJson.data?.items) setCatalog(catJson.data.items);
-      if (setJson.ok && setJson.data) {
+      if (catRes.ok && catJson.ok) {
+        setCatalog(catJson.data?.items ?? []);
+      } else {
+        setError('Resource catalog unavailable — check the Atina API.');
+      }
+      if (setRes.ok && setJson.ok && setJson.data) {
         setAutoOn(Boolean(setJson.data.settings?.autoProcurementEnabled));
         setWallets(setJson.data.wallets ?? []);
       }
-      if (ordJson.ok && ordJson.data?.orders) setOrders(ordJson.data.orders);
+      if (ordRes.ok && ordJson.ok) setOrders(ordJson.data?.orders ?? []);
     } catch {
       setError('Unable to load the resource shop.');
     } finally {
@@ -230,6 +234,16 @@ export function ResourceShopPanel({ disabled }: Props) {
             <ShoppingCart className="h-4 w-4 text-violet-400" /> Resource cart
           </h3>
           <div className="space-y-2">
+            {loading && catalog.length === 0 && (
+              <p className="flex items-center gap-2 text-xs text-slate-500">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading catalog…
+              </p>
+            )}
+            {!loading && catalog.length === 0 && (
+              <p className="text-xs text-slate-500">
+                No resource SKUs available right now.
+              </p>
+            )}
             {catalog.map((item) => (
               <div
                 key={item.sku}

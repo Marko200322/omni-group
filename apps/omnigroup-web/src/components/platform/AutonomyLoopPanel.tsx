@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Bot, Play, RefreshCw, Sparkles, Timer } from 'lucide-react';
 import { formatEur } from '@/lib/category-pricing';
 import { calculateDeliverableQuote } from '@/lib/dynamic-pricing';
+import { isDevClient } from '@/lib/is-dev-client';
 
 type AutonomyStatus = {
   seedCatalogSize?: number;
@@ -535,9 +536,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
             Batch {String(lastBatch.category ?? '')} — {String(lastBatch.succeeded ?? 0)}/
             {String(lastBatch.processed ?? 0)} OK
           </p>
-          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
-            {JSON.stringify(lastBatch, null, 2)}
-          </pre>
+          {isDevClient() && (
+            <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
+              {JSON.stringify(lastBatch, null, 2)}
+            </pre>
+          )}
         </motion.div>
       )}
 
@@ -548,9 +551,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 text-xs text-violet-100"
         >
           <p className="font-medium text-violet-300">Evolution tick complete</p>
-          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
-            {JSON.stringify(lastEvolution, null, 2)}
-          </pre>
+          {isDevClient() && (
+            <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
+              {JSON.stringify(lastEvolution, null, 2)}
+            </pre>
+          )}
         </motion.div>
       )}
 
@@ -561,9 +566,11 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
           className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-100"
         >
           <p className="font-medium text-emerald-300">Tick complete</p>
-          <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
-            {JSON.stringify(lastTick, null, 2)}
-          </pre>
+          {isDevClient() && (
+            <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap font-mono text-[11px] text-slate-300">
+              {JSON.stringify(lastTick, null, 2)}
+            </pre>
+          )}
         </motion.div>
       )}
 

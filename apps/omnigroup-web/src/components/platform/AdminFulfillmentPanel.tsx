@@ -21,9 +21,10 @@ type Props = { disabled?: boolean };
 
 export function AdminFulfillmentPanel({ disabled }: Props) {
   const [jobs, setJobs] = useState<AtinaFulfillmentJob[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   const refresh = useCallback(async () => {
@@ -38,7 +39,9 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
         error?: string;
         detail?: string;
       };
-      if (!body.ok) throw new Error(body.detail ?? body.error ?? 'refresh_failed');
+      if (!res.ok || !body.ok) {
+        throw new Error(body.detail ?? body.error ?? `http_${res.status}`);
+      }
       setJobs(body.data?.jobs ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load');
@@ -51,10 +54,12 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
     async (paymentId: string) => {
       setBusyId(paymentId);
       setError(null);
+      setMessage(null);
       try {
         const res = await fetch(`/api/atina/billing/fulfillment/jobs/${paymentId}/approve`, { method: 'POST' });
         const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
-        if (!body.ok) throw new Error(body.detail ?? body.error ?? 'approve_failed');
+        if (!res.ok || !body.ok) throw new Error(body.detail ?? body.error ?? `http_${res.status}`);
+        setMessage('Deliverable approved and released to the client.');
         await refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Approve failed');
@@ -109,7 +114,23 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
         </p>
       )}
 
-      {!disabled && jobs.length === 0 && !loading && (
+      {!disabled && loading && jobs.length === 0 && (
+        <p className="flex items-center gap-2 text-sm text-slate-500">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Loading fulfillment jobs…
+        </p>
+      )}
+
+      {!disabled && !loading && error && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-200">
+          Could not load fulfillment ({error}).{' '}
+          <button type="button" className="underline" onClick={() => void refresh()}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!disabled && jobs.length === 0 && !loading && !error && (
         <p className="text-sm text-slate-500">
           No fulfillment jobs yet — click Refresh after confirming a deliverable payment.
         </p>
@@ -117,19 +138,21 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
 
       {!disabled && jobs.length > 0 && (
         <ul className="space-y-2">
-          {jobs.map((job) => {
+          {jobs.map((job, idx) => {
             const meta =
               job.reviewStatus === 'pending_review' && job.status === 'completed'
                 ? STATUS_META.pending_review
-                : STATUS_META[job.status];
+                : STATUS_META[job.status] ?? STATUS_META.pending;
             const Icon = meta.icon;
             const label = job.deliverableId
               ? (getDeliverable(job.deliverableId)?.name ?? job.deliverableId)
-              : job.planSlug ?? job.purchaseType;
+              : job.planSlug ?? job.purchaseType ?? 'Deliverable';
             const canApprove = job.reviewStatus === 'pending_review';
+            const artifactCount = job.artifacts?.length ?? 0;
+            const paymentRef = job.paymentId ? `${job.paymentId.slice(0, 8)}…` : '—';
             return (
               <li
-                key={job.id}
+                key={job.id ?? job.paymentId ?? idx}
                 className="rounded-xl border border-violet-500/15 bg-violet-500/5 px-3 py-2 text-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -140,9 +163,9 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
                   </span>
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-slate-500">
-                  payment {job.paymentId.slice(0, 8)}… · {job.artifacts.length} artifact(s)
+                  payment {paymentRef} · {artifactCount} artifact(s)
                 </p>
-                {canApprove && (
+                {canApprove && job.paymentId && (
                   <button
                     type="button"
                     disabled={busyId === job.paymentId}
@@ -159,7 +182,8 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
         </ul>
       )}
 
-      {error && <p className="mt-4 text-sm text-rose-300">{error}</p>}
+      {message && <p className="mt-4 text-sm text-emerald-300">{message}</p>}
+      {error && !loading && jobs.length > 0 && <p className="mt-4 text-sm text-rose-300">{error}</p>}
     </GlassCard>
   );
 }

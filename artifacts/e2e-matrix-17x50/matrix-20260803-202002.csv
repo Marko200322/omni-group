@@ -1,0 +1,4 @@
+﻿deliverableId,industry,status,score,artifacts,seconds,error,checkedAt
+setup-quick,development_it,PASS,,2,2,"",2026-08-03T20:20:07.2353238+02:00
+setup-quick,ai_data,PASS,,2,2,"",2026-08-03T20:20:09.4729465+02:00
+setup-quick,design_creative,PASS,,2,2,"",2026-08-03T20:20:11.6698093+02:00

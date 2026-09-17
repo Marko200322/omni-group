@@ -15,12 +15,17 @@ import {
 import type { AtinaPublicSnapshot } from '@/lib/atina';
 import { AdminPendingPaymentsPanel } from '@/components/platform/AdminPendingPaymentsPanel';
 import { AdminFulfillmentPanel } from '@/components/platform/AdminFulfillmentPanel';
+import { AdminRevenueAllocationPanel } from '@/components/platform/AdminRevenueAllocationPanel';
+import { AdminMarketAnalyticsPanel } from '@/components/platform/AdminMarketAnalyticsPanel';
+import type { LiveMarketKpi } from '@/lib/market-analytics';
 import { InviteClientPanel } from '@/components/platform/InviteClientPanel';
+import { CrmContactsPanel } from '@/components/platform/CrmContactsPanel';
 import type { AtinaAdminOverview, AtinaAdminPayment } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
 import { isAdminRole } from '@/lib/auth-roles';
 import { describeSource, formatPlanLine } from '@/lib/atina-display';
 import { buildAdminMetrics } from '@/lib/platform-metrics';
+import { buildAdminNavItems } from '@/lib/platform-nav';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { StatCard } from '@/components/ui/StatCard';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -32,12 +37,21 @@ import { AutonomyLoopPanel } from '@/components/platform/AutonomyLoopPanel';
 import { ResourceShopPanel } from '@/components/platform/ResourceShopPanel';
 import { HuntingStackPanel } from '@/components/platform/HuntingStackPanel';
 import { ProductFactoryPanel } from '@/components/platform/ProductFactoryPanel';
+import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
+import { getFactoryPhase, getFactoryPhaseLabel } from '@/lib/factory-phase';
+import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
+import { FactoryPhasePanel } from '@/components/platform/FactoryPhasePanel';
+import { isLeanProdMode } from '@/lib/prod-mode';
+import { getMonthlyBudgetEur, getBudgetAllocationHint, isBudgetLaunchMode } from '@/lib/prod-budget';
+import { getSellablePackageHint } from '@/lib/sellable-packages';
 type Props = {
   snapshot: AtinaPublicSnapshot;
   sessionUser: SessionUser | null;
   isDemo: boolean;
   overview?: AtinaAdminOverview | null;
+  overviewError?: string;
   pendingPayments?: AtinaAdminPayment[];
+  marketKpi?: LiveMarketKpi | null;
 };
 
 const severityColor = {
@@ -46,14 +60,37 @@ const severityColor = {
   error: 'border-l-rose-500/60',
 };
 
-export default function AdminClient({ snapshot, sessionUser, isDemo, overview, pendingPayments = [] }: Props) {
+export default function AdminClient({
+  snapshot,
+  sessionUser,
+  isDemo,
+  overview,
+  overviewError,
+  pendingPayments = [],
+  marketKpi = null,
+}: Props) {
   const router = useRouter();
   const metrics = buildAdminMetrics(snapshot, overview);
-  const status = overview ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
+  const status = overviewError
+    ? 'partial'
+    : overview
+      ? 'live'
+      : snapshot.source === 'live'
+        ? 'live'
+        : snapshot.source;
+  const leanProd = isLeanProdMode();
+  const factoryPhase = getFactoryPhase();
+  const budgetEur = getMonthlyBudgetEur();
+  const budgetHints = getBudgetAllocationHint();
+  const hunterAllowed = isFactoryModuleAllowed('hunter', factoryPhase);
+  const autonomyAllowed = isFactoryModuleAllowed('autonomy', factoryPhase);
+  const factoryOverview = (overview as { factory?: Record<string, unknown> } | null)?.factory ?? null;
+  const adminNavItems = buildAdminNavItems({ leanProd, hunterAllowed, autonomyAllowed });
 
   return (
     <PlatformShell
       variant="admin"
+      navItems={adminNavItems}
       title="Operator overview"
       subtitle={
         isDemo
@@ -66,6 +103,73 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
       sessionUser={sessionUser}
       isDemo={isDemo}
     >
+      {!isDemo && overviewError ? (
+        <GlassCard delay={0} className="mb-6 border border-rose-500/40 bg-rose-500/5">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-300" />
+            <div>
+              <p className="text-sm font-medium text-rose-100">
+                Live operator podaci trenutno nedostupni — Atina API nije odgovorio ({overviewError}).
+              </p>
+              <p className="mt-1 text-xs text-rose-200/80">
+                Prikazani brojevi mogu biti nepotpuni ili iz kataloga (fallback), nisu potvrđeni uživo. Osveži za ponovni pokušaj.
+              </p>
+            </div>
+          </div>
+        </GlassCard>
+      ) : null}
+
+      <FactoryPhasePanel initial={factoryOverview as Parameters<typeof FactoryPhasePanel>[0]['initial']} />
+
+      <GlassCard
+        delay={0}
+        className={`mb-6 border ${leanProd ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/30 bg-emerald-500/5'}`}
+      >
+        <p className={`text-sm font-medium ${leanProd ? 'text-amber-100' : 'text-emerald-100'}`}>
+          Factory {factoryPhase} — {getFactoryPhaseLabel(factoryPhase)} · €{budgetEur}/mo budget
+          {!leanProd ? ' · prodMode full' : ' · prodMode lean'}
+        </p>
+        <p className={`mt-1 text-sm ${leanProd ? 'text-amber-200/80' : 'text-emerald-200/80'}`}>
+          {getSellablePackageHint()}
+        </p>
+        <p className={`mt-2 text-xs ${leanProd ? 'text-amber-200/70' : 'text-emerald-200/70'}`}>
+          {leanProd
+            ? 'Lean profile: limited checkout · AI cap enforced · Sales: contact → manual checkout → confirm → fulfillment.'
+            : 'Live ops: Hunting + Autonomy panels below · scraper/Hunter/outbound per readiness · Confirm payments → fulfillment.'}
+        </p>
+        <p className={`mt-2 text-xs ${leanProd ? 'text-amber-200/60' : 'text-emerald-200/60'}`}>
+          Jump:{' '}
+          {hunterAllowed ? (
+            <>
+              <a href="#hunting" className="underline underline-offset-2">
+                Hunting
+              </a>
+              {' · '}
+            </>
+          ) : null}
+          {autonomyAllowed ? (
+            <>
+              <a href="#autonomy" className="underline underline-offset-2">
+                Autonomy
+              </a>
+              {' · '}
+            </>
+          ) : null}
+          <a href="#billing" className="underline underline-offset-2">
+            Pending payments
+          </a>
+        </p>
+        {leanProd && isBudgetLaunchMode() ? (
+          <ul className="mt-3 space-y-1 text-xs text-amber-100/80">
+            {budgetHints.map((h) => (
+              <li key={h.label}>
+                {h.label}: ~€{h.eur}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </GlassCard>
+
       <div id="users" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active users"
@@ -73,7 +177,7 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
           sub="30d rolling"
           icon={Users}
           accent="violet"
-          trend={{ value: '+8.2% vs last month', positive: true }}
+          trend={metrics.trends?.activeUsers}
           delay={0}
         />
         <StatCard
@@ -82,7 +186,7 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
           sub="Stripe + internal catalog"
           icon={CreditCard}
           accent="cyan"
-          trend={{ value: '+12% QoQ', positive: true }}
+          trend={metrics.trends?.mrr}
           delay={0.05}
         />
         <StatCard
@@ -108,11 +212,23 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
         />
       </div>
 
-      <div className="mt-6">
+      <div id="invite-users" className="mt-6 scroll-mt-24">
         <InviteClientPanel
           disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
           plans={snapshot.plans}
         />
+      </div>
+
+      <div id="crm" className="mt-6 scroll-mt-24">
+        <GlassCard delay={0.18}>
+          <h2 className="font-display text-lg font-semibold text-white">CRM contacts</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Leads, prospects, and clients — operator view only.
+          </p>
+          <div className="mt-4">
+            <CrmContactsPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
+          </div>
+        </GlassCard>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -192,7 +308,7 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
         </GlassCard>
       </div>
 
-      <section id="billing" className="mt-6">
+      <section id="billing" className="mt-6 scroll-mt-24">
         <GlassCard delay={0.4}>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-lg font-semibold text-white">Internal plans (operator)</h2>
@@ -239,6 +355,17 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
           <AdminFulfillmentPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
         </div>
 
+        <div className="mt-4">
+          <AdminRevenueAllocationPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
+        </div>
+
+        <div className="mt-4">
+          <AdminMarketAnalyticsPanel
+            disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
+            initialKpi={marketKpi}
+          />
+        </div>
+
         <div className="mt-6">
           <h3 className="mb-3 font-display text-base font-semibold text-white">Pricing by industry category</h3>
           <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -274,65 +401,81 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
         </div>
       </section>
 
-      <section id="factory" className="mt-6">
-        <GlassCard delay={0.38}>
-          <h2 className="font-display text-lg font-semibold text-white">Product Factory</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Isolated client orders and internal SaaS lane — greenfield scaffold, test gate, deploy prep.
-          </p>
-          <ProductFactoryPanel
-            isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
-            disabled={isDemo || !sessionUser}
-          />
-        </GlassCard>
-      </section>
-
-      <section id="hunting" className="mt-6">
-        <GlassCard delay={0.385}>
-          <h2 className="font-display text-lg font-semibold text-white">Hunting module</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Client Hunter → Lead Scoring → Outreach → CRM. One click to bootstrap and run the nurture-loop pipeline.
-          </p>
-          <div className="mt-4">
-            <HuntingStackPanel
+      <section id="factory" className="mt-6 scroll-mt-24">
+        {leanProd ? (
+          <GlassCard delay={0.38}>
+            <h2 className="font-display text-lg font-semibold text-white">Product Factory</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Hidden in lean mode — enable after MRR gate (<span className="font-mono text-xs">prodMode: full</span>).
+            </p>
+          </GlassCard>
+        ) : (
+          <GlassCard delay={0.38}>
+            <h2 className="font-display text-lg font-semibold text-white">Product Factory</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Isolated client orders and internal SaaS lane — greenfield scaffold, test gate, deploy prep.
+            </p>
+            <ProductFactoryPanel
               isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
               disabled={isDemo || !sessionUser}
             />
-          </div>
-        </GlassCard>
+          </GlassCard>
+        )}
       </section>
 
-      <section id="resources" className="mt-6">
-        <GlassCard delay={0.395}>
-          <h2 className="font-display text-lg font-semibold text-white">Resource shop</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Purchase API credits through the system — pay via IBAN without logging into HeyGen/OpenRouter sites.
-            Auto-procurement creates an order when resources fall below threshold (ON/OFF).
-          </p>
-          <div className="mt-4">
-            <ResourceShopPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
-          </div>
-        </GlassCard>
-      </section>
+      {hunterAllowed ? (
+        <>
+          <section id="hunting" className="mt-6 scroll-mt-24">
+            <GlassCard delay={0.385}>
+              <h2 className="font-display text-lg font-semibold text-white">Hunting module</h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Client Hunter, outreach drafts, CRM pipeline. Factory M2+.
+              </p>
+              <div className="mt-4">
+                <HuntingStackPanel
+                  isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+                  disabled={isDemo || !sessionUser}
+                />
+              </div>
+            </GlassCard>
+          </section>
 
-      <section id="autonomy" className="mt-6">
-        <GlassCard delay={0.39}>
-          <h2 className="font-display text-lg font-semibold text-white">Autonomy Loop</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Operator loop — rollout, outbound, evolution tick. Internal team only.
-          </p>
-          <AutonomyLoopPanel
-            isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
-            disabled={isDemo || !sessionUser}
-          />
-        </GlassCard>
-      </section>
+          {!leanProd ? (
+            <section id="resources" className="mt-6">
+              <GlassCard delay={0.395}>
+                <h2 className="font-display text-lg font-semibold text-white">Resource shop</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Purchase API credits through the system — pay via IBAN without logging into HeyGen/OpenRouter sites.
+                </p>
+                <div className="mt-4">
+                  <ResourceShopPanel disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)} />
+                </div>
+              </GlassCard>
+            </section>
+          ) : null}
+        </>
+      ) : null}
 
-      <section id="settings" className="mt-6">
+      {autonomyAllowed ? (
+          <section id="autonomy" className="mt-6">
+            <GlassCard delay={0.39}>
+              <h2 className="font-display text-lg font-semibold text-white">Autonomy Loop</h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Scheduler, outbound stats, vertical rollout. Live from Factory M4+.
+              </p>
+              <AutonomyLoopPanel
+                isAdmin={sessionUser ? isAdminRole(sessionUser.role) : false}
+                disabled={isDemo || !sessionUser}
+              />
+            </GlassCard>
+          </section>
+      ) : null}
+
+      <section id="settings" className="mt-6 scroll-mt-24">
         <GlassCard delay={0.42}>
           <h2 className="font-display text-lg font-semibold text-white">Settings</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Quick links to the marketing site, client workspace, and internal documentation.
+            Quick links to the marketing site, client workspace preview, and internal documentation.
           </p>
           <motion.div className="mt-4 flex flex-wrap gap-3">
             <Link href="/admin/mobile" className="btn-primary text-sm">
@@ -342,16 +485,26 @@ export default function AdminClient({ snapshot, sessionUser, isDemo, overview, p
               Marketing site
             </Link>
             <Link href="/dashboard" className="btn-glass text-sm">
-              Client workspace
+              Client portal preview
             </Link>
             <Link href="/dev/docs" className="btn-primary text-sm">
               Dev documentation
             </Link>
           </motion.div>
+          <div className="mt-8 border-t border-white/5 pt-6">
+            <h3 className="font-display text-base font-semibold text-white">AI memory</h3>
+            <p className="mt-1 text-sm text-slate-500">Operator context store — not visible to clients.</p>
+            <div className="mt-4">
+              <AiMemoryPanel
+                disabled={isDemo || !sessionUser || !isAdminRole(sessionUser.role)}
+                operatorMode={!isDemo && !!sessionUser && isAdminRole(sessionUser.role)}
+              />
+            </div>
+          </div>
         </GlassCard>
       </section>
 
-      <section id="workflows" className="mt-6 grid gap-4 md:grid-cols-3">
+      <section id="workflows" className="mt-6 scroll-mt-24 grid gap-4 md:grid-cols-3">
         {(overview?.modules?.slice(0, 3) ?? [
           { name: 'Onboarding chain', slug: 'onboarding' },
           { name: 'Forge health', slug: 'forge' },

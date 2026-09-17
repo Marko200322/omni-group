@@ -17,15 +17,20 @@ function queueSmokeReq(overrides: Partial<Request> = {}): Request {
 
 describe('AppController', () => {
   let appController: AppController;
+  let module: TestingModule;
 
   beforeEach(async () => {
     delete process.env.REDIS_HOST;
-    const app: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [AppController],
       providers: [HealthService],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    appController = module.get<AppController>(AppController);
+  });
+
+  afterEach(async () => {
+    await module?.close();
   });
 
   describe('health', () => {
@@ -58,14 +63,24 @@ describe('AppController', () => {
       }
     });
 
+    async function withQueueSmokeModule(
+      providers: Parameters<typeof Test.createTestingModule>[0]['providers'],
+    ) {
+      const testModule = await Test.createTestingModule({
+        controllers: [AppController],
+        providers,
+      }).compile();
+      try {
+        return testModule.get<AppController>(AppController);
+      } finally {
+        await testModule.close();
+      }
+    }
+
     it('throws NotFoundException in production', async () => {
       process.env.NODE_ENV = 'production';
       delete process.env.INTERNAL_QUEUE_SMOKE_KEY;
-      const app: TestingModule = await Test.createTestingModule({
-        controllers: [AppController],
-        providers: [HealthService],
-      }).compile();
-      const c = app.get<AppController>(AppController);
+      const c = await withQueueSmokeModule([HealthService]);
       await expect(c.enqueueQueueSmoke(queueSmokeReq())).rejects.toThrow(
         NotFoundException,
       );
@@ -74,11 +89,7 @@ describe('AppController', () => {
     it('returns bull false when Bull is not configured', async () => {
       process.env.NODE_ENV = 'development';
       delete process.env.INTERNAL_QUEUE_SMOKE_KEY;
-      const app: TestingModule = await Test.createTestingModule({
-        controllers: [AppController],
-        providers: [HealthService],
-      }).compile();
-      const c = app.get<AppController>(AppController);
+      const c = await withQueueSmokeModule([HealthService]);
       await expect(c.enqueueQueueSmoke(queueSmokeReq())).resolves.toEqual({
         bull: false,
         message: 'Set REDIS_HOST to enable BullMQ',
@@ -88,11 +99,7 @@ describe('AppController', () => {
     it('returns Forbidden when INTERNAL_QUEUE_SMOKE_KEY set and header arg missing', async () => {
       process.env.NODE_ENV = 'development';
       process.env.INTERNAL_QUEUE_SMOKE_KEY = 'gate-secret';
-      const app: TestingModule = await Test.createTestingModule({
-        controllers: [AppController],
-        providers: [HealthService],
-      }).compile();
-      const c = app.get<AppController>(AppController);
+      const c = await withQueueSmokeModule([HealthService]);
       await expect(c.enqueueQueueSmoke(queueSmokeReq())).rejects.toThrow(
         ForbiddenException,
       );
@@ -101,11 +108,7 @@ describe('AppController', () => {
     it('allows smoke when key matches', async () => {
       process.env.NODE_ENV = 'development';
       process.env.INTERNAL_QUEUE_SMOKE_KEY = 'gate-secret';
-      const app: TestingModule = await Test.createTestingModule({
-        controllers: [AppController],
-        providers: [HealthService],
-      }).compile();
-      const c = app.get<AppController>(AppController);
+      const c = await withQueueSmokeModule([HealthService]);
       await expect(
         c.enqueueQueueSmoke(queueSmokeReq(), 'gate-secret'),
       ).resolves.toEqual({
@@ -120,14 +123,10 @@ describe('AppController', () => {
       const mockSvc = {
         enqueueSmokeJob: jest.fn().mockResolvedValue({ jobId: 'jid-1' }),
       };
-      const app: TestingModule = await Test.createTestingModule({
-        controllers: [AppController],
-        providers: [
-          HealthService,
-          { provide: SystemQueueService, useValue: mockSvc },
-        ],
-      }).compile();
-      const c = app.get<AppController>(AppController);
+      const c = await withQueueSmokeModule([
+        HealthService,
+        { provide: SystemQueueService, useValue: mockSvc },
+      ]);
       await expect(c.enqueueQueueSmoke(queueSmokeReq())).resolves.toEqual({
         bull: true,
         queue: 'system',

@@ -1,0 +1,3 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+setup-quick,admin_support,PASS,,2,098f38d6-17f8-4b49-ac36-1ec395478e4b,"",192,2026-08-04T16:47:27.7150711+02:00
+setup-full,admin_support,PASS,,4,9e35ee05-000a-4994-81fb-f9a7298dea1a,"",31,2026-08-04T16:48:07.0134538+02:00

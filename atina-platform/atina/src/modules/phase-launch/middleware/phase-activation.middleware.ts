@@ -119,11 +119,17 @@ export function createPhaseActivationGuard(moduleSlug: string): RequestHandler {
         }
       );
     } catch (error) {
-      logger.warn('Phase activation guard fallback (allowing request)', {
+      logger.warn('Phase activation guard — DB read failed (blocking request)', {
         moduleSlug,
         error: error instanceof Error ? error.message : String(error),
       });
-      return next();
+      return sendError(
+        res,
+        `Phase guard unavailable — request blocked for '${moduleSlug}'`,
+        503,
+        'PHASE_GUARD_UNAVAILABLE',
+        { moduleSlug },
+      );
     }
   };
 }

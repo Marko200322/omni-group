@@ -10,6 +10,8 @@ export type ContactLeadInput = {
   message: string;
   service?: string;
   category?: string;
+  vertical?: string;
+  topic?: string;
 };
 
 export async function pushContactToCrm(
@@ -27,11 +29,15 @@ export async function pushContactToCrm(
 
   const tags = ['website_contact'];
   if (input.service) tags.push(`service:${input.service}`);
+  if (input.topic) tags.push(`topic:${input.topic}`);
   if (input.category) tags.push(`category:${input.category}`);
+  if (input.vertical) tags.push(`vertical:${input.vertical}`);
 
   const noteLines = [
     ...(input.service ? [`Service interest: ${input.service}`] : []),
+    ...(input.topic ? [`Topic: ${input.topic}`] : []),
     ...(input.category ? [`Industry category: ${input.category}`] : []),
+    ...(input.vertical ? [`Vertical niche: ${input.vertical}`] : []),
     input.message,
   ];
 
@@ -60,7 +66,9 @@ export async function pushContactToCrm(
         notes: noteLines.join('\n\n'),
         customFields: {
           ...(input.service ? { service: input.service } : {}),
+          ...(input.topic ? { topic: input.topic } : {}),
           ...(input.category ? { category: input.category } : {}),
+          ...(input.vertical ? { vertical: input.vertical } : {}),
         },
       }),
       cache: 'no-store',

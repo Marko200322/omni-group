@@ -7,6 +7,7 @@ import {
   resolvePricingTier,
 } from '@/lib/category-pricing';
 import { categoryLabel, tierLabel } from '@/lib/display-text';
+import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 
 type Props = {
   value: string;
@@ -24,7 +25,7 @@ export function IndustryCategorySelect({ value, onChange, className, showTierHin
       <label className="block text-sm">
         <span className="text-slate-400">Industry category</span>
         <select
-          className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+          className={CHECKOUT_SELECT_CLASS}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >

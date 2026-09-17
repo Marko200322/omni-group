@@ -12,6 +12,8 @@ export * from './domain-client';
 export * from './web3-storage-client';
 export * from './kriptoman-client';
 export * from './telegram-direct';
+export * from './external-ai-connections';
+export * from './instantly-client';
 export * from './lead-database.service';
 export * from './lead-databases/types';
 export * from './lead-databases/phased-rollout';

@@ -23,6 +23,15 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
   },
 }));
 
+// Route-security tests only exercise auth guards. Keep BillingModule.initialize()
+// side-effect free: the real retainer scheduler otherwise starts a live setInterval
+// and fires an immediate DB tick / lead-gen kickoff, which makes this suite hang
+// whenever a local Postgres is reachable (CI has none, so it passed there).
+jest.mock('../../modules/billing/service/retainer-scheduler.service', () => ({
+  getRetainerScheduler: () => ({ start: jest.fn(), stop: jest.fn() }),
+  stopRetainerScheduler: jest.fn(),
+}));
+
 jest.mock('../../modules/billing/service/billing.service', () => ({
   BillingService: jest.fn().mockImplementation(() => ({
     getPlans: jest.fn().mockResolvedValue([]),
@@ -87,6 +96,16 @@ describe('Billing module route security', () => {
       expect(res.body.error.code).toBe('AUTHENTICATION_ERROR');
     }
   );
+
+  it('allows unauthenticated GET /billing/package-context', async () => {
+    authEnabled = false;
+    const app = await buildApp();
+    const res = await request(app)
+      .get('/billing/package-context')
+      .query({ deliverableId: 'landing', industryCategory: 'marketing' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.primaryProblem).toMatch(/marketing/i);
+  });
 
   it('allows unauthenticated GET /billing/plans', async () => {
     authEnabled = false;

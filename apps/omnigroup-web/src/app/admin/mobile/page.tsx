@@ -18,7 +18,7 @@ export default async function AdminMobilePage() {
 
   let pendingPayments: AtinaAdminPayment[] = [];
   const pr = await fetchAtinaForBff<AtinaAdminPayment[]>(
-    '/api/v1/admin/payments?status=processing&provider=manual&limit=50',
+    '/api/v1/admin/payments?status=processing&limit=50',
     session,
     { method: 'GET' },
   );

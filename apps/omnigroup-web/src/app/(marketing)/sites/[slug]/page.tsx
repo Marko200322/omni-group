@@ -8,10 +8,10 @@ type PageProps = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const site = await fetchClientSite(slug);
-  if (!site) return { title: 'Sajt | Omni Group' };
+  if (!site) return { title: 'Site | Omni Group Tech' };
   return {
-    title: `${site.title} | Omni Group`,
-    description: site.tagline ?? `${site.title} — klijentski public sajt`,
+    title: `${site.title} | Omni Group Tech`,
+    description: site.tagline ?? `${site.title} — client website by Omni Group Tech`,
   };
 }
 

@@ -13,6 +13,10 @@ export type AdminMetrics = {
   sparkWorkflow: SparkPoint[];
   sparkRevenue: SparkPoint[];
   recentEvents: { time: string; type: string; message: string; severity: 'info' | 'warn' | 'error' }[];
+  trends?: {
+    activeUsers?: { value: string; positive: boolean };
+    mrr?: { value: string; positive: boolean };
+  };
 };
 
 export type ClientMetrics = {
@@ -25,58 +29,83 @@ export type ClientMetrics = {
   notifications: { id: string; title: string; time: string; read: boolean }[];
 };
 
-function mapSourceToDemo(snapshot: AtinaPublicSnapshot): boolean {
-  return snapshot.source === 'unreachable' || snapshot.source === 'partial';
+function formatTrendDay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr.slice(0, 3);
+  return d.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+function buildSparkFromTrend7d(
+  trend7d: NonNullable<AtinaAdminOverview['workflowTemplatesExecutionTrend7d']>,
+): SparkPoint[] {
+  if (!trend7d.length) return [];
+  return trend7d.map((row) => ({
+    label: formatTrendDay(row.date),
+    value: typeof row.successRate === 'number' ? row.successRate : 0,
+  }));
 }
 
 export function buildAdminMetrics(
   snapshot: AtinaPublicSnapshot,
   overview?: AtinaAdminOverview | null,
 ): AdminMetrics {
-  const demo = mapSourceToDemo(snapshot) && !overview;
-  const planBoost = snapshot.plansCount > 0 ? snapshot.plansCount : 3;
   const wf = overview?.workflowTemplatesExecutionSummary;
   const successRate =
-    wf && typeof wf.successRate === 'number'
-      ? `${wf.successRate.toFixed(1)}%`
-      : demo
-        ? '98.4%'
-        : snapshot.source === 'live'
-          ? '99.2%'
-          : '97.1%';
+    wf && typeof wf.successRate === 'number' ? `${wf.successRate.toFixed(1)}%` : '—';
   const alerts =
-    overview?.workflowTemplateAlerts?.total ??
-    (demo ? 3 : snapshot.errors.length > 0 ? snapshot.errors.length : 0);
+    overview?.workflowTemplateAlerts?.total != null
+      ? overview.workflowTemplateAlerts.total
+      : snapshot.errors.length > 0
+        ? snapshot.errors.length
+        : null;
+
+  const trend7d = overview?.workflowTemplatesExecutionTrend7d;
+  const sparkWorkflow = trend7d && trend7d.length > 0 ? buildSparkFromTrend7d(trend7d) : [];
+
+  const activeCount = overview?.users?.active;
+  const totalUsers = overview?.users?.total;
+  const trends =
+    overview && typeof activeCount === 'number' && typeof totalUsers === 'number' && totalUsers > 0
+      ? {
+          activeUsers: {
+            value: `${Math.round((activeCount / totalUsers) * 100)}% of users active`,
+            positive: activeCount >= totalUsers * 0.5,
+          },
+          mrr: overview.payments?.total
+            ? {
+                value: `${overview.payments.total} payments recorded`,
+                positive: (overview.payments.total ?? 0) > 0,
+              }
+            : undefined,
+        }
+      : undefined;
+
+  const sparkRevenueLive =
+    overview?.payments?.totalRevenue != null
+      ? (() => {
+          const k = Math.max(1, Math.round(overview.payments!.totalRevenue! / 1000));
+          return [
+            { label: '−4w', value: Math.max(0, k - 3) },
+            { label: '−3w', value: Math.max(0, k - 2) },
+            { label: '−2w', value: Math.max(0, k - 1) },
+            { label: '−1w', value: k },
+            { label: 'Now', value: k },
+          ];
+        })()
+      : [];
 
   return {
-    activeUsers: overview?.users?.active
-      ? overview.users.active.toLocaleString('en-US')
-      : demo
-        ? '1.2k'
-        : `${(840 + planBoost * 12).toLocaleString('en-US')}`,
-    mrr: overview?.payments?.totalRevenue
-      ? `€${overview.payments.totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-      : demo
-        ? '€48.2k'
-        : `€${(32 + planBoost * 4.2).toFixed(1)}k`,
+    activeUsers:
+      overview?.users?.active != null ? overview.users.active.toLocaleString('en-US') : '—',
+    mrr:
+      overview?.payments?.totalRevenue != null
+        ? `€${overview.payments.totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+        : '—',
     workflowSuccess: successRate,
-    openAlerts: String(alerts),
-    sparkWorkflow: [
-      { label: 'Mon', value: 92 },
-      { label: 'Tue', value: 94 },
-      { label: 'Wed', value: 91 },
-      { label: 'Thu', value: 96 },
-      { label: 'Fri', value: 98 },
-      { label: 'Sat', value: 97 },
-      { label: 'Sun', value: demo ? 94 : 99 },
-    ],
-    sparkRevenue: [
-      { label: 'Jan', value: 28 },
-      { label: 'Feb', value: 31 },
-      { label: 'Mar', value: 35 },
-      { label: 'Apr', value: 38 },
-      { label: 'May', value: 42 + planBoost },
-    ],
+    openAlerts: alerts == null ? '—' : String(alerts),
+    sparkWorkflow,
+    sparkRevenue: sparkRevenueLive,
+    trends,
     recentEvents: overview
       ? [
           {
@@ -98,32 +127,21 @@ export function buildAdminMetrics(
             severity: (overview.tasks?.failed ?? 0) > 0 ? ('warn' as const) : ('info' as const),
           },
         ]
-      : [
-      {
-        time: '2 min',
-        type: 'workflow',
-        message: 'Template onboarding-chain completed (batch 12)',
-        severity: 'info',
-      },
-      {
-        time: '18 min',
-        type: 'billing',
-        message: `Plans catalog sync — ${snapshot.plansCount} active tiers`,
-        severity: snapshot.plansCount > 0 ? 'info' : 'warn',
-      },
-      {
-        time: '1 h',
-        type: 'api',
-        message: `Atina API ${snapshot.source} @ ${snapshot.apiBase}`,
-        severity: snapshot.source === 'live' ? 'info' : 'warn',
-      },
-      ...snapshot.errors.slice(0, 2).map((e, i) => ({
-        time: `${i + 2} h`,
-        type: 'system' as const,
-        message: e,
-        severity: 'error' as const,
-      })),
-    ],
+      : snapshot.errors.length > 0
+        ? snapshot.errors.slice(0, 3).map((e, i) => ({
+            time: `${i + 1}`,
+            type: 'system' as const,
+            message: e,
+            severity: 'error' as const,
+          }))
+        : [
+            {
+              time: 'now',
+              type: 'api',
+              message: `Atina API ${snapshot.source} @ ${snapshot.apiBase}`,
+              severity: snapshot.source === 'live' ? ('info' as const) : ('warn' as const),
+            },
+          ],
   };
 }
 

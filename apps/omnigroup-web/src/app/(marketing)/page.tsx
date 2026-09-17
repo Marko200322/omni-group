@@ -17,13 +17,11 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Industries online', value: '25+' },
-  { label: 'Delivery', value: 'Custom' },
-  { label: 'Payment', value: 'EUR / bank' },
-  { label: 'Support', value: '24/7 AI' },
+  { label: 'Industry catalog', value: '50+' },
+  { label: 'Delivery', value: 'Turnkey' },
+  { label: 'Payment', value: 'Bank or card' },
+  { label: 'Support', value: '24h target' },
 ];
-
-const logos = ['Omni Group', 'Atina', 'Astra', 'Titan', 'Forge', 'Workflow', 'Analytics'];
 
 export default function HomePage() {
   return (
@@ -51,18 +49,18 @@ export default function HomePage() {
                 <span className="text-gradient">built for your business</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                You are not buying a platform — you get a turnkey solution: CRM, AI support, lead gen, and custom
-                software, tested before delivery. Transparent pricing and professional support.
+                You get a finished digital deliverable — setup, websites, audits, and retainers — tested before handover.
+                Transparent EUR pricing. Bank transfer or card at checkout.
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
-                  Request a quote <ArrowRight className="h-4 w-4" />
+                  See packages <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  Solutions
+                  What you get
                 </Link>
                 <Link href="/contact" className="btn-glass">
-                  Book a call
+                  Start a project
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -95,20 +93,6 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      <section className="overflow-hidden border-y border-white/[0.06] bg-white/[0.02] py-6">
-        <motion.div
-          animate={{ x: [0, -600] }}
-          transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-          className="flex gap-12 whitespace-nowrap text-sm font-medium uppercase tracking-[0.25em] text-slate-600"
-        >
-          {[...logos, ...logos, ...logos].map((name, i) => (
-            <span key={i} className="text-slate-500">
-              {name}
-            </span>
-          ))}
-        </motion.div>
-      </section>
-
       <section className="px-4 py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div
@@ -121,7 +105,7 @@ export default function HomePage() {
               Three pillars of <span className="text-gradient">one platform</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-              Marketing site, client dashboard, and admin console — one brand, three modules under the hood.
+              Marketing site, client portal, and professional delivery — one brand, built around your business.
             </p>
           </motion.div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -140,9 +124,9 @@ export default function HomePage() {
               },
               {
                 icon: Zap,
-                title: 'Operator console',
-                body: 'Monitoring, workflow stats, billing catalog, and system signals.',
-                href: '/admin',
+                title: 'Support & delivery',
+                body: 'Track orders, documents, billing, and live support from your client portal.',
+                href: '/login',
               },
             ].map(({ icon: Icon, title, body, href }, i) => (
               <motion.div
@@ -173,15 +157,14 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           <div>
             <h2 className="font-display text-3xl font-bold text-white">
-              A platform for <span className="text-gradient-client">clients</span> and{' '}
-              <span className="text-gradient-admin">operators</span>
+              Everything you need in <span className="text-gradient-client">one client portal</span>
             </h2>
             <ul className="mt-8 space-y-4">
               {[
-                { icon: Layers, text: 'Client dashboard — projects, automations, billing.' },
-                { icon: Shield, text: 'Admin console — monitoring, plans, workflow stats.' },
-                { icon: LineChart, text: 'Live Atina API snapshot — health + public plan catalog.' },
-                { icon: Globe2, text: 'Production-ready once you configure .env and deploy.' },
+                { icon: Layers, text: 'Projects, orders, and delivery status in real time.' },
+                { icon: Shield, text: 'Secure sign-in — billing, documents, and support behind your account.' },
+                { icon: LineChart, text: 'Transparent pricing and industry-specific packages.' },
+                { icon: Globe2, text: 'Video consultations, AI support, and professional onboarding.' },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-3 text-slate-300">
                   <span className="mt-0.5 rounded-lg bg-white/5 p-2">
@@ -192,11 +175,11 @@ export default function HomePage() {
               ))}
             </ul>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Link href="/dashboard" className="btn-primary">
-                Client workspace
+              <Link href="/login" className="btn-primary">
+                Client portal
               </Link>
-              <Link href="/admin" className="btn-glass">
-                Admin console
+              <Link href="/pricing" className="btn-glass">
+                View pricing
               </Link>
             </div>
           </div>
@@ -209,7 +192,7 @@ export default function HomePage() {
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-violet-600/20 blur-3xl" />
             <p className="relative text-sm text-slate-400">Delivery process</p>
             <ol className="relative mt-6 space-y-6">
-              {['Discovery & architecture', 'Implementation + test gates', 'Staging mirror & CEO checklist'].map(
+              {['Discovery & architecture', 'Implementation with test gates', 'Staging preview & launch sign-off'].map(
                 (step, i) => (
                   <li key={step} className="flex gap-4">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 font-display text-sm font-bold">
@@ -217,7 +200,7 @@ export default function HomePage() {
                     </span>
                     <div>
                       <p className="font-medium text-white">{step}</p>
-                      <p className="mt-1 text-xs text-slate-500">Phase {i + 1} · documented in monorepo</p>
+                      <p className="mt-1 text-xs text-slate-500">Phase {i + 1} · tracked and documented</p>
                     </div>
                   </li>
                 ),

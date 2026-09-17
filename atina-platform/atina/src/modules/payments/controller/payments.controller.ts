@@ -19,6 +19,7 @@ const DeliverableCheckoutDto = z
     marketIntensity: z.number().min(0).max(100).optional(),
     tamEstimateUsd: z.number().finite().optional(),
     competitionScore: z.number().min(0).max(100).optional(),
+    maintenanceTierId: z.enum(['essential', 'professional', 'premium']).optional(),
   })
   .strict();
 
@@ -33,6 +34,9 @@ const CheckoutDto = z
       .max(64)
       .regex(/^[a-z0-9_-]+$/, 'Invalid industry category slug')
       .optional(),
+    buyerCompany: z.string().trim().min(1).max(120).optional(),
+    buyerVatId: z.string().trim().min(1).max(64).optional(),
+    buyerBillingAddress: z.string().trim().min(1).max(240).optional(),
   })
   .strict();
 
@@ -49,12 +53,17 @@ export class PaymentsController {
 
   // Stripe
   createCheckoutSession = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const body = CheckoutDto.parse(req.body);
     const result = await this.service.createStripeCheckoutSession(
       req.user!.userId,
-      planSlug,
-      billingCycle,
-      industryCategory,
+      body.planSlug,
+      body.billingCycle,
+      body.industryCategory,
+      {
+        buyerCompany: body.buyerCompany,
+        buyerVatId: body.buyerVatId,
+        buyerBillingAddress: body.buyerBillingAddress,
+      },
     );
     sendCreated(res, result, 'Checkout session created');
   };
@@ -83,12 +92,17 @@ export class PaymentsController {
 
   // PayPal
   createPayPalOrder = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const body = CheckoutDto.parse(req.body);
     const result = await this.service.createPayPalOrder(
       req.user!.userId,
-      planSlug,
-      billingCycle,
-      industryCategory,
+      body.planSlug,
+      body.billingCycle,
+      body.industryCategory,
+      {
+        buyerCompany: body.buyerCompany,
+        buyerVatId: body.buyerVatId,
+        buyerBillingAddress: body.buyerBillingAddress,
+      },
     );
     sendCreated(res, result);
   };
@@ -100,12 +114,17 @@ export class PaymentsController {
 
   // Wise
   createWiseTransfer = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const body = CheckoutDto.parse(req.body);
     const result = await this.service.createWiseTransfer(
       req.user!.userId,
-      planSlug,
-      billingCycle,
-      industryCategory,
+      body.planSlug,
+      body.billingCycle,
+      body.industryCategory,
+      {
+        buyerCompany: body.buyerCompany,
+        buyerVatId: body.buyerVatId,
+        buyerBillingAddress: body.buyerBillingAddress,
+      },
     );
     sendCreated(res, result, 'Transfer instructions generated');
   };
@@ -126,12 +145,17 @@ export class PaymentsController {
   };
 
   createManualCheckout = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, industryCategory } = CheckoutDto.parse(req.body);
+    const body = CheckoutDto.parse(req.body);
     const result = await this.service.createManualCheckout(
       req.user!.userId,
-      planSlug,
-      billingCycle,
-      industryCategory
+      body.planSlug,
+      body.billingCycle,
+      body.industryCategory,
+      {
+        buyerCompany: body.buyerCompany,
+        buyerVatId: body.buyerVatId,
+        buyerBillingAddress: body.buyerBillingAddress,
+      },
     );
     sendCreated(res, result, 'Bank transfer instructions generated');
   };
@@ -140,6 +164,12 @@ export class PaymentsController {
     const body = DeliverableCheckoutDto.parse(req.body);
     const result = await this.service.createDeliverableManualCheckout(req.user!.userId, body);
     sendCreated(res, result, 'Deliverable checkout generated');
+  };
+
+  createDeliverableStripeCheckout = async (req: Request, res: Response): Promise<void> => {
+    const body = DeliverableCheckoutDto.parse(req.body);
+    const result = await this.service.createDeliverableStripeCheckout(req.user!.userId, body);
+    sendCreated(res, result, 'Stripe deliverable checkout session created');
   };
 
   markManualPaymentSent = async (req: Request, res: Response): Promise<void> => {
@@ -153,13 +183,18 @@ export class PaymentsController {
   };
 
   createKriptomanCheckout = async (req: Request, res: Response): Promise<void> => {
-    const { planSlug, billingCycle, cryptoCurrency, industryCategory } = KriptomanCheckoutDto.parse(req.body);
+    const body = KriptomanCheckoutDto.parse(req.body);
     const result = await this.service.createKriptomanCheckout(
       req.user!.userId,
-      planSlug,
-      billingCycle,
-      cryptoCurrency,
-      industryCategory
+      body.planSlug,
+      body.billingCycle,
+      body.cryptoCurrency,
+      body.industryCategory,
+      {
+        buyerCompany: body.buyerCompany,
+        buyerVatId: body.buyerVatId,
+        buyerBillingAddress: body.buyerBillingAddress,
+      },
     );
     sendCreated(res, result, 'Kriptoman checkout created');
   };

@@ -1,24 +1,27 @@
-# Preostalih 10 stavki u CEO sekcijama A–H (`- [ ]` — do 100% liste)
+# Preostalih stavki u CEO sekcijama A–H (`- [ ]` — do 100% liste)
 
 *Ime fajla `CEO-OPEN-BULLETS-RUNBOOK.md` je istorijsko (*bullets* = Markdown stavke); u ostalim dokovima koristi se reč **stavke** i **CEO sekcije A–H** — vidi [`README.md`](../README.md) (**Terminologija**).*
 
-**Pregled 2026-05-10:** i dalje **10** otvorenih stavki; evidencije ispod nisu ažurirane na **Pass** — vidi blok *Stanje revizije* u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md).
+> **Kanonska lista:** [`STATUS-KANON.md`](./STATUS-KANON.md) · live snapshot [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md)  
+> **CEO A (Git protection) = DONE.** Nest TypeORM prod = **N/A** (Nest nije u live Docker).
+
+**Pregled 2026-09-06:** otvoreno uglavnom **CEO G** (live Stripe, SMTP invoice, rollback owner, staging ritual) + opcione stavke. Ne brojati “10” slepo iz maj 2026 revizije.
 
 **Pun spoj svih izvornih lista + red rada:** [`MASTER-WORK-LIST.md`](./MASTER-WORK-LIST.md).
 
-**Sve što moraš ti (jedna strana):** [`VLASNIK-ZAVRSAVA.md`](./VLASNIK-ZAVRSAVA.md).
+**Sve što moraš ti (jedna strana):** [`STATUS-KANON.md`](./STATUS-KANON.md) · [`VLASNIK-ZAVRSAVA.md`](./VLASNIK-ZAVRSAVA.md) · kratko: [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md).
 
 **Brzi paket (4 koraka, popunjavanje šablona redom):** [`VLASNIK-PAKET.md`](./VLASNIK-PAKET.md).
 
-Izvor istine: [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) (ukupno **68** stavki; **58** zatvoreno, **~85%**). Ulazi: [`NIVO-1-START.md`](../NIVO-1-START.md), [`CONTRIBUTING.md`](../CONTRIBUTING.md). Ovde su samo **otvorene** stavke + gde zalepiti dokaz.
+Izvor istine CEO matrice: [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md). Ovde su **otvorene / delimične** stavke + gde zalepiti dokaz.
 
 **Interni pregled dokova u browseru:** ruta **`/dev/docs`** u [`apps/omnigroup-web`](../apps/omnigroup-web/) (Next dev server). Širi runbook kontekst (uklj. Next marketing / SEO u indeksu): [`EVIDENCE-INDEX.md`](./EVIDENCE-INDEX.md).
 
-| # | Sekcija | Stavka (ukratko) | Šablon / uputstvo |
-|---|---------|------------------|-------------------|
-| 1 | **CEO sekcija A** | `main` zaštićen, PR obavezni | [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md) · evidencija: [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) |
-| 2 | **CEO sekcija C** | Prod: `TYPEORM_SYNC=false` + migracije na prod DB | [`atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md`](../atina-system/docs/TYPEORM-PRODUCTION-CHECKLIST.md) · evidencija: [`TYPEORM-PROD-EVIDENCE-LATEST.md`](./TYPEORM-PROD-EVIDENCE-LATEST.md) |
-| 3–10 | **CEO sekcija G** | Build prod, staging migracije, `.env` prod, live plaćanja, SMTP, smoke, admin monitoring, rollback vlasnik | [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md) · [`STAGING-RELEASE-CHECKLIST.md`](./STAGING-RELEASE-CHECKLIST.md) · [`atina-platform/atina/docs/operations/release-gate-checklist.md`](../atina-platform/atina/docs/operations/release-gate-checklist.md) |
+| # | Sekcija | Stavka (ukratko) | Status 2026-09-06 | Šablon / uputstvo |
+|---|---------|------------------|------------------|-------------------|
+| 1 | **CEO sekcija A** | `main` zaštićen, PR obavezni | **DONE** | [`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md) |
+| 2 | **CEO sekcija C** | Prod TypeORM Nest | **N/A** (Nest out of live Docker) | [`TYPEORM-PROD-EVIDENCE-LATEST.md`](./TYPEORM-PROD-EVIDENCE-LATEST.md) |
+| 3–10 | **CEO sekcija G** | Build/smoke/admin OK; Stripe **test** + SMTP + rollback **DONE**; Stripe **live** + staging VPS još open | **partial** | [`CEO-G-PRODUCTION-EVIDENCE-LATEST.md`](./CEO-G-PRODUCTION-EVIDENCE-LATEST.md) · [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) |
 
 **Agent deploy handoff (sekcija I u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md)) — 6 stavki vlasnika posle agenta:**
 

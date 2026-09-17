@@ -172,10 +172,10 @@ export class AutonomyLoopService {
     return this.categoryRolloutJob.startJob(userId, dto);
   }
 
-  getCategoriesRolloutJob() {
+  async getCategoriesRolloutJob() {
     return {
-      active: this.categoryRolloutJob.getActiveJob(),
-      last: this.categoryRolloutJob.getLastJob(),
+      active: await this.categoryRolloutJob.getActiveJob(),
+      last: await this.categoryRolloutJob.getLastJob(),
     };
   }
 

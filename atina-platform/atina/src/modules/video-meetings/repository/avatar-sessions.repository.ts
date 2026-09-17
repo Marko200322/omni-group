@@ -2,7 +2,7 @@ import { query } from '../../../database/connection';
 
 export type AvatarSessionRow = {
   id: string;
-  user_id: string;
+  user_id: string | null;
   agent_type: 'support' | 'sales';
   status: 'active' | 'closed';
   metadata: Record<string, unknown> | string;
@@ -23,7 +23,7 @@ export type AvatarMessageRow = {
 };
 
 export class AvatarSessionsRepository {
-  createSession(userId: string, agentType: 'support' | 'sales', metadata: Record<string, unknown> = {}) {
+  createSession(userId: string | null, agentType: 'support' | 'sales', metadata: Record<string, unknown> = {}) {
     return query<AvatarSessionRow>(
       `INSERT INTO avatar_conversation_sessions (user_id, agent_type, metadata)
        VALUES ($1, $2, $3) RETURNING *`,
@@ -35,6 +35,14 @@ export class AvatarSessionsRepository {
     return query<AvatarSessionRow>(
       `SELECT * FROM avatar_conversation_sessions WHERE id = $1 AND user_id = $2`,
       [sessionId, userId]
+    );
+  }
+
+  getGuestSession(sessionId: string) {
+    return query<AvatarSessionRow>(
+      `SELECT * FROM avatar_conversation_sessions
+        WHERE id = $1 AND user_id IS NULL AND COALESCE(metadata->>'guest', 'false') = 'true'`,
+      [sessionId]
     );
   }
 

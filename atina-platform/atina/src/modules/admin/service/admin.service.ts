@@ -38,12 +38,16 @@ import { AuthService } from '../../auth/service/auth.service';
 import { createWorkflowChainAuthBootstrapAdapter } from '../../auth/service/workflow-chain-auth-bootstrap.adapter';
 import { generateInvitePassword } from '../lib/invite-password';
 import { ValidationError } from '../../../utils/errors';
+import { buildFactoryPhaseStatus } from '../../billing/lib/factory-phase-modules';
+import { getFactoryRuntimeSnapshot } from '../../billing/lib/factory-phase-runtime';
+import { NotificationsService } from '../../notifications/service/notifications.service';
 import type { AdminInviteUserBodyDtoType } from '../dto/admin.dto';
 
 export class AdminService {
   private readonly repo = new AdminRepository();
   private readonly workflowChainService: WorkflowChainService;
   private readonly onboarding: AdminOnboardingService;
+  private readonly notifications = new NotificationsService();
 
   constructor(workflowChainService?: WorkflowChainService) {
     this.workflowChainService = workflowChainService ?? new WorkflowChainService();
@@ -346,6 +350,10 @@ export class AdminService {
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage(),
         nodeVersion: process.version,
+        factory: {
+          ...buildFactoryPhaseStatus(),
+          runtime: getFactoryRuntimeSnapshot(),
+        },
       };
   }
 
@@ -437,6 +445,34 @@ export class AdminService {
       email: registered.user.email,
       generatedPassword,
     });
+
+    if (body.sendWelcomeEmail) {
+      const loginUrl = `${String(config.app.webUrl).replace(/\/+$/, '')}/login`;
+      const intro = generatedPassword
+        ? `Your client portal account is ready. Use the temporary password below and change it after you sign in.`
+        : `Your client portal account is ready. Sign in with the password that was set for you.`;
+      const passwordBlock = generatedPassword
+        ? `<p><strong>Temporary password:</strong> <code>${password}</code></p>`
+        : '';
+      const plainPasswordBlock = generatedPassword ? `Temporary password: ${password}\n` : '';
+      await this.notifications.sendEmail(
+        registered.user.email,
+        'Your Omni Group portal access is ready',
+        `<p>Hello ${registered.user.name},</p>
+<p>${intro}</p>
+<p><strong>Login:</strong> ${registered.user.email}<br/><strong>Portal:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
+${passwordBlock}
+<p>If anything looks wrong, reply to this email and we will help.</p>`,
+        `Hello ${registered.user.name},
+
+${intro}
+
+Login: ${registered.user.email}
+Portal: ${loginUrl}
+${plainPasswordBlock}
+If anything looks wrong, reply to this email and we will help.`
+      );
+    }
 
     return {
       data: {

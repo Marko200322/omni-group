@@ -17,8 +17,14 @@ export default function BillingSuccessPage() {
       <p className="mt-2 text-slate-400">
         {provider === 'kriptoman'
           ? 'Crypto payment received. Your plan activates within a few minutes.'
-          : 'Subscription activated. Invoice will arrive by email with a PDF attachment.'}
+          : 'Thank you — your payment was received. Your subscription activates shortly and the invoice will arrive by email.'}
       </p>
+      {provider === 'stripe' && (
+        <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          If billing still shows pending after a few minutes, open Billing and refresh — card payments sometimes need a
+          manual verification step on our side before the plan activates.
+        </p>
+      )}
       {(sessionId || paymentId) && (
         <p className="mt-3 font-mono text-xs text-slate-500">
           {sessionId ? `Session: ${sessionId.slice(0, 24)}…` : `Payment: ${paymentId}`}

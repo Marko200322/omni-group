@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { assertFactoryModule } from '../../billing/lib/factory-phase-guard';
 import { getAiClient } from '../../../integrations';
 import type { LeadRecord } from '../../../integrations/lead-databases/types';
 import { NotificationsService } from '../../notifications/service/notifications.service';
@@ -12,8 +13,19 @@ import {
   normalizeJobPostingContext,
 } from '../../client-hunter/lib/job-hunt-copy';
 import { getJobBoardPlatform } from '../../client-hunter/data/job-board-catalog';
+import { getInstantlyClient } from '../../../integrations/instantly-client';
+import { isCompanyEmail } from '../../client-hunter/lib/company-email';
+
+function splitLeadName(full?: string | null): { firstName?: string; lastName?: string } {
+  const parts = (full ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return {};
+  if (parts.length === 1) return { firstName: parts[0] };
+  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
+}
 
 export type OutboundQueueStats = {
+  emailProvider: string;
+  instantlyConfigured: boolean;
   warmupComplete: boolean;
   warmupMode: boolean;
   dailyCap: number;
@@ -52,7 +64,10 @@ export class OutboundQueueService {
       if (row.status) byStatus[row.status] = parseInt(row.count, 10);
     }
     const dailyCap = config.outreach.dailyCap;
+    const instantly = getInstantlyClient();
     return {
+      emailProvider: config.outreach.emailProvider,
+      instantlyConfigured: instantly.isConfigured(),
       warmupComplete: config.outreach.domainWarmupComplete,
       warmupMode: config.outreach.warmupMode,
       dailyCap,
@@ -177,7 +192,11 @@ export class OutboundQueueService {
     source?: string;
   }): Promise<{ created: number; ids: string[] }> {
     const ids: string[] = [];
-    for (const lead of input.leads.slice(0, 5)) {
+    const companyOnly = config.hunt.companyEmailsOnly !== false;
+    const leads = input.leads.filter((lead) =>
+      companyOnly ? isCompanyEmail(lead.email) : Boolean(lead.email?.trim()),
+    );
+    for (const lead of leads.slice(0, 5)) {
       const row = await this.createDraftFromVertical({
         userId: input.userId,
         verticalSlug: input.verticalSlug,
@@ -200,10 +219,17 @@ export class OutboundQueueService {
   }
 
   async processSendQueue(): Promise<{ processed: number; sent: number; blocked: number; failed: number }> {
+    if (!config.outreach.devSendToFallback) {
+      assertFactoryModule('outbound_send', 'Outbound send requires factory phase M4+ and domain warmup.');
+    }
     const devFallback =
       config.outreach.devSendToFallback && Boolean(config.outreach.fallbackNotifyEmail?.trim());
+    const instantlyMode =
+      config.outreach.emailProvider === 'instantly' &&
+      getInstantlyClient().isConfigured() &&
+      !devFallback;
 
-    if (!config.outreach.domainWarmupComplete && !devFallback) {
+    if (!config.outreach.domainWarmupComplete && !devFallback && !instantlyMode) {
       return { processed: 0, sent: 0, blocked: 0, failed: 0 };
     }
 
@@ -222,7 +248,7 @@ export class OutboundQueueService {
     for (const msg of queued) {
       const to = devFallback
         ? config.outreach.fallbackNotifyEmail!.trim()
-        : msg.lead_email?.trim() || config.outreach.fallbackNotifyEmail;
+        : msg.lead_email?.trim() || '';
       if (!to) {
         await this.repo.updateStatus(msg.id, 'failed', {
           metadata: { error: 'no_recipient' },
@@ -230,9 +256,39 @@ export class OutboundQueueService {
         failed += 1;
         continue;
       }
+      // Skip free-mail / gov / test — commercial outbound only.
+      if (!devFallback && !isCompanyEmail(to)) {
+        await this.repo.updateStatus(msg.id, 'failed', {
+          metadata: { error: 'blocked_recipient_policy', to },
+        });
+        failed += 1;
+        continue;
+      }
       try {
-        await this.notifications.sendEmail(to, msg.subject, msg.body_html, msg.body_text ?? undefined);
-        await this.repo.updateStatus(msg.id, 'sent', { sentAt: new Date() });
+        if (instantlyMode) {
+          const name = splitLeadName(msg.lead_name);
+          await getInstantlyClient().addLeadsToCampaign([
+            {
+              email: to,
+              firstName: name.firstName ?? null,
+              lastName: name.lastName ?? null,
+              companyName: msg.lead_company,
+              personalization: msg.body_text?.slice(0, 2000) ?? null,
+              customVariables: {
+                subject: msg.subject,
+                body_html: msg.body_html,
+                outbound_id: msg.id,
+                vertical_slug: msg.vertical_slug ?? '',
+              },
+            },
+          ]);
+        } else {
+          await this.notifications.sendEmail(to, msg.subject, msg.body_html, msg.body_text ?? undefined);
+        }
+        await this.repo.updateStatus(msg.id, 'sent', {
+          sentAt: new Date(),
+          metadata: instantlyMode ? { provider: 'instantly' } : { provider: 'resend' },
+        });
         sent += 1;
       } catch (err) {
         await this.repo.updateStatus(msg.id, 'failed', {

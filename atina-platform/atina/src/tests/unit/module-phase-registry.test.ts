@@ -7,6 +7,9 @@ describe('MODULE_PHASE_REGISTRY', () => {
     expect(MODULE_PHASE_REGISTRY.scaling).toBe('v5');
     expect(MODULE_PHASE_REGISTRY['edge-swarm']).toBe('v6');
     expect(MODULE_PHASE_REGISTRY['pdf-legal-alignment']).toBe('v6');
+    expect(MODULE_PHASE_REGISTRY['marketing-growth']).toBe('v2');
+    expect(MODULE_PHASE_REGISTRY['cursor-agent']).toBe('v2');
+    expect(MODULE_PHASE_REGISTRY['resource-procurement']).toBe('v2');
   });
 
   it('getModulePhaseRequirements exposes registry slugs', () => {

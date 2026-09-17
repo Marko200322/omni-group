@@ -35,7 +35,7 @@ export function OmniGroupLogoMark({ size = 'md', animated = true, className = ''
       height={px}
       className={className}
       role="img"
-      aria-label="Omni Group"
+      aria-label="Omni Group Tech"
       initial={motionOn ? { opacity: 0, scale: 0.88 } : false}
       animate={motionOn ? { opacity: 1, scale: 1 } : undefined}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}

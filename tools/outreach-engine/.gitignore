@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+data/*.sqlite
+data/*.jsonl
+data/outreach-audit.*
+*.log

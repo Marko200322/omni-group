@@ -1,17 +1,18 @@
-﻿'use client';
+import type { Metadata } from 'next';
+import { MarketingShell } from '@/components/marketing/MarketingShell';
+import { getSiteCompany } from '@/lib/site-company';
+import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { PageEnter } from '@/components/motion/PageEnter';
+export const metadata: Metadata = {
+  openGraph: marketingOpenGraph('Omni Group Tech'),
+  twitter: marketingTwitter('Omni Group Tech'),
+};
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+  const company = getSiteCompany();
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <PageEnter>{children}</PageEnter>
-      </main>
-      <Footer />
-    </div>
+    <MarketingShell impressum={company.impressumLine()} supportEmail={company.supportEmail}>
+      {children}
+    </MarketingShell>
   );
 }

@@ -13,13 +13,32 @@ jest.mock('../../integrations', () => ({
   getAiClient: () => mockAi,
 }));
 
+jest.mock('../../utils/plan-module-access', () => ({
+  assertPlanIncludesModule: jest.fn().mockResolvedValue(undefined),
+}));
+
 const mockQuery = db.query as jest.MockedFunction<typeof db.query>;
+const { assertPlanIncludesModule } = jest.requireMock('../../utils/plan-module-access') as {
+  assertPlanIncludesModule: jest.Mock;
+};
 
 describe('AiMemoryService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAi.isConfigured.mockReturnValue(false);
+    assertPlanIncludesModule.mockResolvedValue(undefined);
     mockQuery.mockResolvedValue({ rows: [{ id: 'log-1', created_at: new Date() }], rowCount: 1 } as never);
+  });
+
+  it('remember rejects users without ai-memory plan', async () => {
+    const { PaymentError } = await import('../../utils/errors');
+    assertPlanIncludesModule.mockRejectedValue(
+      new PaymentError('AI memory requires Partner (Enterprise) plan or higher'),
+    );
+    const service = new AiMemoryService();
+    await expect(
+      service.remember('u1', { key: 'prefs', value: { theme: 'dark' }, namespace: 'global' }),
+    ).rejects.toThrow(/Enterprise/);
   });
 
   it('remember stores locally and skips remote when AI off', async () => {

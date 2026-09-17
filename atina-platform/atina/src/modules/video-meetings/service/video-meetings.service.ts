@@ -10,6 +10,7 @@ import {
 } from '../providers/google-meet.provider';
 import logger from '../../../utils/logger';
 import { AvatarAgentService } from './avatar-agent.service';
+import { LiveMeetingBridgeService } from '../../live-call-avatar/service/live-meeting-bridge.service';
 
 type MeetingType = 'support' | 'sales';
 
@@ -17,6 +18,7 @@ export class VideoMeetingsService {
   private readonly repo = new VideoMeetingsRepository();
   private readonly notify = new MeetingNotificationsService();
   private readonly avatarAgents = new AvatarAgentService();
+  private readonly liveBridge = new LiveMeetingBridgeService();
 
   private agentProfile(meetingType: MeetingType) {
     return meetingType === 'support' ? config.videoMeetings.support : config.videoMeetings.sales;
@@ -66,12 +68,43 @@ export class VideoMeetingsService {
       });
     }
 
-    return { meetingType, methods };
+    const liveAvatarAvailable =
+      config.liveCallAvatar.enabled || config.liveCallAvatar.allowStub;
+
+    return {
+      meetingType,
+      methods,
+      liveAvatar: liveAvatarAvailable
+        ? {
+            enabled: true,
+            defaultAgentId: 'mila',
+            providers: ['auto', 'heygen', 'd-id', 'stub'],
+            platforms: ['zoom', 'google_meet', 'browser'],
+            recallConfigured: config.liveCallAvatar.recallApiKey.trim().length > 8,
+          }
+        : { enabled: false },
+    };
   }
 
   async book(userId: string, meetingType: MeetingType, dto: BookMeetingDtoType) {
     if (meetingType === 'sales' && !config.videoMeetings.salesEnabled) {
       throw new ValidationError('Sales meeting booking is not enabled yet.');
+    }
+
+    if (dto.hostType === 'ai_avatar') {
+      const provider =
+        dto.provider === 'zoom' || dto.provider === 'google_meet' ? dto.provider : 'zoom';
+      const result = await this.liveBridge.bookAiAvatarMeeting(userId, {
+        topic: dto.topic,
+        description: dto.description,
+        provider,
+        scheduledAt: dto.scheduledAt,
+        durationMinutes: dto.durationMinutes,
+        agentId: dto.agentId ?? 'mila',
+        agentType: meetingType,
+        liveProvider: dto.liveProvider,
+      });
+      return result.meeting;
     }
 
     const agent = this.agentProfile(meetingType);

@@ -13,7 +13,7 @@ export function InvoicePreviewClient() {
     <div className="py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <header className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Omni Group · Billing</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Omni Group Tech · Billing</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">Invoice preview</h1>
           <p className="mt-3 max-w-2xl text-slate-400">
             Premium HTML templates sent to clients and operators. Same appearance in email clients and this
