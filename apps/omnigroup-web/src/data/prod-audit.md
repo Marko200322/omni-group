@@ -1,8 +1,8 @@
 # PROD-AUDIT (auto-generated)
 
-**Generated:** 2026-09-17 20:49  
+**Generated:** 2026-09-17 21:01  
 **Command:** `.\scripts\audit-prod-autonomous.ps1`  
-**Summary:** 6 PASS Â· 0 FAIL Â· 8 TI/DEFERRED
+**Summary:** 7 PASS Â· 0 FAIL Â· 7 TI/DEFERRED
 
 Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 
@@ -11,17 +11,17 @@ Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 | P0-01 | DMARC DNS | **TI** | No _dmarc TXT â€” Spaceship API keys not in deploy.config |
 | LIVE-10 | Resend DKIM DNS | **PASS** | resend._domainkey SET |
 | P0-02 | Resend domain verify | **TI** | Resend UI Verify - status=partially_failed |
-| P0-04 | Slack kontakt webhook | **TI** | CONTACT_SLACK_WEBHOOK_URL empty â€” paste URL + deploy |
+| P0-04 | Slack kontakt webhook | **TI** | CONTACT_SLACK_WEBHOOK_URL empty - paste URL + deploy |
 | P0-05 | Slack ops webhook | **TI** | SLACK_WEBHOOK_URL empty |
 | LIVE-01 | Web /api/health | **PASS** | https://omnigrouptech.com |
 | LIVE-01 | API /health | **PASS** | api.omnigrouptech.com |
 | AUTH | Admin login | **PASS** | admin@atina.io |
 | P1-05 | Problem Hunter BFF | **PASS** | sources=3 |
 | P0-03 | Instantly/warmup | **TI** | Instantly UI warmup + OUTREACH_DOMAIN_WARMUP_COMPLETE |
-| P3-E06 | catalog-quality BFF | **PARTIAL** | Route may need deploy |
+| P3-E06 | catalog-quality BFF | **PASS** | Admin endpoint OK |
 | CONTACT | POST /api/contact | **PASS** | message=sent_via_resend |
-| P0-06 | Mystery shopper PDF inbox | **TI** | Auto: e2e-billing-prod PASS â€” ti proveri inbox PDF |
-| P0-07 | Legal counsel sign-off | **TI** | Formalni advokat â€” stranice u kodu |
+| P0-06 | Mystery shopper PDF inbox | **TI** | Auto e2e-billing-prod PASS - ti proveri inbox PDF |
+| P0-07 | Legal counsel sign-off | **TI** | Formalni advokat - stranice u kodu |
 | P2 | Firma + Stripe LIVE + PayPal/Wise/Kriptoman | **DEFERRED** | Namerno na kraju (P2) |
 
 ## Agent vs ti
