@@ -23,11 +23,11 @@ if (-not (Test-Path $ConfigPath)) { throw "Nema $ConfigPath" }
 
 $cfg = Get-Content $ConfigPath -Raw | ConvertFrom-Json
 $key = $cfg.sshKeyPath.Trim()
-$host = $cfg.vpsHost.Trim()
+$vpsHost = $cfg.vpsHost.Trim()
 if (-not $key -or -not (Test-Path $key)) { throw 'sshKeyPath u deploy.config.json' }
 
 $localScript = Join-Path $scriptsDir 'verify-monorepo-vps.sh'
-scp -o StrictHostKeyChecking=accept-new -i $key $localScript "root@${host}:/tmp/run-omni-verify.sh" | Out-Null
+scp -o StrictHostKeyChecking=accept-new -i $key $localScript "root@${vpsHost}:/tmp/run-omni-verify.sh" | Out-Null
 
 $remote = @"
 chmod +x /tmp/run-omni-verify.sh
@@ -40,9 +40,9 @@ sleep 2
 tail -n 8 /var/log/omni-verify-monorepo.log
 "@
 
-ssh -o StrictHostKeyChecking=accept-new -i $key "root@$host" $remote
+ssh -o StrictHostKeyChecking=accept-new -i $key "root@$vpsHost" $remote
 
 if ($FollowLog) {
   Write-Host 'Following log (Ctrl+C to stop)...' -ForegroundColor Cyan
-  ssh -i $key "root@$host" 'tail -f /var/log/omni-verify-monorepo.log'
+  ssh -i $key "root@$vpsHost" 'tail -f /var/log/omni-verify-monorepo.log'
 }

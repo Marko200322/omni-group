@@ -870,6 +870,13 @@ describe('PaymentsService', () => {
   });
 
   describe('Wise', () => {
+    beforeEach(() => {
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName =
+        'Omni Group';
+      (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban =
+        'RS35100000000000000000';
+    });
+
     it('createWiseTransfer returns instructions (yearly amount)', async () => {
       mockQuery.mockResolvedValue({
         rows: [{ id: 'wise-pay-1' }],

@@ -2,6 +2,11 @@
 # Full monorepo verify on VPS (Linux). Laptop only triggers: scripts/run-vps-verify.ps1
 # Log: /var/log/omni-verify-monorepo.log
 set -euo pipefail
+exec 9>/var/lock/omni-verify.lock
+if ! flock -n 9; then
+  echo "Another verify is already running; exit." >&2
+  exit 0
+fi
 REPO="${REPO:-/opt/omni-group-ci-verify}"
 LOG="${LOG:-/var/log/omni-verify-monorepo.log}"
 BRANCH="${BRANCH:-feat/phase10-outreach-send-enabled}"
