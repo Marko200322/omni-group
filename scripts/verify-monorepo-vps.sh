@@ -47,6 +47,8 @@ docker run --rm -v "$REPO/atina-system:/app" -w /app "$NODE_IMAGE" \
 
 echo "== docker compose config =="
 export DB_PASSWORD=ci_verify_only DB_USER=atina_user DB_NAME=atina_saas_db
+cp -n atina-platform/atina/.env.docker.prod.example atina-platform/atina/.env.docker.prod
+cp -n apps/omnigroup-web/.env.production.example apps/omnigroup-web/.env.production
 docker compose -f docker-compose.prod.yml config --quiet
 cp -n atina-platform/atina/.env.example atina-platform/atina/.env || true
 docker compose -f atina-platform/atina/docker-compose.yml config --quiet
