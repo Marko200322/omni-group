@@ -275,7 +275,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.docker.prod ps
   Write-Host '=== VPS deploy zavrsen ===' -ForegroundColor Green
   Write-Host "  Web:  https://$SiteDomain"
   Write-Host "  API:  https://$ApiDomain/health"
-  Write-Host '  Admin: admin@atina.io (lozinka u deploy.config.json — ne logujemo)' -ForegroundColor DarkGray
+  Write-Host '  Admin: admin@atina.io (lozinka u deploy.config.json - ne logujemo)' -ForegroundColor DarkGray
   Write-Host ''
   Write-Host 'Smoke (posle DNS propagacije, TTL 1800 = do ~30 min):' -ForegroundColor Cyan
   Write-Host "  .\scripts\staging-smoke-remote.ps1 -AtinaNodeBase https://$ApiDomain"

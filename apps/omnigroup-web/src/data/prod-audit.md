@@ -1,8 +1,8 @@
 # PROD-AUDIT (auto-generated)
 
-**Generated:** 2026-09-20 06:57  
+**Generated:** 2026-09-20 07:35  
 **Command:** `.\scripts\audit-prod-autonomous.ps1`  
-**Summary:** 12 PASS Â· 0 FAIL Â· 2 TI/DEFERRED
+**Summary:** 13 PASS Â· 0 FAIL Â· 2 TI/DEFERRED
 
 Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 
@@ -18,6 +18,7 @@ Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 | AUTH | Admin login | **PASS** | admin@atina.io |
 | P1-05 | Problem Hunter BFF | **PASS** | sources=3 |
 | P0-03 | Instantly/warmup flag | **PASS** | warmupComplete=true on prod |
+| P3-A04 | Cold outbound send OFF | **PASS** | OUTREACH_SEND_ENABLED=false (kill-switch) |
 | P3-E06 | catalog-quality BFF | **PASS** | Admin endpoint OK |
 | CONTACT | POST /api/contact | **PASS** | message=sent_via_resend |
 | P0-06 | Mystery shopper PDF inbox | **PASS** | Gmail IMAP: 1 invoice PDF(s) â€ |
