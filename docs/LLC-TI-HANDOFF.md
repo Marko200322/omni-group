@@ -135,7 +135,7 @@ Events: `checkout.session.completed` (deliverables + subscription).
 | 7 | **850 matrix re-run** | `.\scripts\m4-launch-gate.ps1 -FullPackagesMatrix` |
 | 8 | **2FA admin** | Backlog |
 | 9 | **CDN Cloudflare** | Opciono |
-| 10 | **CI u GitHub Actions** | `verify-monorepo.ps1` |
+| 10 | **CI u GitHub Actions** | [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**) |
 | 11 | **Rollback owner** | Upiši u CEO-G doc |
 | 12 | **IBAN fallback** | Samo ako hoćeš ručnu uplatu pored Stripe |
 

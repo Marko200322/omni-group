@@ -262,7 +262,7 @@ Configured via `deploy.config.json` / KLJUCEVI (see [`../generated/EMPTY-KEYS.md
 | Atina smoke | `npm run smoke:all` |
 | Web | `npm run build` (Next.js) |
 | Nest | `npm run verify:ci` / `verify:n1` |
-| Monorepo gate | `scripts/verify-monorepo.ps1` |
+| Monorepo gate | [`verify-monorepo.ps1`](../../scripts/verify-monorepo.ps1) (job **`python`** / **`Python (Doslednost dok + pytest)`** — [`../GIT-BRANCH-PROTECTION.md`](../GIT-BRANCH-PROTECTION.md); **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**) |
 | Prod autonomous audit | `scripts/audit-prod-autonomous.ps1` |
 | Prod E2E billing | `scripts/e2e-billing-prod.ps1` |
 | Fulfillment matrix | `scripts/e2e-fulfillment-matrix-prod.ps1` |

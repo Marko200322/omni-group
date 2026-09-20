@@ -142,7 +142,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 | ID | Stavka | Status |
 |----|--------|--------|
 | P3-F01 | Obriši `scripts/_tmp_nb_profile*` (temp) | DONE | 2026-09-17 |
-| P3-F02 | Disk C: ≥5 GB za pun `verify-monorepo` | DEFERRED — lokalno |
+| P3-F02 | Disk C: ≥5 GB za pun [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**) | DEFERRED — lokalno |
 | P3-F03 | CEO checklist zastareli `[ ]` → uskladiti | DONE | kanon banner u CHECKLIST-CEO · 2026-09-17 |
 
 ### P3-G · Otkazano

@@ -9,7 +9,7 @@
 
 ## 1. Executive summary
 
-Quality gates are **layered** (CI unit → verify-monorepo → smoke → PS E2E → prod audit), not uniform coverage.
+Quality gates are **layered** (CI unit → [`verify-monorepo.ps1`](../../scripts/verify-monorepo.ps1) → smoke → PS E2E → prod audit), not uniform coverage. Lokalni pun mirror = job **`python`** / required check **`Python (Doslednost dok + pytest)`** ([`GIT-BRANCH-PROTECTION.md`](../GIT-BRANCH-PROTECTION.md)); uključuje **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**; dublji Atina gate posle servisa: **`npm run smoke:all`** u `atina-platform/atina`.
 
 | Area | Strongest | Weakest |
 |------|-----------|---------|
