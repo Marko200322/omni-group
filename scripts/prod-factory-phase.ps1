@@ -284,6 +284,11 @@ function Apply-FactoryPhaseEnvFiles(
     Set-FactoryEnvLine $atinaEnv 'COMPANY_ADDRESS' "$($DeployConfig.companyAddress)"
   }
 
+  $warmupOverride = "$($DeployConfig.outreachDomainWarmupComplete)".Trim().ToLower()
+  if ($warmupOverride -in @('true', '1', 'yes')) {
+    Set-FactoryEnvLine $atinaEnv 'OUTREACH_DOMAIN_WARMUP_COMPLETE' 'true'
+  }
+
   return $atinaMap.FACTORY_PHASE
 }
 

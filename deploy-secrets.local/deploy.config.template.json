@@ -112,6 +112,8 @@
   "proPriceId": "",
   "enterprisePriceId": "",
 
+  "outreachDomainWarmupComplete": "false",
+  "_outreachDomainWarmupComplete_comment": "Set true after Instantly/domain warmup confirmed",
   "slackWebhookUrl": "",
   "contactSlackWebhookUrl": "",
 

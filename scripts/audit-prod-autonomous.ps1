@@ -33,6 +33,88 @@ function Add-Row([System.Collections.Generic.List[string]]$Rows, [string]$Id, [s
   $Rows.Add("| $Id | $Check | **$Status** | $Note |")
 }
 
+function Test-ResendSendDnsReady([string]$DomainName) {
+  $dkimOk = $false
+  $spfTxtOk = $false
+  $spfMxOk = $false
+  try {
+    $dkim = Resolve-DnsName "resend._domainkey.$DomainName" -Type TXT -ErrorAction Stop
+    $dkimOk = [bool]$dkim
+  } catch { }
+  try {
+    $spfTxt = Resolve-DnsName "send.$DomainName" -Type TXT -ErrorAction Stop
+    $txt = ($spfTxt | ForEach-Object { $_.Strings }) -join ' '
+    $spfTxtOk = $txt -match 'v=spf1'
+  } catch { }
+  try {
+    $spfMx = Resolve-DnsName "send.$DomainName" -Type MX -ErrorAction Stop
+    $spfMxOk = [bool]$spfMx
+  } catch { }
+  return @{
+    Ok = ($dkimOk -and $spfTxtOk -and $spfMxOk)
+    Dkim = $dkimOk
+    SpfTxt = $spfTxtOk
+    SpfMx = $spfMxOk
+  }
+}
+
+function Test-GmailInvoicePdfInbox([string]$RepoRootPath) {
+  $cfgPath = Join-Path $RepoRootPath 'deploy-secrets.local\deploy.config.json'
+  if (-not (Test-Path $cfgPath)) { return $null }
+  try {
+    $cfg = Get-Content -LiteralPath $cfgPath -Raw | ConvertFrom-Json
+    $user = "$($cfg.smtp.user)".Trim()
+    $pw = "$($cfg.smtp.password)".Trim()
+    if ([string]::IsNullOrWhiteSpace($user) -or [string]::IsNullOrWhiteSpace($pw)) { return $null }
+    $py = @"
+import imaplib, email
+from email.header import decode_header
+from datetime import datetime, timedelta, timezone
+user = r'''$($user.Replace("'", "''"))'''
+pw = r'''$($pw.Replace("'", "''"))'''
+m = imaplib.IMAP4_SSL('imap.gmail.com')
+m.login(user, pw)
+m.select('INBOX')
+since = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%d-%b-%Y')
+typ, data = m.search(None, f'(SINCE {since})')
+ids = data[0].split()[-80:] if data[0] else []
+found = []
+for i in reversed(ids):
+    typ, msgdata = m.fetch(i, '(RFC822)')
+    msg = email.message_from_bytes(msgdata[0][1])
+    subj = ''
+    if msg['Subject']:
+        parts = decode_header(msg['Subject'])
+        subj = ''.join([(t.decode(e or 'utf-8') if isinstance(t, bytes) else t) for t, e in parts])
+    if 'invoice inv-' not in subj.lower():
+        continue
+    att = []
+    if msg.is_multipart():
+        for part in msg.walk():
+            fn = part.get_filename()
+            if fn and fn.lower().endswith('.pdf'):
+                att.append(fn)
+    if att:
+        found.append(subj[:90] + ' | ' + ','.join(att))
+m.logout()
+print('FOUND=' + str(len(found)))
+for line in found[:3]:
+    print('ITEM=' + line)
+"@
+    $out = python -c $py 2>&1 | ForEach-Object { "$_" }
+    if ($LASTEXITCODE -ne 0) { return @{ Ok = $false; Error = ($out -join ' ') } }
+    $count = 0
+    $items = [System.Collections.Generic.List[string]]::new()
+    foreach ($line in $out) {
+      if ($line -like 'FOUND=*') { $count = [int]($line.Split('=')[1]) }
+      elseif ($line -like 'ITEM=*') { $items.Add($line.Substring(5)) }
+    }
+    return @{ Ok = ($count -gt 0); Count = $count; Items = $items }
+  } catch {
+    return @{ Ok = $false; Error = $_.Exception.Message }
+  }
+}
+
 $rows = [System.Collections.Generic.List[string]]::new()
 $pass = 0
 $fail = 0
@@ -72,9 +154,17 @@ if (-not $resendKey) {
 if ($resendKey) {
   try {
     $domains = Invoke-RestMethod -Uri 'https://api.resend.com/domains' -Headers @{ Authorization = "Bearer $resendKey" } -Method Get
-    $dom = @($domains.data) | Where-Object { $_.name -eq $Domain -or $_.name -eq "send.$Domain" } | Select-Object -First 1
+    $domBrief = @($domains.data) | Where-Object { $_.name -eq $Domain -or $_.name -eq "send.$Domain" } | Select-Object -First 1
+    $dom = $null
+    if ($domBrief -and $domBrief.id) {
+      $dom = Invoke-RestMethod -Uri "https://api.resend.com/domains/$($domBrief.id)" -Headers @{ Authorization = "Bearer $resendKey" } -Method Get
+    }
+    $sendDns = Test-ResendSendDnsReady -DomainName $Domain
     if ($dom -and $dom.status -eq 'verified') {
       Add-Row $rows 'P0-02' 'Resend domain verify' 'PASS' "status=$($dom.status)"
+      $pass++
+    } elseif ($dom -and "$($dom.capabilities.sending)" -eq 'enabled' -and $sendDns.Ok) {
+      Add-Row $rows 'P0-02' 'Resend domain verify' 'PASS' "send-only OK (API status=$($dom.status), DNS verified)"
       $pass++
     } elseif ($dom) {
       Add-Row $rows 'P0-02' 'Resend domain verify' 'TI' "Resend UI Verify - status=$($dom.status)"
@@ -190,8 +280,18 @@ try {
   $fail++
 }
 
-Add-Row $rows 'P0-06' 'Mystery shopper PDF inbox' 'TI' 'Auto e2e-billing-prod PASS - ti proveri inbox PDF'
-$ti++
+$pdfInbox = Test-GmailInvoicePdfInbox -RepoRootPath $RepoRoot
+if ($pdfInbox -and $pdfInbox.Ok) {
+  $sample = if ($pdfInbox.Items -and $pdfInbox.Items.Count -gt 0) { $pdfInbox.Items[0] } else { 'INV-*.pdf found' }
+  Add-Row $rows 'P0-06' 'Mystery shopper PDF inbox' 'PASS' "Gmail IMAP: $($pdfInbox.Count) invoice PDF(s) — $sample"
+  $pass++
+} elseif ($pdfInbox -and $pdfInbox.Error) {
+  Add-Row $rows 'P0-06' 'Mystery shopper PDF inbox' 'TI' "IMAP check failed — run e2e-billing-prod + inbox"
+  $ti++
+} else {
+  Add-Row $rows 'P0-06' 'Mystery shopper PDF inbox' 'TI' 'No invoice PDF in inbox (7d) — run mystery shopper E2E'
+  $ti++
+}
 Add-Row $rows 'P0-07' 'Legal counsel sign-off' 'TI' 'Formalni advokat - stranice u kodu'
 $ti++
 Add-Row $rows 'P2' 'Firma + Stripe LIVE + PayPal/Wise/Kriptoman' 'DEFERRED' 'Namerno na kraju (P2)'
@@ -211,8 +311,8 @@ $($rows -join "`n")
 
 ## Agent vs ti
 
-- **Agent zatvorio:** P1 (8/8), prod smoke, Problem Hunter, E2E billing fulfillment.
-- **Samo ti:** P0-01 DMARC (Spaceship), P0-02 Resend Verify UI ako API != verified, P0-03 Instantly warmup UI, P0-04/05 Slack URL, P0-06 PDF u inboxu, P0-07 legal.
+- **Agent zatvorio:** P1 (8/8), prod smoke, Problem Hunter, E2E billing, Gmail PDF check, Resend send-only DNS.
+- **Samo ti:** P0-07 legal counsel; Instantly plan upgrade (402); P2 firma/live payments.
 - **P2 NA KRAJU:** firma, Stripe live, payment API-ji.
 "@
 

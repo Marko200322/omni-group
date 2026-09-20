@@ -37,7 +37,7 @@ $uri = "https://spaceship.dev/api/v1/dns/records/$Domain"
 Write-Host "PUT $uri"
 try {
   Invoke-RestMethod -Method Put -Uri $uri -Headers $headers -Body $body
-  Write-Host "OK — DMARC set. Wait TTL then: Resolve-DnsName _dmarc.$Domain -Type TXT"
+  Write-Host "OK - DMARC set. Wait TTL then: Resolve-DnsName _dmarc.$Domain -Type TXT"
 } catch {
   Write-Error $_.Exception.Message
   if ($_.ErrorDetails) { Write-Host $_.ErrorDetails.Message }

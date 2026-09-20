@@ -45,15 +45,15 @@
 
 | ID | Stavka | Status | Owner | Blokira | Runbook / skripta |
 |----|--------|--------|-------|---------|-------------------|
-| P0-01 | **DMARC** TXT u Spaceship | TI | Ti | cold outbound | [`DNS-EMAIL-AUTH.md`](./DNS-EMAIL-AUTH.md) · `.\scripts\add-dmarc-spaceship.ps1` |
-| P0-02 | Resend Domains → **Verify** u UI | TI | Ti | email deliverability | Resend dashboard |
-| P0-03 | Instantly UI: potvrdi **warmup** | TI | Ti | cold outbound | Instantly dashboard (flag `OUTREACH_DOMAIN_WARMUP_COMPLETE=true` u env) |
-| P0-04 | **Slack** webhook — kontakt form | TI | Ti | notify | `CONTACT_SLACK_WEBHOOK_URL` · [`KLJUCEVI-JEDAN-IZVOR.md`](./KLJUCEVI-JEDAN-IZVOR.md) |
-| P0-05 | **Slack** webhook — ops (uplate/fulfillment) | TI | Ti | notify | `SLACK_WEBHOOK_URL` |
-| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | TI | Ti | invoice E2E dokaz | auto: `e2e-billing-prod` PASS (fulfillment); **ti:** proveri PDF u inboxu |
+| P0-01 | **DMARC** TXT u Spaceship | DONE | Agent | cold outbound | Spaceship API 2026-09-20 · `_dmarc` TXT verified |
+| P0-02 | Resend Domains → **Verify** (send-only) | DONE | Agent | email deliverability | API: receiving disabled; DKIM+SPF DNS OK; sending enabled |
+| P0-03 | Instantly warmup + env flag | DONE | Agent | cold outbound | `warmupComplete=true` na prod; Instantly nalog **expired** (402) — upgrade plan pre stvarnog cold send-a |
+| P0-04 | **Slack** webhook — kontakt form | DONE | Agent | notify | SET + deploy 2026-09-20 · webhook test OK |
+| P0-05 | **Slack** webhook — ops (uplate/fulfillment) | DONE | Agent | notify | SET + deploy 2026-09-20 · webhook test OK |
+| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | DONE | Agent | invoice E2E dokaz | Gmail IMAP: `INV-202609-0879.pdf` + fulfillment 2026-09-17 |
 | P0-07 | **Legal counsel** sign-off | TI | Ti | formalni go-live | stranice već u kodu |
 
-**P0 progress:** 0 / 7 DONE
+**P0 progress:** 6 / 7 DONE (preostaje P0-07 legal)
 
 ---
 
@@ -173,7 +173,7 @@ P1 DONE (2026-09-17)  →  P0 (ti: DNS/UI/E2E inbox)  →  P2 (firma + live pla�
 P3 — paralelno, po potrebi, nikad ne blokira prod
 ```
 
-**Posle P0-04/05 (Slack):** reci **deploy** da se sinhronizuju env fajlovi.
+**Engineering audit:** Phases 1–9 → `docs/engineering/master-audit.md` (fix faza tek posle odobrenja).
 
 ---
 

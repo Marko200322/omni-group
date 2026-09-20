@@ -368,6 +368,7 @@ function Build-DeployConfigHashtable([object]$Config) {
     companyLegalName    = Get-DeployConfigTrim $Config 'companyLegalName'
     companyTaxId        = Get-DeployConfigTrim $Config 'companyTaxId'
     companyAddress      = Get-DeployConfigTrim $Config 'companyAddress'
+    outreachDomainWarmupComplete = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
   }
 }
 
@@ -455,6 +456,7 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     LIVE_TTS_STREAMING        = 'liveTtsStreaming'
     INSTANTLY_API_KEY         = 'instantlyApiKey'
     INSTANTLY_CAMPAIGN_ID     = 'instantlyCampaignId'
+    OUTREACH_DOMAIN_WARMUP_COMPLETE = 'outreachDomainWarmupComplete'
   }
   foreach ($entry in $map.GetEnumerator()) {
     if ($Keys.ContainsKey($entry.Key) -and $Keys[$entry.Key]) {
@@ -510,6 +512,7 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     ENTERPRISE_PRICE_ID          = Get-DeployConfigTrim $Config 'enterprisePriceId'
     SLACK_WEBHOOK_URL            = Get-DeployConfigTrim $Config 'slackWebhookUrl'
     CONTACT_SLACK_WEBHOOK_URL    = Get-DeployConfigTrim $Config 'contactSlackWebhookUrl'
+    OUTREACH_DOMAIN_WARMUP_COMPLETE = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
     TELEGRAM_BOT_TOKEN           = Get-DeployConfigTrim $Config 'telegramBotToken'
     TELEGRAM_CHAT_ID             = Get-DeployConfigTrim $Config 'telegramChatId'
     CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'contactCrmIngressPassword'
@@ -663,6 +666,11 @@ function Apply-DeployConfigProdEnvFiles {
     if ($Config.instantly.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'INSTANTLY_API_KEY' $Config.instantly.apiKey.Trim() }
     if ($Config.instantly.campaignId) { Set-EnvLineInDeployFile $atinaEnv 'INSTANTLY_CAMPAIGN_ID' $Config.instantly.campaignId.Trim() }
     if ($Config.instantly.apiKey) { Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_EMAIL_PROVIDER' 'instantly' }
+  }
+
+  $warmupComplete = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
+  if ($warmupComplete) {
+    Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_DOMAIN_WARMUP_COMPLETE' $warmupComplete
   }
 
   foreach ($entry in (Get-DeployConfigWebEnvPatches $Config $SiteDomain).GetEnumerator()) {

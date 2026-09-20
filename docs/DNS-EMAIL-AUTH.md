@@ -1,12 +1,12 @@
 # DNS email auth — omnigrouptech.com
 
-**Provera:** 2026-09-06
+**Provera:** 2026-09-20
 
 | Record | Status | Vrednost / napomena |
 |--------|--------|---------------------|
 | DKIM `resend._domainkey` | **SET** | TXT present (Resend) |
 | SPF `send.omnigrouptech.com` | **SET** | `v=spf1 include:amazonses.com ~all` |
-| DMARC `_dmarc.omnigrouptech.com` | **MISSING** | treba 1 TXT |
+| DMARC `_dmarc.omnigrouptech.com` | **SET** | `p=none` via Spaceship API (2026-09-20) |
 
 ## DMARC — jedan zapis (Spaceship DNS)
 
