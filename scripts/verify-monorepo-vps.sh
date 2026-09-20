@@ -75,7 +75,7 @@ record pytest_root "$root_py"
 
 echo "== pytest (sistem_naplate) =="
 pip install -q -r sistem_naplate/requirements.txt
-naplata_py=$(cd sistem_naplate && python -m pytest -q 2>&1 | tee /dev/stderr | tail -n 1)
+naplata_py=$(cd sistem_naplate && PYTHONWARNINGS=ignore::DeprecationWarning python -m pytest -q 2>&1 | tee /dev/stderr | tail -n 1)
 record pytest_sistem_naplate "$naplata_py"
 deactivate
 
@@ -97,8 +97,9 @@ atina_unit=$(grep -E '^(Test Suites:|All [0-9]+ tests passed|Jest:)' "$LOG" | ta
 record atina_unit_ci "${atina_unit:-PASS}"
 
 echo "== Atina SaaS — integration (migrate + jest integration) =="
-atina_node "apt-get update -qq && apt-get install -y -qq python3 make g++ >/dev/null && npm ci && \
-  export DB_HOST=host.docker.internal DB_PORT=${PG_ATINA_PORT} DB_USER=atina_user DB_PASSWORD=atina_password DB_NAME=atina_saas_db && \
+docker run --rm --network host -v "$REPO/atina-platform/atina:/app" -w /app "$NODE_IMAGE" \
+  bash -lc "apt-get update -qq && apt-get install -y -qq python3 make g++ >/dev/null && npm ci && \
+  export DB_HOST=127.0.0.1 DB_PORT=${PG_ATINA_PORT} DB_USER=atina_user DB_PASSWORD=atina_password DB_NAME=atina_saas_db NODE_ENV=test && \
   npm run migrate && npm run test:integration"
 int_line=$(grep 'Test Suites:' "$LOG" | tail -n 1)
 record atina_integration "${int_line:-PASS}"
@@ -110,9 +111,8 @@ docker run --rm -v "$REPO/apps/omnigroup-web:/app" -w /app \
 record omnigroup_web PASS
 
 echo "== atina-system verify:ci (unit + migrations + e2e — same as CI) =="
-docker run --rm --add-host=host.docker.internal:host-gateway \
-  -v "$REPO/atina-system:/app" -w /app "$NODE_IMAGE" \
-  bash -lc "npm ci && export POSTGRES_HOST=host.docker.internal POSTGRES_PORT=${PG_NEST_PORT} POSTGRES_USER=atina POSTGRES_PASSWORD=atina POSTGRES_DB=atina NODE_ENV=test JWT_SECRET=ci-jwt-secret-at-least-32-characters-long E2E_WITH_DB=1 && npm run verify:ci"
+docker run --rm --network host -v "$REPO/atina-system:/app" -w /app "$NODE_IMAGE" \
+  bash -lc "npm ci && export POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=${PG_NEST_PORT} POSTGRES_USER=atina POSTGRES_PASSWORD=atina POSTGRES_DB=atina NODE_ENV=test JWT_SECRET=ci-jwt-secret-at-least-32-characters-long E2E_WITH_DB=1 && npm run verify:ci"
 nest_lines=$(grep 'Test Suites:' "$LOG" | tail -n 2 | tr '\n' ' ')
 record atina_system_verify_ci "${nest_lines:-PASS}"
 
