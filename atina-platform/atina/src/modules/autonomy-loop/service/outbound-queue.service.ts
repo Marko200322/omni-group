@@ -1,4 +1,5 @@
 import { config } from '../../../config';
+import { AuthorizationError } from '../../../utils/errors';
 import { assertFactoryModule } from '../../billing/lib/factory-phase-guard';
 import { getAiClient } from '../../../integrations';
 import type { LeadRecord } from '../../../integrations/lead-databases/types';
@@ -26,6 +27,7 @@ function splitLeadName(full?: string | null): { firstName?: string; lastName?: s
 export type OutboundQueueStats = {
   emailProvider: string;
   instantlyConfigured: boolean;
+  sendEnabled: boolean;
   warmupComplete: boolean;
   warmupMode: boolean;
   dailyCap: number;
@@ -68,6 +70,7 @@ export class OutboundQueueService {
     return {
       emailProvider: config.outreach.emailProvider,
       instantlyConfigured: instantly.isConfigured(),
+      sendEnabled: config.outreach.sendEnabled,
       warmupComplete: config.outreach.domainWarmupComplete,
       warmupMode: config.outreach.warmupMode,
       dailyCap,
@@ -219,6 +222,11 @@ export class OutboundQueueService {
   }
 
   async processSendQueue(): Promise<{ processed: number; sent: number; blocked: number; failed: number }> {
+    if (!config.outreach.sendEnabled) {
+      throw new AuthorizationError(
+        'Outbound send is disabled (OUTREACH_SEND_ENABLED=false). Enable only after P3-A04 go-live.',
+      );
+    }
     if (!config.outreach.devSendToFallback) {
       assertFactoryModule('outbound_send', 'Outbound send requires factory phase M4+ and domain warmup.');
     }

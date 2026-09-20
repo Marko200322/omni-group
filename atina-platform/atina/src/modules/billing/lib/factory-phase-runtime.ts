@@ -65,6 +65,7 @@ export function isFactoryModuleEnabled(
         : config.features.scraper || envOn('AUTONOMY_REAL_ECOSYSTEM_RUNS');
     case 'outbound_send':
       return (
+        config.outreach.sendEnabled &&
         (auto ? true : config.outreach.dailyCap > 0) &&
         (config.outreach.domainWarmupComplete || config.outreach.devSendToFallback || auto)
       );

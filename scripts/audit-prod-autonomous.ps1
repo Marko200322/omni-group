@@ -247,6 +247,14 @@ try {
         Add-Row $rows 'P0-03' 'Instantly/warmup' 'TI' 'Instantly UI warmup + OUTREACH_DOMAIN_WARMUP_COMPLETE'
         $ti++
       }
+      $sendOn = $hrj.data.outbound.sendEnabled -eq $true
+      if (-not $sendOn) {
+        Add-Row $rows 'P3-A04' 'Cold outbound send OFF' 'PASS' 'OUTREACH_SEND_ENABLED=false (kill-switch)'
+        $pass++
+      } else {
+        Add-Row $rows 'P3-A04' 'Cold outbound send OFF' 'FAIL' 'OUTREACH_SEND_ENABLED=true on prod without explicit go-live'
+        $fail++
+      }
     }
 
     try {

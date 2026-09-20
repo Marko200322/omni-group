@@ -22,11 +22,14 @@ describe('factory-phase-runtime', () => {
     expect(isFactoryModuleEnabled('scraper', 'M2')).toBe(true);
   });
 
-  it('M4 outbound send requires warmup', () => {
+  it('M4 outbound send requires warmup and OUTREACH_SEND_ENABLED', () => {
     process.env.FACTORY_PHASE = 'M4';
     process.env.OUTREACH_DOMAIN_WARMUP_COMPLETE = 'true';
-    (config.outreach as { dailyCap: number; domainWarmupComplete: boolean }).dailyCap = 50;
-    (config.outreach as { domainWarmupComplete: boolean }).domainWarmupComplete = true;
+    (config.outreach as { dailyCap: number; domainWarmupComplete: boolean; sendEnabled: boolean }).dailyCap = 50;
+    (config.outreach as { domainWarmupComplete: boolean; sendEnabled: boolean }).domainWarmupComplete = true;
+    (config.outreach as { sendEnabled: boolean }).sendEnabled = false;
+    expect(isFactoryModuleEnabled('outbound_send', 'M4')).toBe(false);
+    (config.outreach as { sendEnabled: boolean }).sendEnabled = true;
     expect(isFactoryModuleEnabled('outbound_send', 'M4')).toBe(true);
   });
 });

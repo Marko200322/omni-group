@@ -96,6 +96,14 @@ export class HuntingReadinessService {
         hint: 'ENABLE_CRM=true',
       },
       {
+        id: 'send_policy',
+        label: 'Outbound send policy',
+        status: config.outreach.sendEnabled ? 'ready' : 'partial',
+        hint: config.outreach.sendEnabled
+          ? 'OUTREACH_SEND_ENABLED=true — process-send allowed when factory gates pass'
+          : 'OUTREACH_SEND_ENABLED=false (default) — cold/warm mass send blocked until P3-A04',
+      },
+      {
         id: 'warmup',
         label: 'Domain warmup',
         status: outboundStats.warmupComplete || instantlyMode ? 'ready' : 'partial',
@@ -146,6 +154,7 @@ export class HuntingReadinessService {
         autonomyEnabled: config.autonomy.enabled,
         scraperEnabled: config.features.scraper,
         devSendToFallback: config.outreach.devSendToFallback,
+        outreachSendEnabled: config.outreach.sendEnabled,
         leadDatabase: this.leadDb.getStatus(),
       },
       userId: userId ?? null,

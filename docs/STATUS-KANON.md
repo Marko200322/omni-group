@@ -158,7 +158,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 | Lock | Vrednost |
 |------|----------|
 | Stripe mode | **test** |
-| Cold outbound send | **OFF** |
+| Cold outbound send | **OFF** (`OUTREACH_SEND_ENABLED=false` na prod) |
 | `factoryPhaseAuto` | **false** |
 | `AUTONOMY_AUTO_DEPLOY` | **false** |
 | `PHASE` | **v2** (ne K8s) |

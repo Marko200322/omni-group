@@ -464,6 +464,8 @@ export const config = {
     },
   },
   outreach: {
+    /** Explicit go-live for cold/warm mass send (process-send). Default false — STATUS-KANON safety lock. */
+    sendEnabled: optionalBool('OUTREACH_SEND_ENABLED', false),
     warmupMode: optionalBool('OUTREACH_WARMUP_MODE', true),
     domainWarmupComplete: optionalBool('OUTREACH_DOMAIN_WARMUP_COMPLETE', false),
     dailyCap: optionalNumber('OUTREACH_DAILY_CAP', 20),

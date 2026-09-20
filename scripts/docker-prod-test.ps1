@@ -106,7 +106,7 @@ Write-Host ''
 Write-Host '=== Docker prod test PASS ===' -ForegroundColor Green
 Write-Host "  API:  http://127.0.0.1:$atinaPort/health"
 Write-Host "  Web:  http://127.0.0.1:$webPort"
-Write-Host "  Login: admin@atina.io / $adminPass"
+Write-Host '  Login: admin@atina.io (ADMIN_PASSWORD u lokalnom .env — ne logujemo)'
 Write-Host ''
 docker compose @composeArgs ps
 

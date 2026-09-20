@@ -277,8 +277,7 @@ Write-Host "  .env.vps.prod              -> .env.docker.prod na VPS"
 Write-Host "  atina/.env.vps.prod        -> atina/.env.docker.prod"
 Write-Host "  web/.env.vps.production    -> web/.env.production"
 Write-Host ''
-Write-Host "Admin login: admin@atina.io / $adminPass" -ForegroundColor Yellow
-Write-Host '(Sacuvaj lozinku - nije u gitu.)'
+Write-Host 'Admin login: admin@atina.io — lozinka u deploy-secrets.local/deploy.config.json (ne ispisujemo u terminal).' -ForegroundColor Yellow
 Write-Host ''
 Write-Host 'Deploy na VPS:' -ForegroundColor Cyan
 Write-Host '  .\scripts\deploy-to-vps.ps1 -VpsHost YOUR_IP -SiteDomain omnigrouptech.com'

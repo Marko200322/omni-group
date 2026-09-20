@@ -369,6 +369,7 @@ function Build-DeployConfigHashtable([object]$Config) {
     companyTaxId        = Get-DeployConfigTrim $Config 'companyTaxId'
     companyAddress      = Get-DeployConfigTrim $Config 'companyAddress'
     outreachDomainWarmupComplete = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
+    outreachSendEnabled          = Get-DeployConfigTrim $Config 'outreachSendEnabled'
   }
 }
 
@@ -513,6 +514,7 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     SLACK_WEBHOOK_URL            = Get-DeployConfigTrim $Config 'slackWebhookUrl'
     CONTACT_SLACK_WEBHOOK_URL    = Get-DeployConfigTrim $Config 'contactSlackWebhookUrl'
     OUTREACH_DOMAIN_WARMUP_COMPLETE = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
+    OUTREACH_SEND_ENABLED           = Get-DeployConfigTrim $Config 'outreachSendEnabled'
     TELEGRAM_BOT_TOKEN           = Get-DeployConfigTrim $Config 'telegramBotToken'
     TELEGRAM_CHAT_ID             = Get-DeployConfigTrim $Config 'telegramChatId'
     CONTACT_CRM_INGRESS_PASSWORD = Get-DeployConfigTrim $Config 'contactCrmIngressPassword'
@@ -671,6 +673,13 @@ function Apply-DeployConfigProdEnvFiles {
   $warmupComplete = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
   if ($warmupComplete) {
     Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_DOMAIN_WARMUP_COMPLETE' $warmupComplete
+  }
+
+  $sendEnabled = Get-DeployConfigTrim $Config 'outreachSendEnabled'
+  if ($sendEnabled) {
+    Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_SEND_ENABLED' $sendEnabled
+  } else {
+    Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_SEND_ENABLED' 'false'
   }
 
   foreach ($entry in (Get-DeployConfigWebEnvPatches $Config $SiteDomain).GetEnumerator()) {

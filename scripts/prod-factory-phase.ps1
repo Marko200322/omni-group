@@ -66,6 +66,7 @@ function Get-FactoryPhaseAtinaEnvMap([string]$FactoryPhase, [int]$MonthlyBudgetE
     AUTONOMY_MAX_SPEND_PER_DAY_USD             = $aiDaily
     AUTONOMY_MAX_SPEND_PER_TICK_USD            = '0.25'
     AUTONOMY_MIN_RESERVE_USD                   = '5'
+    OUTREACH_SEND_ENABLED                      = 'false'
     OUTREACH_WARMUP_MODE                       = 'true'
     OUTREACH_DOMAIN_WARMUP_COMPLETE            = 'false'
     OUTREACH_DAILY_CAP                         = '0'

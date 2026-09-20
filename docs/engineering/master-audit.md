@@ -89,7 +89,7 @@ Single **MASTER FINDINGS** document per engineering orchestration email. **No co
 
 ## 5. Suggested Phase 10 fix order (PR-sized — not started)
 
-1. **OUTREACH_SEND_ENABLED** (or equivalent) + prod audit assertion — ties B-02, P3-A04, S-16  
+1. ~~**OUTREACH_SEND_ENABLED** + prod audit assertion~~ — **Phase 10 PR #1 (2026-09-20)**  
 2. **STATUS-KANON / LIVE-01** copy vs `PAYMENTS_MODE` — B-01  
 3. **Stripe webhook test harness** — G-06, S-13  
 4. **BFF smoke in CI** — G-04  

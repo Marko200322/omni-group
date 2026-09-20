@@ -114,6 +114,8 @@
 
   "outreachDomainWarmupComplete": "false",
   "_outreachDomainWarmupComplete_comment": "Set true after Instantly/domain warmup confirmed",
+  "outreachSendEnabled": "false",
+  "_outreachSendEnabled_comment": "true only for P3-A04 cold/warm mass send go-live (OUTREACH_SEND_ENABLED on VPS)",
   "slackWebhookUrl": "",
   "contactSlackWebhookUrl": "",
 

@@ -11,6 +11,7 @@ import { OutboundQueueService } from '../../../../modules/autonomy-loop/service/
 jest.mock('../../../../config', () => ({
   config: {
     outreach: {
+      sendEnabled: false,
       domainWarmupComplete: false,
       warmupMode: true,
       dailyCap: 20,
@@ -53,9 +54,19 @@ describe('outbound-queue.service', () => {
     expect(stats.byStatus.draft).toBe(12);
   });
 
-  it('blocks send processing when warmup is incomplete', async () => {
+  it('rejects process-send when OUTREACH_SEND_ENABLED is false', async () => {
+    const svc = new OutboundQueueService();
+    await expect(svc.processSendQueue()).rejects.toThrow(/OUTREACH_SEND_ENABLED=false/);
+  });
+
+  it('blocks send processing when warmup is incomplete but send is enabled', async () => {
+    const { config } = jest.requireMock('../../../../config') as {
+      config: { outreach: { sendEnabled: boolean } };
+    };
+    config.outreach.sendEnabled = true;
     const svc = new OutboundQueueService();
     const result = await svc.processSendQueue();
     expect(result).toEqual({ processed: 0, sent: 0, blocked: 0, failed: 0 });
+    config.outreach.sendEnabled = false;
   });
 });
