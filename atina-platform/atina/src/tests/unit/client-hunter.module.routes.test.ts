@@ -69,9 +69,16 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     }
     (req as express.Request & { user?: { userId: string; role: string; email: string } }).user = {
       userId: 'u1',
-      role: 'user',
+      role: 'admin',
       email: 'u@test.com',
     };
+    next();
+  },
+  requireAdmin: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const u = (req as express.Request & { user?: { role: string } }).user;
+    if (u?.role !== 'admin') {
+      throw new AuthenticationError('Admin required');
+    }
     next();
   },
 }));

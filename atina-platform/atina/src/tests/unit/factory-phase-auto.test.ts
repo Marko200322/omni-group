@@ -8,6 +8,7 @@ import {
   revenueAllowsPhase,
   type FactoryRevenueMetrics,
 } from '../../modules/billing/lib/factory-phase-effective';
+import { config } from '../../config';
 import { isFactoryModuleEnabled } from '../../modules/billing/lib/factory-phase-runtime';
 import { buildFactoryPhaseStatus } from '../../modules/billing/lib/factory-phase-modules';
 import {
@@ -142,9 +143,11 @@ describe('factory-phase-runtime AUTO', () => {
     expect(isFactoryModuleEnabled('outbound_draft', 'M2')).toBe(true);
   });
 
-  it('enables outbound_send at M4 when AUTO', () => {
+  it('enables outbound_send at M4 when AUTO and OUTREACH_SEND_ENABLED', () => {
     process.env.FACTORY_PHASE_AUTO = 'true';
+    (config.outreach as { sendEnabled: boolean }).sendEnabled = true;
     expect(isFactoryModuleEnabled('outbound_send', 'M4')).toBe(true);
+    (config.outreach as { sendEnabled: boolean }).sendEnabled = false;
   });
 
   it('lists module status snapshot', () => {

@@ -205,6 +205,7 @@ describe('PaymentsService', () => {
     });
 
     it('uses dynamic price_data when Stripe price missing', async () => {
+      (config.stripe.priceIds as { pro?: string }).pro = 'price_pro';
       billingApi.getPlanBySlug.mockResolvedValueOnce({
         ...planFull,
         stripe_price_id_monthly: null,

@@ -27,6 +27,12 @@ describe('PaymentsController', () => {
   const authed = (userId = 'u1'): Request =>
     ({ user: { userId, role: 'user', email: 'a@b.com' } }) as Request;
 
+  const buyerMeta = {
+    buyerBillingAddress: undefined,
+    buyerCompany: undefined,
+    buyerVatId: undefined,
+  };
+
   it('createCheckoutSession parses body and returns 201', async () => {
     mockService.createStripeCheckoutSession.mockResolvedValue({ sessionId: 's', url: 'https://x' });
     const r = res();
@@ -37,7 +43,13 @@ describe('PaymentsController', () => {
       } as Request,
       r
     );
-    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined);
+    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith(
+      'u1',
+      'pro',
+      'yearly',
+      undefined,
+      buyerMeta,
+    );
     expect(r.status).toHaveBeenCalledWith(201);
     expect(r.json).toHaveBeenCalled();
   });
@@ -49,7 +61,13 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'starter' } } as Request,
       r
     );
-    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'starter', 'monthly', undefined);
+    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith(
+      'u1',
+      'starter',
+      'monthly',
+      undefined,
+      buyerMeta,
+    );
   });
 
   it('stripeWebhook forwards buffer and signature', async () => {
@@ -100,7 +118,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'enterprise', billingCycle: 'monthly' } } as Request,
       r
     );
-    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined);
+    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined, buyerMeta);
     expect(r.status).toHaveBeenCalledWith(201);
   });
 
@@ -119,7 +137,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'pro', billingCycle: 'yearly' } } as Request,
       r
     );
-    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined);
+    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined, buyerMeta);
     expect(r.status).toHaveBeenCalledWith(201);
   });
 

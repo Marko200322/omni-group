@@ -149,20 +149,24 @@ describe('phase activation middleware', () => {
     expect(getPhaseOrder()).toEqual(['v1', 'v2', 'v3', 'v4', 'v5', 'v6']);
   });
 
-  it('allows write on DB error (fail-open) and logs a warning', async () => {
+  it('falls back to v1 when DB read fails then applies phase lock', async () => {
     mockQuery.mockRejectedValueOnce(new Error('db down'));
 
     const guard = createPhaseActivationGuard('forge');
     const req = { method: 'POST' } as Request;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const res = { status } as unknown as Response;
     const next = jest.fn() as NextFunction;
 
-    await guard(req, {} as Response, next);
+    await guard(req, res, next);
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'Phase activation guard fallback (allowing request)',
-      expect.objectContaining({ moduleSlug: 'forge' })
+      'Phase read from DB failed; using env/default',
+      expect.objectContaining({ error: 'db down' })
     );
-    expect(next).toHaveBeenCalled();
+    expect(status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it('sendError shape matches API contract for phase lock (403)', async () => {

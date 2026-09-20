@@ -42,7 +42,7 @@ describe('external AI stack catalog', () => {
         'langchain',
       ])
     );
-    expect(EXTERNAL_AI_STACK.length).toBe(16);
+    expect(EXTERNAL_AI_STACK.length).toBe(17);
   });
 
   it('reports configured vs missing without leaking values', () => {
