@@ -3,6 +3,12 @@
 .SYNOPSIS
   Pokrece pun verify-monorepo na VPS (bez opterecenja laptopa).
 
+.DESCRIPTION
+  Parity with scripts/verify-monorepo.ps1 and GitHub CI (monorepo): Python (Doslednost dok + pytest),
+  Atina test:ci / integration, apps/omnigroup-web build unless -SkipOmnigroupWeb,
+  atina-system verify:ci. Bundled Atina HTTP gate: atina-platform/atina npm run smoke:all.
+  See docs/GIT-BRANCH-PROTECTION.md.
+
 .EXAMPLE
   .\scripts\run-vps-verify.ps1
   .\scripts\run-vps-verify.ps1 -FollowLog
