@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $atinaRoot = Join-Path $repoRoot 'atina-platform\atina'
 $composeFile = Join-Path $repoRoot 'docker-compose.prod.yml'
-$project = 'omni-prod'
+$project = if ($env:COMPOSE_PROJECT_NAME) { $env:COMPOSE_PROJECT_NAME.Trim() } else { 'omni-prod' }
 
 Set-Location $repoRoot
 
@@ -70,14 +70,25 @@ docker compose @composeArgs --profile setup run --rm seed
 if ($LASTEXITCODE -ne 0) { throw 'Seed failed' }
 
 Write-Host '[4/4] Starting API + Web...' -ForegroundColor Yellow
-docker compose @composeArgs up -d atina-api web
-if ($LASTEXITCODE -ne 0) { throw 'atina-api/web start failed' }
-
-$deadline = (Get-Date).AddMinutes(5)
+docker compose @composeArgs up -d atina-api
+if ($LASTEXITCODE -ne 0) { throw 'atina-api start failed' }
+$deadlineApi = (Get-Date).AddMinutes(8)
 do {
   Start-Sleep -Seconds 5
   try {
-    $h = Invoke-RestMethod -Uri "http://127.0.0.1:$atinaPort/health" -TimeoutSec 5
+    $h = Invoke-RestMethod -Uri "http://127.0.0.1:$atinaPort/health" -TimeoutSec 10
+    if ($h.status -eq 'ok') { break }
+  } catch { }
+  if ((Get-Date) -ge $deadlineApi) { break }
+} while ($true)
+docker compose @composeArgs up -d web
+if ($LASTEXITCODE -ne 0) { throw 'web start failed' }
+
+$deadline = (Get-Date).AddMinutes(8)
+do {
+  Start-Sleep -Seconds 5
+  try {
+    $h = Invoke-RestMethod -Uri "http://127.0.0.1:$atinaPort/health" -TimeoutSec 10
     if ($h.status -eq 'ok') { break }
   } catch { }
 } while ((Get-Date) -lt $deadline)
