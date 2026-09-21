@@ -38,10 +38,9 @@ else
   sleep 15
 fi
 
-echo "== Nest (alt ports 13001 / 6381 / 55433) =="
-docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml -f docker-compose.nest-ci-vps.yml \
-  -p omni-ci-nest up -d --build
-sleep 25
+echo "== Nest (standalone verify compose, API :13001) =="
+docker compose -f docker-compose.nest-vps-verify.yml -p omni-ci-nest up -d --build
+sleep 35
 
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-stack.ps1 \

@@ -1,0 +1,44 @@
+# Standalone Nest stack for VPS verify (no host Redis/Postgres port clashes with prod).
+services:
+  atina-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+    ports:
+      - "55433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atina -d atina"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  atina-redis:
+    image: redis:7-alpine
+
+  atina-api:
+    build:
+      context: ./atina-system
+      dockerfile: Dockerfile
+    ports:
+      - "13001:3000"
+    environment:
+      POSTGRES_HOST: atina-postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: atina
+      POSTGRES_PASSWORD: atina
+      POSTGRES_DB: atina
+      JWT_SECRET: atina-docker-compose-dev-secret-min-32chars
+      CORS_ORIGINS: http://127.0.0.1:8080,http://127.0.0.1:13001,http://localhost:8080,http://localhost:13001
+      NODE_ENV: development
+      PHASE: v1
+      PORT: "3000"
+      TYPEORM_SYNC: "true"
+      REDIS_HOST: atina-redis
+      REDIS_PORT: "6379"
+    depends_on:
+      atina-postgres:
+        condition: service_healthy
+      atina-redis:
+        condition: service_started
