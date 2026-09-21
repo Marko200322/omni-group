@@ -1,26 +1,11 @@
-﻿# Extended tests 2026-09-21
+﻿# Extended tests 2026-09-21T07:20:19.9796456+02:00
 
-## Local / prod HTTP (run-extended-tests.ps1)
+Web: https://omnigrouptech.com | API: https://api.omnigrouptech.com
 
-| Test | Result |
-|------|--------|
-| test:contact (Resend prod) | PASS sent_via_resend |
-| smoke:hunting:quick | PASS |
-| smoke:evolution | PASS (tick: 1 internal task `test_fix` failed — smoke still OK) |
-| smoke:product-factory | PASS |
-| smoke:category-rollout (status only, no seed) | PASS 25/25 categories |
-| test:hunt-pipeline (OpenRouter/Gemini) | PASS |
-| smoke:hunting (full + pipeline) | **FAIL** — `OUTREACH_SEND_ENABLED=false` on prod (expected kill-switch) |
+PASS test:contact (Resend prod)
+PASS smoke:hunting:quick
+PASS smoke:evolution
+PASS smoke:product-factory
+PASS smoke:category-rollout - no seed
 
-## VPS (/var/log/omni-extended-tests.log)
-
-| Test | Result |
-|------|--------|
-| test:ci + coverage | **FAIL** — 2 suites (`revenue-allocation`, `dynamic-pricing`) on clean Docker env; coverage ~85% vs 90% threshold |
-| test:hunt-pipeline | SKIP — no `.env` with AI keys on CI clone |
-| smoke-stack | **PARTIAL** — Astra :8080 OK; Nest :3001 connection refused (Redis port 6380 conflict with prod stack) |
-
-## Not run in this pass
-
-- test:ci on laptop (use VPS log above)
-- Nest queue smoke (-NestQueueSmoke)
+Failures: 0
