@@ -27,6 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
+. (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
 Set-Location $repoRoot
 
 $atina = if ($AtinaNodeBase) { $AtinaNodeBase } else { $env:STAGING_ATINA_NODE_BASE }
@@ -69,8 +70,10 @@ if ($IncludeStack) {
 
 Write-Host ''
 Write-Host '== Atina bundled smoke (login / forge / admin) ==' -ForegroundColor Cyan
+$remoteProd = $atina -match 'omnigrouptech\.com' -or ($atina -like 'https://*' -and $atina -notmatch '127\.0\.0\.1|localhost')
+$creds = if ($remoteProd) { Get-AdminCredentials -RepoRoot $repoRoot -Prod } else { Get-AdminCredentials -RepoRoot $repoRoot }
 Push-Location (Join-Path $repoRoot 'atina-platform\atina')
-npm.cmd run smoke:all -- -BaseUrl $atina
+npm.cmd run smoke:all -- -BaseUrl $atina -Email $creds.Email -Password $creds.Password
 $code = $LASTEXITCODE
 Pop-Location
 if ($code -ne 0) { exit $code }

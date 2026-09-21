@@ -81,7 +81,15 @@ do {
   } catch { }
   if ((Get-Date) -ge $deadlineApi) { break }
 } while ($true)
-docker compose @composeArgs up -d web
+$hPreWeb = $null
+try {
+  $hPreWeb = Invoke-RestMethod -Uri "http://127.0.0.1:$atinaPort/health" -TimeoutSec 10
+} catch { }
+if (-not $hPreWeb -or $hPreWeb.status -ne 'ok') {
+  throw "API not healthy on host port $atinaPort before starting web"
+}
+# Start web without waiting on Compose health (API already OK via host probe; avoids slow/unstable container healthcheck).
+docker compose @composeArgs up -d web --no-deps
 if ($LASTEXITCODE -ne 0) { throw 'web start failed' }
 
 $deadline = (Get-Date).AddMinutes(8)
