@@ -38,9 +38,14 @@ describe('config/env helpers', () => {
       expect(optionalNumber('TEST_OPT_NUM3', 8)).toBe(8);
     });
 
-    it('returns NaN when env is non-numeric (parseInt behavior)', () => {
+    it('parses decimal fee rates', () => {
+      process.env.TEST_OPT_NUM_DEC = '0.029';
+      expect(optionalNumber('TEST_OPT_NUM_DEC', 0)).toBeCloseTo(0.029, 5);
+    });
+
+    it('returns fallback when env is non-numeric', () => {
       process.env.TEST_OPT_NUM_BAD = 'not-a-number';
-      expect(Number.isNaN(optionalNumber('TEST_OPT_NUM_BAD', 0))).toBe(true);
+      expect(optionalNumber('TEST_OPT_NUM_BAD', 12)).toBe(12);
     });
   });
 

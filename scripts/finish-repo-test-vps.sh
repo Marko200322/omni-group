@@ -24,15 +24,19 @@ echo "test:ci exit=$CI_EXIT"
 echo "== hunt-pipeline =="
 if [[ -f "$PROD_ENV" ]]; then
   docker run --rm -v "$REPO/atina-platform/atina:/app" -w /app --env-file "$PROD_ENV" "$NODE_IMAGE" \
-    bash -lc "apt-get update -qq && apt-get install -y -qq python3 python3-pip >/dev/null && pip install -q requests && python3 test_pipeline.py" \
+    bash -lc "apt-get update -qq && apt-get install -y -qq python3 python3-venv >/dev/null && python3 -m venv /tmp/hunt-venv && /tmp/hunt-venv/bin/pip install -q requests && /tmp/hunt-venv/bin/python test_pipeline.py" \
     && echo "hunt-pipeline: PASS" || echo "hunt-pipeline: FAIL"
 else
   echo "hunt-pipeline: SKIP no $PROD_ENV"
 fi
 
-echo "== Astra (root compose) =="
-docker compose -f docker-compose.yml -p omni-ci-astra up -d --build
-sleep 15
+echo "== Astra (root compose, skip if :8080 already up) =="
+if curl -sf http://127.0.0.1:8080/api/status >/dev/null 2>&1; then
+  echo "Astra already listening on :8080"
+else
+  docker compose -f docker-compose.yml -p omni-ci-astra up -d --build
+  sleep 15
+fi
 
 echo "== Nest (alt ports 13001 / 6381 / 55433) =="
 docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml -f docker-compose.nest-ci-vps.yml \

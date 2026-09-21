@@ -1,0 +1,5 @@
+# When host :8080 is taken, use ASTRA_HOST_PORT=18080 in finish-repo-test-vps.sh
+services:
+  astra:
+    ports:
+      - "${ASTRA_HOST_PORT:-8080}:8080"
