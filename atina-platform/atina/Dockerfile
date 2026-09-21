@@ -29,7 +29,7 @@ RUN addgroup -g 1001 -S atina && \
     adduser -S atina -u 1001 -G atina
 
 # Install only production system dependencies
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl su-exec
 
 # Copy package files
 COPY package*.json ./
@@ -49,8 +49,8 @@ RUN mkdir -p logs && chown atina:atina logs
 # Default FORGE_VAULT_PATH resolves to ./data/vault.db — mora biti writable za non-root.
 RUN mkdir -p data && chown atina:atina data
 
-# Switch to non-root user
-USER atina
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 3000
@@ -59,5 +59,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-# Start application
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "dist/index.js"]
