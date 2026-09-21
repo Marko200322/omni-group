@@ -19,7 +19,8 @@ $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $here '..\..\..')).Path
 . (Join-Path $repoRoot 'scripts\resolve-admin-credentials.ps1')
-$creds = Get-AdminCredentials -RepoRoot $repoRoot
+$useProdCreds = $BaseUrl -match 'omnigrouptech\.com' -or ($BaseUrl -like 'https://*' -and $BaseUrl -notmatch '127\.0\.0\.1|localhost')
+$creds = if ($useProdCreds) { Get-AdminCredentials -RepoRoot $repoRoot -Prod } else { Get-AdminCredentials -RepoRoot $repoRoot }
 if ($Email -eq 'admin@atina.io') { $Email = $creds.Email }
 if ($Password -eq 'Admin@123456') { $Password = $creds.Password }
 

@@ -1,0 +1,11 @@
+# VPS CI verify: Nest stack without colliding with live omni-group (Redis 6380, Nest 3001).
+services:
+  atina-postgres:
+    ports:
+      - "55433:5432"
+  atina-redis:
+    ports:
+      - "6381:6379"
+  atina-api:
+    ports:
+      - "13001:3000"

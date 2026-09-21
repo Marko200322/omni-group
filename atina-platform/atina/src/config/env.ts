@@ -3,10 +3,12 @@ export function optional(key: string, fallback: string): string {
   return process.env[key] || fallback;
 }
 
-/** Non-numeric strings yield `NaN` — validate in callers or use strict env parsing in production. */
+/** Non-numeric strings yield fallback. Supports decimal env values (e.g. fee rates 0.029). */
 export function optionalNumber(key: string, fallback: number): number {
   const val = process.env[key];
-  return val ? parseInt(val, 10) : fallback;
+  if (!val) return fallback;
+  const n = parseFloat(val);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 export function optionalBool(key: string, fallback: boolean): boolean {
