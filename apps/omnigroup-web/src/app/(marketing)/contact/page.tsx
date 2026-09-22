@@ -1,9 +1,18 @@
-import { Suspense } from 'react';
 import { FadeIn } from '@/components/motion/FadeIn';
 import { ContactForm } from './ContactForm';
 import { getSiteCompany } from '@/lib/site-company';
 
-export default function ContactPage() {
+type Props = {
+  searchParams: Promise<{
+    service?: string;
+    category?: string;
+    vertical?: string;
+    topic?: string;
+  }>;
+};
+
+export default async function ContactPage({ searchParams }: Props) {
+  const sp = await searchParams;
   const company = getSiteCompany();
 
   return (
@@ -25,13 +34,12 @@ export default function ContactPage() {
             <p className="mt-2 text-xs text-slate-500">{company.impressumLine()}</p>
           ) : null}
         </FadeIn>
-        <Suspense
-          fallback={
-            <div className="glass-strong p-8 text-sm text-slate-500">Loading form…</div>
-          }
-        >
-          <ContactForm />
-        </Suspense>
+        <ContactForm
+          service={sp.service}
+          category={sp.category}
+          vertical={sp.vertical}
+          topic={sp.topic}
+        />
       </div>
     </div>
   );

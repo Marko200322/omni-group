@@ -249,10 +249,13 @@ try {
       }
       $sendOn = $hrj.data.outbound.sendEnabled -eq $true
       if (-not $sendOn) {
-        Add-Row $rows 'P3-A04' 'Cold outbound send OFF' 'PASS' 'OUTREACH_SEND_ENABLED=false (kill-switch)'
+        Add-Row $rows 'P3-A04' 'Outbound send' 'PASS' 'OUTREACH_SEND_ENABLED=false (drafts only)'
+        $pass++
+      } elseif ($warm) {
+        Add-Row $rows 'P3-A04' 'Outbound send' 'PASS' 'send ON + warmup complete (marketing go-live)'
         $pass++
       } else {
-        Add-Row $rows 'P3-A04' 'Cold outbound send OFF' 'FAIL' 'OUTREACH_SEND_ENABLED=true on prod without explicit go-live'
+        Add-Row $rows 'P3-A04' 'Outbound send' 'FAIL' 'send ON without warmup complete'
         $fail++
       }
     }

@@ -51,9 +51,18 @@ export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-xs uppercase tracking-wider text-violet-300/80">{offer.categoryLabel}</p>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${badgeClass(offer.availability.badgeTone)}`}>
-          {offer.availability.badge}
-        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {offer.industryRecommended && (
+            <span className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[10px] font-medium uppercase text-violet-100">
+              Top for your industry
+            </span>
+          )}
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase ${badgeClass(offer.availability.badgeTone)}`}
+          >
+            {offer.availability.badge}
+          </span>
+        </div>
       </div>
 
       <h3 className="mt-2 font-display text-xl font-semibold text-white">{offer.name}</h3>

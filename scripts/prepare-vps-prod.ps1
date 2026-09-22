@@ -20,6 +20,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'prod-lean-profile.ps1')
 . (Join-Path $PSScriptRoot 'prod-budget-profile.ps1')
 . (Join-Path $PSScriptRoot 'prod-factory-phase.ps1')
+. (Join-Path $PSScriptRoot 'deploy-config-env.ps1')
 $isLeanProd = Test-IsLeanProdMode $ProdMode
 if ($MonthlyBudgetEur -le 0) { $MonthlyBudgetEur = Get-DefaultMonthlyBudgetEur }
 $atinaRoot = Join-Path $repoRoot 'atina-platform\atina'
@@ -270,7 +271,15 @@ Set-Content -Path $outWeb -Value $webEnv -Encoding UTF8
 
 if ($isLeanProd) { Apply-LeanProdEnvFiles $repoRoot }
 Apply-BudgetProdEnvFiles $repoRoot $MonthlyBudgetEur
-Apply-FactoryPhaseEnvFiles $repoRoot $FactoryPhase $MonthlyBudgetEur $ProdMode @{}
+$deployCfg = @{}
+$configPath = Join-Path $repoRoot 'deploy-secrets.local\deploy.config.json'
+if (Test-Path $configPath) {
+  $cfgObj = Get-Content $configPath -Raw | ConvertFrom-Json
+  if (Get-Command Build-DeployConfigHashtable -ErrorAction SilentlyContinue) {
+    $deployCfg = Build-DeployConfigHashtable $cfgObj
+  }
+}
+Apply-FactoryPhaseEnvFiles $repoRoot $FactoryPhase $MonthlyBudgetEur $ProdMode $deployCfg
 
 Write-Host 'Kreirano (gitignored - kopiraj na VPS):' -ForegroundColor Green
 Write-Host "  .env.vps.prod              -> .env.docker.prod na VPS"

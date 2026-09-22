@@ -1,6 +1,6 @@
 # PROD-AUDIT (auto-generated)
 
-**Generated:** 2026-09-20 07:35  
+**Generated:** 2026-09-22 12:57  
 **Command:** `.\scripts\audit-prod-autonomous.ps1`  
 **Summary:** 13 PASS Â· 0 FAIL Â· 2 TI/DEFERRED
 
@@ -18,10 +18,10 @@ Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 | AUTH | Admin login | **PASS** | admin@atina.io |
 | P1-05 | Problem Hunter BFF | **PASS** | sources=3 |
 | P0-03 | Instantly/warmup flag | **PASS** | warmupComplete=true on prod |
-| P3-A04 | Cold outbound send OFF | **PASS** | OUTREACH_SEND_ENABLED=false (kill-switch) |
+| P3-A04 | Outbound send | **PASS** | send ON + warmup complete (marketing go-live) |
 | P3-E06 | catalog-quality BFF | **PASS** | Admin endpoint OK |
 | CONTACT | POST /api/contact | **PASS** | message=sent_via_resend |
-| P0-06 | Mystery shopper PDF inbox | **PASS** | Gmail IMAP: 1 invoice PDF(s) â€ |
+| P0-06 | Mystery shopper PDF inbox | **TI** | No invoice PDF in inbox (7d) â€” run mystery shopper E2E |
 | P0-07 | Legal counsel sign-off | **TI** | Formalni advokat - stranice u kodu |
 | P2 | Firma + Stripe LIVE + PayPal/Wise/Kriptoman | **DEFERRED** | Namerno na kraju (P2) |
 

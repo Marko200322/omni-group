@@ -8,8 +8,8 @@ import {
 import { getMaintenanceTiersForPackage } from '../../../../modules/billing/lib/package-maintenance-tiers';
 
 describe('package-industry-problems', () => {
-  it('covers all 17 catalog packages with problem specs', () => {
-    expect(Object.keys(PACKAGE_PROBLEM_SPECS)).toHaveLength(17);
+  it('covers all catalog packages with problem specs', () => {
+    expect(Object.keys(PACKAGE_PROBLEM_SPECS)).toHaveLength(DELIVERABLE_CATALOG.length);
     expect(assertAllPackagesHaveProblemSpecs()).toEqual([]);
     for (const d of DELIVERABLE_CATALOG) {
       expect(PACKAGE_PROBLEM_SPECS[d.id]).toBeDefined();
@@ -33,7 +33,7 @@ describe('package-industry-problems', () => {
 
   it('returns full matrix for an industry', () => {
     const matrix = listPackageIndustryMatrix('development_it');
-    expect(matrix).toHaveLength(17);
+    expect(matrix).toHaveLength(DELIVERABLE_CATALOG.length);
     const recommended = matrix.filter((p) => p.recommendedForIndustry);
     expect(recommended.length).toBeGreaterThan(0);
     expect(recommended.some((p) => p.deliverableId === 'integration')).toBe(true);

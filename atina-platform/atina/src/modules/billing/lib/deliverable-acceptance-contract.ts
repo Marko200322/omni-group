@@ -175,9 +175,30 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   'custom-software': {
     deliverableId: 'custom-software',
     name: 'Custom software',
-    description: DELIVERABLE_CATALOG[16].description,
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'custom-software')!.description,
     billing: 'one_time',
     criteria: [CR.status, CR.softwareProject, CR.handoffPdf, CR.testGate],
+  },
+  'bundle-portal-presence': {
+    deliverableId: 'bundle-portal-presence',
+    name: 'Portal + presence bundle',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-portal-presence')!.description,
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf, CR.setupProject, CR.portalModules, CR.publicUrl],
+  },
+  'bundle-sales-launch': {
+    deliverableId: 'bundle-sales-launch',
+    name: 'Sales launch bundle',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-sales-launch')!.description,
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf, CR.publicUrl],
+  },
+  'bundle-ops-clarity': {
+    deliverableId: 'bundle-ops-clarity',
+    name: 'Ops clarity bundle',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-ops-clarity')!.description,
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf],
   },
 };
 

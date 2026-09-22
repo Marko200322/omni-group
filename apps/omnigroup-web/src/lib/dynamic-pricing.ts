@@ -10,6 +10,7 @@ import {
   DELIVERABLE_CATALOG,
 } from './deliverable-catalog';
 import { usesFixedPhasePricing } from './factory-phase';
+import { computeCompetitiveClientSubtotal } from './competitive-catalog-pricing';
 import { getPackageAnchorEur } from './package-delivery-spec';
 
 export type PaymentProviderId = 'manual' | 'kriptoman' | 'stripe' | 'paypal';
@@ -158,8 +159,16 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
 
   const marginPct = PRICING.targetMarginPct / 100;
   const costFloor = resourceCostEur * (1 + marginPct);
+  const competitive = computeCompetitiveClientSubtotal({
+    effectiveAnchorEur: effectiveAnchor,
+    deliverableId: deliverable.id,
+    industryCategory: input.industryCategory,
+    pricingTier,
+  });
   const subtotalEur = usesFixedPhasePricing()
-    ? roundPriceEur(effectiveAnchor)
+    ? input.industryCategory?.trim()
+      ? competitive.subtotalEur
+      : roundPriceEur(effectiveAnchor)
     : roundPriceEur(
         Math.max(marketEur, costFloor, effectiveAnchor * factors.tierMultiplier * 0.65) *
           subtypeIntensityBoost,

@@ -9,7 +9,37 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     metadata: {},
   };
 
-  if (deliverableId.includes('website') || deliverableId === 'landing' || deliverableId === 'white-label-setup') {
+  if (deliverableId === 'bundle-portal-presence') {
+    return {
+      status: 'completed',
+      publicUrl: '/sites/demo',
+      projectId: 'proj-setup',
+      artifacts: [{ type: 'pdf', filename: 'deliverable.pdf', downloadLabel: 'PDF', storagePath: '/x' }],
+      metadata: {
+        modulesActivated: ['notifications', 'billing'],
+        portalReady: true,
+        bundleParts: 2,
+      },
+    };
+  }
+
+  if (deliverableId === 'bundle-ops-clarity') {
+    return {
+      ...base,
+      artifacts: [
+        ...base.artifacts,
+        { type: 'pdf', filename: 'workflow-design.pdf', downloadLabel: 'Workflow', storagePath: '/w' },
+      ],
+      metadata: { bundleParts: 2 },
+    };
+  }
+
+  if (
+    deliverableId.includes('website') ||
+    deliverableId === 'landing' ||
+    deliverableId === 'white-label-setup' ||
+    deliverableId === 'bundle-sales-launch'
+  ) {
     return {
       ...base,
       publicUrl: '/sites/demo',
@@ -111,10 +141,10 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   return base;
 }
 
-describe('fulfillment quality checklist — 17 package contract', () => {
-  it('covers all 17 deliverables in acceptance contract', () => {
-    expect(allDeliverableIdsInContract().length).toBe(17);
-    expect(listAcceptanceContracts().length).toBe(17);
+describe('fulfillment quality checklist — catalog contract', () => {
+  it('covers all deliverables in acceptance contract', () => {
+    expect(allDeliverableIdsInContract().length).toBe(20);
+    expect(listAcceptanceContracts().length).toBe(20);
   });
 
   for (const contract of listAcceptanceContracts()) {

@@ -15,16 +15,22 @@ import { getClientOffer, listClientOffers } from '@/lib/client-offers';
 import { calculateDeliverableQuote, type PaymentProviderId } from '@/lib/dynamic-pricing';
 import { getIndustryCategory } from '@/lib/category-pricing';
 import { listCheckoutPackages } from '@/lib/package-delivery-spec';
+import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
 
 export default function PricingPage() {
   const [industryCategory, setIndustryCategory] = useState('');
+  const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
   const [showAdjust, setShowAdjust] = useState(false);
   const [paymentProvider] = useState<PaymentProviderId>('manual');
   const intensity = 55;
 
   const { available, later } = useMemo(
-    () => listClientOffers({ category: industryCategory || undefined }),
-    [industryCategory],
+    () =>
+      listClientOffers({
+        category: industryCategory || undefined,
+        industryMatrix: industryCategory ? industryMatrix : undefined,
+      }),
+    [industryCategory, industryMatrix],
   );
 
   const quotePriceById = useMemo(() => {
@@ -103,7 +109,13 @@ export default function PricingPage() {
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
           {categoryMeta && (
             <p className="text-sm text-slate-400">
-              Pricing for <strong className="text-white">{categoryMeta.name}</strong>
+              Catalog for <strong className="text-white">{categoryMeta.name}</strong>
+              {matrixCount > 0 ? (
+                <span className="text-slate-500">
+                  {' '}
+                  — {matrixCount} packages tailored (problems, extras, competitive price)
+                </span>
+              ) : null}
             </p>
           )}
           <button
@@ -115,8 +127,9 @@ export default function PricingPage() {
           </button>
           {showAdjust && (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-              Subscription plans start from {formatEur(39)}/mo (industry-adjusted). Package prices are fixed anchors
-              for launch SKUs. Industry can adjust quotes slightly. Payment is bank transfer or Stripe after sign-in.
+              Subscription plans start from {formatEur(39)}/mo (industry-adjusted). Package anchors reflect EU
+              productized-agency benchmarks; when you pick an industry, prices adjust for that segment (budget vs
+              regulated) — same deliverables, competitive positioning. Payment is bank transfer or Stripe after sign-in.
               {foundingPromo && growthFounding?.active ? (
                 <span className="mt-2 block text-emerald-200/90">
                   Founding client promo: Growth from {formatEur(growthFounding.foundingEur)}/mo (
@@ -161,7 +174,12 @@ export default function PricingPage() {
                   transition={{ delay: i * 0.04 }}
                 >
                   <OfferCard
-                    offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                    offer={
+                      getClientOffer(offer.id, {
+                        category: industryCategory || undefined,
+                        industryRow: industryMatrix.get(offer.id) ?? null,
+                      }) ?? offer
+                    }
                     id={`offer-${offer.id}`}
                     priceOverrideEur={quotePriceById.get(offer.id)}
                   />
@@ -187,7 +205,12 @@ export default function PricingPage() {
                   transition={{ delay: i * 0.03 }}
                 >
                   <OfferCard
-                    offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                    offer={
+                      getClientOffer(offer.id, {
+                        category: industryCategory || undefined,
+                        industryRow: industryMatrix.get(offer.id) ?? null,
+                      }) ?? offer
+                    }
                     id={`offer-${offer.id}`}
                     priceOverrideEur={quotePriceById.get(offer.id)}
                     compact

@@ -32,16 +32,27 @@ fi
 
 echo "== Nest + Astra stack (docker) + smoke-stack =="
 cd "$REPO"
-docker compose -f docker-compose.yml up -d --build 2>&1 | tail -n 5
-docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml up -d --build 2>&1 | tail -n 5
-sleep 30
+set +e
+if curl -sf http://127.0.0.1:8080/api/status >/dev/null 2>&1; then
+  echo "Astra already on :8080"
+else
+  docker compose -f docker-compose.yml -p omni-ci-astra up -d --build 2>&1 | tail -n 5
+fi
+docker compose -f docker-compose.nest-vps-verify.yml -p omni-ci-nest down 2>/dev/null || true
+docker compose -f docker-compose.nest-vps-verify.yml -p omni-ci-nest up -d --build 2>&1 | tail -n 8
+NEST_HTTP=1
+for _ in $(seq 1 24); do
+  curl -sf http://127.0.0.1:13001/ >/dev/null 2>&1 && NEST_HTTP=0 && break
+  sleep 5
+done
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-stack.ps1 \
-    -SkipNode:$false -AtinaNodeBase "https://api.omnigrouptech.com" \
-    -AstraBase "http://127.0.0.1:8080" -NestBase "http://127.0.0.1:3001" \
+    '-SkipNode:$false' -AtinaNodeBase "https://api.omnigrouptech.com" \
+    -AstraBase "http://127.0.0.1:8080" -NestBase "http://127.0.0.1:13001" \
     && echo "smoke-stack: PASS" || echo "smoke-stack: FAIL"
 else
-  curl -sf http://127.0.0.1:8080/api/status && curl -sf http://127.0.0.1:3001/ && echo "stack HTTP OK" || echo "stack HTTP FAIL"
+  curl -sf http://127.0.0.1:8080/api/status && curl -sf http://127.0.0.1:13001/ && echo "stack HTTP OK" || echo "stack HTTP FAIL"
 fi
+set -e
 
 echo "=== EXTENDED TESTS DONE $(date -Is) ==="

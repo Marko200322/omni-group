@@ -6,14 +6,40 @@ import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { getClientOffer, listClientOffers } from '@/lib/client-offers';
+import { calculateDeliverableQuote, type PaymentProviderId } from '@/lib/dynamic-pricing';
 import { getGeneratedVerticalsIndex } from '@/lib/generated-verticals';
+import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
+import { getIndustryCategory } from '@/lib/category-pricing';
 
 export default function ProductsPage() {
   const [industryCategory, setIndustryCategory] = useState('');
+  const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
+  const paymentProvider: PaymentProviderId = 'manual';
+  const intensity = 55;
+  const categoryMeta = industryCategory ? getIndustryCategory(industryCategory) : null;
   const { available, later } = useMemo(
-    () => listClientOffers({ category: industryCategory || undefined }),
-    [industryCategory],
+    () =>
+      listClientOffers({
+        category: industryCategory || undefined,
+        industryMatrix: industryCategory ? industryMatrix : undefined,
+      }),
+    [industryCategory, industryMatrix],
   );
+  const quotePriceById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const offer of [...available, ...later]) {
+      const q = calculateDeliverableQuote({
+        deliverableId: offer.id,
+        industryCategory: industryCategory || null,
+        paymentProvider,
+        marketIntensity: intensity,
+        tamEstimateUsd: 50_000 + intensity * 1200,
+        competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
+      });
+      map.set(offer.id, q.clientPriceEur);
+    }
+    return map;
+  }, [available, later, industryCategory, paymentProvider, intensity]);
   const generatedCount = getGeneratedVerticalsIndex().count;
 
   return (
@@ -38,8 +64,14 @@ export default function ProductsPage() {
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-2">
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
+          {categoryMeta && matrixCount > 0 && (
+            <p className="text-sm text-slate-400">
+              {matrixCount} product sets for <strong className="text-white">{categoryMeta.name}</strong> — same
+              SKUs, industry problems and extras applied.
+            </p>
+          )}
         </motion.div>
 
         <section className="mt-14">
@@ -54,7 +86,13 @@ export default function ProductsPage() {
                 transition={{ delay: i * 0.04 }}
               >
                 <OfferCard
-                  offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                  offer={
+                    getClientOffer(offer.id, {
+                      category: industryCategory || undefined,
+                      industryRow: industryMatrix.get(offer.id) ?? null,
+                    }) ?? offer
+                  }
+                  priceOverrideEur={quotePriceById.get(offer.id)}
                 />
               </motion.div>
             ))}
@@ -87,6 +125,7 @@ export default function ProductsPage() {
                 >
                   <OfferCard
                     offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
+                    priceOverrideEur={quotePriceById.get(offer.id)}
                     compact
                   />
                 </motion.div>

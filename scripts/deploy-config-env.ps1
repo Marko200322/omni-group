@@ -11,6 +11,17 @@ function Get-DeployConfigTrim([object]$Config, [string]$Property) {
   return "$val".Trim()
 }
 
+function Test-DeployConfigBool([object]$Config, [string]$Property, [bool]$Default = $false) {
+  if ($null -eq $Config) { return $Default }
+  $val = $Config.$Property
+  if ($null -eq $val) { return $Default }
+  if ($val -is [bool]) { return $val }
+  $s = "$val".Trim().ToLower()
+  if ($s -in @('false', '0', 'no', '')) { return $false }
+  if ($s -in @('true', '1', 'yes')) { return $true }
+  return $Default
+}
+
 function Build-DeployConfigKeyLookup([object]$Config) {
   if ($null -eq $Config) { return @{} }
   $lookup = @{}
@@ -675,12 +686,9 @@ function Apply-DeployConfigProdEnvFiles {
     Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_DOMAIN_WARMUP_COMPLETE' $warmupComplete
   }
 
-  $sendEnabled = Get-DeployConfigTrim $Config 'outreachSendEnabled'
-  if ($sendEnabled) {
-    Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_SEND_ENABLED' $sendEnabled
-  } else {
-    Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_SEND_ENABLED' 'false'
-  }
+  Set-EnvLineInDeployFile $atinaEnv 'OUTREACH_SEND_ENABLED' (
+    $(if (Test-DeployConfigBool $Config 'outreachSendEnabled' $false) { 'true' } else { 'false' })
+  )
 
   foreach ($entry in (Get-DeployConfigWebEnvPatches $Config $SiteDomain).GetEnumerator()) {
     Set-EnvLineInDeployFile $webEnv $entry.Key $entry.Value
@@ -736,5 +744,15 @@ function Invoke-DeployConfigProdPipeline {
   }
 
   Sync-RootDockerNextPublicFromWeb $RepoRoot
+
+  # Factory phase defaults OUTREACH_SEND_ENABLED=false; deploy.config owns go-live.
+  $atinaEnvFinal = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'
+  Set-EnvLineInDeployFile $atinaEnvFinal 'OUTREACH_SEND_ENABLED' (
+    $(if (Test-DeployConfigBool $Config 'outreachSendEnabled' $false) { 'true' } else { 'false' })
+  )
+  if (Test-DeployConfigBool $Config 'outreachDomainWarmupComplete' $false) {
+    Set-EnvLineInDeployFile $atinaEnvFinal 'OUTREACH_DOMAIN_WARMUP_COMPLETE' 'true'
+  }
+
   Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
 }

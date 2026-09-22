@@ -269,7 +269,12 @@ function Apply-FactoryPhaseEnvFiles(
     }
   }
 
-  $webMap = Get-FactoryPhaseWebEnvMapAuto $atinaMap.FACTORY_PHASE $MonthlyBudgetEur $ProdMode $auto
+  $webMap = Get-FactoryPhaseWebEnvMapAuto $phase $MonthlyBudgetEur $ProdMode $auto
+  $anchorMult = if ($DeployConfig.anchorMultiplier) { "$($DeployConfig.anchorMultiplier)".Trim() } else { '1' }
+  $webMap['NEXT_PUBLIC_ANCHOR_MULTIPLIER'] = $anchorMult
+  $atinaMap['ANCHOR_MULTIPLIER'] = $anchorMult
+  Set-FactoryEnvLine $atinaEnv 'ANCHOR_MULTIPLIER' $anchorMult
+
   foreach ($entry in $webMap.GetEnumerator()) {
     Set-FactoryEnvLine $webEnv $entry.Key $entry.Value
   }
@@ -290,6 +295,11 @@ function Apply-FactoryPhaseEnvFiles(
     Set-FactoryEnvLine $atinaEnv 'OUTREACH_DOMAIN_WARMUP_COMPLETE' 'true'
   }
 
+  $sendOverride = "$($DeployConfig.outreachSendEnabled)".Trim().ToLower()
+  if ($sendOverride -in @('true', '1', 'yes')) {
+    Set-FactoryEnvLine $atinaEnv 'OUTREACH_SEND_ENABLED' 'true'
+  }
+
   return $atinaMap.FACTORY_PHASE
 }
 
@@ -302,6 +312,19 @@ function Test-FactoryPhaseEnvFiles(
 ) {
   $phase = Resolve-FactoryPhase $FactoryPhase
   $expected = Get-FactoryPhaseAtinaEnvMap $phase $MonthlyBudgetEur
+  $warmupOverride = ''
+  if ($null -ne $ConfigObject) {
+    $warmupOverride = "$($ConfigObject.outreachDomainWarmupComplete)".Trim().ToLower()
+  } elseif ($DeployConfig.outreachDomainWarmupComplete) {
+    $warmupOverride = "$($DeployConfig.outreachDomainWarmupComplete)".Trim().ToLower()
+  }
+  if ($warmupOverride -in @('true', '1', 'yes')) {
+    $expected.OUTREACH_DOMAIN_WARMUP_COMPLETE = 'true'
+  }
+  if ($phase -eq 'M6' -and $DeployConfig.stripeSecretKey) {
+    $expected.PAYMENTS_MODE = 'live'
+    $expected.ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION = 'true'
+  }
   $atinaEnv = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'
   $fail = 0
   $pass = 0

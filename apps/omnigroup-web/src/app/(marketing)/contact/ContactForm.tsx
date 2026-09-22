@@ -2,7 +2,6 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { AnimatedInput, AnimatedTextarea } from '@/components/motion/AnimatedInput';
 import { fadeUp } from '@/lib/animations';
 import { getIndustryCategory } from '@/lib/category-pricing';
@@ -44,13 +43,27 @@ function buildDefaultMessage(
   return lines.join('\n');
 }
 
-export function ContactForm() {
-  const searchParams = useSearchParams();
-  const serviceId = searchParams.get('service') ?? '';
-  const categorySlug = searchParams.get('category') ?? '';
-  const verticalSlug = searchParams.get('vertical') ?? '';
-  const topicRaw = searchParams.get('topic') ?? '';
-  const topic = /^[a-z0-9_-]{1,64}$/.test(topicRaw) ? topicRaw : '';
+export type ContactFormQuery = {
+  service?: string;
+  category?: string;
+  vertical?: string;
+  topic?: string;
+};
+
+function normalizeTopic(raw: string): string {
+  return /^[a-z0-9_-]{1,64}$/.test(raw) ? raw : '';
+}
+
+export function ContactForm({
+  service: serviceProp = '',
+  category: categoryProp = '',
+  vertical: verticalProp = '',
+  topic: topicProp = '',
+}: ContactFormQuery) {
+  const serviceId = serviceProp.trim();
+  const categorySlug = categoryProp.trim();
+  const verticalSlug = verticalProp.trim();
+  const topic = normalizeTopic(topicProp.trim());
 
   const deliverable = serviceId ? getDeliverable(serviceId) : null;
   const categoryMeta = categorySlug ? getIndustryCategory(categorySlug) : null;

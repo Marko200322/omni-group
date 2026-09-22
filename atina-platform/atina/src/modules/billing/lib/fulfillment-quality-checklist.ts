@@ -14,7 +14,13 @@ export type FulfillmentChecklistResult = {
   items: ChecklistItemResult[];
 };
 
-const WEBSITE_IDS = new Set(['landing', 'website-business', 'website-ecommerce']);
+const WEBSITE_IDS = new Set([
+  'landing',
+  'website-business',
+  'website-ecommerce',
+  'bundle-portal-presence',
+  'bundle-sales-launch',
+]);
 const PDF_CATALOG_IDS = new Set([
   'audit',
   'workflow-design',
@@ -30,6 +36,9 @@ const PDF_CATALOG_IDS = new Set([
   'white-label-setup',
   'sales-enablement',
   'custom-software',
+  'bundle-portal-presence',
+  'bundle-sales-launch',
+  'bundle-ops-clarity',
 ]);
 
 function hasPdfArtifact(result: FulfillmentResult): boolean {
@@ -44,7 +53,7 @@ const MODULE_BOOTSTRAP_IDS = new Set([
   'setup-custom',
 ]);
 
-const SETUP_IDS = new Set(['setup-quick', 'setup-full', 'setup-custom']);
+const SETUP_IDS = new Set(['setup-quick', 'setup-full', 'setup-custom', 'bundle-portal-presence']);
 
 function crmBootstrapOk(result: FulfillmentResult): boolean {
   const crm = result.metadata?.crmBootstrap as { importedLeads?: number } | undefined;
@@ -149,7 +158,7 @@ export function runFulfillmentQualityChecklist(
       passed: Boolean(result.projectId?.trim()),
       message: result.projectId ? 'Setup project scaffold verified' : 'Setup requires verified project scaffold',
     });
-    if (deliverableId === 'setup-quick') {
+    if (deliverableId === 'setup-quick' || deliverableId === 'bundle-portal-presence') {
       items.push({
         id: 'portal_modules',
         passed: Boolean(

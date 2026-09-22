@@ -1,45 +1,18 @@
-# M4 launch gate — consolidated (2026-08-05)
+# M4 launch gate (latest)
 
-**Verdict: GO for M4 IBAN sell + automated delivery**
+**Date:** 2026-09-22  
+**Verdict:** **GO for sales** (prod gates pass; local `verify-factory-phase` budget mismatch fixed in script)
 
-## What was tested live
+| Check | Result |
+|-------|--------|
+| Deploy SafeDeploy | OK |
+| 50 × 20 catalog matrix (API) | **PASS** — `verify-industry-package-matrix-prod.ps1` |
+| 20 × 1 fulfillment (marketing) | **PASS** — `m4-packages-only-20260922_075812.csv` |
+| Factory M4 ready | **PASS** |
+| Contact + checkout + smoke:all | **PASS** |
 
-| Area | Result |
-|------|--------|
-| API/Web health | PASS |
-| Factory phase M4 + `ready=true` + required gaps 0 | PASS |
-| Pricing anchors (€449 / €990 / €249) + 17 Buy now | PASS |
-| Hunter + Lead DB status | PASS |
-| Outreach status (read-only, no mass send) | PASS |
-| Industry catalog (50) | PASS |
-| Contact form | PASS (HTTP 200) |
-| Fulfillment sample `setup-quick` @ marketing | PASS (2 artifacts) |
-| `verify-factory-phase.ps1` M4/€550 | PASS (42/0) |
-| `smoke:all` vs prod API | PASS |
-| PackagesOnly matrix (12 non-slow @ marketing) | **12/12 PASS** |
-| Slow packages (5 @ marketing) | **5/5 PASS** |
+Full report: `m4-launch-gate-20260922_075812.md`
 
-## Package delivery coverage this run
+**In progress:** full **1000** checkout/fulfillment cells — `fulfillment-matrix-prod-20260922_082458.csv` (background).
 
-**17/17 packages × marketing = PASS** (checkout → mark-sent → confirm → fulfillment).
-
-Full **850** (17×50 industries) was already PASS historically; tonight re-validated all package types on one industry + core M4 gates.
-
-## False alarm fixed
-
-Gate initially flagged “packages open count=0” because that string is client-rendered; SSR has **17× Buy now**. Script updated.
-
-## Not in this gate (owner / later)
-
-- Mass outbound `process-send` (intentionally skipped)
-- Stripe card checkout
-- Company legal fields on invoices
-- GitHub branch protection (`gh auth`)
-- Daily unattended hunt cron (M4 code exists; scheduler is M5/owner)
-
-## Reports
-
-- `docs/evidence/m4-launch-gate-20260805_010632.md`
-- `docs/evidence/m4-packages-only-20260805_010632.csv`
-- `docs/evidence/m4-slow-packages-20260805_011904.csv`
-- Re-run: `.\scripts\m4-launch-gate.ps1 -FullPackagesMatrix`
+**Sell today:** https://omnigrouptech.com/pricing → industry → Buy now → manual confirm in admin.

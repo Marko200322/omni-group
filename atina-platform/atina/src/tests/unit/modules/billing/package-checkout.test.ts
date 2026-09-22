@@ -17,9 +17,9 @@ describe('catalog checkout', () => {
     else process.env.OWNER_MONTHLY_BUDGET_EUR = prevBudget;
   });
 
-  it('opens all 17 catalog packages for self-serve checkout', () => {
-    expect(PACKAGE_DELIVERY_SPECS).toHaveLength(17);
-    expect(DELIVERABLE_CATALOG).toHaveLength(17);
+  it('opens all catalog packages for self-serve checkout', () => {
+    expect(PACKAGE_DELIVERY_SPECS).toHaveLength(DELIVERABLE_CATALOG.length);
+    expect(DELIVERABLE_CATALOG.length).toBe(20);
     for (const item of DELIVERABLE_CATALOG) {
       expect(canCheckoutPackage(item.id)).toBe(true);
     }

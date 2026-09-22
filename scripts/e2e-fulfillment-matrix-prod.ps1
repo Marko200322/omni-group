@@ -40,14 +40,10 @@ $web = $WebBase.TrimEnd('/')
 $scriptsDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptsDir
 . (Join-Path $scriptsDir 'rate-limit-retry.ps1')
+. (Join-Path $scriptsDir 'fulfillment-catalog-packages.ps1')
 
-$allPackages = @(
-  'setup-quick', 'setup-full', 'setup-custom', 'audit', 'integration', 'workflow-design',
-  'support-priority', 'support-dedicated', 'landing', 'website-business', 'website-ecommerce',
-  'white-label-setup', 'sales-enablement', 'vertical-package', 'lead-gen-retainer',
-  'ai-support-retainer', 'custom-software'
-)
-$slowIds = @('website-business', 'website-ecommerce', 'white-label-setup', 'custom-software', 'setup-custom')
+$allPackages = @($script:FulfillmentCatalogPackages)
+$slowIds = @($script:FulfillmentSlowPackageIds)
 
 function Get-CsrfHeaders {
   param($Session, [string]$Base)

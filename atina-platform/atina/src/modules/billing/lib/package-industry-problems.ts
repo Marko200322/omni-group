@@ -6,6 +6,7 @@ import { getCategoryDeliveryProfile } from '../../autonomy-loop/lib/vertical-del
 import { getIndustryCategory } from './category-pricing';
 import { DELIVERABLE_CATALOG, getDeliverable, type DeliverableBilling } from './deliverable-catalog';
 import { getMaintenanceTiersForPackage, type MaintenanceTier } from './package-maintenance-tiers';
+import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
 
 export type PackageProblemSpec = {
   primaryProblemTemplate: string;
@@ -100,6 +101,28 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
     secondaryProblems: ['No starter codebase', 'Unclear handoff', 'Tests and docs missing'],
     businessOutcome: 'Node API + SPA scaffold, tests, and handoff PDF — bounded starter scope',
   },
+  'bundle-portal-presence': {
+    primaryProblemTemplate:
+      '{industry} firms lose leads online while client onboarding stays manual — portal and landing are bought separately elsewhere',
+    secondaryProblems: [
+      'No live niche page',
+      'Portal and website vendors do not match',
+      'Higher total cost from two agencies',
+    ],
+    businessOutcome: 'Client portal live plus niche landing page — one bundle, one timeline',
+  },
+  'bundle-sales-launch': {
+    primaryProblemTemplate:
+      '{industry} teams publish generic pages without scripts — sales and marketing do not convert',
+    secondaryProblems: ['Weak copy', 'No demo script', 'Landing not tied to outreach'],
+    businessOutcome: 'Live landing with sales enablement PDF and niche hooks in one package',
+  },
+  'bundle-ops-clarity': {
+    primaryProblemTemplate:
+      '{industry} leadership lacks a shared picture of tech debt, process gaps, and what to fix first',
+    secondaryProblems: ['Audit and SOP bought separately', 'No 90-day plan linked to workflows', 'Consultants overcharge for basics'],
+    businessOutcome: 'Technical audit PDF plus workflow/SOP pack aligned to your industry priorities',
+  },
 };
 
 export type PackageIndustryContext = {
@@ -115,6 +138,7 @@ export type PackageIndustryContext = {
   recommendedForIndustry: boolean;
   maintenanceIncludedInPrice: boolean;
   optionalMaintenanceTiers: MaintenanceTier[] | null;
+  competitiveBonusIncludes: string[];
 };
 
 function applyIndustryLabel(template: string, label: string): string {
@@ -175,6 +199,11 @@ export function getPackageIndustryContext(
     optionalMaintenanceTiers: maintenanceIncludedInPrice
       ? null
       : getMaintenanceTiersForPackage(deliverableId, billing),
+    competitiveBonusIncludes: getIndustryCompetitiveBonusIncludes(
+      industryCategory,
+      deliverableId,
+      recommended,
+    ),
   };
 }
 

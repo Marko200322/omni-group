@@ -4,7 +4,7 @@ import { allDeliverableIdsInContract } from '../../modules/billing/lib/deliverab
 import { generateDeliverablePdfBuffer } from '../../modules/billing/service/deliverable-document-pdf.service';
 
 describe('deliverable fulfillment registry', () => {
-  it('covers all 17 catalog deliverables', () => {
+  it('covers all catalog deliverables', () => {
     const covered = new Set<string>();
     for (const handler of listDeliverableFulfillmentHandlers()) {
       for (const id of handler.ids) covered.add(id);
@@ -12,11 +12,11 @@ describe('deliverable fulfillment registry', () => {
     for (const d of DELIVERABLE_CATALOG) {
       expect(covered.has(d.id)).toBe(true);
     }
-    expect(covered.size).toBe(17);
+    expect(covered.size).toBe(DELIVERABLE_CATALOG.length);
   });
 
-  it('has acceptance contract for all 17 deliverables', () => {
-    expect(allDeliverableIdsInContract().length).toBe(17);
+  it('has acceptance contract for all deliverables', () => {
+    expect(allDeliverableIdsInContract().length).toBe(DELIVERABLE_CATALOG.length);
     for (const id of allDeliverableIdsInContract()) {
       expect(resolveDeliverableFulfillmentHandler(id)).not.toBeNull();
     }

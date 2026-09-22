@@ -5,6 +5,7 @@
  * Checkout is open for every catalog package; phase/budget only change price and extras.
  */
 import { config } from '../../../config';
+import { applyAnchorDiscount } from './anchor-pricing';
 import {
   FACTORY_PHASE_ORDER,
   getFactoryPhase,
@@ -17,6 +18,7 @@ export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'setup-quick',
   'audit',
   'landing',
+  'bundle-portal-presence',
   'website-business',
   'workflow-design',
   'support-priority',
@@ -55,7 +57,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Onboarding checklist in PDF',
     ],
     excludes: ['Custom domain on your DNS', 'Dedicated VPS for the client'],
-    anchorByPhase: { M0: 349, M1: 399, M3: 429, M4: 429, M6: 549 },
+    anchorByPhase: { M0: 349, M1: 399, M3: 419, M4: 419, M6: 549 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -76,6 +78,11 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         fromPhase: 'M3',
         includes: ['Client public site slot linked in portal'],
         includesSr: ['Javni sajt klijenta povezan na portalu'],
+      },
+      {
+        fromPhase: 'M4',
+        includes: ['EU SMB competitive benchmark sheet (PDF) for your industry'],
+        includesSr: ['EU SMB benchmark cena/ponuda (PDF) za vašu industriju'],
       },
     ],
     leanCheckout: true,
@@ -136,7 +143,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'AI tehnički audit PDF: rezime, bezbednost, stack, 90-dnevni plan i ROI — po industriji.',
     includes: ['PDF report (6+ sections)', 'Markdown source bundle', 'Industry-specific recommendations'],
     excludes: ['On-site inspection', 'Penetration testing', 'Legal compliance sign-off'],
-    anchorByPhase: { M0: 449, M2: 549, M4: 549, M6: 790 },
+    anchorByPhase: { M0: 449, M2: 539, M4: 539, M6: 790 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -166,7 +173,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     deliverableId: 'integration',
     description:
       'Integration guide PDF plus integration-config.json (webhook URLs, auth notes, sample events) — ready for your developer.',
-    descriptionSr: 'Integration vodič PDF + integration-config.json — za vašeg developera.',
+    descriptionSr:
+      'Integration vodič PDF + integration-config.json — za vašeg developera.',
     includes: ['Integration guide PDF', 'integration-config.json download', 'Webhook endpoint map'],
     excludes: [
       'Live connection to client Stripe/ERP/CRM',
@@ -207,7 +215,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Maintenance & support included in monthly subscription price',
     ],
     excludes: ['Unlimited dev hours', 'Emergency weekend SLA', 'Separate maintenance invoice (already included)'],
-    anchorByPhase: { M0: 199, M2: 249, M4: 299, M6: 399 },
+    anchorByPhase: { M0: 199, M2: 249, M4: 289, M6: 399 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -263,7 +271,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Live landing na /sites/{slug} sa AI copy-jem — host na omnigrouptech.com.',
     includes: ['Published live URL', 'AI-generated copy for niche', 'Contact section'],
     excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
-    anchorByPhase: { M0: 690, M2: 690, M4: 749, M6: 1290 },
+    anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -279,6 +287,11 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
         fromPhase: 'M3',
         includes: ['Retargeting pixel placement guide'],
         includesSr: ['Vodič za retargeting pixel'],
+      },
+      {
+        fromPhase: 'M4',
+        includes: ['Competitor landing teardown checklist (PDF)'],
+        includesSr: ['Checklist analize konkurentske landing strane (PDF)'],
       },
     ],
     leanCheckout: true,
@@ -448,6 +461,60 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     leanCheckout: true,
     fullCheckout: true,
   },
+  {
+    deliverableId: 'bundle-portal-presence',
+    description:
+      'Combined: quick client portal (login, billing, setup PDF) plus live niche landing — cheaper than buying setup + landing separately.',
+    descriptionSr:
+      'Kombinovano: brzi portal (login, billing, setup PDF) + live landing za nišu — jeftinije nego setup + landing odvojeno.',
+    includes: [
+      'Everything in Quick setup',
+      'Everything in Landing + copy',
+      'Single project timeline in portal',
+      'Industry-tailored landing copy',
+    ],
+    excludes: ['Custom domain DNS', 'Full CRM onboarding (see Full onboarding)'],
+    anchorByPhase: { M3: 899, M4: 899, M6: 1090 },
+    minCheckoutPhase: 'M3',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
+  {
+    deliverableId: 'bundle-sales-launch',
+    description:
+      'Live landing plus sales enablement PDF (demo script, FAQ, hooks) — launch sales and marketing together.',
+    descriptionSr:
+      'Live landing + sales enablement PDF (demo script, FAQ, hookovi) — prodaja i marketing odjednom.',
+    includes: [
+      'Live public landing URL',
+      'Sales enablement PDF + markdown',
+      'Niche outreach hooks in PDF',
+      'Contact section on landing',
+    ],
+    excludes: ['Custom domain', 'Live sales calls', 'CRM setup'],
+    anchorByPhase: { M3: 1290, M4: 1290, M6: 1590 },
+    minCheckoutPhase: 'M3',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
+  {
+    deliverableId: 'bundle-ops-clarity',
+    description:
+      'Technical audit PDF plus workflow/SOP design — priorities and processes in one delivery.',
+    descriptionSr:
+      'Tehnički audit PDF + workflow/SOP dizajn — prioriteti i procesi u jednoj isporuci.',
+    includes: [
+      'Full audit PDF + markdown',
+      'Workflow & SOP PDF',
+      '90-day roadmap cross-linked in audit',
+      'Industry-specific recommendations in both docs',
+    ],
+    excludes: ['On-site visit', 'Building automations in your tools'],
+    anchorByPhase: { M3: 990, M4: 990, M6: 1190 },
+    minCheckoutPhase: 'M3',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
 ];
 
 const BY_ID = new Map(PACKAGE_DELIVERY_SPECS.map((s) => [s.deliverableId, s]));
@@ -463,11 +530,11 @@ export function getPackageAnchorEur(deliverableId: string, phase: FactoryPhase =
   for (let i = idx; i >= 0; i--) {
     const key = FACTORY_PHASE_ORDER[i];
     const v = spec.anchorByPhase[key];
-    if (v != null) return v;
+    if (v != null) return applyAnchorDiscount(v);
   }
   for (const key of FACTORY_PHASE_ORDER) {
     const v = spec.anchorByPhase[key];
-    if (v != null) return v;
+    if (v != null) return applyAnchorDiscount(v);
   }
   return 0;
 }

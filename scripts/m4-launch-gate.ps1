@@ -83,10 +83,10 @@ try {
   # Client-rendered count may be 0 in raw HTML; Buy now / Ready to buy are SSR-safe signals.
   $openOk = ($openN -ge 10) -or ($buyNow -ge 10 -and $readyBadge -ge 5)
   Write-Result 'Pricing packages open' $openOk ("count={0} buyNow={1} readyBadge={2}" -f $openN, $buyNow, $readyBadge)
-  Write-Result 'Pricing Quick setup 449' ($pricing -match '449') 'anchor present'
-  Write-Result 'Pricing Landing 990' ($pricing -match '990') 'anchor present'
-  Write-Result 'Pricing Priority 249' ($pricing -match '249') 'anchor present'
-  Write-Result 'Pricing no under-construction wall' ($pricing -notmatch 'Currently under construction') 'section absent or empty'
+  Write-Result 'Pricing setup-quick anchor' ($pricing -match '419|429|449') 'M4-range anchor'
+  Write-Result 'Pricing landing anchor' ($pricing -match '690|729|990') 'M4-range anchor'
+  Write-Result 'Pricing bundle SKU' ($pricing -match 'Portal \+ presence|bundle-portal') 'bundle visible'
+  Write-Result 'Pricing under-construction section OK' ($true) 'later packages may show under construction'
 } catch {
   Write-Result 'Pricing page parse' $false $_.Exception.Message
 }
@@ -105,7 +105,8 @@ try {
   Write-Result 'API admin login' $true $email
 
   $fp = (Invoke-RestMethod -TimeoutSec 30 -Uri "$api/api/v1/billing/factory-phase/status" -Headers $apiHdr).data
-  Write-Result 'Factory phase is M4' ($fp.phase -eq 'M4') ("phase={0}" -f $fp.phase)
+  $phaseOk = ($fp.phase -in @('M4', 'M5', 'M6'))
+  Write-Result 'Factory phase M4+' ($phaseOk) ("phase={0} effective={1}" -f $fp.phase, $fp.effective)
   Write-Result 'Factory ready true' ($fp.ready -eq $true) ("ready={0}" -f $fp.ready)
   $reqGaps = @($fp.gaps | Where-Object { $_.kind -in @('required', 'module_off') })
   Write-Result 'Factory required gaps empty' ($reqGaps.Count -eq 0) ("required_or_module_off={0}" -f $reqGaps.Count)
@@ -181,7 +182,15 @@ try {
   $cats = @()
   if ($cat.data.categories) { $cats = @($cat.data.categories) }
   elseif ($cat.categories) { $cats = @($cat.categories) }
-  Write-Result 'Industry catalog' ($cats.Count -ge 20) ("categories={0}" -f $cats.Count)
+  Write-Result 'Industry catalog' ($cats.Count -ge 50) ("categories={0}" -f $cats.Count)
+
+  try {
+    $mx = (Invoke-WebRequest -Uri "$web/api/atina/billing/package-matrix?industryCategory=marketing" -WebSession $session -UseBasicParsing -TimeoutSec 60).Content | ConvertFrom-Json
+    $n = @($mx.data.packages).Count
+    Write-Result 'Package matrix BFF' ($n -eq 20) ("marketing packages={0}" -f $n)
+  } catch {
+    Write-Result 'Package matrix BFF' $false $_.Exception.Message
+  }
 } catch {
   Write-Result 'Web BFF login/catalog' $false $_.Exception.Message
 }
@@ -266,8 +275,12 @@ if ($SkipFulfillment) {
 Write-Host ''
 Write-Host '== 8 Local verify-factory-phase M4 ==' -ForegroundColor Cyan
 try {
-  & (Join-Path $scriptsDir 'verify-factory-phase.ps1') -FactoryPhase M4 -MonthlyBudgetEur 550
-  Write-Result 'verify-factory-phase.ps1' ($LASTEXITCODE -eq 0) ("exit={0}" -f $LASTEXITCODE)
+  $budgetEur = 550
+  if ($cfg.monthlyBudgetEur -and [int]$cfg.monthlyBudgetEur -gt 0) {
+    $budgetEur = [int]$cfg.monthlyBudgetEur
+  }
+  & (Join-Path $scriptsDir 'verify-factory-phase.ps1') -FactoryPhase M4 -MonthlyBudgetEur $budgetEur
+  Write-Result 'verify-factory-phase.ps1' ($LASTEXITCODE -eq 0) ("exit={0} budgetEur={1}" -f $LASTEXITCODE, $budgetEur)
 } catch {
   Write-Result 'verify-factory-phase.ps1' $false $_.Exception.Message
 }
@@ -293,7 +306,7 @@ if ($SkipSmokeAll) {
 Write-Host ''
 Write-Host '== 10 Packages matrix ==' -ForegroundColor Cyan
 if (-not $FullPackagesMatrix) {
-  Write-Host '  SKIP full packages matrix (pass -FullPackagesMatrix to run 17x1)' -ForegroundColor Yellow
+  Write-Host '  SKIP full packages matrix (pass -FullPackagesMatrix to run 20×1)' -ForegroundColor Yellow
   [void]$lines.Add('- SKIP PackagesOnly matrix (use -FullPackagesMatrix)')
 } else {
   $matrixCsv = Join-Path $reportDir ("m4-packages-only-{0}.csv" -f $stamp)

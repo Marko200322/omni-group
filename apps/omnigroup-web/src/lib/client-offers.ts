@@ -11,14 +11,17 @@ import {
   resolvePackageOffer,
   type PackageAvailability,
 } from './package-delivery-spec';
+import { getFactoryPhase } from './factory-phase';
 import {
   DELIVERABLE_CATALOG,
   DELIVERABLE_CATEGORY_LABELS,
   type DeliverableDefinition,
 } from './deliverable-catalog';
 import { formatEur } from './category-pricing';
-import { formatBillingLabel } from './dynamic-pricing';
+import { calculateDeliverableQuote, formatBillingLabel } from './dynamic-pricing';
 import { buildLoginNextForQuote, buildPricingHref } from './checkout-navigation';
+import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
+import type { PackageIndustryMatrixRow } from './package-industry-matrix';
 
 export type ClientOfferCopy = {
   /** One clear outcome line under the title */
@@ -184,6 +187,36 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     youGet: ['AI support PDF', 'RAG knowledge seed', 'Avatar modules'],
     notIncluded: ['Video avatar without AI keys'],
   },
+  'bundle-portal-presence': {
+    promise: 'Portal and landing live — one purchase.',
+    summary:
+      'We turn on your client portal and publish a niche landing page so you can onboard and capture leads without two vendors.',
+    readMore:
+      'Includes everything in Quick setup and Landing + copy, one timeline in the portal, and industry-tailored copy. Custom domain and full CRM onboarding are separate packages.',
+    when: 'Usually 3–5 days after payment',
+    youGet: ['Client portal live', 'Live landing URL', 'Setup + landing PDFs', 'Industry landing copy'],
+    notIncluded: ['Custom domain DNS', 'Full CRM onboarding'],
+  },
+  'bundle-sales-launch': {
+    promise: 'Page live + sales kit for your niche.',
+    summary:
+      'Live landing plus sales enablement PDF (scripts, FAQ, hooks) so marketing and sales start aligned.',
+    readMore:
+      'Combines public landing URL with sales enablement deliverables. Does not include CRM setup or live sales coaching.',
+    when: 'Usually 4–6 days after payment',
+    youGet: ['Live landing URL', 'Sales enablement PDF', 'Niche outreach hooks', 'Contact on page'],
+    notIncluded: ['Custom domain', 'CRM pipeline setup'],
+  },
+  'bundle-ops-clarity': {
+    promise: 'Audit + workflow plan in one delivery.',
+    summary:
+      'Technical audit and workflow/SOP design together — what to fix and how work should flow in your industry.',
+    readMore:
+      'Two PDF packs with cross-linked priorities. We do not build automations inside your tools in this bundle.',
+    when: 'Usually within 4–5 days',
+    youGet: ['Audit PDF', 'Workflow/SOP PDF', '90-day priorities', 'Industry recommendations'],
+    notIncluded: ['On-site visit', 'Automation build in your stack'],
+  },
   'custom-software': {
     promise: 'Software starter kit — scaffold + tests, not a finished custom product.',
     summary: 'Isolated Node API + SPA starter with test gate and handoff PDF.',
@@ -213,6 +246,10 @@ export type ClientOffer = {
   buyHref: string;
   detailsHref: string;
   contactHref: string;
+  /** Set when an industry is selected and matrix row exists */
+  industryPrimaryProblem?: string;
+  industryRecommended?: boolean;
+  industryPitch?: string;
 };
 
 function fallbackCopy(d: DeliverableDefinition): ClientOfferCopy {
@@ -233,12 +270,36 @@ function fallbackCopy(d: DeliverableDefinition): ClientOfferCopy {
 
 export function getClientOffer(
   id: string,
-  opts?: { category?: string; vertical?: string },
+  opts?: { category?: string; vertical?: string; industryRow?: PackageIndustryMatrixRow | null },
 ): ClientOffer | null {
   const d = DELIVERABLE_CATALOG.find((x) => x.id === id);
   if (!d) return null;
   const copy = CLIENT_OFFER_COPY[id] ?? fallbackCopy(d);
-  const priceEur = getPackageAnchorEur(id);
+  const resolved = resolvePackageOffer(id, getFactoryPhase());
+  const row = opts?.industryRow;
+  const bonusIncludes =
+    row?.competitiveBonusIncludes ??
+    (opts?.category
+      ? getIndustryCompetitiveBonusIncludes(opts.category, id, row?.recommendedForIndustry)
+      : []);
+  const baseYouGet =
+    resolved.includes.length > 0 ? resolved.includes.slice(0, 6) : copy.youGet;
+  const mergedYouGet = Array.from(new Set([...bonusIncludes, ...baseYouGet])).slice(0, 7);
+  const summary = row?.primaryProblem?.trim() ? row.primaryProblem : copy.summary;
+  const promise =
+    row?.recommendedForIndustry && row.businessOutcome
+      ? row.businessOutcome.split('—')[0]?.trim() || copy.promise
+      : copy.promise;
+  const priceEur = opts?.category
+    ? calculateDeliverableQuote({
+        deliverableId: id,
+        industryCategory: opts.category,
+        paymentProvider: 'manual',
+        marketIntensity: 55,
+        tamEstimateUsd: 50_000 + 55 * 1200,
+        competitionScore: 58,
+      }).clientPriceEur
+    : getPackageAnchorEur(id);
   const availability = getPackageAvailability(id);
   const category = opts?.category;
   const vertical = opts?.vertical;
@@ -250,11 +311,13 @@ export function getClientOffer(
     billing: d.billing,
     priceEur,
     priceLabel: `${formatEur(priceEur)} ${formatBillingLabel(d.billing)}`,
-    promise: copy.promise,
-    summary: copy.summary,
-    readMore: copy.readMore,
+    promise,
+    summary,
+    readMore: row?.industrySolutionPitch
+      ? `${copy.readMore} ${row.industrySolutionPitch}`.trim()
+      : copy.readMore,
     when: copy.when,
-    youGet: copy.youGet,
+    youGet: mergedYouGet,
     notIncluded: copy.notIncluded,
     availability,
     buyHref: buildLoginNextForQuote({ service: id, category, vertical }),
@@ -262,19 +325,27 @@ export function getClientOffer(
     contactHref: `/contact?service=${encodeURIComponent(id)}${
       category ? `&category=${encodeURIComponent(category)}` : ''
     }`,
+    industryPrimaryProblem: row?.primaryProblem,
+    industryRecommended: row?.recommendedForIndustry,
+    industryPitch: row?.industrySolutionPitch,
   };
 }
 
 export function listClientOffers(opts?: {
   category?: string;
   vertical?: string;
+  industryMatrix?: Map<string, PackageIndustryMatrixRow>;
   /** only packages open for self-serve checkout */
   availableOnly?: boolean;
 }): { available: ClientOffer[]; later: ClientOffer[] } {
   const available: ClientOffer[] = [];
   const later: ClientOffer[] = [];
   for (const d of DELIVERABLE_CATALOG) {
-    const offer = getClientOffer(d.id, opts);
+    const offer = getClientOffer(d.id, {
+      category: opts?.category,
+      vertical: opts?.vertical,
+      industryRow: opts?.industryMatrix?.get(d.id) ?? null,
+    });
     if (!offer) continue;
     if (canCheckoutPackage(d.id)) available.push(offer);
     else if (!opts?.availableOnly) later.push(offer);

@@ -1,7 +1,5 @@
-/**
- * Tržišni indeksi po industriji (EU remote / Balkan agencija, 2026).
- * Množi anchor cene isporuka — 1.0 = prosečan freelance segment.
- */
+/** Sync with atina-platform/atina/src/modules/billing/lib/market-pricing.ts */
+
 export const CATEGORY_MARKET_INDEX: Record<string, number> = {
   admin_support: 0.82,
   writing_translation: 0.85,
@@ -59,4 +57,11 @@ export function getCategoryMarketIndex(categorySlug?: string | null): number {
   if (!categorySlug?.trim()) return 1;
   const key = categorySlug.trim().toLowerCase().replace(/\s+/g, '_');
   return CATEGORY_MARKET_INDEX[key] ?? 1;
+}
+
+export function formatMarketIndexLabel(index: number): string {
+  if (index >= 1.25) return 'Premium market';
+  if (index >= 1.05) return 'Above average';
+  if (index >= 0.95) return 'Average market';
+  return 'Accessible segment';
 }
