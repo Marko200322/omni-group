@@ -1,10 +1,15 @@
 /** Public company identity — set via deploy.config → NEXT_PUBLIC_* on web. */
 export function getSiteCompany() {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://omnigrouptech.com').replace(/\/$/, '');
-  const supportEmail =
+  const configuredSupport =
     process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ||
     process.env.CONTACT_EMAIL_TO?.trim() ||
-    'hello@omnigrouptech.com';
+    '';
+  // Public footer/contact: prefer domain inbox; internal Gmail in CONTACT_EMAIL_TO stays for routing only.
+  const supportEmail =
+    configuredSupport && !/@gmail\.com$/i.test(configuredSupport)
+      ? configuredSupport
+      : 'hello@omnigrouptech.com';
 
   return {
     brand: 'Omni Group Tech',

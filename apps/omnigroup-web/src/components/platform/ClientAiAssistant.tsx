@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react';
 import { PORTAL_QUICK_PROMPTS, PUBLIC_QUICK_PROMPTS } from '@/lib/client-portal-ai-context';
@@ -33,6 +34,8 @@ function friendlyError(raw: string | undefined): string {
 }
 
 export function ClientAiAssistant({ userName }: Props) {
+  const pathname = usePathname() ?? '';
+  const isClientPortal = pathname.startsWith('/dashboard');
   const [open, setOpen] = useState(false);
   const [booting, setBooting] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -131,7 +134,9 @@ export function ClientAiAssistant({ userName }: Props) {
   );
 
   const firstName = userName?.split(' ')[0];
-  const displayName = ASSISTANT_NAME;
+  /** Public marketing: avoid lone “Omi” floating over the cookie bar; portal keeps brand name. */
+  const displayName = isClientPortal ? ASSISTANT_NAME : 'Help';
+  const fabBottomClass = isClientPortal ? 'bottom-6' : 'bottom-28 sm:bottom-6';
   const chips = audience === 'portal' ? PORTAL_QUICK_PROMPTS : PUBLIC_QUICK_PROMPTS;
   const subtitle =
     audience === 'portal'
@@ -144,7 +149,7 @@ export function ClientAiAssistant({ userName }: Props) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-[70] flex h-14 items-center gap-2 rounded-full border border-emerald-500/40 bg-[#0a1218]/95 px-4 text-emerald-200 shadow-lg shadow-emerald-500/10 backdrop-blur-md transition hover:scale-105 hover:border-emerald-400/60 hover:bg-emerald-500/10"
+          className={`fixed right-6 z-[60] flex h-14 items-center gap-2 rounded-full border border-emerald-500/40 bg-[#0a1218]/95 px-4 text-emerald-200 shadow-lg shadow-emerald-500/10 backdrop-blur-md transition hover:scale-105 hover:border-emerald-400/60 hover:bg-emerald-500/10 ${fabBottomClass}`}
           aria-label={`Open ${displayName}`}
         >
           <MessageCircle className="h-5 w-5 shrink-0" />

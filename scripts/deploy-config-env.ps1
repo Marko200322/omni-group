@@ -298,9 +298,17 @@ function Get-DeployConfigWebEnvPatches([object]$Config, [string]$SiteDomain) {
   if ($lookup.ContainsKey('COMPANY_ADDRESS')) {
     $patches['NEXT_PUBLIC_COMPANY_ADDRESS'] = $lookup['COMPANY_ADDRESS']
   }
-  if ($lookup.ContainsKey('CONTACT_EMAIL_TO')) {
-    $patches['NEXT_PUBLIC_SUPPORT_EMAIL'] = $lookup['CONTACT_EMAIL_TO']
+  $publicSupport = ''
+  if ($Config.resend.contactFrom -and "$($Config.resend.contactFrom)".Trim() -match '@') {
+    $from = "$($Config.resend.contactFrom)".Trim()
+    if ($from -notmatch '@gmail\.com$') { $publicSupport = $from }
   }
+  if (-not $publicSupport -and $lookup.ContainsKey('CONTACT_EMAIL_TO')) {
+    $to = "$($lookup['CONTACT_EMAIL_TO'])".Trim()
+    if ($to -notmatch '@gmail\.com$') { $publicSupport = $to }
+  }
+  if (-not $publicSupport) { $publicSupport = 'hello@omnigrouptech.com' }
+  $patches['NEXT_PUBLIC_SUPPORT_EMAIL'] = $publicSupport
   $patches['REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
   $patches['NEXT_PUBLIC_REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
   foreach ($entry in (Get-FoundingClientPromoEnvMap $Config).GetEnumerator()) {
@@ -753,6 +761,11 @@ function Invoke-DeployConfigProdPipeline {
   if (Test-DeployConfigBool $Config 'outreachDomainWarmupComplete' $false) {
     Set-EnvLineInDeployFile $atinaEnvFinal 'OUTREACH_DOMAIN_WARMUP_COMPLETE' 'true'
   }
+
+  $payMax = Get-DeployConfigTrim $Config 'paymentsRateLimitMax'
+  if (-not $payMax) { $payMax = '200' }
+  Set-EnvLineInDeployFile $atinaEnvFinal 'PAYMENTS_RATE_LIMIT_MAX' $payMax
+  Set-EnvLineInDeployFile $atinaEnvFinal 'PAYMENTS_RATE_LIMIT_WINDOW_MS' '600000'
 
   Write-Host 'Prod env patched from deploy.config.json' -ForegroundColor DarkGray
 }

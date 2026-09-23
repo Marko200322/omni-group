@@ -3,11 +3,11 @@
 import { usePathname } from 'next/navigation';
 import { ClientAiAssistant } from '@/components/platform/ClientAiAssistant';
 
-/** Site-wide Omi helper — hidden only on operator/dev consoles. */
+/** Portal assistant only — marketing uses /contact (avoids “Omi” chip over cookie banner). */
 export function AtinaAssistantHost() {
   const pathname = usePathname() ?? '';
-  if (pathname.startsWith('/admin') || pathname.startsWith('/dev')) {
+  if (!pathname.startsWith('/dashboard')) {
     return null;
   }
-  return <ClientAiAssistant />;
+  return <ClientAiAssistant userName={undefined} />;
 }
