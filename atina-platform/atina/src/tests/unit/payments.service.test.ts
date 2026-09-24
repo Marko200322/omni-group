@@ -678,6 +678,36 @@ describe('PaymentsService', () => {
       expect(pastDue).toHaveLength(0);
     });
 
+    it('marks a matching Stripe payment refunded', async () => {
+      testStripeApi.webhooks.constructEvent.mockReturnValue({
+        type: 'charge.refunded',
+        data: {
+          object: {
+            id: 'ch_1',
+            payment_intent: 'pi_1',
+            amount: 54900,
+            amount_refunded: 54900,
+            refunded: true,
+          },
+        },
+      } as never);
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: 'pay-1', status: 'completed', amount: 549 }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+
+      await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
+
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining("status = $2"),
+        expect.arrayContaining(['pay-1', 'refunded', 549]),
+      );
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('deliverable_fulfillment_jobs'),
+        expect.arrayContaining(['pay-1', 'Stripe refund recorded']),
+      );
+    });
+
     it('logs unhandled event types', async () => {
       testStripeApi.webhooks.constructEvent.mockReturnValue({
         type: 'customer.created',

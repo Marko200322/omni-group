@@ -7,6 +7,12 @@ import type { SolutionDetail } from '@/lib/public-site-api';
 import { formatEur } from '@/lib/category-pricing';
 import { getClientOffer, getPublicListPriceEur } from '@/lib/client-offers';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
+import {
+  capabilityClusterFor,
+  FORBIDDEN_SKU_CLUSTERS,
+  isCatalogDump,
+  recommendSkusForIndustry,
+} from '@/lib/industry-sku-map';
 import { getPackageAvailability } from '@/lib/package-delivery-spec';
 import { buildLoginNextForQuote } from '@/lib/checkout-navigation';
 import { buildVerticalLandingCopy } from '@/lib/vertical-landing-copy';
@@ -37,6 +43,24 @@ export function VerticalLanding({ solution }: Props) {
     category: solution.category,
     valueProp: pack.valueProp,
   });
+  const cluster = capabilityClusterFor(solution.category);
+  const mapped = recommendSkusForIndustry(solution.category);
+  const packIds = pack.recommendedDeliverables.map((d) => d.id);
+  const filteredPack = pack.recommendedDeliverables.filter((d) => {
+    const banned = FORBIDDEN_SKU_CLUSTERS[d.id];
+    return !banned || !banned.includes(cluster);
+  });
+  const recommended = isCatalogDump(packIds) || filteredPack.length === 0
+    ? mapped.map((row) => ({
+        id: row.id,
+        name: deliverableDisplayName(row.id, row.id),
+        why: row.why,
+      }))
+    : filteredPack.slice(0, 4).map((d) => ({
+        id: d.id,
+        name: deliverableDisplayName(d.id, d.name ?? d.nameSr ?? d.id),
+        why: mapped.find((row) => row.id === d.id)?.why,
+      }));
 
   return (
     <div className="px-4 py-16">
@@ -64,7 +88,7 @@ export function VerticalLanding({ solution }: Props) {
           {SAAS_PLANS.map((plan) => (
             <Link
               key={plan.slug}
-              href={`/register?plan=${plan.slug}&utm_campaign=vertical-${solution.slug}`}
+              href={`/register?plan=${plan.slug}&cycle=monthly&currency=EUR&utm_campaign=vertical-${solution.slug}`}
               className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-violet-400/40"
             >
               <p className="font-medium text-white">{plan.name}</p>
@@ -148,16 +172,7 @@ export function VerticalLanding({ solution }: Props) {
           >
             <h2 className="font-display text-xl font-semibold text-white">Recommended deliverables</h2>
             <ul className="mt-4 space-y-3">
-              {(pack.recommendedDeliverables.length
-                ? pack.recommendedDeliverables
-                : DELIVERABLE_CATALOG.map((d) => ({
-                    id: d.id,
-                    name: d.name,
-                    nameSr: d.nameSr,
-                    clientPriceEur: 0,
-                    billing: d.billing,
-                  }))
-              ).map((d) => {
+              {recommended.map((d) => {
                 const availability = getPackageAvailability(d.id);
                 const ready = availability.saleStatus === 'READY_TO_BUY';
                 const href = buildLoginNextForQuote({
@@ -169,7 +184,8 @@ export function VerticalLanding({ solution }: Props) {
                 return (
                   <li key={d.id} className="flex items-start justify-between gap-3 text-sm">
                     <span className="text-slate-300">
-                      {deliverableDisplayName(d.id, d.name ?? d.nameSr ?? d.id)}
+                      {deliverableDisplayName(d.id, d.name ?? d.id)}
+                      {d.why ? <span className="mt-0.5 block text-[11px] text-slate-500">{d.why}</span> : null}
                       {!ready && (
                         <span className="mt-0.5 block text-[11px] text-amber-200/90">
                           {availability.badge}

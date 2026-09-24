@@ -4,12 +4,22 @@ export function getSiteUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://omnigrouptech.com').replace(/\/$/, '');
 }
 
+export function marketingCanonical(path = ''): string {
+  const origin = getSiteUrl();
+  if (!path || path === '/') return origin;
+  return `${origin}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 const defaultDescription =
   'Omni Group Tech — custom software, digital services, and monthly support for your business. Transparent industry-based pricing.';
 
 /** Shared Open Graph / Twitter defaults for public marketing pages. */
-export function marketingOpenGraph(title: string, description?: string): Metadata['openGraph'] {
-  const url = getSiteUrl();
+export function marketingOpenGraph(
+  title: string,
+  description?: string,
+  path?: string,
+): Metadata['openGraph'] {
+  const url = marketingCanonical(path);
   const desc = description ?? defaultDescription;
   return {
     title,

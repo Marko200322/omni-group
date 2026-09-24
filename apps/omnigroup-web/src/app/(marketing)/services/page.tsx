@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
+import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 
 export default function ServicesPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const { available, later } = useMemo(
-    () => listClientOffers({ category: industryCategory || undefined }),
+    () => listClientOffers({ category: industryCategory || undefined, excludeBundles: true }),
     [industryCategory],
   );
   const catalogStats = getPublicCatalogStats();
@@ -26,14 +27,17 @@ export default function ServicesPage() {
             Setup, support, and growth
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Expert services sit on top of the SaaS plans. Same {catalogStats.expertServiceCount} services and
-            the same list prices as Pricing and Packages. Use Read more for the full delivery detail.
+            Expert services sit on top of the SaaS plans. Same {catalogStats.expertServiceCount} services and{' '}
+            {catalogStats.bundleCount} catalog bundles as Pricing and Packages —{' '}
+            {catalogStats.catalogSkuCount} SKUs, one price book. Use Read more for the full delivery detail.
           </p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md">
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
         </motion.div>
+
+        <LaunchBundlesPanel />
 
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>

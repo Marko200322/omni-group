@@ -67,8 +67,9 @@ export default async function SolutionsPage({
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
           {total} industry landings. Each starts from one of {SAAS_PLANS.length} SaaS plans, then can add any of
-          the {catalogStats.expertServiceCount} expert services — same catalog and list prices as Pricing.
-          {catalogStats.readyToBuyCount} services are ready to buy now. Ready packages with fixed scope are on{' '}
+          the {catalogStats.expertServiceCount} expert services or {catalogStats.bundleCount} catalog bundles —{' '}
+          {catalogStats.catalogSkuCount} SKUs, same catalog and list prices as Pricing.{' '}
+          {catalogStats.readyToBuyCount} SKUs are ready to buy now. Ready packages with fixed scope are on{' '}
           <Link href="/pricing" className="text-violet-300 hover:text-white">
             Pricing
           </Link>

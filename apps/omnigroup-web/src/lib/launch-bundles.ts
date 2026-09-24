@@ -3,12 +3,9 @@
  * Prices always come from getPublicListPriceEur. No second price book.
  */
 import { getClientOffer, getPublicListPriceEur, type ClientOffer } from './client-offers';
+import { CATALOG_BUNDLE_IDS } from './catalog-bundle-ids';
 
-export const CATALOG_BUNDLE_IDS = [
-  'bundle-portal-presence',
-  'bundle-sales-launch',
-  'bundle-ops-clarity',
-] as const;
+export { CATALOG_BUNDLE_IDS } from './catalog-bundle-ids';
 
 export type LaunchBundleSpec = {
   id: (typeof CATALOG_BUNDLE_IDS)[number];

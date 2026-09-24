@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { VerticalLanding } from '@/components/marketing/VerticalLanding';
 import { fetchSolution, fallbackSolutionFromIndex } from '@/lib/public-site-api';
 import { formatPublicTitle } from '@/lib/industry-catalog';
-import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
+import { marketingCanonical, marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 import { buildVerticalLandingCopy } from '@/lib/vertical-landing-copy';
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -30,22 +30,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const description = landingCopy(fallback).lede;
     const thin = isDraftSolution(fallback);
     const title = formatPublicTitle(fallback.name);
+    const path = `/solutions/${slug}`;
     return {
       title,
       description,
+      alternates: { canonical: marketingCanonical(path) },
       ...(thin ? { robots: { index: false, follow: true } } : {}),
-      openGraph: marketingOpenGraph(title, description),
+      openGraph: marketingOpenGraph(title, description, path),
       twitter: marketingTwitter(title, description),
     };
   }
   const description = landingCopy(solution).lede;
   const thin = isDraftSolution(solution);
   const title = formatPublicTitle(solution.name);
+  const path = `/solutions/${slug}`;
   return {
     title,
     description,
+    alternates: { canonical: marketingCanonical(path) },
     ...(thin ? { robots: { index: false, follow: true } } : {}),
-    openGraph: marketingOpenGraph(title, description),
+    openGraph: marketingOpenGraph(title, description, path),
     twitter: marketingTwitter(title, description),
   };
 }

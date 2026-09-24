@@ -38,7 +38,7 @@ export const FALLBACK_SOURCE_OF_TRUTH = {
     { id: 'support-dedicated', name: 'Dedicated support', description: 'Slack channel, monthly health check.', billing: 'monthly' as const, category: 'retainer', anchorEur: 690 },
     { id: 'landing', name: 'Landing + copy', description: 'Professional landing page and sales copy for your niche.', billing: 'one_time' as const, category: 'growth', anchorEur: 990 },
     { id: 'website-business', name: 'Business website', description: 'Multi-page site with services, pricing, and contact.', billing: 'one_time' as const, category: 'growth', anchorEur: 1990 },
-    { id: 'website-ecommerce', name: 'E-commerce website', description: 'Demo storefront + checkout docs — not a full merchant Stripe shop.', billing: 'one_time' as const, category: 'growth', anchorEur: 3490 },
+    { id: 'website-ecommerce', name: 'E-commerce demo storefront', description: 'Demo storefront + checkout docs — not a full merchant Stripe shop.', billing: 'one_time' as const, category: 'growth', anchorEur: 3490 },
     { id: 'white-label-setup', name: 'White-label packaging', description: 'Branding, domain, and sales materials.', billing: 'one_time' as const, category: 'growth', anchorEur: 1790 },
     { id: 'sales-enablement', name: 'Sales enablement', description: 'Demo scripts, FAQ, and onboarding for your team.', billing: 'one_time' as const, category: 'growth', anchorEur: 890 },
     { id: 'vertical-package', name: 'Vertical solution', description: 'CRM + automations + AI support tailored to your industry.', billing: 'monthly' as const, category: 'vertical', anchorEur: 299, modules: ['crm', 'automation', 'support-avatar', 'billing'] },

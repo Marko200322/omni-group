@@ -1,11 +1,23 @@
 'use client';
 
 import Script from 'next/script';
+import { useEffect, useState } from 'react';
+import { COOKIE_CONSENT_EVENT, hasAnalyticsConsent } from '@/lib/cookie-consent';
 
 export function MarketingPixels() {
+  const [allowed, setAllowed] = useState(false);
   const gtm = process.env.NEXT_PUBLIC_GTM_ID?.trim();
   const ads = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID?.trim();
   const meta = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
+
+  useEffect(() => {
+    const sync = () => setAllowed(hasAnalyticsConsent());
+    sync();
+    window.addEventListener(COOKIE_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, sync);
+  }, []);
+
+  if (!allowed) return null;
 
   return (
     <>

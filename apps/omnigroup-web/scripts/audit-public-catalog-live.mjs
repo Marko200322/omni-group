@@ -15,7 +15,7 @@ const EXPECTED = [
   ['support-dedicated', 'Dedicated support', 1190, 'monthly'],
   ['landing', 'Landing + copy', 1290, 'one_time'],
   ['website-business', 'Business website', 2990, 'one_time'],
-  ['website-ecommerce', 'E-commerce website', 4900, 'one_time'],
+  ['website-ecommerce', 'E-commerce demo storefront', 4900, 'one_time'],
   ['white-label-setup', 'White-label packaging', 2490, 'one_time'],
   ['sales-enablement', 'Sales enablement', 1190, 'one_time'],
   ['vertical-package', 'Vertical solution', 790, 'monthly'],

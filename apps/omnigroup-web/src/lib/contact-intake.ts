@@ -29,8 +29,48 @@ export function parseContactTimeline(value: unknown): ContactTimelineId | undefi
   return typeof value === 'string' && TIMELINE_IDS.has(value) ? (value as ContactTimelineId) : undefined;
 }
 
+export const CONTACT_MESSAGE_MIN_LEN = 12;
+export const CONTACT_MESSAGE_MAX_LEN = 5000;
+export const CONTACT_NAME_MIN_LEN = 2;
+export const CONTACT_NAME_MAX_LEN = 120;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export function parseContactConsent(value: unknown): boolean {
   return value === true || value === 'true' || value === 'on' || value === '1';
+}
+
+export function isValidContactEmail(value: string): boolean {
+  const email = value.trim();
+  if (email.length < 6 || email.length > 254) return false;
+  if (email.includes(' ') || email.includes('..')) return false;
+  return EMAIL_RE.test(email);
+}
+
+export function parseContactName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const name = value.trim();
+  if (name.length < CONTACT_NAME_MIN_LEN || name.length > CONTACT_NAME_MAX_LEN) return undefined;
+  return name;
+}
+
+export function parseContactMessage(value: unknown):
+  | { ok: true; message: string }
+  | { ok: false; error: 'message_required' | 'message_invalid_type' | 'message_too_short' | 'message_too_long' } {
+  if (value === undefined || value === null || value === '') {
+    return { ok: false, error: 'message_required' };
+  }
+  if (typeof value !== 'string') {
+    return { ok: false, error: 'message_invalid_type' };
+  }
+  const message = value.trim();
+  if (message.length < CONTACT_MESSAGE_MIN_LEN) {
+    return { ok: false, error: 'message_too_short' };
+  }
+  if (message.length > CONTACT_MESSAGE_MAX_LEN) {
+    return { ok: false, error: 'message_too_long' };
+  }
+  return { ok: true, message };
 }
 
 export function contactBudgetLabel(id: string): string {

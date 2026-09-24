@@ -3,15 +3,18 @@ import { notifyContactSlack } from '@/lib/contact-slack-notify';
 import { notifyContactTelegram } from '@/lib/contact-telegram-notify';
 import { pushContactToCrm } from '@/lib/contact-crm-ingress';
 import {
+  CONTACT_MESSAGE_MAX_LEN,
+  CONTACT_MESSAGE_MIN_LEN,
   contactBudgetLabel,
   contactIntakeLines,
   contactTimelineLabel,
+  isValidContactEmail,
   parseContactBudget,
   parseContactConsent,
+  parseContactMessage,
+  parseContactName,
   parseContactTimeline,
 } from '@/lib/contact-intake';
-
-const MESSAGE_MAX_LEN = 5000;
 
 function slugParam(value: unknown): string | undefined {
   return typeof value === 'string' && /^[a-z0-9_-]{1,64}$/.test(value) ? value : undefined;
@@ -25,8 +28,8 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: 'invalid_json' }, { status: 400 });
   }
-  const email = typeof body.email === 'string' ? body.email : '';
-  const name = typeof body.name === 'string' ? body.name : '';
+  const emailRaw = typeof body.email === 'string' ? body.email : '';
+  const name = parseContactName(body.name);
   const company = typeof body.company === 'string' ? body.company.trim() : '';
   const service = slugParam(body.service);
   const category = slugParam(body.category);
@@ -34,9 +37,13 @@ export async function POST(req: Request) {
   const topic = slugParam(body.topic);
   const budget = parseContactBudget(body.budget);
   const timeline = parseContactTimeline(body.timeline);
-  if (!email || !name) {
+  if (!name || !emailRaw.trim()) {
     return NextResponse.json({ ok: false, error: 'name_and_email_required' }, { status: 400 });
   }
+  if (!isValidContactEmail(emailRaw)) {
+    return NextResponse.json({ ok: false, error: 'invalid_email' }, { status: 400 });
+  }
+  const email = emailRaw.trim();
   if (!parseContactConsent(body.consent)) {
     return NextResponse.json({ ok: false, error: 'consent_required' }, { status: 400 });
   }
@@ -47,20 +54,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'timeline_invalid' }, { status: 400 });
   }
 
-  if (body.message !== undefined && body.message !== null) {
-    if (typeof body.message !== 'string') {
-      return NextResponse.json({ ok: false, error: 'message_invalid_type' }, { status: 400 });
-    }
-    if (body.message.length > MESSAGE_MAX_LEN) {
-      return NextResponse.json(
-        { ok: false, error: 'message_too_long', maxLength: MESSAGE_MAX_LEN },
-        { status: 400 },
-      );
-    }
+  const parsedMessage = parseContactMessage(body.message);
+  if (!parsedMessage.ok) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: parsedMessage.error,
+        minLength: CONTACT_MESSAGE_MIN_LEN,
+        maxLength: CONTACT_MESSAGE_MAX_LEN,
+      },
+      { status: 400 },
+    );
   }
-
-  const messageText =
-    typeof body.message === 'string' && body.message.length > 0 ? body.message : '(no message)';
+  const messageText = parsedMessage.message;
 
   const crm = await pushContactToCrm({
     name,

@@ -26,6 +26,7 @@ const offerCard = read('src/components/marketing/OfferCard.tsx');
 const quotePanel = read('src/components/platform/DeliverableQuotePanel.tsx');
 const orderPage = read('src/app/dashboard/order/page.tsx');
 const launchBundles = read('src/lib/launch-bundles.ts');
+const catalogBundleIds = read('src/lib/catalog-bundle-ids.ts');
 const launchPanel = read('src/components/marketing/LaunchBundlesPanel.tsx');
 const marketingCatalog = read('src/lib/marketing-catalog.ts');
 const verticalLanding = read('src/components/marketing/VerticalLanding.tsx');
@@ -56,6 +57,8 @@ assert(availability.includes('saleStatus: OfferSaleStatus'), 'Availability carri
 for (const [name, src] of Object.entries(pages)) {
   assert(src.includes('@/lib/public-catalog'), `${name} must import the public catalog barrel`);
   assert(src.includes('listClientOffers'), `${name} must list the shared catalog`);
+  assert(src.includes('excludeBundles: true'), `${name} must not double-render bundle SKUs in the offer grid`);
+  assert(src.includes('LaunchBundlesPanel'), `${name} must show bundles once in the shared panel`);
   assert(!src.includes('priceOverrideEur'), `${name} must not override prices`);
   assert(!src.includes('calculateDeliverableQuote'), `${name} must not use the quote calculator`);
   assert(!/€\d/.test(src), `${name} must not hardcode euro prices`);
@@ -73,7 +76,8 @@ assert(verticalLanding.includes('getPublicListPriceEur'), 'Industry landings use
 assert(verticalLanding.includes('saleStatus'), 'Industry landings use the shared status enum');
 
 assert(launchBundles.includes('getPublicListPriceEur'), 'Launch bundles read the shared list price');
-assert(launchBundles.includes('bundle-portal-presence'), 'Launch bundles are catalog SKUs');
+assert(launchBundles.includes('CATALOG_BUNDLE_IDS'), 'Launch bundles use the shared bundle ID list');
+assert(catalogBundleIds.includes('bundle-portal-presence'), 'Launch bundles are catalog SKUs');
 assert(!/bundleEur:\s*\d+/.test(launchBundles), 'Launch bundles must not hardcode a second price book');
 assert(launchPanel.includes('bundle.offer.saleStatus'), 'Bundle CTAs follow saleStatus');
 

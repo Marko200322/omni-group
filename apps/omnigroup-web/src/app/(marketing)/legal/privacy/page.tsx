@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FadeIn } from '@/components/motion/FadeIn';
+import { DATA_CATEGORIES, DATA_PROCESSORS } from '@/lib/data-processors';
+import { getSiteCompany } from '@/lib/site-company';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
 
 const LAST_UPDATED = 'August 2026';
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
+  const company = getSiteCompany();
+
   return (
     <div className="px-4 py-16">
       <FadeIn className="mx-auto max-w-3xl">
@@ -26,25 +30,37 @@ export default function PrivacyPage() {
         <div className="prose prose-invert mt-10 max-w-none space-y-6 text-slate-300">
           <section>
             <h2 className="text-xl font-semibold text-white">1. What we collect</h2>
-            <p>
-              Contact form submissions (name, email, message), account registration details, billing references, and
-              technical logs needed to operate the site and client portal.
-            </p>
+            <p>The public product collects only the categories below. We do not invent extra data types here.</p>
+            <ul className="mt-3 list-disc space-y-1 pl-5">
+              {DATA_CATEGORIES.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </section>
           <section>
             <h2 className="text-xl font-semibold text-white">2. Why we use data</h2>
             <p>
-              To respond to inquiries, deliver purchased packages, send transactional email (invoices, status), secure
-              the platform, and measure marketing performance when analytics or ad pixels are enabled.
+              To respond to inquiries, create accounts, confirm payments, deliver the purchased package, send
+              transactional email, secure the platform, and — only when public analytics IDs are set — measure
+              marketing performance.
             </p>
           </section>
           <section>
             <h2 className="text-xl font-semibold text-white">3. Processors</h2>
             <p>
-              We may use infrastructure and email providers (e.g. hosting/VPS, Resend or similar) under their terms.
-              Bank transfer details are processed in-house; card or wallet processors apply only when those channels
-              are explicitly enabled at checkout.
+              These are the processors the current Omni Group Tech stack can actually send data to. A row being listed
+              does not mean the integration is always on — see the “When” column.
             </p>
+            <ul className="mt-3 space-y-3">
+              {DATA_PROCESSORS.map((row) => (
+                <li key={row.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                  <p className="font-medium text-white">{row.name}</p>
+                  <p className="mt-1 text-sm">{row.purpose}</p>
+                  <p className="mt-1 text-xs text-slate-500">Data: {row.data}</p>
+                  <p className="mt-1 text-xs text-slate-500">When: {row.when}</p>
+                </li>
+              ))}
+            </ul>
           </section>
           <section>
             <h2 className="text-xl font-semibold text-white">4. Retention</h2>
@@ -57,7 +73,11 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-white">5. Your rights</h2>
             <p>
               Depending on your location, you may request access, correction, deletion, or restriction of processing.
-              Contact us via the{' '}
+              Contact{' '}
+              <a href={`mailto:${company.supportEmail}`} className="text-violet-300 hover:text-white">
+                {company.supportEmail}
+              </a>{' '}
+              or use the{' '}
               <Link href="/contact" className="text-violet-300 hover:text-white">
                 contact form
               </Link>

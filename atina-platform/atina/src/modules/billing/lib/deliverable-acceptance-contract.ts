@@ -132,7 +132,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   },
   'website-ecommerce': {
     deliverableId: 'website-ecommerce',
-    name: 'E-commerce website',
+    name: 'E-commerce demo storefront',
     description: DELIVERABLE_CATALOG[10].description,
     billing: 'one_time',
     criteria: [CR.status, CR.publicUrl, CR.ecommerceCatalog],

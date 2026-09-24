@@ -27,9 +27,10 @@ export default function RefundPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">1. Digital deliverables</h2>
             <p>
-              Most {company.brand} packages are digital and begin processing after payment is confirmed (card
-              automatically, or bank transfer after we verify funds). Once fulfillment has started, purchases are
-              generally non-refundable except as described below.
+              Most {company.brand} packages are digital and begin processing after payment is confirmed. Card checkout
+              via Stripe starts fulfillment automatically after Stripe confirms the charge. A bank-transfer option
+              appears only when it is enabled for the signed-in account; those payments start after we verify funds.
+              Once fulfillment has started, purchases are generally non-refundable except as described below.
             </p>
           </section>
           <section>

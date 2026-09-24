@@ -30,8 +30,19 @@ export function getGeneratedVerticalsIndex(): GeneratedVerticalsIndex {
   }
 }
 
+const PUBLIC_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function isPublicVerticalSlug(slug: string): boolean {
+  return PUBLIC_SLUG.test(slug);
+}
+
 export function listOnlineVerticalEntries(limit?: number): GeneratedVerticalIndexEntry[] {
-  const entries = getGeneratedVerticalsIndex().verticals.filter((v) => v.hasPage);
+  const seen = new Set<string>();
+  const entries = getGeneratedVerticalsIndex().verticals.filter((v) => {
+    if (!v.hasPage || !isPublicVerticalSlug(v.slug) || seen.has(v.slug)) return false;
+    seen.add(v.slug);
+    return true;
+  });
   if (limit == null || limit <= 0) return entries;
   return entries.slice(0, limit);
 }

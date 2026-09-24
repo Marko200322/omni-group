@@ -38,16 +38,18 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">2. Orders and payment</h2>
             <p>
-              Payment is completed by card (Stripe) at checkout. Access and automated fulfillment begin after Stripe
-              confirms payment.
+              Default checkout is card (Stripe). Access and fulfillment begin after Stripe confirms payment — the
+              webhook, not the success redirect, is the source of truth. If card checkout is not enabled for an
+              account, a bank-transfer option may appear after sign-in; those orders start after we verify funds.
             </p>
           </section>
           <section>
             <h2 className="text-xl font-semibold text-white">3. Delivery</h2>
             <p>
-              Most packages are fulfilled automatically after confirmation (documents, portal setup, published demo
-              sites under our domain, or related artifacts). Custom domains, dedicated VPS, and work outside the package
-              scope are not included unless stated.
+              After Stripe confirms payment, fulfillment starts for the package you bought. Some packages ship
+              documents or a hosted demo automatically. Others are partly automated or need a person — the pricing card
+              for that package is the source of truth. Custom domains, dedicated VPS, live third-party wiring, and work
+              outside the listed scope are not included unless stated.
             </p>
           </section>
           <section>

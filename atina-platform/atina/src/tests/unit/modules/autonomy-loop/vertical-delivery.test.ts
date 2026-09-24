@@ -58,6 +58,8 @@ describe('vertical delivery pack', () => {
     expect(profile.slug).toBe('healthcare');
     expect(profile.nameSr).toBe('Zdravstvo');
     expect(profile.coreModules).toContain('crm');
+    expect(profile.primaryDeliverables).toContain('audit');
+    expect(profile.primaryDeliverables).not.toContain('lead-gen-retainer');
     expect(profile.marketIntensityDefault).toBeGreaterThan(0);
   });
 

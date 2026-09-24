@@ -12,7 +12,12 @@ import { LAUNCH_BUNDLE_SPECS } from '@/lib/launch-bundles';
 import { trackConversion } from '@/components/marketing/UtmCapture';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
-import { CONTACT_BUDGETS, CONTACT_TIMELINES } from '@/lib/contact-intake';
+import {
+  CONTACT_BUDGETS,
+  CONTACT_MESSAGE_MAX_LEN,
+  CONTACT_MESSAGE_MIN_LEN,
+  CONTACT_TIMELINES,
+} from '@/lib/contact-intake';
 import Link from 'next/link';
 
 function topicLabel(topic: string): string {
@@ -150,8 +155,18 @@ export function ContactForm({
               setErrMsg('email delivery is temporarily unavailable — please email us directly');
             } else if (err === 'email_provider_error' || err === 'email_send_failed') {
               setErrMsg('email delivery failed — please try again shortly');
-            } else if (err === 'consent_required') {
+            } else             if (err === 'consent_required') {
               setErrMsg('please confirm we can contact you about this inquiry');
+            } else if (err === 'invalid_email') {
+              setErrMsg('please enter a valid email address');
+            } else if (err === 'name_and_email_required') {
+              setErrMsg('name and email are required');
+            } else if (err === 'message_too_short' || err === 'message_required') {
+              setErrMsg(`please add a bit more detail (at least ${CONTACT_MESSAGE_MIN_LEN} characters)`);
+            } else if (err === 'message_too_long') {
+              setErrMsg(`message is too long (max ${CONTACT_MESSAGE_MAX_LEN} characters)`);
+            } else if (err === 'budget_invalid' || err === 'timeline_invalid') {
+              setErrMsg('please choose a valid budget or timeline option');
             } else {
               setErrMsg('please try again shortly');
             }
@@ -244,6 +259,8 @@ export function ContactForm({
         required
         name="message"
         rows={4}
+        minLength={CONTACT_MESSAGE_MIN_LEN}
+        maxLength={CONTACT_MESSAGE_MAX_LEN}
         placeholder="How can we help?"
         delay={0.25}
         value={message}

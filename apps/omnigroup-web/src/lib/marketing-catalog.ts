@@ -287,7 +287,7 @@ const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
       {
         id: 'setup-custom',
         name: 'Custom deploy',
-        description: 'Your domain, SSL, backup, monitoring, and SLA agreement.',
+        description: 'Your domain, SSL, backup, monitoring, and a written support target.',
         priceLabel: '',
         href: serviceCatalogHref('setup-custom'),
       },
@@ -331,21 +331,21 @@ const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
       {
         id: 'support-basic',
         name: 'Email support',
-        description: 'Weekdays, response within 48h — included in Launch plan.',
+        description: 'Weekdays, 48h response target — included in Launch plan.',
         priceLabel: 'included',
         href: '/pricing',
       },
       {
         id: 'support-priority',
         name: 'Priority support',
-        description: 'Response within 24h, help with env and minor changes.',
+        description: '24h response target, help with env and minor changes.',
         priceLabel: '',
         href: serviceCatalogHref('support-priority'),
       },
       {
         id: 'support-dedicated',
         name: 'Dedicated support',
-        description: 'Slack channel, 8h response, monthly health check.',
+        description: '8h response target, notify-via-Slack webhook, monthly health check.',
         priceLabel: '',
         href: serviceCatalogHref('support-dedicated'),
         badge: 'Partner',

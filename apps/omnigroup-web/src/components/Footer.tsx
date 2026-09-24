@@ -15,7 +15,10 @@ const PUBLIC_SUPPORT_EMAIL = 'hello@omnigrouptech.com';
 
 function publicSupportEmail(value?: string): string {
   const email = value?.trim() || PUBLIC_SUPPORT_EMAIL;
-  return /@(gmail|googlemail|outlook|hotmail|yahoo)\.com$/i.test(email) ? PUBLIC_SUPPORT_EMAIL : email;
+  return /@(gmail|googlemail|outlook|hotmail|yahoo)\.com$/i.test(email) ||
+    /^(noreply|no-reply|mailer-daemon)@/i.test(email)
+    ? PUBLIC_SUPPORT_EMAIL
+    : email;
 }
 
 export function Footer({ impressum, supportEmail = PUBLIC_SUPPORT_EMAIL }: FooterProps) {

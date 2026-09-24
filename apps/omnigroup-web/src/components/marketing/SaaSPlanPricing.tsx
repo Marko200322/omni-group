@@ -37,7 +37,9 @@ export function SaaSPlanPricing() {
           <h2 className="mt-2 font-display text-3xl font-bold text-white">More operations in one subscription</h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
             Start below the closest all-in-one agency platform, with CRM, delivery, billing, documents, and AI support
-            in the same workspace. Optional expert services stay separate and transparent.
+            in the same workspace. Optional expert services stay separate and transparent. Workspace, user, and contact
+            figures are the published commercial caps. The server currently enforces monthly task quota and AI-memory
+            module access.
           </p>
         </div>
         <div className="flex flex-wrap gap-2" aria-label="Pricing options">

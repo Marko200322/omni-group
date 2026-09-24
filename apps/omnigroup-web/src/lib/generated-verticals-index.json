@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-06-14T17:46:43.880Z",
-  "count": 907,
+  "count": 906,
   "source": "postgres:generated_artifacts",
   "verticals": [
     {
@@ -4562,16 +4562,6 @@
       "hasOutreach": true,
       "updatedAt": "2026-06-09T00:26:35.784Z",
       "href": "/solutions/government-workforce-agency"
-    },
-    {
-      "slug": "healthcare- hospice",
-      "name": " hospice (Healthcare)",
-      "category": "healthcare",
-      "valueProp": "End-to-end delivery for  hospice: CRM, automations, lead gen, and AI support — no platform resale, only finished output.",
-      "hasPage": true,
-      "hasOutreach": true,
-      "updatedAt": "2026-06-07T14:47:04.363Z",
-      "href": "/solutions/healthcare- hospice"
     },
     {
       "slug": "healthcare-chiropractic",

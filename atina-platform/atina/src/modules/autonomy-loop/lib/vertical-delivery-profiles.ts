@@ -544,10 +544,32 @@ function legacyIntensityForTier(tier: PricingTier): number {
   }
 }
 
+function legacyPrimaryDeliverables(slug: string): string[] {
+  const regulated = new Set(['healthcare', 'government', 'energy', 'industrial']);
+  const commerce = new Set(['ecommerce', 'retail']);
+  const local = new Set([
+    'beauty',
+    'fitness',
+    'hospitality',
+    'automotive',
+    'home_services',
+    'pets',
+    'travel',
+  ]);
+  const ops = new Set(['construction', 'manufacturing', 'logistics', 'agriculture']);
+  const tech = new Set(['technology']);
+  if (regulated.has(slug)) return ['audit', 'workflow-design', 'setup-quick', 'support-priority'];
+  if (commerce.has(slug)) return ['landing', 'website-ecommerce', 'setup-quick', 'sales-enablement'];
+  if (local.has(slug)) return ['landing', 'setup-quick', 'sales-enablement', 'support-priority'];
+  if (ops.has(slug)) return ['workflow-design', 'audit', 'setup-full', 'integration'];
+  if (tech.has(slug)) return ['audit', 'integration', 'setup-full', 'custom-software'];
+  return ['setup-quick', 'audit', 'workflow-design', 'support-priority'];
+}
+
 function legacySmbProfile(meta: { slug: string; nameSr: string; tier: PricingTier }): CategoryDeliveryProfile {
   const label = meta.nameSr;
   return profile(meta.slug, label, {
-    primaryDeliverables: ['vertical-package', 'setup-full', 'lead-gen-retainer', 'landing'],
+    primaryDeliverables: legacyPrimaryDeliverables(meta.slug),
     coreModules: ['crm', 'client-hunter', 'outreach', 'automation', 'billing'],
     marketIntensityDefault: legacyIntensityForTier(meta.tier),
     researchFocus: [

@@ -63,6 +63,13 @@ export function OfferCard({ offer, id, compact }: Props) {
           >
             {offer.availability.badge}
           </span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium uppercase text-slate-200">
+            {offer.automationLevel === 'AUTOMATED'
+              ? 'Automated'
+              : offer.automationLevel === 'HUMAN_DELIVERY'
+                ? 'Human delivery'
+                : 'Partly automated'}
+          </span>
         </div>
       </div>
 
@@ -96,6 +103,12 @@ export function OfferCard({ offer, id, compact }: Props) {
       )}
 
       <p className="mt-4 text-xs text-slate-500">{when}</p>
+      <p className="mt-1 text-xs text-slate-500">{offer.deliveryLabel}</p>
+      {offer.prePurchaseWarning ? (
+        <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          {offer.prePurchaseWarning}
+        </p>
+      ) : null}
 
       <p className="mt-4">
         <span className="text-3xl font-bold text-gradient">{formatEur(offer.priceEur)}</span>

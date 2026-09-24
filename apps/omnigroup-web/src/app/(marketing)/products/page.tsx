@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
+import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getGeneratedVerticalsIndex } from '@/lib/generated-verticals';
@@ -19,6 +20,7 @@ export default function ProductsPage() {
       listClientOffers({
         category: industryCategory || undefined,
         industryMatrix: industryCategory ? industryMatrix : undefined,
+        excludeBundles: true,
       }),
     [industryCategory, industryMatrix],
   );
@@ -57,11 +59,14 @@ export default function ProductsPage() {
           )}
         </motion.div>
 
+        <LaunchBundlesPanel />
+
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Same {catalogStats.expertServiceCount} expert services and the same list prices as Pricing and
-            Services. {catalogStats.readyToBuyCount} are ready to buy
+            Same {catalogStats.expertServiceCount} expert services and {catalogStats.bundleCount} catalog
+            bundles as Pricing and Services — {catalogStats.catalogSkuCount} SKUs, one price book.{' '}
+            {catalogStats.readyToBuyCount} SKUs are ready to buy
             {catalogStats.comingSoonCount > 0 ? `; ${catalogStats.comingSoonCount} are coming soon` : ''}.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

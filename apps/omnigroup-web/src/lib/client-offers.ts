@@ -23,6 +23,14 @@ import { formatBillingLabel } from './dynamic-pricing';
 import { buildLoginNextForQuote, buildPricingHref } from './checkout-navigation';
 import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
 import type { PackageIndustryMatrixRow } from './package-industry-matrix';
+import {
+  deliveryLevelShort,
+  getDeliveryHonesty,
+  type AutomationLevel,
+} from './delivery-honesty';
+import { isCatalogBundle } from './catalog-bundle-ids';
+
+export { isCatalogBundle } from './catalog-bundle-ids';
 
 export type ClientOfferCopy = {
   /** One clear outcome line under the title */
@@ -80,10 +88,10 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     summary:
       'Monthly support with a 24h response target, portal access for tickets, and a welcome pack so you know how to ask for help.',
     readMore:
-      'Includes welcome PDF, support queue with 24h SLA, and portal modules for notifications. Unlimited development hours and weekend emergency SLA are not included.',
+      'Includes welcome PDF, support queue with a 24h response target, and portal modules for notifications. Unlimited development hours and weekend emergency coverage are not included. The target is not an automated SLA clock.',
     when: 'Starts after first payment · renews monthly',
     youGet: ['24h response target', 'Support in your portal', 'Welcome guide PDF'],
-    notIncluded: ['Unlimited build hours', 'Weekend emergency SLA'],
+    notIncluded: ['Unlimited build hours', 'Weekend emergency coverage', 'Automated SLA clock'],
   },
   landing: {
     promise: 'A live landing page for your niche.',
@@ -116,9 +124,10 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   },
   'setup-custom': {
     promise: 'Production checklist pack for teams with their own ops.',
-    summary: 'Deploy manifest, CRM seed, and enterprise setup PDF for your operations team.',
+    summary:
+      'Deploy manifest, CRM seed, security/backup checklist, and an admin handoff PDF your operations team can execute.',
     readMore:
-      'For teams that run their own servers. We do not deploy onto your infrastructure or run 24/7 SLA ops for you in this package.',
+      'This is a documented production-readiness pack, not a remote deploy onto your VPS. You receive the deploy manifest, CRM seed, and the custom-tier setup PDF (roles, notifications, backup/security checklist, admin handoff). We do not SSH into your servers or run a 24/7 SLA clock. Success: those artifacts are in your portal.',
     when: 'Usually 3–5 days after payment',
     youGet: ['Deploy manifest', 'CRM + modules', 'Enterprise setup PDF'],
     notIncluded: ['Deploy on your servers', '24/7 SLA ops'],
@@ -133,20 +142,22 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Live third-party wiring'],
   },
   'support-dedicated': {
-    promise: 'Dedicated monthly support with faster SLA.',
+    promise: 'Dedicated monthly support with a faster response target.',
     summary: '8h response target, video meetings module, and monthly health-check.',
-    readMore: 'Slack on your workspace is notify-via-webhook, not a private channel we create for you.',
+    readMore:
+      'A person replies against an 8-hour target. There is no automated SLA clock, business-hours calendar, or breach dashboard yet. Slack on your workspace is notify-via-webhook, not a private channel we create for you.',
     when: 'Starts after first payment · renews monthly',
-    youGet: ['8h SLA queue', 'Video meetings module', 'Monthly health-check'],
+    youGet: ['8h response-target queue', 'Video meetings module', 'Monthly health-check'],
     notIncluded: ['Private Slack on your workspace'],
   },
   'website-ecommerce': {
     promise: 'Demo storefront with catalog and checkout notes.',
-    summary: 'Live demo shop with sample products and documented checkout path.',
-    readMore: 'Not real inventory sync or your Stripe account wiring.',
+    summary: 'Live demo shop with sample products, cart path, and documented checkout — not a live merchant shop.',
+    readMore:
+      'You get a hosted demo storefront, sample catalog, and checkout notes. Your own Stripe account, inventory sync, tax, and shipping carriers are not wired. Success: the demo URL and notes are in your portal.',
     when: 'Usually 5–8 days after payment',
-    youGet: ['Live storefront URL', 'Demo catalog', 'Checkout notes'],
-    notIncluded: ['Real payments wiring', 'Inventory sync'],
+    youGet: ['Live demo storefront URL', 'Sample catalog', 'Checkout notes'],
+    notIncluded: ['Real payments wiring', 'Inventory sync', 'Your Stripe account'],
   },
   'white-label-setup': {
     promise: 'Partner packaging + live landing for resale.',
@@ -174,8 +185,9 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   },
   'lead-gen-retainer': {
     promise: 'Monthly lead gen into your CRM.',
-    summary: 'Lead report, CRM pipeline, and outreach workspace — needs outbound stack.',
-    readMore: 'No guaranteed meetings. Full outbound prospecting is a separate engagement.',
+    summary: 'Lead report, CRM pipeline, and outreach workspace — live hunting needs our outbound stack.',
+    readMore:
+      'Outbound stack means Instantly/Apollo (or equivalent) plus scraper credentials on Omni’s side — not tools you must buy separately. If that stack is off, you still get the workspace and monthly report; live lead batches do not ship. No guaranteed meetings.',
     when: 'Starts after first payment · renews monthly',
     youGet: ['Monthly lead report', 'CRM + outreach modules'],
     notIncluded: ['Guaranteed meetings'],
@@ -183,7 +195,8 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'ai-support-retainer': {
     promise: 'Monthly AI support setup for your clients.',
     summary: 'AI support inbox, knowledge starter, and setup PDF.',
-    readMore: 'Ultra-realistic video avatars need HeyGen/D-ID keys configured.',
+    readMore:
+      'HeyGen/D-ID keys are optional. Without them you still get the AI inbox, knowledge seed, and setup PDF at the same price. Video avatar render is skipped until keys are configured — delivery status stays complete for the included artifacts.',
     when: 'Starts after first payment · renews monthly',
     youGet: ['AI support PDF', 'RAG knowledge seed', 'Avatar modules'],
     notIncluded: ['Video avatar without AI keys'],
@@ -258,6 +271,11 @@ export type ClientOffer = {
   industryPrimaryProblem?: string;
   industryRecommended?: boolean;
   industryPitch?: string;
+  automationLevel: AutomationLevel;
+  deliveryLabel: string;
+  humanIntervention: string;
+  prePurchaseWarning?: string;
+  isBundle: boolean;
 };
 
 /**
@@ -295,8 +313,13 @@ export function publicOfferWhen(
 
 export function getPublicCatalogStats() {
   const { available, later } = listClientOffers();
+  const all = [...available, ...later];
+  const services = all.filter((o) => !o.isBundle);
+  const bundles = all.filter((o) => o.isBundle);
   return {
-    expertServiceCount: available.length + later.length,
+    catalogSkuCount: all.length,
+    expertServiceCount: services.length,
+    bundleCount: bundles.length,
     readyToBuyCount: available.length,
     comingSoonCount: later.length,
   };
@@ -380,6 +403,13 @@ export function getClientOffer(
     industryPrimaryProblem: row?.primaryProblem,
     industryRecommended: row?.recommendedForIndustry,
     industryPitch: row?.industrySolutionPitch,
+    automationLevel: getDeliveryHonesty(d.id)?.automationLevel ?? 'SEMI_AUTOMATED',
+    deliveryLabel: getDeliveryHonesty(d.id)?.label ?? deliveryLevelShort('SEMI_AUTOMATED'),
+    humanIntervention:
+      getDeliveryHonesty(d.id)?.humanIntervention ??
+      'A person may still finish steps that are outside the listed artifacts.',
+    prePurchaseWarning: getDeliveryHonesty(d.id)?.prePurchaseWarning,
+    isBundle: isCatalogBundle(d.id),
   };
 }
 
@@ -389,6 +419,8 @@ export function listClientOffers(opts?: {
   industryMatrix?: Map<string, PackageIndustryMatrixRow>;
   /** only packages open for self-serve checkout */
   availableOnly?: boolean;
+  /** Hide bundle SKUs — they have their own Pricing panel. */
+  excludeBundles?: boolean;
 }): { available: ClientOffer[]; later: ClientOffer[] } {
   const available: ClientOffer[] = [];
   const later: ClientOffer[] = [];
@@ -399,6 +431,7 @@ export function listClientOffers(opts?: {
       industryRow: opts?.industryMatrix?.get(d.id) ?? null,
     });
     if (!offer) continue;
+    if (opts?.excludeBundles && offer.isBundle) continue;
     if (canCheckoutPackage(d.id)) available.push(offer);
     else if (!opts?.availableOnly) later.push(offer);
   }

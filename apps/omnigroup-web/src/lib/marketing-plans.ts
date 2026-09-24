@@ -113,6 +113,6 @@ export const IMPLEMENTATION_ADDONS = [
     name: 'Custom deploy',
     price: formatEur(getPublicListPriceEur('setup-custom')),
     once: true,
-    desc: 'Integrations, custom workflows, deploy on your domain, and SLA.',
+    desc: 'Integrations, custom workflows, deploy on your domain, and a written support target.',
   },
 ];

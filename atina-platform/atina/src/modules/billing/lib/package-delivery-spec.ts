@@ -205,12 +205,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-priority',
     description:
-      'Monthly retainer: welcome PDF, support queue with 24h SLA task, portal modules — human replies by our team.',
+      'Monthly retainer: welcome PDF, support queue with a 24h response target, portal modules — human replies by our team.',
     descriptionSr:
       'Mesečni retainer: welcome PDF, support queue SLA 24h, moduli na portalu — odgovori našeg tima.',
     includes: [
       'Welcome PDF',
-      'Support automation task (SLA 24h)',
+      'Support queue with 24h response target',
       'Modules: notifications, support-avatar, AI-RAG',
       'Maintenance & support included in monthly subscription price',
     ],
@@ -249,12 +249,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-dedicated',
     description:
-      'Dedicated retainer: 8h SLA, video-meetings module, monthly health-check task, Slack notify when configured.',
+      'Dedicated retainer: 8h response target, video-meetings module, monthly health-check task, Slack notify when configured.',
     descriptionSr:
       'Dedicated retainer: SLA 8h, video-meetings modul, mesečni health-check, Slack obaveštenje.',
     includes: [
       'Welcome PDF',
-      'SLA 8h support queue',
+      'Support queue with 8h response target',
       'Video meetings module',
       'Monthly health-check task',
       'Maintenance, monitoring & support included in monthly price',

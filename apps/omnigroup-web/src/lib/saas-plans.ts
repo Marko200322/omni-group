@@ -68,7 +68,7 @@ export const SAAS_PLANS: readonly SaaSPlan[] = [
       'Everything in Growth',
       'Unlimited workspaces, users, and contacts',
       'White-label client experience',
-      'Advanced RBAC, audit exports, and SLA',
+      'Advanced RBAC, audit exports, and named response targets',
       'Dedicated onboarding and migration plan',
     ],
     limits: { workspaces: 'unlimited', users: 'unlimited', contacts: 'unlimited' },

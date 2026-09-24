@@ -1,0 +1,410 @@
+{
+  "admin_support": [
+    "{work} requests sit in personal inboxes instead of one job record",
+    "{work} notes never make it back into the shared task list",
+    "clients ask for {work} status because there is no portal",
+    "{work} deadlines live in personal calendars",
+    "{work} handoffs drop when someone is out of office",
+    "{work} SOPs exist only in someone's head"
+  ],
+  "ai_data": [
+    "{work} experiments and evaluation notes live in scattered chats",
+    "{work} dataset versions are hard to tell apart after a week",
+    "clients cannot see which {work} run produced the last deliverable",
+    "{work} labeling queues stall because intake has no owner",
+    "{work} cost per run is reconstructed from invoices after the fact",
+    "handoff from the {work} notebook to production is undocumented"
+  ],
+  "audio_music": [
+    "{work} session files and mix notes live in different drives",
+    "{work} revision requests arrive as unmarked voice notes",
+    "{work} rights and cue sheets are rebuilt for every delivery",
+    "clients ask which {work} bounce is final because naming is inconsistent",
+    "{work} studio calendar and invoice status never meet",
+    "{work} stems are hard to find when a remix starts"
+  ],
+  "business_consulting": [
+    "{work} discovery notes stay in decks instead of a living brief",
+    "{work} recommendations are delivered without a tracked action list",
+    "{work} retainers renew without a clear log of what shipped",
+    "{work} workshop outputs never become assigned work",
+    "clients cannot see which {work} workstream is waiting on them",
+    "{work} proposal versions multiply across email threads"
+  ],
+  "community_moderation": [
+    "{work} escalations arrive in DMs instead of a single queue",
+    "repeat {work} incidents are hard to recognize across channels",
+    "{work} policy decisions live in chat and cannot be audited later",
+    "{work} shift handoffs drop context between moderators",
+    "clients ask for {work} incident history that was never logged",
+    "{work} banned-term lists drift out of date across platforms"
+  ],
+  "creator_services": [
+    "{work} brand briefs live in DMs instead of a job record",
+    "{work} asset approvals stall across three comment threads",
+    "{work} usage rights are unclear when a clip is reused",
+    "{work} publish dates and invoice status sit in different tools",
+    "sponsors cannot see what {work} already shipped this month",
+    "{work} revision rounds have no single source of truth"
+  ],
+  "customer_service": [
+    "the same {work} how-to is answered from scratch every day",
+    "{work} ticket history is split across inbox, chat, and a spreadsheet",
+    "agents cannot see what the last {work} shift already promised",
+    "{work} refund and delivery questions bounce between teams",
+    "{work} macros exist but nobody knows which one is current",
+    "customers chase {work} status because there is no shared case view"
+  ],
+  "design_creative": [
+    "{work} briefs, comments, and final files live in three places",
+    "{work} revision rounds have no owner once Slack goes quiet",
+    "{work} brand tokens drift because the latest kit is unofficial",
+    "clients approve a {work} version that is not the export",
+    "{work} retainer hours are reconstructed from chat at month end",
+    "handoff from {work} to development loses the decision log"
+  ],
+  "development_it": [
+    "{work} tickets, deploys, and client updates live in different tools",
+    "{work} scope changes arrive in chat without a change record",
+    "{work} staging credentials are passed around in DMs",
+    "clients ask for {work} status because there is no delivery portal",
+    "{work} runbooks exist only in the last engineer's notes",
+    "{work} invoices and shipped milestones do not match"
+  ],
+  "ecommerce": [
+    "{work} catalog edits and live storefront status are out of sync",
+    "{work} order exceptions sit in email instead of a queue",
+    "{work} returns and restocks are tracked on a spreadsheet",
+    "{work} promo rules are hard to reconstruct after a campaign",
+    "suppliers ask for {work} PO status that lives in another tool",
+    "{work} checkout notes never make it back into the product record"
+  ],
+  "education_training": [
+    "{work} enrollments arrive as form dumps with no pipeline",
+    "{work} cohort schedules live in a spreadsheet",
+    "learners ask for {work} materials because nothing is centralized",
+    "{work} renewals for the next term surprise the office",
+    "{work} instructor notes never reach the next cohort",
+    "{work} certificates are issued without a completion record"
+  ],
+  "engineering_architecture": [
+    "{work} drawing revisions multiply without a current-set flag",
+    "{work} RFI answers live in email instead of the project record",
+    "{work} site photos and spec notes never meet",
+    "clients ask which {work} package is issued for construction",
+    "{work} consultant markups are hard to find at handover",
+    "{work} fee claims stall while someone hunts the latest revision"
+  ],
+  "engineering_science": [
+    "{work} lab notes and client reports live in separate folders",
+    "{work} instrument logs are not attached to the delivery pack",
+    "{work} protocol versions drift between the bench and the PDF",
+    "{work} review comments never make it back into the method",
+    "{work} deadlines are tracked in personal calendars",
+    "clients cannot see which {work} test batch is in progress"
+  ],
+  "finance_accounting": [
+    "{work} client documents arrive as email attachments",
+    "{work} deadlines live in a shared spreadsheet nobody trusts",
+    "{work} renewals surprise the team because dates live in chat",
+    "{work} quotes stall while someone hunts the latest rate card",
+    "{work} workpapers and the filed return sit in different drives",
+    "clients ask for {work} status because there is no portal"
+  ],
+  "hr_recruiting": [
+    "{work} resumes arrive in inboxes instead of one pipeline",
+    "{work} interview feedback is scattered across private notes",
+    "{work} offer status is hard to see across hiring managers",
+    "{work} requisitions renew without a clear close-out",
+    "candidates ask for {work} updates because nothing is shared",
+    "{work} onboarding tasks start before the offer record is final"
+  ],
+  "legal_services": [
+    "{work} intake forms and matter notes live in separate inboxes",
+    "{work} deadlines are tracked in personal calendars",
+    "clients ask for {work} status because there is no portal",
+    "{work} document versions multiply across email threads",
+    "{work} conflicts checks are rebuilt from memory",
+    "{work} time entries and the last advice note do not meet"
+  ],
+  "localization": [
+    "{work} source files and translation memories live in different tools",
+    "{work} review comments never make it back into the string list",
+    "{work} glossary terms drift between projects",
+    "clients ask which {work} locale package is final",
+    "{work} invoices and word counts are reconciled by hand",
+    "{work} context screenshots are missing when linguists start"
+  ],
+  "marketing": [
+    "{work} campaign briefs live in chat instead of a brief record",
+    "{work} approvals stall while files sit in three drives",
+    "{work} retainers renew without a clear delivery log",
+    "clients cannot see what {work} shipped last month",
+    "{work} UTM and creative versions are reconstructed after launch",
+    "handoffs from {work} strategy to media buying drop the brief"
+  ],
+  "photography": [
+    "{work} shot lists and selects live in different folders",
+    "{work} galleries go out without a usage-rights note",
+    "{work} revision requests arrive as unmarked screenshots",
+    "{work} invoices stall while someone finds the final set",
+    "{work} location and talent releases are hard to retrieve later",
+    "clients ask which {work} edit is approved for publish"
+  ],
+  "product_project_management": [
+    "{work} roadmap items and delivery status live in different tools",
+    "{work} stakeholder updates are rebuilt every Friday",
+    "{work} scope changes arrive in chat without a decision log",
+    "{work} handoffs between squads drop acceptance criteria",
+    "clients cannot see which {work} milestone is actually next",
+    "{work} retro notes never become tracked work"
+  ],
+  "real_estate_services": [
+    "{work} buyer inquiries sit in inboxes instead of a viewing pipeline",
+    "{work} listing packs are scattered across drives",
+    "follow-ups after {work} viewings are easy to miss",
+    "{work} commission and deal status live in different tools",
+    "{work} offer documents multiply without a current version",
+    "landlords ask for {work} status because there is no portal"
+  ],
+  "sales": [
+    "{work} prospects sit in inboxes instead of a named pipeline",
+    "{work} quotes stall while someone hunts the latest price list",
+    "{work} handoffs to delivery drop what was promised on the call",
+    "{work} renewals surprise the team because dates live in chat",
+    "{work} call notes never make it into the next outreach",
+    "{work} forecasts are rebuilt from private spreadsheets"
+  ],
+  "video_animation": [
+    "{work} briefs, animatics, and finals live in three places",
+    "{work} revision notes arrive as unmarked timecode comments",
+    "clients approve a {work} cut that is not the export",
+    "{work} stock and music licenses are hard to find at delivery",
+    "{work} render queues and invoice status never meet",
+    "handoff to the {work} editor loses the last decision"
+  ],
+  "web3": [
+    "{work} contributor updates live in Discord instead of a delivery record",
+    "{work} mint or release timelines are reconstructed from chat",
+    "clients cannot see which {work} release is actually live",
+    "{work} wallet and contract notes sit outside the project file",
+    "community asks for {work} status because there is no portal",
+    "{work} scope changes arrive as tweets without a change log"
+  ],
+  "writing_translation": [
+    "{work} briefs and drafts live in different docs",
+    "{work} style-guide comments never make it into the next piece",
+    "clients ask which {work} version is approved to publish",
+    "{work} word-count and invoice status are reconciled by hand",
+    "{work} source files arrive without context for the linguist",
+    "{work} retainers renew without a delivery log"
+  ],
+  "healthcare": [
+    "{work} intake notes live in email instead of one record",
+    "follow-ups after {work} visits are easy to miss",
+    "staff cannot see what the last {work} call promised",
+    "{work} billing and clinical notes sit in different tools",
+    "{work} referral packets are rebuilt for every specialist",
+    "{work} scheduling changes never reach the treatment plan"
+  ],
+  "legal": [
+    "{work} intake forms and case notes live in separate inboxes",
+    "{work} court and filing deadlines sit in personal calendars",
+    "clients ask for {work} matter status because there is no portal",
+    "{work} document versions multiply across email threads",
+    "{work} conflicts checks are rebuilt from memory",
+    "{work} time entries and the last advice note do not meet"
+  ],
+  "retail": [
+    "{work} shelf, stock, and promo status live in different tools",
+    "{work} supplier emails never become a purchase record",
+    "{work} returns pile up without a reason code",
+    "{work} store managers rebuild the weekly numbers by hand",
+    "online and floor {work} inventory disagree after a weekend",
+    "staff cannot see which {work} SKU is actually on promo"
+  ],
+  "hospitality": [
+    "{work} reservations and special requests live in the inbox",
+    "{work} shift notes never reach the next service",
+    "guest follow-ups after {work} checkout are easy to miss",
+    "{work} events and catering quotes stall in chat",
+    "{work} housekeeping and front desk status sit in different tools",
+    "regulars are hard to recognize at the {work} door"
+  ],
+  "construction": [
+    "{work} RFIs and site photos live in email instead of the job file",
+    "{work} change orders stall while someone hunts the latest drawing",
+    "{work} subcontractor updates never reach the owner report",
+    "{work} punch lists are rebuilt on paper at handover",
+    "{work} invoices and installed quantities do not match",
+    "clients ask which {work} package is issued for site"
+  ],
+  "education": [
+    "{work} enrollments arrive as form dumps with no pipeline",
+    "{work} term schedules live in a spreadsheet",
+    "learners ask for {work} materials because nothing is centralized",
+    "{work} renewals for next term surprise the office",
+    "{work} instructor notes never reach the next cohort",
+    "{work} attendance and invoicing sit in different tools"
+  ],
+  "finance": [
+    "{work} client documents arrive as email attachments",
+    "{work} filing and close deadlines live in a shared spreadsheet",
+    "{work} renewals surprise the team because dates live in chat",
+    "{work} fee quotes stall while someone hunts the latest rate card",
+    "{work} workpapers and the filed pack sit in different drives",
+    "clients ask for {work} status because there is no portal"
+  ],
+  "logistics": [
+    "{work} shipment exceptions sit in email instead of a board",
+    "{work} proof-of-delivery photos never meet the invoice",
+    "customers chase {work} ETA because there is no shared status",
+    "{work} carrier rate cards are hard to find at quote time",
+    "{work} warehouse and dispatch notes live in different tools",
+    "{work} claims are reconstructed from chat after the fact"
+  ],
+  "beauty": [
+    "{work} bookings and intake notes live in the inbox",
+    "{work} product-use notes never reach the next visit",
+    "follow-ups after {work} treatments are easy to miss",
+    "{work} retail and chair time sit in different tools",
+    "regulars are hard to recognize at the {work} desk",
+    "staff cannot see which {work} service was last sold"
+  ],
+  "fitness": [
+    "{work} intro bookings sit in DMs instead of a pipeline",
+    "{work} program notes never reach the next session",
+    "{work} renewals surprise the front desk because dates live in chat",
+    "{work} class capacity and payments sit in different tools",
+    "clients ask for the last {work} plan because nothing is centralized",
+    "{work} onboarding packets are rebuilt for every new member"
+  ],
+  "agriculture": [
+    "{work} field notes and season plans live in different notebooks",
+    "{work} input orders and delivery dates never meet",
+    "buyers ask for {work} lot status because there is no shared record",
+    "{work} compliance paperwork is rebuilt at inspection time",
+    "{work} weather delays are logged in chat instead of the job file",
+    "{work} invoices stall while someone finds the last weigh ticket"
+  ],
+  "automotive": [
+    "{work} service bookings and follow-ups live in the inbox",
+    "{work} parts and job status are tracked on paper",
+    "repeat {work} customers are hard to recognize at the counter",
+    "{work} invoices and promised ready-times sit in different tools",
+    "{work} warranty notes never reach the next visit",
+    "{work} estimators rebuild the same quote from memory"
+  ],
+  "real-estate": [
+    "{work} leads sit in inboxes instead of a viewing pipeline",
+    "{work} listing documents are scattered across drives",
+    "follow-ups after {work} viewings are easy to miss",
+    "{work} commission and status live in different tools",
+    "{work} offer packs multiply without a current version",
+    "sellers ask for {work} activity because there is no portal"
+  ],
+  "real_estate": [
+    "{work} leads sit in inboxes instead of a viewing pipeline",
+    "{work} listing documents are scattered across drives",
+    "follow-ups after {work} viewings are easy to miss",
+    "{work} commission and status live in different tools",
+    "{work} offer packs multiply without a current version",
+    "sellers ask for {work} activity because there is no portal"
+  ],
+  "manufacturing": [
+    "{work} job travelers and quality notes live in different places",
+    "{work} change orders stall on the shop floor without a current spec",
+    "customers ask for {work} WIP status because there is no portal",
+    "{work} scrap and rework are reconstructed at month end",
+    "{work} purchase and production dates never meet",
+    "{work} ship dates slip while someone hunts the latest BOM"
+  ],
+  "technology": [
+    "{work} tickets, deploys, and client updates live in different tools",
+    "{work} scope changes arrive in chat without a change record",
+    "clients ask for {work} status because there is no delivery portal",
+    "{work} runbooks exist only in the last engineer's notes",
+    "{work} invoices and shipped milestones do not match",
+    "onboarding a new {work} tenant repeats the same undocumented steps"
+  ],
+  "media": [
+    "{work} pitches, slots, and finals live in different tools",
+    "{work} rights and embargo notes are easy to lose before publish",
+    "clients ask which {work} cut is approved to air",
+    "{work} revision comments never make it back into the rundown",
+    "{work} invoices and delivered spots are reconciled by hand",
+    "handoffs between {work} desk and production drop the brief"
+  ],
+  "nonprofit": [
+    "{work} donor notes live in inboxes instead of one record",
+    "{work} grant deadlines sit in personal calendars",
+    "volunteers ask for the current {work} brief because nothing is shared",
+    "{work} program reports are rebuilt from scattered files",
+    "{work} acknowledgements stall after a campaign weekend",
+    "{work} board packs take a week because status lives in chat"
+  ],
+  "government": [
+    "{work} requests arrive through too many unofficial channels",
+    "{work} status updates are rebuilt for every stakeholder",
+    "{work} handoffs between teams get lost between tools",
+    "{work} documentation is hard to find when an audit starts",
+    "{work} deadlines live in personal calendars",
+    "constituents ask for {work} case status because there is no portal"
+  ],
+  "energy": [
+    "{work} site readings and work orders live in different tools",
+    "{work} outage notes never reach the customer update",
+    "{work} compliance evidence is rebuilt at audit time",
+    "contractors ask for {work} permit status that sits in email",
+    "{work} invoices and completed tickets do not match",
+    "handoffs between {work} field and office drop the latest reading"
+  ],
+  "travel": [
+    "{work} itineraries and change requests live in the inbox",
+    "{work} supplier confirmations never meet the client pack",
+    "travelers ask for {work} status because there is no portal",
+    "{work} invoices stall while someone finds the last voucher",
+    "{work} preference notes are easy to miss before departure",
+    "{work} group manifests are rebuilt from chat the night before"
+  ],
+  "professional": [
+    "{work} engagement notes live in email instead of one brief",
+    "{work} deliverables and invoices sit in different tools",
+    "clients ask for {work} status because there is no portal",
+    "{work} retainers renew without a clear delivery log",
+    "{work} handoffs between partners drop the last decision",
+    "{work} proposal versions multiply across threads"
+  ],
+  "entertainment": [
+    "{work} talent, venue, and rundown notes live in different chats",
+    "clients ask which {work} cut or date is actually locked",
+    "{work} rights and hold notes are easy to lose before showtime",
+    "{work} invoices and performed dates are reconciled by hand",
+    "{work} crew call sheets never meet the last change",
+    "sponsors cannot see what {work} already shipped"
+  ],
+  "home_services": [
+    "{work} job bookings and photos live in the inbox",
+    "{work} parts runs and promised arrival times sit in different tools",
+    "follow-ups after a {work} visit are easy to miss",
+    "repeat {work} customers are hard to recognize at dispatch",
+    "{work} invoices stall while someone finds the last quote",
+    "crews ask for the current {work} scope because nothing is shared"
+  ],
+  "pets": [
+    "{work} bookings and care notes live in the inbox",
+    "{work} vaccine and visit history is hard to find at drop-off",
+    "follow-ups after a {work} stay are easy to miss",
+    "owners ask for {work} updates because there is no shared record",
+    "{work} retail and boarding sit in different tools",
+    "staff cannot see special-handling notes for {work} in time"
+  ],
+  "industrial": [
+    "{work} work orders and safety notes live in different tools",
+    "{work} permit evidence is rebuilt at inspection time",
+    "customers ask for {work} job status because there is no portal",
+    "{work} parts and downtime logs never meet",
+    "{work} invoices and completed tickets do not match",
+    "handoffs between {work} shifts drop the latest reading"
+  ]
+}

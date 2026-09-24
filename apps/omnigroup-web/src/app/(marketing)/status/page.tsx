@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { resolveAtinaApiBase } from '@/lib/atina-api-base';
+import { collectPublicStatus, statusLabel, type StatusLevel } from '@/lib/public-status';
 
 export const metadata: Metadata = {
   title: 'System status',
@@ -8,24 +8,22 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-async function probe(url: string): Promise<{ ok: boolean; status: number }> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-    clearTimeout(timer);
-    return { ok: res.ok, status: res.status };
-  } catch {
-    return { ok: false, status: 0 };
+function tone(level: StatusLevel): string {
+  switch (level) {
+    case 'operational':
+      return 'text-emerald-300';
+    case 'degraded':
+      return 'text-amber-300';
+    case 'partial_outage':
+    case 'major_outage':
+      return 'text-rose-300';
+    default:
+      return 'text-slate-300';
   }
 }
 
 export default async function StatusPage() {
-  const atinaBase = resolveAtinaApiBase();
-  const [web, api] = await Promise.all([
-    probe(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://127.0.0.1:3010'}/api/health/live`),
-    probe(`${atinaBase}/health`),
-  ]);
+  const { overall, checks } = await collectPublicStatus();
 
   return (
     <div className="px-4 py-20">
@@ -33,24 +31,26 @@ export default async function StatusPage() {
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Operations</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-white">System status</h1>
         <p className="mt-4 text-slate-400">
-          Public probes for uptime monitors. Point UptimeRobot at <code className="text-violet-300">/api/health/live</code>{' '}
-          (always 200) and <code className="text-violet-300">/api/health/ready</code> for API coupling.
+          Live and ready probes, plus dependency signals from Atina <code className="text-violet-300">/health</code>.
+          Stripe and email are listed only when we can honestly say they were probed — a HTTP 200 on the API is not
+          enough to call checkout operational.
         </p>
-        <dl className="mt-10 space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <dt className="text-sm text-slate-400">Marketing site</dt>
-            <dd className={`mt-1 text-lg font-semibold ${web.ok ? 'text-emerald-300' : 'text-rose-300'}`}>
-              {web.ok ? 'Operational' : 'Degraded'}
-            </dd>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <dt className="text-sm text-slate-400">Atina API</dt>
-            <dd className={`mt-1 text-lg font-semibold ${api.ok ? 'text-emerald-300' : 'text-rose-300'}`}>
-              {api.ok ? 'Operational' : 'Degraded'}
-              {api.status ? ` · ${api.status}` : ''}
-            </dd>
-          </div>
+        <p className={`mt-6 text-lg font-semibold ${tone(overall)}`}>Overall · {statusLabel(overall)}</p>
+        <dl className="mt-8 space-y-4">
+          {checks.map((check) => (
+            <div key={check.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <dt className="text-sm text-slate-400">{check.label}</dt>
+              <dd className={`mt-1 text-lg font-semibold ${tone(check.level)}`}>
+                {statusLabel(check.level)}
+                {check.httpStatus ? ` · ${check.httpStatus}` : ''}
+              </dd>
+              <p className="mt-2 text-sm text-slate-500">{check.detail}</p>
+            </div>
+          ))}
         </dl>
+        <p className="mt-8 text-xs text-slate-600">
+          UptimeRobot: <code>/api/health/live</code> (process up) and <code>/api/health/ready</code> (API coupling).
+        </p>
       </div>
     </div>
   );

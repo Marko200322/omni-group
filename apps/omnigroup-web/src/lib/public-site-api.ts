@@ -4,6 +4,7 @@ import { resolveAtinaApiBase } from './atina-api-base';
 import { getGeneratedVerticalsIndex } from './generated-verticals';
 import { getPublicListPriceEur } from './client-offers';
 import { DELIVERABLE_CATALOG } from './deliverable-catalog';
+import { recommendSkusForIndustry } from './industry-sku-map';
 import { buildVerticalLandingCopy } from './vertical-landing-copy';
 
 type AtinaEnvelope<T> = {
@@ -66,6 +67,7 @@ export type VerticalDeliveryPack = {
     nameSr?: string;
     clientPriceEur: number;
     billing: string;
+    why?: string;
   }>;
   verticalPackageQuoteEur: number;
   workflowSteps: Array<{ step: string; moduleSlug: string; action: string; config?: Record<string, unknown> }>;
@@ -134,13 +136,17 @@ export function fallbackSolutionFromIndex(slug: string): SolutionDetail | null {
       valueProp,
       keywords: [],
       outreachHooks: [],
-      recommendedDeliverables: DELIVERABLE_CATALOG.map((d) => ({
-        id: d.id,
-        name: d.name,
-        nameSr: d.nameSr,
-        clientPriceEur: getPublicListPriceEur(d.id),
-        billing: d.billing,
-      })),
+      recommendedDeliverables: recommendSkusForIndustry(entry.category ?? 'professional').map((row) => {
+        const d = DELIVERABLE_CATALOG.find((item) => item.id === row.id);
+        return {
+          id: row.id,
+          name: d?.name ?? row.id,
+          nameSr: d?.nameSr ?? row.id,
+          clientPriceEur: getPublicListPriceEur(row.id),
+          billing: d?.billing ?? 'one_time',
+          why: row.why,
+        };
+      }),
       verticalPackageQuoteEur: getPublicListPriceEur('vertical-package'),
       workflowSteps: [],
     },

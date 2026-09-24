@@ -28,6 +28,7 @@ type Props = {
 };
 
 export function HomePageClient({ catalogStats }: Props) {
+  const publicCatalog = getPublicCatalogStats();
   const stats = [
     { label: 'Industry groups', value: String(catalogStats.industryGroups) },
     { label: 'Vertical landing pages', value: String(catalogStats.verticalLandings) },
@@ -35,7 +36,10 @@ export function HomePageClient({ catalogStats }: Props) {
       label: 'SaaS plans from',
       value: `${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'USD'), 'USD')} / ${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'EUR'), 'EUR')}`,
     },
-    { label: 'Expert services', value: String(getPublicCatalogStats().expertServiceCount) },
+    {
+      label: 'Services + bundles',
+      value: `${publicCatalog.expertServiceCount} + ${publicCatalog.bundleCount}`,
+    },
   ];
 
   return (

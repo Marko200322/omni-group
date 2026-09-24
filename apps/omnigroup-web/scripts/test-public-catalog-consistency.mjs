@@ -52,6 +52,13 @@ assert(!pricing.includes('calculateDeliverableQuote'), 'Pricing must use list pr
 assert(!products.includes('calculateDeliverableQuote'), 'Packages must use list prices, not quote calculator');
 assert(offers.includes('getPublicListPriceEur'), 'client-offers must export getPublicListPriceEur');
 assert(offers.includes('getPublicCatalogStats'), 'client-offers must export getPublicCatalogStats');
+assert(offers.includes('expertServiceCount'), 'Catalog stats must split expert services from bundles');
+assert(offers.includes('bundleCount'), 'Catalog stats must count bundle SKUs separately');
+assert(offers.includes('excludeBundles'), 'Offer lists must be able to hide bundles from the grid');
+assert(home.includes('Services + bundles'), 'Homepage must not call the 20 SKUs only expert services');
+assert(pricing.includes('excludeBundles: true'), 'Pricing grid must not double-count bundles');
+assert(products.includes('excludeBundles: true'), 'Packages grid must not double-count bundles');
+assert(services.includes('excludeBundles: true'), 'Services grid must not double-count bundles');
 assert(offers.includes('saleStatus: OfferSaleStatus'), 'ClientOffer must carry saleStatus');
 assert(offers.includes('export function publicOfferWhen'), 'Timeline must be derived from saleStatus');
 assert(

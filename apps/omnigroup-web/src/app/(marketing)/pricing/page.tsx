@@ -23,6 +23,7 @@ export default function PricingPage() {
       listClientOffers({
         category: industryCategory || undefined,
         industryMatrix: industryCategory ? industryMatrix : undefined,
+        excludeBundles: true,
       }),
     [industryCategory, industryMatrix],
   );
@@ -74,9 +75,10 @@ export default function PricingPage() {
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Expert services</p>
           <h2 className="mt-2 font-display text-3xl font-bold text-white">Optional implementation and delivery</h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-            The subscription is the product. These fixed-scope expert services are optional accelerators with a
-            defined output, timeline, and list price — the same prices as on Packages and Services.{' '}
-            {catalogStats.readyToBuyCount} are ready to buy now
+            The subscription is the product. The catalog is {catalogStats.expertServiceCount} expert services
+            plus {catalogStats.bundleCount} launch bundles — {catalogStats.catalogSkuCount} SKUs, one price
+            book. Bundles are listed once below; they are not a second catalog.{' '}
+            {catalogStats.readyToBuyCount} SKUs are ready to buy now
             {catalogStats.comingSoonCount > 0
               ? `, ${catalogStats.comingSoonCount} are coming soon`
               : ''}
@@ -128,7 +130,8 @@ export default function PricingPage() {
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Clear scope. Automated delivery after payment confirmation.
+            Clear scope. Delivery starts after payment confirmation — each card says what ships
+            automatically and what still needs a person.
           </p>
           {available.length === 0 ? (
             <p className="mt-8 rounded-2xl border border-amber-500/25 bg-amber-500/5 p-6 text-amber-100">

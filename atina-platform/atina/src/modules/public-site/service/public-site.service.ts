@@ -9,6 +9,45 @@ import type {
 } from '../dto/public-site.dto';
 import { PublicSiteRepository } from '../repository/public-site.repository';
 
+type ShopCatalogItem = { id: string; name: string; priceEur: number; quantity: number };
+
+function catalogRowsFromBranding(branding: unknown): Array<{ id: string; name: string; priceEur: number }> {
+  const catalog =
+    branding && typeof branding === 'object' && 'catalog' in branding
+      ? (branding as { catalog?: unknown }).catalog
+      : null;
+  if (!Array.isArray(catalog)) return [];
+  const rows: Array<{ id: string; name: string; priceEur: number }> = [];
+  for (const raw of catalog) {
+    if (!raw || typeof raw !== 'object') continue;
+    const row = raw as Record<string, unknown>;
+    const id = typeof row.id === 'string' ? row.id.trim() : '';
+    const name = typeof row.name === 'string' ? row.name.trim() : '';
+    const priceEur = typeof row.priceEur === 'number' ? row.priceEur : Number(row.priceEur);
+    if (!id || !Number.isFinite(priceEur) || priceEur < 0) continue;
+    rows.push({ id, name: name || id, priceEur });
+  }
+  return rows;
+}
+
+export function priceShopItemsFromCatalog(
+  branding: unknown,
+  items: ClientSiteShopOrderDtoType['items'],
+): ShopCatalogItem[] {
+  const catalog = catalogRowsFromBranding(branding);
+  if (!catalog.length) throw new ValidationError('This shop has no priced catalog');
+  return items.map((item) => {
+    const row = catalog.find((c) => c.id === item.id);
+    if (!row) throw new ValidationError(`Unknown catalog item: ${item.id}`);
+    return {
+      id: row.id,
+      name: row.name,
+      priceEur: row.priceEur,
+      quantity: item.quantity,
+    };
+  });
+}
+
 const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
   {
     slug: 'home',
@@ -217,7 +256,8 @@ export class PublicSiteService {
       throw new NotFoundError('E-commerce site');
     }
 
-    const total = body.items.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
+    const pricedItems = priceShopItemsFromCatalog(site.branding, body.items);
+    const total = pricedItems.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
     if (total <= 0) throw new ValidationError('Order total must be positive');
 
     const paymentReference = `SHOP-${slug.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
@@ -227,7 +267,7 @@ export class PublicSiteService {
       buyerName: body.buyerName,
       buyerEmail: body.buyerEmail,
       buyerPhone: body.buyerPhone ?? null,
-      items: body.items,
+      items: pricedItems,
       totalEur: Math.round(total * 100) / 100,
       paymentReference,
       notes: body.notes ?? null,
@@ -263,7 +303,7 @@ export class PublicSiteService {
           ownerUserId: site.owner_user_id,
           buyerEmail: body.buyerEmail,
           buyerName: body.buyerName,
-          items: body.items.map((i) => ({
+          items: pricedItems.map((i) => ({
             name: i.name,
             priceEur: i.priceEur,
             quantity: i.quantity,

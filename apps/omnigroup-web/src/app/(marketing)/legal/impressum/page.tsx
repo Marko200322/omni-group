@@ -75,6 +75,16 @@ export default function ImpressumPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-semibold text-white">Payment</h2>
+            <p>
+              Default checkout is card (Stripe). Access and fulfillment begin after Stripe confirms payment — the
+              webhook, not the success redirect, is the source of truth. A bank-transfer option appears only when it
+              is enabled for the signed-in account; those payments start after we verify funds. We do not publish a
+              public IBAN on this page.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-semibold text-white">Related policies</h2>
             <p className="flex flex-wrap gap-x-3 gap-y-1">
               <Link href="/legal/terms" className="text-violet-300 hover:text-white">

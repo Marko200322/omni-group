@@ -433,6 +433,9 @@ export class PaymentsService {
         case 'invoice.payment_failed':
           await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
           break;
+        case 'charge.refunded':
+          await this.handleChargeRefunded(event.data.object as Stripe.Charge);
+          break;
         default:
           logger.debug(`Unhandled Stripe event: ${event.type}`);
       }
@@ -634,6 +637,24 @@ export class PaymentsService {
       amount: invoice.amount_due / 100,
       currency: invoice.currency.toUpperCase(),
     });
+  }
+
+  private async handleChargeRefunded(charge: Stripe.Charge): Promise<void> {
+    const paymentIntentId =
+      typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id ?? null;
+    const { rows } = await this.db.findStripePaymentForRefund({
+      chargeId: charge.id,
+      paymentIntentId,
+    });
+    if (!rows[0]) {
+      logger.info('Stripe refund ignored — no matching payment', { chargeId: charge.id, paymentIntentId });
+      return;
+    }
+    const refundedAmount = (charge.amount_refunded ?? 0) / 100;
+    const fully = Boolean(charge.refunded) || (charge.amount > 0 && (charge.amount_refunded ?? 0) >= charge.amount);
+    await this.db.markPaymentRefunded(rows[0].id, refundedAmount, fully);
+    await this.db.noteFulfillmentRefund(rows[0].id, fully);
+    logger.info('Stripe payment marked refunded', { paymentId: rows[0].id, fully, refundedAmount });
   }
 
   async cancelSubscription(userId: string): Promise<void> {

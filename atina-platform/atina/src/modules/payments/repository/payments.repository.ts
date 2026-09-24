@@ -468,6 +468,48 @@ export class PaymentsRepository {
     );
   }
 
+  findStripePaymentForRefund(refs: { chargeId?: string | null; paymentIntentId?: string | null }) {
+    return query<{ id: string; status: string; amount: number }>(
+      `SELECT id, status, amount FROM payments
+       WHERE provider = 'stripe'
+         AND (
+           ($1::text IS NOT NULL AND provider_charge_id = $1)
+           OR ($2::text IS NOT NULL AND provider_payment_id = $2)
+           OR ($2::text IS NOT NULL AND metadata->>'paymentIntentId' = $2)
+         )
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+      [refs.chargeId ?? null, refs.paymentIntentId ?? null],
+    );
+  }
+
+  markPaymentRefunded(paymentId: string, refundedAmount: number, fully: boolean) {
+    return query(
+      `UPDATE payments
+       SET status = $2,
+           refunded_amount = $3,
+           refunded_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $1
+         AND status IN ('completed', 'processing', 'refunded', 'partially_refunded')`,
+      [paymentId, fully ? 'refunded' : 'partially_refunded', refundedAmount],
+    );
+  }
+
+  noteFulfillmentRefund(paymentId: string, fully: boolean) {
+    const label = fully ? 'Stripe refund recorded' : 'Stripe partial refund recorded';
+    return query(
+      `UPDATE deliverable_fulfillment_jobs
+       SET review_notes = CASE
+             WHEN review_notes ILIKE '%Stripe %refund recorded%' THEN review_notes
+             ELSE TRIM(BOTH FROM CONCAT(COALESCE(review_notes, ''), E'\n', $2::text))
+           END,
+           updated_at = NOW()
+       WHERE payment_id = $1`,
+      [paymentId, label],
+    );
+  }
+
   countPaymentsByUser(userId: string) {
     return query<{ count: string }>('SELECT COUNT(*) FROM payments WHERE user_id = $1', [userId]);
   }

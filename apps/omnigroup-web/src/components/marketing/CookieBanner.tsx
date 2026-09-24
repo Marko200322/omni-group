@@ -2,18 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
-const STORAGE_KEY = 'ogt_cookie_consent';
+import { readCookieConsent, writeCookieConsent } from '@/lib/cookie-consent';
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
-    } catch {
-      setVisible(true);
-    }
+    setVisible(readCookieConsent() === null);
   }, []);
 
   if (!visible) return null;
@@ -26,26 +21,35 @@ export function CookieBanner() {
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-300">
-          We use essential cookies for login and security. See our{' '}
+          Essential cookies keep login and checkout working. Optional analytics or ads load only after you accept
+          them and only if those IDs are configured. See our{' '}
           <Link href="/legal/cookies" className="text-violet-300 underline hover:text-white">
             Cookie Policy
           </Link>
           .
         </p>
-        <button
-          type="button"
-          className="btn-primary shrink-0 text-sm"
-          onClick={() => {
-            try {
-              localStorage.setItem(STORAGE_KEY, 'essential');
-            } catch {
-              /* ignore */
-            }
-            setVisible(false);
-          }}
-        >
-          Accept essential cookies
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-glass text-sm"
+            onClick={() => {
+              writeCookieConsent('essential');
+              setVisible(false);
+            }}
+          >
+            Essential only
+          </button>
+          <button
+            type="button"
+            className="btn-primary text-sm"
+            onClick={() => {
+              writeCookieConsent('analytics');
+              setVisible(false);
+            }}
+          >
+            Accept analytics
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { PublicSiteModule } from '../../../../modules/public-site/public-site.module';
-import { PublicSiteService } from '../../../../modules/public-site/service/public-site.service';
+import { PublicSiteService, priceShopItemsFromCatalog } from '../../../../modules/public-site/service/public-site.service';
+import { ValidationError } from '../../../../utils/errors';
 
 jest.mock('../../../../modules/public-site/repository/public-site.repository', () => ({
   PublicSiteRepository: jest.fn().mockImplementation(() => ({
@@ -64,5 +65,27 @@ describe('PublicSiteService', () => {
     expect(result.slug).toBe('dev-it-react');
     expect(result.deliveryPack.verticalSlug).toBe('dev-it-react');
     expect(result.deliveryPack.recommendedDeliverables.length).toBeGreaterThan(0);
+  });
+});
+
+describe('priceShopItemsFromCatalog', () => {
+  const branding = {
+    catalog: [
+      { id: 'starter-pack', name: 'Starter', priceEur: 49 },
+      { id: 'growth-pack', name: 'Growth', priceEur: 99 },
+    ],
+  };
+
+  it('reprices from the site catalog and ignores client amounts', () => {
+    const priced = priceShopItemsFromCatalog(branding, [
+      { id: 'starter-pack', name: 'Hacked', priceEur: 1, quantity: 2 },
+    ]);
+    expect(priced).toEqual([{ id: 'starter-pack', name: 'Starter', priceEur: 49, quantity: 2 }]);
+  });
+
+  it('rejects unknown catalog ids', () => {
+    expect(() =>
+      priceShopItemsFromCatalog(branding, [{ id: 'not-real', name: 'X', priceEur: 1, quantity: 1 }]),
+    ).toThrow(ValidationError);
   });
 });
