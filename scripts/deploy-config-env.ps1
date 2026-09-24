@@ -45,6 +45,8 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'NEVERBOUNCE_API_KEY' (Get-DeployConfigTrim $Config 'neverbounceApiKey')
   & $set 'ZEROBOUNCE_API_KEY' (Get-DeployConfigTrim $Config 'zerobounceApiKey')
   & $set 'LUSHA_API_KEY' (Get-DeployConfigTrim $Config 'lushaApiKey')
+  & $set 'TAVILY_API_KEY' (Get-DeployConfigTrim $Config 'tavilyApiKey')
+  & $set 'ZOOMINFO_API_KEY' (Get-DeployConfigTrim $Config 'zoominfoApiKey')
   & $set 'SNOV_API_KEY' (Get-DeployConfigTrim $Config 'snovApiKey')
   & $set 'SNOV_USER_ID' (Get-DeployConfigTrim $Config 'snovUserId')
   & $set 'CONTACT_SLACK_WEBHOOK_URL' (Get-DeployConfigTrim $Config 'contactSlackWebhookUrl')
@@ -311,6 +313,10 @@ function Get-DeployConfigWebEnvPatches([object]$Config, [string]$SiteDomain) {
   }
   if (-not $publicSupport) { $publicSupport = 'hello@omnigrouptech.com' }
   $patches['NEXT_PUBLIC_SUPPORT_EMAIL'] = $publicSupport
+  $plausible = Get-DeployConfigTrim $Config 'plausibleDomain'
+  if ($plausible) {
+    $patches['NEXT_PUBLIC_PLAUSIBLE_DOMAIN'] = $plausible
+  }
   $patches['REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
   $patches['NEXT_PUBLIC_REGISTRATION_ENABLED'] = if ($Config.registrationEnabled -eq $true) { 'true' } else { 'false' }
   foreach ($entry in (Get-FoundingClientPromoEnvMap $Config).GetEnumerator()) {
@@ -412,6 +418,8 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     NEVERBOUNCE_API_KEY      = 'neverbounceApiKey'
     ZEROBOUNCE_API_KEY       = 'zerobounceApiKey'
     LUSHA_API_KEY            = 'lushaApiKey'
+    TAVILY_API_KEY           = 'tavilyApiKey'
+    ZOOMINFO_API_KEY         = 'zoominfoApiKey'
     SNOV_API_KEY             = 'snovApiKey'
     SNOV_USER_ID             = 'snovUserId'
     STARTER_PRICE_ID         = 'starterPriceId'
@@ -524,6 +532,8 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     NEVERBOUNCE_API_KEY          = Get-DeployConfigTrim $Config 'neverbounceApiKey'
     ZEROBOUNCE_API_KEY           = Get-DeployConfigTrim $Config 'zerobounceApiKey'
     LUSHA_API_KEY                = Get-DeployConfigTrim $Config 'lushaApiKey'
+    TAVILY_API_KEY               = Get-DeployConfigTrim $Config 'tavilyApiKey'
+    ZOOMINFO_API_KEY             = Get-DeployConfigTrim $Config 'zoominfoApiKey'
     SNOV_API_KEY                 = Get-DeployConfigTrim $Config 'snovApiKey'
     SNOV_USER_ID                 = Get-DeployConfigTrim $Config 'snovUserId'
     STRIPE_SECRET_KEY            = Get-DeployConfigTrim $Config 'stripeSecretKey'

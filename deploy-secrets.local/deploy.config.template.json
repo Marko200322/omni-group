@@ -104,6 +104,11 @@
   "hunterApiKey": "",
   "neverbounceApiKey": "",
   "zerobounceApiKey": "",
+  "lushaApiKey": "",
+  "tavilyApiKey": "",
+  "zoominfoApiKey": "",
+  "plausibleDomain": "",
+  "_plausibleDomain_comment": "P3-D03: omnigrouptech.com after the site exists in Plausible. Empty = no analytics script.",
 
   "stripeSecretKey": "",
   "stripePublishableKey": "",

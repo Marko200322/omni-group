@@ -39,6 +39,8 @@ ping() {
 FAILURES=()
 ping "${SITE_URL%/}/" "web-home"
 ping "${SITE_URL%/}/api/health" "web-health"
+ping "${SITE_URL%/}/api/health/live" "web-live"
+ping "${SITE_URL%/}/status" "web-status"
 ping "${API_URL%/}/health" "api-health"
 
 if (( ${#FAILURES[@]} > 0 )); then

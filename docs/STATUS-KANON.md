@@ -99,33 +99,33 @@
 
 | ID | Stavka | Status | Kada |
 |----|--------|--------|------|
-| P3-A01 | `LUSHA_API_KEY` | DEFERRED | enrich telefon |
-| P3-A02 | `TAVILY_API_KEY` | DEFERRED | Problem Hunter web_search + n8n |
-| P3-A03 | `ZOOMINFO_API_KEY` | DEFERRED | lead baze |
-| P3-A04 | Cold outbound send **ON** | BLOCKED | P0-01/P0-03 DONE; Instantly nalog **expired (402)** — upgrade plan |
-| P3-A05 | Live **n8n** workflow import | DEFERRED | `tools/outreach-engine/` |
-| P3-A06 | Ads budžet €200–300 | DEFERRED | marketing odluka |
+| P3-A01 | `LUSHA_API_KEY` | READY | env wired — paste key in deploy.config |
+| P3-A02 | `TAVILY_API_KEY` | READY | env wired — paste key in deploy.config |
+| P3-A03 | `ZOOMINFO_API_KEY` | READY | env wired — paste key in deploy.config |
+| P3-A04 | Cold outbound send **ON** | BLOCKED | Instantly nalog **expired (402)** — upgrade plan; send stays OFF |
+| P3-A05 | Live **n8n** workflow import | READY | `.\scripts\import-n8n-workflow.ps1` validates JSON; live import needs `N8N_*` |
+| P3-A06 | Ads budžet €200–300 | TI | marketing odluka |
 
 ### P3-B · Integracije (M4/M5+ external AI stack)
 
-Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai · Jasper · Predis · Devin · Replit Agent · CrewAI · LangChain — svi **DEFERRED**. Puna lista EMPTY: [`generated/EMPTY-KEYS.md`](./generated/EMPTY-KEYS.md).
+Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai · Jasper · Predis · Devin · Replit Agent · CrewAI · LangChain — **READY** u `deploy-config-env.ps1` (fail-closed dok je ključ prazan). Puna lista EMPTY: [`generated/EMPTY-KEYS.md`](./generated/EMPTY-KEYS.md).
 
 ### P3-C · Video / avatar advanced
 
 | ID | Stavka | Status |
 |----|--------|--------|
-| P3-C01 | Zoom OAuth API (`ZOOM_ACCOUNT_ID`…) | DEFERRED — join linkovi već rade |
-| P3-C02 | Live call avatar (Recall, HeyGen Live, Deepgram…) | DEFERRED |
+| P3-C01 | Zoom OAuth API (`ZOOM_ACCOUNT_ID`…) | READY — join linkovi rade; OAuth čeka ključeve |
+| P3-C02 | Live call avatar (Recall, HeyGen Live, Deepgram…) | READY — stub ON; live chain čeka ključeve |
 
 ### P3-D · Infra / ops
 
 | ID | Stavka | Status |
 |----|--------|--------|
-| P3-D01 | Staging VPS | DEFERRED |
-| P3-D02 | UptimeRobot monitoring | DEFERRED — probe ready (`/api/health/live`, `/status`) |
-| P3-D03 | Plausible analytics | DEFERRED |
-| P3-D04 | GitHub CI **required checks** na `main` | DEFERRED — branch protection DONE |
-| P3-D05 | DMARC `p=quarantine` (posle monitor faze) | DEFERRED |
+| P3-D01 | Staging VPS | TI — treba drugi server |
+| P3-D02 | Uptime monitoring | DONE — keep-warm */5 + Slack + `/status` + `/api/health/live` |
+| P3-D03 | Plausible analytics | READY — `plausibleDomain` u deploy.config; prazno = nema script |
+| P3-D04 | GitHub CI **required checks** na `main` | BLOCKED — nema `gh auth` na ovoj mašini; protection rule već postoji |
+| P3-D05 | DMARC `p=quarantine` (posle monitor faze) | TI — DNS |
 | P3-D06 | Nest TypeORM prod | **N/A** — Nest nije u live Docker |
 
 ### P3-E · Product backlog (detalji u linked docovima)
@@ -137,7 +137,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 | P3-E03 | Faza 6 K8s / observability / vector DB / GPU | DEFERRED | [`FAZA-6-BACKLOG.md`](./FAZA-6-BACKLOG.md) |
 | P3-E04 | Nivo 3 vision / PDF aligned review | DEFERRED | [`NIVO-3-MASTER-CHECKLIST.md`](../NIVO-3-MASTER-CHECKLIST.md) |
 | P3-E05 | YouTube/Celery pipeline prod ključevi | DEFERRED | [`tools/youtube-pipeline/RUNBOOK.md`](../tools/youtube-pipeline/RUNBOOK.md) |
-| P3-E06 | Ručno odobrenje cena (ako ≠ M6 anchor) | DEFERRED | `GET /api/v1/billing/catalog-quality` |
+| P3-E06 | Ručno odobrenje cena (ako ≠ M6 anchor) | DONE | `GET /api/v1/billing/catalog-quality` |
 
 ### P3-F · Repo higijena
 
@@ -192,4 +192,4 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 
 ---
 
-*Poslednja izmena: 2026-09-24 — katalog SSOT, migrate 038–042, contact intake.*
+*Poslednja izmena: 2026-09-24 — katalog SSOT + P3 env/monitoring/n8n import ready.*
