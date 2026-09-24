@@ -6,16 +6,18 @@ import { PaymentsRepository } from '../repository/payments.repository';
 import { PaymentError, NotFoundError } from '../../../utils/errors';
 import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
-import { getIndustryCategory, getPlanPriceForCategory, resolvePricingTier, type PlanSlug } from '../../billing/lib/category-pricing';
+import { getIndustryCategory, resolvePricingTier, type PlanSlug } from '../../billing/lib/category-pricing';
+import {
+  getSaaSPrice,
+  normalizeBillingCurrency,
+  type BillingCurrency,
+} from '../../billing/lib/saas-price-book';
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
-import { canCheckoutPackage } from '../../billing/lib/package-delivery-spec';
+import { canCheckoutPackage, getPackageAnchorEur } from '../../billing/lib/package-delivery-spec';
 import { resolveOptionalMaintenanceTier } from '../../billing/lib/package-maintenance-tiers';
 import { buildDeliverableStripeSessionParams } from '../lib/deliverable-stripe-checkout';
 import { resolvePlanDeliverableId } from '../../billing/lib/plan-deliverable-map';
-import {
-  calculateDeliverableQuote,
-  type PaymentProviderId,
-} from '../../billing/lib/dynamic-pricing.engine';
+import { type PaymentProviderId } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
 import { RevenueAllocationService } from '../../billing/service/revenue-allocation.service';
 import { DeliverableFulfillmentService } from '../../billing/service/deliverable-fulfillment.service';
@@ -64,12 +66,13 @@ function getManualPaymentConfig() {
 function resolveCheckoutAmount(
   plan: { slug: string; price_monthly: number; price_yearly: number },
   billingCycle: 'monthly' | 'yearly',
-  industryCategory?: string | null
+  currency: BillingCurrency,
+  industryCategory?: string | null,
 ): number {
   const slug = plan.slug as PlanSlug;
   const list =
-    ['starter', 'pro', 'enterprise'].includes(slug) && industryCategory?.trim()
-      ? getPlanPriceForCategory(slug, billingCycle, industryCategory)
+    ['starter', 'pro', 'enterprise'].includes(slug)
+      ? getSaaSPrice(slug, billingCycle, currency)
       : toMoneyNumber(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
   return applyFoundingPromoDiscount(list, industryCategory);
 }
@@ -206,11 +209,29 @@ function dispatchRevenueAllocation(input: {
   metadata: Record<string, unknown>;
 }): void {
   const purchaseType = String(input.metadata.purchaseType ?? 'platform_plan');
+  const normalizedCurrency = normalizeBillingCurrency(input.currency);
+  let grossEur = toMoneyNumber(input.amount);
+
+  if (normalizedCurrency === 'USD') {
+    const planSlug = String(input.metadata.planSlug ?? '') as PlanSlug;
+    const billingCycle = String(input.metadata.billingCycle ?? 'monthly') as 'monthly' | 'yearly';
+    if (!['starter', 'pro', 'enterprise'].includes(planSlug)) {
+      logger.warn('Revenue allocation skipped: USD payment has no canonical EUR price', {
+        paymentId: input.paymentId,
+        purchaseType,
+      });
+      return;
+    }
+    const usdPrice = getSaaSPrice(planSlug, billingCycle, 'USD');
+    const eurPrice = getSaaSPrice(planSlug, billingCycle, 'EUR');
+    grossEur = Math.round((grossEur * eurPrice / usdPrice) * 100) / 100;
+  }
+
   dispatchPaymentSideEffect(
     revenueAllocation.allocateConfirmedPayment({
       paymentId: input.paymentId,
       userId: input.userId,
-      grossEur: toMoneyNumber(input.amount),
+      grossEur,
       currency: input.currency,
       paymentProvider: input.provider,
       purchaseType: purchaseType === 'deliverable' ? 'deliverable' : 'platform_plan',
@@ -265,11 +286,14 @@ export class PaymentsService {
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
     buyer?: BuyerBillingInput | null,
+    requestedCurrency: BillingCurrency = 'EUR',
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
-    const amountEur = resolveCheckoutAmount(plan, billingCycle, industryCategory);
+    const currency = normalizeBillingCurrency(requestedCurrency);
+    const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const priceId = resolveStripePriceId(plan, planSlug, billingCycle);
-    const useDynamicPrice = Boolean(industryCategory?.trim()) || !priceId || isFoundingPromoActive(industryCategory);
+    const useDynamicPrice =
+      currency !== 'EUR' || Boolean(industryCategory?.trim()) || !priceId || isFoundingPromoActive(industryCategory);
     const buyerMeta = buyerBillingMeta(buyer);
 
     const { rows: userRows } = await this.db.getUserWithStripeCustomer(userId);
@@ -289,11 +313,11 @@ export class PaymentsService {
       ? [
           {
             price_data: {
-              currency: 'eur',
+              currency: currency.toLowerCase(),
               product_data: {
                 name: `${plan.name}${categoryCheckoutLabel(industryCategory)}`,
               },
-              unit_amount: Math.round(amountEur * 100),
+              unit_amount: Math.round(amount * 100),
               recurring: { interval: billingCycle === 'yearly' ? 'year' : 'month' },
             },
             quantity: 1,
@@ -312,6 +336,7 @@ export class PaymentsService {
         userId,
         planSlug,
         billingCycle,
+        currency,
         industryCategory: industryCategory ?? '',
         ...buyerMeta,
         ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
@@ -320,6 +345,7 @@ export class PaymentsService {
         metadata: {
           userId,
           planSlug,
+          currency,
           industryCategory: industryCategory ?? '',
           ...buyerMeta,
           ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
@@ -381,24 +407,49 @@ export class PaymentsService {
 
     logger.info('Stripe webhook received', { type: event.type });
 
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
-        break;
-      case 'customer.subscription.updated':
-        await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-        break;
-      case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-        break;
-      case 'invoice.payment_succeeded':
-        await this.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
-        break;
-      case 'invoice.payment_failed':
-        await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-        break;
-      default:
-        logger.debug(`Unhandled Stripe event: ${event.type}`);
+    const eventId = event.id?.trim();
+    if (eventId) {
+      const claim = await this.db.claimStripeWebhookEvent(eventId, event.type);
+      if (claim.rowCount === 0) {
+        logger.info('Stripe webhook already claimed', { eventId, type: event.type });
+        return;
+      }
+    }
+
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+          break;
+        case 'customer.subscription.updated':
+          await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+          break;
+        case 'customer.subscription.deleted':
+          await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+          break;
+        case 'invoice.payment_succeeded':
+          await this.handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+          break;
+        case 'invoice.payment_failed':
+          await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+          break;
+        default:
+          logger.debug(`Unhandled Stripe event: ${event.type}`);
+      }
+      if (eventId) await this.db.completeStripeWebhookEvent(eventId);
+    } catch (error) {
+      if (eventId) {
+        await this.db.failStripeWebhookEvent(
+          eventId,
+          error instanceof Error ? error.message : String(error),
+        ).catch((markError) => {
+          logger.error('Failed to persist Stripe webhook failure', {
+            eventId,
+            error: markError instanceof Error ? markError.message : String(markError),
+          });
+        });
+      }
+      throw error;
     }
   }
 
@@ -604,7 +655,7 @@ export class PaymentsService {
 
     const session = await requireStripe().billingPortal.sessions.create({
       customer: rows[0].stripe_customer_id,
-      return_url: webAppUrl('/dashboard#billing'),
+      return_url: webAppUrl('/dashboard/billing'),
     });
 
     return session.url;
@@ -633,9 +684,11 @@ export class PaymentsService {
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
     buyer?: BuyerBillingInput | null,
+    requestedCurrency: BillingCurrency = 'EUR',
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
-    const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
+    const currency = normalizeBillingCurrency(requestedCurrency);
+    const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const buyerMeta = buyerBillingMeta(buyer);
 
     const finance = getFinanceClient();
@@ -645,7 +698,7 @@ export class PaymentsService {
         planSlug,
         billingCycle,
         amount,
-        currency: 'USD',
+        currency,
         returnUrl: webAppUrl('/dashboard/billing/paypal/success'),
         cancelUrl: webAppUrl('/dashboard/billing/cancel'),
       });
@@ -653,11 +706,13 @@ export class PaymentsService {
         await this.db.insertPendingPayPalPayment({
           userId,
           amount,
+          currency,
           orderId: remote.orderId,
           description: `PayPal ${plan.name} ${billingCycle}`,
           metadataJson: JSON.stringify({
             planSlug,
             billingCycle,
+            currency,
             industryCategory: industryCategory ?? null,
             orderId: remote.orderId,
             via: 'finance_aggregator',
@@ -678,7 +733,7 @@ export class PaymentsService {
       {
         intent: 'CAPTURE',
         purchase_units: [{
-          amount: { currency_code: 'USD', value: amount.toFixed(2) },
+          amount: { currency_code: currency, value: amount.toFixed(2) },
           description: `${plan.name} Plan (${billingCycle})`,
           custom_id: `${userId}:${planSlug}:${billingCycle}`,
         }],
@@ -697,11 +752,13 @@ export class PaymentsService {
     await this.db.insertPendingPayPalPayment({
       userId,
       amount,
+      currency,
       orderId: order.id,
       description: `PayPal ${plan.name} ${billingCycle}`,
       metadataJson: JSON.stringify({
         planSlug,
         billingCycle,
+        currency,
         industryCategory: industryCategory ?? null,
         orderId: order.id,
         ...buyerMeta,
@@ -798,10 +855,11 @@ export class PaymentsService {
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string | null,
     buyer?: BuyerBillingInput | null,
+    requestedCurrency: BillingCurrency = 'EUR',
   ) {
     const plan = await billingService.getPlanBySlug(planSlug);
-    const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
-    const currency = config.payments.manual.currency || 'USD';
+    const currency = normalizeBillingCurrency(requestedCurrency);
+    const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const reference = buildTransferReference(userId);
     const buyerMeta = buyerBillingMeta(buyer);
 
@@ -813,7 +871,7 @@ export class PaymentsService {
         billingCycle,
         amount,
         reference,
-        currency: 'USD',
+        currency,
       });
       if (remote && typeof remote.paymentId === 'string') {
         return remote as {
@@ -1097,26 +1155,18 @@ export class PaymentsService {
     const mode = config.payments.mode;
     const manual = getManualPaymentConfig();
     const methods: Array<{ id: string; label: string; description: string; available: boolean }> = [];
+    const stripeReady = Boolean(config.stripe.secretKey?.trim());
 
-    if (mode === 'manual' || (manual.configured && process.env.PAYMENTS_MANUAL_ENABLED !== 'false')) {
-      methods.push({
-        id: 'manual',
-        label: 'Bank transfer',
-        description: 'Pay by bank transfer — activation after admin confirmation.',
-        available: manual.configured,
-      });
-    }
-
-    if (mode !== 'manual' && config.stripe.secretKey) {
+    if (stripeReady) {
       methods.push({
         id: 'stripe',
         label: 'Card (Stripe)',
-        description: 'Checkout via Stripe test or live account.',
+        description: 'Pay by card — Stripe Checkout (test or live).',
         available: true,
       });
     }
 
-    if (mode !== 'manual' && config.paypal.clientId && config.paypal.clientSecret) {
+    if (config.paypal.clientId && config.paypal.clientSecret) {
       methods.push({
         id: 'paypal',
         label: 'PayPal',
@@ -1125,16 +1175,14 @@ export class PaymentsService {
       });
     }
 
-    if (mode !== 'manual') {
-      const finance = getFinanceClient();
-      const wiseConfigured = finance.isConfigured();
+    const finance = getFinanceClient();
+    const wiseConfigured = finance.isConfigured();
+    if (wiseConfigured) {
       methods.push({
         id: 'wise',
         label: 'International transfer (Wise)',
-        description: wiseConfigured
-          ? 'Wise transfer via finance integration — manual confirmation after funds arrive.'
-          : 'Not configured — use bank transfer (IBAN) instead.',
-        available: wiseConfigured,
+        description: 'Wise transfer via finance integration — manual confirmation after funds arrive.',
+        available: true,
       });
     }
 
@@ -1148,15 +1196,26 @@ export class PaymentsService {
       });
     }
 
+    // IBAN is a fallback only when Stripe is not configured.
+    if (!stripeReady && (mode === 'manual' || (manual.configured && process.env.PAYMENTS_MANUAL_ENABLED !== 'false'))) {
+      methods.push({
+        id: 'manual',
+        label: 'Bank transfer',
+        description: 'Pay by bank transfer — activation after admin confirmation.',
+        available: manual.configured,
+      });
+    }
+
     return {
-      mode,
+      mode: stripeReady && mode === 'manual' ? 'sandbox' : mode,
       methods,
       manualConfigured: Boolean(config.payments.manual.accountName && config.payments.manual.iban),
-      note:
-        mode === 'manual'
-          ? 'No-company mode: use bank transfer until you register a company and enable Stripe live.'
+      note: stripeReady
+        ? 'Card checkout via Stripe. Bank transfer (IBAN) is not required.'
+        : mode === 'manual'
+          ? 'Card checkout is not configured yet. Add STRIPE_SECRET_KEY (sk_test_…) to enable Stripe.'
           : undefined,
-      manualSetupMissing: !manual.configured,
+      manualSetupMissing: !stripeReady && !manual.configured,
     };
   }
 
@@ -1166,15 +1225,16 @@ export class PaymentsService {
     billingCycle: 'monthly' | 'yearly',
     industryCategory?: string,
     buyer?: BuyerBillingInput | null,
+    requestedCurrency: BillingCurrency = 'EUR',
   ) {
-    const methods = this.getPaymentMethods();
-    if (!methods.methods.some((m) => m.id === 'manual' && m.available)) {
-      throw new PaymentError('Manual bank transfer is not enabled. Set PAYMENTS_MODE=manual or bank details in .env.');
+    const manualCfg = getManualPaymentConfig();
+    if (!manualCfg.configured) {
+      throw new PaymentError('Manual bank transfer is not enabled. Set bank details in .env if you need IBAN fallback.');
     }
 
     const plan = await billingService.getPlanBySlug(planSlug);
-    const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
-    const currency = config.payments.manual.currency || 'USD';
+    const currency = normalizeBillingCurrency(requestedCurrency);
+    const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const reference = buildTransferReference(userId);
     const categoryLabel = categoryCheckoutLabel(industryCategory);
     const buyerMeta = buyerBillingMeta(buyer);
@@ -1187,6 +1247,7 @@ export class PaymentsService {
       metadataJson: JSON.stringify({
         planSlug,
         billingCycle,
+        currency,
         reference,
         ...(industryCategory ? { industryCategory } : {}),
         ...buyerMeta,
@@ -1248,8 +1309,8 @@ export class PaymentsService {
       maintenanceTierId?: string;
     }
   ) {
-    const methods = this.getPaymentMethods();
-    if (!methods.methods.some((m) => m.id === 'manual' && m.available)) {
+    const manualCfg = getManualPaymentConfig();
+    if (!manualCfg.configured) {
       throw new PaymentError('Manual bank transfer is not enabled.');
     }
 
@@ -1260,16 +1321,6 @@ export class PaymentsService {
         'This package is not available for self-serve checkout at the current budget/production profile. Contact sales.',
       );
     }
-
-    const quote = calculateDeliverableQuote({
-      deliverableId: input.deliverableId,
-      industryCategory: input.industryCategory ?? null,
-      billingCycle: deliverable.billing,
-      paymentProvider: input.paymentProvider ?? 'manual',
-      marketIntensity: input.marketIntensity ?? 55,
-      tamEstimateUsd: input.tamEstimateUsd,
-      competitionScore: input.competitionScore,
-    });
 
     let maintenanceTier: ReturnType<typeof resolveOptionalMaintenanceTier> = null;
     try {
@@ -1282,7 +1333,9 @@ export class PaymentsService {
       throw new PaymentError(err instanceof Error ? err.message : 'Invalid maintenance tier');
     }
 
-    const amount = quote.clientPriceEur;
+    const listPriceEur = getPackageAnchorEur(deliverable.id);
+    if (listPriceEur <= 0) throw new PaymentError('Unknown deliverable price');
+    const amount = listPriceEur;
     const currency = config.payments.manual.currency || 'EUR';
     const reference = buildTransferReference(userId);
     const categoryLabel = categoryCheckoutLabel(input.industryCategory);
@@ -1298,8 +1351,7 @@ export class PaymentsService {
         industryCategory: input.industryCategory ?? null,
         billing: deliverable.billing,
         reference,
-        quotedSubtotalEur: quote.subtotalEur,
-        paymentFeeEur: quote.paymentFeeEur,
+        listPriceEur,
         maintenanceTierId: maintenanceTier?.id ?? null,
         maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
         maintenanceLabel: maintenanceTier?.label ?? null,
@@ -1348,7 +1400,7 @@ export class PaymentsService {
       instructions,
       quote: {
         deliverableName: deliverable.name,
-        clientPriceEur: quote.clientPriceEur,
+        clientPriceEur: amount,
       },
     };
   }
@@ -1365,10 +1417,7 @@ export class PaymentsService {
     }
   ) {
     if (!config.stripe.secretKey) {
-      throw new PaymentError('Stripe is not configured. Add STRIPE_SECRET_KEY and set PAYMENTS_MODE=live.');
-    }
-    if (config.payments.mode === 'manual') {
-      throw new PaymentError('Card checkout is disabled. Set PAYMENTS_MODE=live in production.');
+      throw new PaymentError('Stripe is not configured. Add STRIPE_SECRET_KEY (sk_test_… or sk_live_…).');
     }
 
     const deliverable = getDeliverable(input.deliverableId);
@@ -1378,16 +1427,6 @@ export class PaymentsService {
         'This package is not available for self-serve checkout at the current budget/production profile. Contact sales.',
       );
     }
-
-    const quote = calculateDeliverableQuote({
-      deliverableId: input.deliverableId,
-      industryCategory: input.industryCategory ?? null,
-      billingCycle: deliverable.billing,
-      paymentProvider: 'stripe',
-      marketIntensity: input.marketIntensity ?? 55,
-      tamEstimateUsd: input.tamEstimateUsd,
-      competitionScore: input.competitionScore,
-    });
 
     let maintenanceTier: ReturnType<typeof resolveOptionalMaintenanceTier> = null;
     try {
@@ -1400,7 +1439,9 @@ export class PaymentsService {
       throw new PaymentError(err instanceof Error ? err.message : 'Invalid maintenance tier');
     }
 
-    const amount = applyFoundingPromoDiscount(quote.clientPriceEur, input.industryCategory);
+    const listPriceEur = getPackageAnchorEur(deliverable.id);
+    if (listPriceEur <= 0) throw new PaymentError('Unknown deliverable price');
+    const amount = listPriceEur;
     const currency = 'EUR';
     const categoryLabel = categoryCheckoutLabel(input.industryCategory);
 
@@ -1414,8 +1455,7 @@ export class PaymentsService {
         deliverableId: deliverable.id,
         industryCategory: input.industryCategory ?? null,
         billing: deliverable.billing,
-        quotedSubtotalEur: quote.subtotalEur,
-        paymentFeeEur: quote.paymentFeeEur,
+        listPriceEur,
         foundingPromo: isFoundingPromoActive(input.industryCategory) || undefined,
         maintenanceTierId: maintenanceTier?.id ?? null,
         maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
@@ -1585,6 +1625,7 @@ export class PaymentsService {
     cryptoCurrency?: string,
     industryCategory?: string,
     buyer?: BuyerBillingInput | null,
+    requestedCurrency: BillingCurrency = 'EUR',
   ) {
     const client = getKriptomanClient();
     if (!config.kriptoman.enabled || !client.isConfigured()) {
@@ -1594,8 +1635,8 @@ export class PaymentsService {
     }
 
     const plan = await billingService.getPlanBySlug(planSlug);
-    const amount = resolveCheckoutAmount(plan, billingCycle, industryCategory);
-    const currency = config.payments.manual.currency || 'EUR';
+    const currency = normalizeBillingCurrency(requestedCurrency);
+    const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const asset = (cryptoCurrency ?? config.kriptoman.defaultCrypto).toUpperCase();
     const categoryLabel = categoryCheckoutLabel(industryCategory);
     const buyerMeta = buyerBillingMeta(buyer);
@@ -1608,6 +1649,7 @@ export class PaymentsService {
       metadataJson: JSON.stringify({
         planSlug,
         billingCycle,
+        currency,
         cryptoCurrency: asset,
         ...(industryCategory ? { industryCategory } : {}),
         ...buyerMeta,

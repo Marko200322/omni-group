@@ -11,6 +11,8 @@ export type AtinaLoginUser = {
   role: string;
   planSlug: string | null;
   isEmailVerified: boolean;
+  organizationId?: string | null;
+  orgRole?: string | null;
 };
 
 export type AtinaLoginResult = {

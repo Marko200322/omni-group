@@ -9,6 +9,7 @@ import logger from '../../utils/logger';
 import { getForgeHealthDetails } from '../../modules/forge/service/forge-health.service';
 
 const testConnectionMock = jest.fn().mockResolvedValue(true);
+const testRedisConnectionMock = jest.fn().mockResolvedValue(true);
 
 jest.mock('../../database/connection', () => ({
   testConnection: (...a: unknown[]) => testConnectionMock(...a),
@@ -17,6 +18,10 @@ jest.mock('../../database/connection', () => ({
   transaction: jest.fn(),
   closePool: jest.fn().mockResolvedValue(undefined),
   default: {},
+}));
+
+jest.mock('../../queue/redis-health', () => ({
+  testRedisConnection: (...a: unknown[]) => testRedisConnectionMock(...a),
 }));
 
 jest.mock('../../modules/forge/service/forge-health.service', () => ({
@@ -91,6 +96,7 @@ describe('CoreEngine', () => {
       const res = await request(engine.getApp()).get('/health');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('ok');
+      expect(res.body.redis).toBe('up');
       expect(res.body.environment).toBeDefined();
       expect(res.body.forge).toMatchObject({
         vaultPath: 'C:/tmp/test-forge-vault.db',
@@ -112,11 +118,21 @@ describe('CoreEngine', () => {
       });
     });
 
+    it('getApp /health returns 503 when Redis is unavailable', async () => {
+      testRedisConnectionMock.mockResolvedValueOnce(false);
+      const res = await request(engine.getApp()).get('/health');
+      expect(res.status).toBe(503);
+      expect(res.body.status).toBe('degraded');
+      expect(res.body.db).toBe('up');
+      expect(res.body.redis).toBe('down');
+    });
+
     it('getApp exposes /metrics in prometheus text format', async () => {
       const res = await request(engine.getApp()).get('/metrics');
       expect(res.status).toBe(200);
       expect(res.text).toContain('atina_up 1');
       expect(res.text).toContain('atina_db_up 1');
+      expect(res.text).toContain('atina_redis_up 1');
       expect(res.text).toContain('process_uptime_seconds');
     });
 

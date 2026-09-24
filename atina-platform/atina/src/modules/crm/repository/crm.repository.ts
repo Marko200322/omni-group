@@ -4,10 +4,11 @@ import type { CreateContactDtoType, UpdateContactDtoType } from '../dto/crm.dto'
 export class CrmRepository {
   listContacts(
     userId: string,
-    opts: { search?: string; status?: string; limit: number; offset: number }
+    opts: { search?: string; status?: string; limit: number; offset: number },
+    organizationId?: string,
   ) {
-    const conditions = ['user_id = $1'];
-    const values: unknown[] = [userId];
+    const conditions = [organizationId ? 'organization_id = $1' : 'user_id = $1'];
+    const values: unknown[] = [organizationId ?? userId];
     let idx = 2;
 
     if (opts.search) {
@@ -33,19 +34,23 @@ export class CrmRepository {
     ]);
   }
 
-  getContact(id: string, userId: string) {
-    return query('SELECT * FROM crm_contacts WHERE id = $1 AND user_id = $2', [id, userId]);
+  getContact(id: string, userId: string, organizationId?: string) {
+    return query(
+      `SELECT * FROM crm_contacts WHERE id = $1 AND ${organizationId ? 'organization_id' : 'user_id'} = $2`,
+      [id, organizationId ?? userId],
+    );
   }
 
-  createContact(userId: string, d: CreateContactDtoType) {
+  createContact(userId: string, d: CreateContactDtoType, organizationId?: string) {
     return query(
       `INSERT INTO crm_contacts
-         (user_id, first_name, last_name, email, phone, company, position,
+         (user_id, organization_id, first_name, last_name, email, phone, company, position,
           status, source, tags, notes, custom_fields)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        RETURNING *`,
       [
         userId,
+        organizationId ?? null,
         d.firstName,
         d.lastName ?? null,
         d.email ?? null,
@@ -61,7 +66,7 @@ export class CrmRepository {
     );
   }
 
-  updateContact(id: string, userId: string, d: UpdateContactDtoType) {
+  updateContact(id: string, userId: string, d: UpdateContactDtoType, organizationId?: string) {
     const fields: string[] = [];
     const values: unknown[] = [];
     let idx = 1;
@@ -90,20 +95,23 @@ export class CrmRepository {
     }
 
     if (!fields.length) {
-      return this.getContact(id, userId);
+      return this.getContact(id, userId, organizationId);
     }
 
-    values.push(id, userId);
+    values.push(id, organizationId ?? userId);
     return query(
       `UPDATE crm_contacts SET ${fields.join(', ')}, updated_at = NOW()
-       WHERE id = $${idx++} AND user_id = $${idx}
+       WHERE id = $${idx++} AND ${organizationId ? 'organization_id' : 'user_id'} = $${idx}
        RETURNING *`,
       values
     );
   }
 
-  deleteContact(id: string, userId: string) {
-    return query('DELETE FROM crm_contacts WHERE id = $1 AND user_id = $2', [id, userId]);
+  deleteContact(id: string, userId: string, organizationId?: string) {
+    return query(
+      `DELETE FROM crm_contacts WHERE id = $1 AND ${organizationId ? 'organization_id' : 'user_id'} = $2`,
+      [id, organizationId ?? userId],
+    );
   }
 
   bulkInsertContact(
@@ -117,15 +125,17 @@ export class CrmRepository {
       phone?: string;
       company?: string;
       status?: string;
-    }
+    },
+    organizationId?: string,
   ) {
     return query(
       `INSERT INTO crm_contacts
-         (user_id, first_name, last_name, email, phone, company, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+         (user_id, organization_id, first_name, last_name, email, phone, company, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
        ON CONFLICT DO NOTHING`,
       [
         userId,
+        organizationId ?? null,
         row.firstName ?? row.first_name,
         row.lastName ?? row.last_name ?? null,
         row.email ?? null,
@@ -136,19 +146,21 @@ export class CrmRepository {
     );
   }
 
-  stats(userId: string) {
+  stats(userId: string, organizationId?: string) {
+    const scopeColumn = organizationId ? 'organization_id' : 'user_id';
+    const scopeId = organizationId ?? userId;
     return Promise.all([
-      query<{ count: string }>('SELECT COUNT(*)::text AS count FROM crm_contacts WHERE user_id = $1', [
-        userId,
+      query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM crm_contacts WHERE ${scopeColumn} = $1`, [
+        scopeId,
       ]),
       query<{ status: string; count: string }>(
-        'SELECT status, COUNT(*)::text AS count FROM crm_contacts WHERE user_id = $1 GROUP BY status',
-        [userId]
+        `SELECT status, COUNT(*)::text AS count FROM crm_contacts WHERE ${scopeColumn} = $1 GROUP BY status`,
+        [scopeId]
       ),
       query(
-        `SELECT * FROM crm_contacts WHERE user_id = $1
+        `SELECT * FROM crm_contacts WHERE ${scopeColumn} = $1
          ORDER BY updated_at DESC LIMIT 5`,
-        [userId]
+        [scopeId]
       ),
     ]);
   }

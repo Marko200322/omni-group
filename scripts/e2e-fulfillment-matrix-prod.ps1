@@ -25,8 +25,8 @@ param(
   [switch]$Resume,
   [int]$MaxCells = 0,
   [int]$PollSec = 120,
-  [int]$SleepBetweenSec = 8,
-  [int]$RateLimitMaxAttempts = 8,
+  [int]$SleepBetweenSec = 25,
+  [int]$RateLimitMaxAttempts = 12,
   [string]$ReportCsv = ''
 )
 

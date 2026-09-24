@@ -26,8 +26,8 @@ export function ModulesSection() {
             Three modules, <span className="text-gradient">one brand</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Omni Group Tech is the brand. Atina, Astra, and Titan are product modules covering API, automation, and
-            operations.
+            Omni Group Tech is the brand. Atina, Astra, and Titan cover the workspace, automation, and operations
+            you actually run.
           </p>
         </motion.div>
         <motion.div className="grid gap-6 md:grid-cols-3">
@@ -48,7 +48,7 @@ export function ModulesSection() {
                 <h3 className="mt-2 font-display text-xl font-semibold text-white">{m.tagline}</h3>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-400">{m.description}</p>
                 <span className="mt-6 inline-flex items-center gap-1 text-sm text-violet-300 transition group-hover:text-white">
-                  Open module <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  See how it works <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </span>
               </Link>
             </motion.div>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { PaymentsController } from './controller/payments.controller';
-import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin, requirePermission } from '../../api/middleware/auth.middleware';
 import { authSessionLimiter, paymentsLimiter, webhookLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
@@ -13,6 +13,7 @@ const CheckoutDto = z
   .object({
     planSlug: z.enum(['starter', 'pro', 'enterprise']),
     billingCycle: z.enum(['monthly', 'yearly']).default('monthly'),
+    currency: z.enum(['EUR', 'USD']).default('EUR'),
     industryCategory: z
       .string()
       .trim()
@@ -83,6 +84,7 @@ export class PaymentsModule implements IModule {
       '/stripe/checkout',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
@@ -93,6 +95,7 @@ export class PaymentsModule implements IModule {
       '/stripe/cancel',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -102,6 +105,7 @@ export class PaymentsModule implements IModule {
       '/stripe/portal',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -113,6 +117,7 @@ export class PaymentsModule implements IModule {
       '/paypal/order',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
@@ -122,6 +127,7 @@ export class PaymentsModule implements IModule {
       '/paypal/capture/:orderId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateParams(OrderIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -134,6 +140,7 @@ export class PaymentsModule implements IModule {
       '/wise/transfer',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
@@ -143,6 +150,7 @@ export class PaymentsModule implements IModule {
       '/wise/confirm/:paymentId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       requireAdmin,
       validateParams(PaymentIdParamsDto),
@@ -162,6 +170,7 @@ export class PaymentsModule implements IModule {
       '/manual/checkout',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(CheckoutDto),
@@ -171,6 +180,7 @@ export class PaymentsModule implements IModule {
       '/stripe/deliverable-checkout',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(DeliverableCheckoutDto),
@@ -180,6 +190,7 @@ export class PaymentsModule implements IModule {
       '/manual/deliverable-checkout',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(DeliverableCheckoutDto),
@@ -189,6 +200,7 @@ export class PaymentsModule implements IModule {
       '/manual/mark-sent/:paymentId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateParams(PaymentIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -199,6 +211,7 @@ export class PaymentsModule implements IModule {
       '/manual/confirm/:paymentId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       requireAdmin,
       validateParams(PaymentIdParamsDto),
@@ -212,6 +225,7 @@ export class PaymentsModule implements IModule {
       '/kriptoman/checkout',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(KriptomanCheckoutDto),
@@ -227,6 +241,7 @@ export class PaymentsModule implements IModule {
       '/kriptoman/sync/:paymentId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       validateParams(PaymentIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -237,6 +252,7 @@ export class PaymentsModule implements IModule {
       '/kriptoman/confirm/:paymentId',
       paymentsLimiter,
       authenticate,
+      requirePermission('billing.manage'),
       authSessionLimiter,
       requireAdmin,
       validateParams(PaymentIdParamsDto),
@@ -249,6 +265,7 @@ export class PaymentsModule implements IModule {
     this.router.get(
       '/history',
       authenticate,
+      requirePermission('billing.read'),
       authSessionLimiter,
       paymentsLimiter,
       validateQuery(PaymentHistoryQueryDto),

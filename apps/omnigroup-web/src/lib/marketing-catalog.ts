@@ -21,10 +21,10 @@ import {
 } from './category-pricing';
 import { getDeliverable } from './deliverable-catalog';
 import {
-  getPackageAnchorEur,
   getPackageAvailability,
   getPackageDeliverySpec,
 } from './package-delivery-spec';
+import { getPublicListPriceEur } from './client-offers';
 
 /** Services with a deliverable go to /pricing checkout; others stay on /contact. */
 export function serviceCatalogHref(serviceId: string): string {
@@ -56,7 +56,7 @@ export type CatalogCategory = {
 };
 
 /** Products — platform software modules grouped by business function. */
-export const PRODUCT_CATEGORIES: CatalogCategory[] = [
+const PRODUCT_CATEGORIES_SOURCE: CatalogCategory[] = [
   {
     id: 'platform',
     title: 'Platform & account',
@@ -67,7 +67,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'workspace',
         name: 'Client workspace',
         description: 'Dashboard, projects, account, and live data from the Atina API.',
-        priceLabel: 'from €39/mo in package',
+        priceLabel: '',
         includedIn: ['starter', 'pro', 'enterprise'],
         href: '/dashboard',
       },
@@ -77,13 +77,13 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         description: 'Payment instructions, reference code, and activation without a Stripe company.',
         priceLabel: 'included',
         includedIn: ['starter', 'pro', 'enterprise'],
-        href: '/dashboard#billing',
+        href: '/dashboard/billing',
       },
       {
         id: 'team-access',
         name: 'Team access',
         description: 'Invite colleagues to your workspace — roles and permissions for larger teams.',
-        priceLabel: 'from €99/mo (Growth)',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
         href: '/contact',
       },
@@ -107,35 +107,34 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'crm',
         name: 'CRM module',
         description: 'Contacts, pipeline, and client tracking in one place.',
-        priceLabel: 'from €99/mo',
-        priceMonthly: 99,
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#projects',
+        href: '/dashboard/projects',
         badge: 'Growth+',
       },
       {
         id: 'titanis',
         name: 'Titanis — sales engine',
         description: 'Lead generation, follow-up sequences, and deal closing.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#consultation',
+        href: '/dashboard/consultation',
       },
       {
         id: 'contracts',
         name: 'Contracts',
         description: 'Create, track, and digital signature workflows.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#consultation',
+        href: '/dashboard/consultation',
       },
       {
         id: 'sales-avatar',
         name: 'AI sales avatar',
         description: '4 sales agents — chat and voice for lead qualification.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#consultation',
+        href: '/dashboard/consultation',
       },
     ],
   },
@@ -149,7 +148,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'automation',
         name: 'Automations',
         description: 'Workflow chains, onboarding pipelines, and recurring jobs.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
         href: '/pricing?plan=pro',
       },
@@ -157,15 +156,15 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'tasks',
         name: 'Task system',
         description: 'Job queue, statuses, and real-time execution tracking.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#projects',
+        href: '/dashboard/projects',
       },
       {
         id: 'scraper',
         name: 'Web scraper',
         description: 'Collect web data via Apify/Bright Data integration.',
-        priceLabel: 'from €99/mo + API costs',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
         href: '/pricing?plan=pro',
       },
@@ -173,7 +172,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'craftor',
         name: 'Craftor',
         description: 'AI assistant for freelance platforms — proposals, hunting, deploy.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
         href: '/pricing?plan=pro',
         badge: 'Pro',
@@ -190,33 +189,33 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'ai-memory',
         name: 'AI memory',
         description: 'Long-term context and remember/recall flow for your team.',
-        priceLabel: 'from €249/mo (Partner)',
+        priceLabel: '',
         includedIn: ['enterprise'],
-        href: '/dashboard#account',
+        href: '/dashboard/account',
       },
       {
         id: 'support-avatar',
         name: 'AI support avatar',
         description: 'Avatar team (Mila, Stefan, Jelena) — chat, voice, scheduling.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#support',
+        href: '/dashboard/support',
       },
       {
         id: 'video-meetings',
         name: 'Video meetings',
         description: 'Zoom, Google Meet, or manual scheduling for support/sales calls.',
-        priceLabel: 'from €99/mo',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
-        href: '/dashboard#support',
+        href: '/dashboard/support',
       },
       {
         id: 'ai-rag',
         name: 'AI knowledge base (RAG)',
         description: 'Search documentation and context for AI answers.',
-        priceLabel: 'from €249/mo',
+        priceLabel: '',
         includedIn: ['enterprise'],
-        href: '/dashboard#account',
+        href: '/dashboard/account',
       },
     ],
   },
@@ -230,8 +229,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'white-label',
         name: 'White-label platform',
         description: 'Your brand, our stack — for agencies and partners.',
-        priceLabel: 'from €249/mo',
-        priceMonthly: 249,
+        priceLabel: '',
         includedIn: ['enterprise'],
         href: '/pricing?plan=enterprise',
       },
@@ -239,7 +237,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'omnitube',
         name: 'OmniTube',
         description: 'Automated pipeline for video channels and content.',
-        priceLabel: 'from €99/mo + production',
+        priceLabel: '',
         includedIn: ['pro', 'enterprise'],
         href: '/pricing?plan=pro',
       },
@@ -247,7 +245,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'omnigame',
         name: 'OmniGame',
         description: 'Validation and pipeline for game projects (Steam integration).',
-        priceLabel: 'from €249/mo',
+        priceLabel: '',
         includedIn: ['enterprise'],
         href: '/pricing?plan=pro',
       },
@@ -255,7 +253,7 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
         id: 'dominus360',
         name: 'Dominus360',
         description: 'Risk intelligence, KPIs, and resource management for larger teams.',
-        priceLabel: 'from €249/mo',
+        priceLabel: '',
         includedIn: ['enterprise'],
         href: '/pricing?plan=enterprise',
       },
@@ -263,8 +261,8 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
   },
 ];
 
-/** Services — what the team delivers around the platform (one-time or retainer). */
-export const SERVICE_CATEGORIES: CatalogCategory[] = [
+/** Services — raw labels only. Prices come from getPublicListPriceEur via withPhaseServiceCatalog. */
+const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
   {
     id: 'implementation',
     title: 'Implementation & go-live',
@@ -275,16 +273,14 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         id: 'setup-quick',
         name: 'Quick setup',
         description: 'Env, Docker, login, manual billing, contact form, smoke test.',
-        priceLabel: '€290',
-        priceOnce: 290,
+        priceLabel: '',
         href: serviceCatalogHref('setup-quick'),
       },
       {
         id: 'setup-full',
         name: 'Full onboarding',
         description: 'CRM, automations, data migration, team training, 30 days of support.',
-        priceLabel: '€890',
-        priceOnce: 890,
+        priceLabel: '',
         href: serviceCatalogHref('setup-full'),
         badge: 'Popular',
       },
@@ -292,8 +288,7 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         id: 'setup-custom',
         name: 'Custom deploy',
         description: 'Your domain, SSL, backup, monitoring, and SLA agreement.',
-        priceLabel: 'from €2,490',
-        priceOnce: 2490,
+        priceLabel: '',
         href: serviceCatalogHref('setup-custom'),
       },
     ],
@@ -308,24 +303,21 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         id: 'audit',
         name: 'Technical audit',
         description: 'Stack review, security, env check, and production migration plan.',
-        priceLabel: '€490',
-        priceOnce: 490,
+        priceLabel: '',
         href: serviceCatalogHref('audit'),
       },
       {
         id: 'integration',
         name: 'Custom integration',
         description: 'Nango, OpenRouter, scraper, email — connect your existing tools.',
-        priceLabel: 'from €790',
-        priceOnce: 790,
+        priceLabel: '',
         href: serviceCatalogHref('integration'),
       },
       {
         id: 'workflow-design',
         name: 'Workflow design',
         description: 'Map business processes into automations and task templates.',
-        priceLabel: '€590',
-        priceOnce: 590,
+        priceLabel: '',
         href: serviceCatalogHref('workflow-design'),
       },
     ],
@@ -339,25 +331,22 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
       {
         id: 'support-basic',
         name: 'Email support',
-        description: 'Weekdays, response within 48h — included in Business plan.',
-        priceLabel: 'included in €39/mo',
-        priceMonthly: 39,
+        description: 'Weekdays, response within 48h — included in Launch plan.',
+        priceLabel: 'included',
         href: '/pricing',
       },
       {
         id: 'support-priority',
         name: 'Priority support',
         description: 'Response within 24h, help with env and minor changes.',
-        priceLabel: '€149/mo',
-        priceMonthly: 149,
+        priceLabel: '',
         href: serviceCatalogHref('support-priority'),
       },
       {
         id: 'support-dedicated',
         name: 'Dedicated support',
         description: 'Slack channel, 8h response, monthly health check.',
-        priceLabel: '€390/mo',
-        priceMonthly: 390,
+        priceLabel: '',
         href: serviceCatalogHref('support-dedicated'),
         badge: 'Partner',
       },
@@ -373,24 +362,21 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         id: 'landing',
         name: 'Landing + copy',
         description: 'Custom homepage and copy for your niche.',
-        priceLabel: '€690',
-        priceOnce: 690,
+        priceLabel: '',
         href: serviceCatalogHref('landing'),
       },
       {
         id: 'white-label-setup',
         name: 'White-label packaging',
         description: 'Branding, domain, pricing, and materials for partner sales.',
-        priceLabel: '€1,490',
-        priceOnce: 1490,
+        priceLabel: '',
         href: serviceCatalogHref('white-label-setup'),
       },
       {
         id: 'sales-enablement',
         name: 'Sales enablement',
         description: 'Demo script, FAQ, onboarding materials for your sales team.',
-        priceLabel: '€990',
-        priceOnce: 990,
+        priceLabel: '',
         href: serviceCatalogHref('sales-enablement'),
       },
     ],
@@ -410,7 +396,7 @@ export function withPhaseServiceCatalog(categories: CatalogCategory[]): CatalogC
     items: cat.items.map((item) => {
       const spec = getPackageDeliverySpec(item.id);
       const deliverable = getDeliverable(item.id);
-      const anchor = getPackageAnchorEur(item.id);
+      const anchor = getPublicListPriceEur(item.id);
       let next = { ...item };
       if (spec) next = { ...next, description: spec.description };
       if (anchor > 0 && deliverable) {
@@ -440,6 +426,9 @@ export function withHonestServiceDescriptions(categories: CatalogCategory[]): Ca
   return withPhaseServiceCatalog(categories);
 }
 
+/** Public service catalog — always overlaid with the shared list-price book. */
+export const SERVICE_CATEGORIES = withPhaseServiceCatalog(SERVICE_CATEGORIES_SOURCE);
+
 /** Apply industry-category pricing labels to catalog (once-off service prices stay fixed). */
 export function withCatalogPricing(
   categories: CatalogCategory[],
@@ -467,3 +456,6 @@ export function withCatalogPricing(
     }),
   }));
 }
+
+/** Platform modules — labels come from the SaaS price book, not leftover €99 copy. */
+export const PRODUCT_CATEGORIES = withCatalogPricing(PRODUCT_CATEGORIES_SOURCE);

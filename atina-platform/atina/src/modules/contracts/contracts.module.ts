@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../api/middleware/auth.middleware';
 import { authSessionLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
@@ -38,32 +38,34 @@ export class ContractsModule implements IModule {
 
   async initialize(): Promise<void> {
     const auth = [authenticate, authSessionLimiter];
+    const read = [...auth, requirePermission('documents.read')];
+    const write = [...auth, requirePermission('documents.write')];
     this.router.get(
       '/stats/overview',
-      ...auth,
+      ...read,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.statsOverview
     );
     this.router.get(
       '/',
-      ...auth,
+      ...read,
       validateQuery(ContractsListQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.list
     );
     this.router.get(
       '/:id',
-      ...auth,
+      ...read,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getById
     );
-    this.router.post('/', ...auth, validateQuery(StrictEmptyQueryDto), validateBody(CreateContractDto), this.controller.create);
+    this.router.post('/', ...write, validateQuery(StrictEmptyQueryDto), validateBody(CreateContractDto), this.controller.create);
     this.router.patch(
       '/:id',
-      ...auth,
+      ...write,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(UpdateContractDto),
@@ -71,7 +73,7 @@ export class ContractsModule implements IModule {
     );
     this.router.post(
       '/:id/sign',
-      ...auth,
+      ...write,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(SignContractDto),
@@ -79,7 +81,7 @@ export class ContractsModule implements IModule {
     );
     this.router.post(
       '/:id/send',
-      ...auth,
+      ...write,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -87,7 +89,7 @@ export class ContractsModule implements IModule {
     );
     this.router.post(
       '/:id/cancel',
-      ...auth,
+      ...write,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -95,7 +97,7 @@ export class ContractsModule implements IModule {
     );
     this.router.delete(
       '/:id',
-      ...auth,
+      ...write,
       validateParams(ContractIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),

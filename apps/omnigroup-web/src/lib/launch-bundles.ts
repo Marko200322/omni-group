@@ -1,67 +1,49 @@
 /**
- * Launch bundles — fixed promo prices for faster first-client acquisition.
+ * Public launch bundles — the same three catalog SKUs as Pricing / Products / Services.
+ * Prices always come from getPublicListPriceEur. No second price book.
  */
-import { getPackageAnchorEur } from './package-delivery-spec';
+import { getClientOffer, getPublicListPriceEur, type ClientOffer } from './client-offers';
+
+export const CATALOG_BUNDLE_IDS = [
+  'bundle-portal-presence',
+  'bundle-sales-launch',
+  'bundle-ops-clarity',
+] as const;
 
 export type LaunchBundleSpec = {
-  id: string;
-  title: string;
-  titleSr: string;
-  deliverableIds: string[];
-  bundleEur: number;
-  description: string;
-  descriptionSr: string;
+  id: (typeof CATALOG_BUNDLE_IDS)[number];
   contactTopic: string;
 };
 
-export const LAUNCH_BUNDLE_SPECS: LaunchBundleSpec[] = [
-  {
-    id: 'launch-trio',
-    title: 'Launch trio',
-    titleSr: 'Launch trio paket',
-    deliverableIds: ['setup-quick', 'audit', 'landing'],
-    bundleEur: 1599,
-    description: 'Portal setup + technical audit + live landing — fastest path to first clients.',
-    descriptionSr: 'Portal setup + tehnički audit + live landing — najbrži put do prvih klijenata.',
-    contactTopic: 'launch-trio-bundle',
-  },
-  {
-    id: 'site-crm',
-    title: 'Site + CRM',
-    titleSr: 'Sajt + CRM',
-    deliverableIds: ['website-business', 'setup-full'],
-    bundleEur: 2790,
-    description: '5-page live site plus CRM seed, automation modules, and 30-day support window.',
-    descriptionSr: '5+ strana live sajt plus CRM seed, automation moduli i 30-dnevni support prozor.',
-    contactTopic: 'site-crm-bundle',
-  },
-  {
-    id: 'niche-launch',
-    title: 'Niche launch',
-    titleSr: 'Niche launch',
-    deliverableIds: ['vertical-package', 'support-priority'],
-    bundleEur: 279,
-    description: 'Industry CRM vertical + priority support retainer (monthly).',
-    descriptionSr: 'Industrijski CRM vertikal + priority support retainer (mesečno).',
-    contactTopic: 'niche-launch-bundle',
-  },
-];
+export const LAUNCH_BUNDLE_SPECS: LaunchBundleSpec[] = CATALOG_BUNDLE_IDS.map((id) => ({
+  id,
+  contactTopic: id,
+}));
 
 export type ResolvedLaunchBundle = LaunchBundleSpec & {
+  offer: ClientOffer;
+  title: string;
+  description: string;
+  bundleEur: number;
   listEur: number;
   savingsEur: number;
 };
 
 export function resolveLaunchBundles(): ResolvedLaunchBundle[] {
-  return LAUNCH_BUNDLE_SPECS.map((bundle) => {
-    const listEur = bundle.deliverableIds.reduce(
-      (sum, id) => sum + getPackageAnchorEur(id),
-      0,
-    );
-    return {
-      ...bundle,
+  const rows: ResolvedLaunchBundle[] = [];
+  for (const spec of LAUNCH_BUNDLE_SPECS) {
+    const offer = getClientOffer(spec.id);
+    if (!offer) continue;
+    const listEur = getPublicListPriceEur(spec.id);
+    rows.push({
+      ...spec,
+      offer,
+      title: offer.name,
+      description: offer.summary,
+      bundleEur: listEur,
       listEur,
-      savingsEur: Math.max(0, listEur - bundle.bundleEur),
-    };
-  });
+      savingsEur: 0,
+    });
+  }
+  return rows;
 }

@@ -10,7 +10,9 @@ param(
   [string]$WebBase = 'https://omnigrouptech.com',
   [string]$DeliverableId = 'audit',
   [string]$IndustryCategory = 'marketing',
-  [int]$FulfillmentWaitSec = 180
+  [string]$ClientEmail = '',
+  [int]$FulfillmentWaitSec = 180,
+  [int]$WaitInvoiceInboxSec = 90
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,7 +73,14 @@ Write-Host '== E2E billing PROD ==' -ForegroundColor Cyan
 Write-Host "  web=$web deliverable=$DeliverableId"
 
 $stamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-$userEmail = "e2e-prod-$stamp@test.local"
+if ([string]::IsNullOrWhiteSpace($ClientEmail)) {
+  $smtpUser = ''
+  try {
+    $smtpUser = "$($cfg.smtp.user)".Trim()
+  } catch {}
+  $ClientEmail = if ($smtpUser -match '@') { $smtpUser } else { "e2e-prod-$stamp@test.local" }
+}
+$userEmail = $ClientEmail.Trim()
 $userPassword = 'E2eProd1!Aa'
 $userName = "E2E Prod $stamp"
 
@@ -152,5 +161,10 @@ Write-Host "  fulfillment OK status=$finalStatus artifacts=$artifactCount" -Fore
   fulfillment   = $finalStatus
   artifacts     = $artifactCount
 } | ConvertTo-Json -Compress
+
+if ($WaitInvoiceInboxSec -gt 0) {
+  Write-Host "  pausing ${WaitInvoiceInboxSec}s before inbox check (invoice -> $userEmail)..." -ForegroundColor DarkGray
+  Start-Sleep -Seconds $WaitInvoiceInboxSec
+}
 
 Write-Host 'e2e-billing-prod: PASS' -ForegroundColor Green

@@ -257,6 +257,34 @@ describe('auth.middleware', () => {
     expect(req.user).toMatchObject({ userId: 'uid', role: 'admin' });
   });
 
+  it('authenticate rejects a read-only API key on mutating requests', async () => {
+    mockQuery.mockResolvedValueOnce({
+      rows: [{
+        user_id: 'uid',
+        email: 'key@test.com',
+        role: 'user',
+        permissions: ['read'],
+        is_active: true,
+        expires_at: null,
+      }],
+      rowCount: 1,
+    } as any);
+    req.method = 'POST';
+    req.headers!['x-api-key'] = 'read-only-key';
+
+    const error = await new Promise<unknown>((resolve) => {
+      authenticate(
+        req as Request,
+        res as Response,
+        ((err?: unknown) => resolve(err)) as NextFunction,
+      );
+    });
+
+    expect(error).toBeInstanceOf(AuthorizationError);
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(req.user).toBeUndefined();
+  });
+
   it('authenticate uses first x-api-key when header is duplicated (array)', async () => {
     (jwt.verify as jest.Mock).mockReset();
     mockQuery

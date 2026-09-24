@@ -321,6 +321,15 @@ function Test-FactoryPhaseEnvFiles(
   if ($warmupOverride -in @('true', '1', 'yes')) {
     $expected.OUTREACH_DOMAIN_WARMUP_COMPLETE = 'true'
   }
+  $sendOverride = ''
+  if ($null -ne $ConfigObject) {
+    $sendOverride = "$($ConfigObject.outreachSendEnabled)".Trim().ToLower()
+  } elseif ($DeployConfig.outreachSendEnabled) {
+    $sendOverride = "$($DeployConfig.outreachSendEnabled)".Trim().ToLower()
+  }
+  if ($sendOverride -in @('true', '1', 'yes')) {
+    $expected.OUTREACH_SEND_ENABLED = 'true'
+  }
   if ($phase -eq 'M6' -and $DeployConfig.stripeSecretKey) {
     $expected.PAYMENTS_MODE = 'live'
     $expected.ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION = 'true'

@@ -80,20 +80,6 @@ export function buildAdminMetrics(
         }
       : undefined;
 
-  const sparkRevenueLive =
-    overview?.payments?.totalRevenue != null
-      ? (() => {
-          const k = Math.max(1, Math.round(overview.payments!.totalRevenue! / 1000));
-          return [
-            { label: '−4w', value: Math.max(0, k - 3) },
-            { label: '−3w', value: Math.max(0, k - 2) },
-            { label: '−2w', value: Math.max(0, k - 1) },
-            { label: '−1w', value: k },
-            { label: 'Now', value: k },
-          ];
-        })()
-      : [];
-
   return {
     activeUsers:
       overview?.users?.active != null ? overview.users.active.toLocaleString('en-US') : '—',
@@ -104,7 +90,9 @@ export function buildAdminMetrics(
     workflowSuccess: successRate,
     openAlerts: alerts == null ? '—' : String(alerts),
     sparkWorkflow,
-    sparkRevenue: sparkRevenueLive,
+    // A total is not a time series. Keep the chart empty until the API returns
+    // dated revenue buckets instead of fabricating historical points.
+    sparkRevenue: [],
     trends,
     recentEvents: overview
       ? [
@@ -155,8 +143,8 @@ export function buildClientMetrics(
   const planName =
     live?.me?.planSlug?.toUpperCase() ??
     live?.me?.name ??
-    primaryPlan?.name ??
-    (snapshot.plansCount > 0 ? 'Pro' : 'Starter');
+    (authenticated ? primaryPlan?.name : 'Demo') ??
+    'No active plan';
 
   const hasLive = Boolean(live?.me || live?.tasks.length);
   const wf = live?.workflowStats;
@@ -165,17 +153,7 @@ export function buildClientMetrics(
       ? String(wf.total)
       : hasLive
         ? String(live!.tasksTotal)
-        : authenticated
-          ? '0'
-          : snapshot.source === 'live'
-            ? '24'
-            : '18';
-
-  const placeholderTasks = [
-    { id: '1', title: 'Lead scrape — EU retail', status: 'running' as const, progress: 67 },
-    { id: '2', title: 'Email warmup sequence', status: 'queued' as const, progress: 0 },
-    { id: '3', title: 'CRM sync nightly', status: 'done' as const, progress: 100 },
-  ];
+        : '0';
 
   const tasks =
     live && live.tasks.length > 0
@@ -185,15 +163,7 @@ export function buildClientMetrics(
           status: mapTaskStatus(t.status),
           progress: taskProgress(t.status),
         }))
-      : authenticated
-        ? []
-        : placeholderTasks;
-
-  const placeholderNotifications = [
-    { id: 'n1', title: 'Workflow completed successfully', time: '12 min', read: false },
-    { id: 'n2', title: 'New integration available: Forge', time: '3 h', read: true },
-    { id: 'n3', title: 'Usage at 72% of monthly quota', time: '1 d', read: true },
-  ];
+      : [];
 
   const notifications =
     live && live.notifications.length > 0
@@ -203,43 +173,22 @@ export function buildClientMetrics(
           time: formatRelativeTime(n.createdAt),
           read: n.isRead,
         }))
-      : authenticated
-        ? []
-        : placeholderNotifications;
+      : [];
 
   return {
-    projectsActive: hasLive
-      ? String(Math.max(1, live!.tasksTotal))
-      : authenticated
-        ? '0'
-        : snapshot.source === 'live'
-          ? '6'
-          : '4',
+    projectsActive: hasLive ? String(live!.tasksTotal) : '0',
     automationsRun: automations,
     creditsUsed:
       wf && wf.total > 0
         ? `${Math.min(99, Math.round((wf.completed / wf.total) * 100))}%`
-        : authenticated
-          ? '—'
-          : '72%',
+        : '—',
     planName: String(planName),
-    sparkUsage: authenticated
-      ? [
-          { label: 'P1', value: wf?.completed ?? 0 },
-          { label: 'P2', value: wf?.running ?? 0 },
-          { label: 'P3', value: wf?.failed ?? 0 },
-          { label: 'P4', value: live?.tasksTotal ?? 0 },
-          { label: 'P5', value: 0 },
-          { label: 'P6', value: 0 },
-        ]
-      : [
-          { label: 'P1', value: 12 },
-          { label: 'P2', value: 18 },
-          { label: 'P3', value: 24 },
-          { label: 'P4', value: 28 },
-          { label: 'P5', value: 32 },
-          { label: 'P6', value: 36 },
-        ],
+    sparkUsage: [
+      { label: 'Completed', value: wf?.completed ?? 0 },
+      { label: 'Running', value: wf?.running ?? 0 },
+      { label: 'Failed', value: wf?.failed ?? 0 },
+      { label: 'Tasks', value: live?.tasksTotal ?? 0 },
+    ],
     tasks,
     notifications,
   };

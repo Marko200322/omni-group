@@ -2,7 +2,7 @@
   "name": "Omni Group Tech Admin",
   "short_name": "OGT Admin",
   "description": "Mobile operator console — payments, factory, autonomy.",
-  "start_url": "/admin/mobile",
+  "start_url": "/admin",
   "display": "standalone",
   "background_color": "#0a0a12",
   "theme_color": "#7c3aed",

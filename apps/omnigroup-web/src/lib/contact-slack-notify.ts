@@ -9,6 +9,8 @@ export type ContactSlackInput = {
   category?: string;
   vertical?: string;
   topic?: string;
+  budget?: string;
+  timeline?: string;
 };
 
 export async function notifyContactSlack(input: ContactSlackInput): Promise<{ ok: boolean; skipped?: boolean }> {
@@ -24,6 +26,8 @@ export async function notifyContactSlack(input: ContactSlackInput): Promise<{ ok
     input.topic ? `*Topic:* ${input.topic}` : null,
     input.category ? `*Category:* ${input.category}` : null,
     input.vertical ? `*Vertical:* ${input.vertical}` : null,
+    input.budget ? `*Budget:* ${input.budget}` : null,
+    input.timeline ? `*Timeline:* ${input.timeline}` : null,
     '',
     input.message.slice(0, 1500),
   ].filter(Boolean);

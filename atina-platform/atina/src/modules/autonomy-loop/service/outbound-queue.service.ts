@@ -258,7 +258,7 @@ export class OutboundQueueService {
         ? config.outreach.fallbackNotifyEmail!.trim()
         : msg.lead_email?.trim() || '';
       if (!to) {
-        await this.repo.updateStatus(msg.id, 'failed', {
+        await this.repo.updateStatus(msg.id, 'dead_letter', {
           metadata: { error: 'no_recipient' },
         });
         failed += 1;
@@ -266,7 +266,7 @@ export class OutboundQueueService {
       }
       // Skip free-mail / gov / test — commercial outbound only.
       if (!devFallback && !isCompanyEmail(to)) {
-        await this.repo.updateStatus(msg.id, 'failed', {
+        await this.repo.updateStatus(msg.id, 'dead_letter', {
           metadata: { error: 'blocked_recipient_policy', to },
         });
         failed += 1;
@@ -299,9 +299,10 @@ export class OutboundQueueService {
         });
         sent += 1;
       } catch (err) {
-        await this.repo.updateStatus(msg.id, 'failed', {
-          metadata: { error: err instanceof Error ? err.message : String(err) },
-        });
+        await this.repo.recordTransientFailure(
+          msg.id,
+          err instanceof Error ? err.message : String(err),
+        );
         failed += 1;
       }
     }

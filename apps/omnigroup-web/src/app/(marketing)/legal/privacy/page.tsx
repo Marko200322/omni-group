@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-white">2. Why we use data</h2>
             <p>
               To respond to inquiries, deliver purchased packages, send transactional email (invoices, status), secure
-              the platform, and improve service quality.
+              the platform, and measure marketing performance when analytics or ad pixels are enabled.
             </p>
           </section>
           <section>

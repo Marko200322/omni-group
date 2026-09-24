@@ -31,7 +31,7 @@ if ($homePage.StatusCode -ne 200) { throw "homepage HTTP $($homePage.StatusCode)
 Write-Host "  OK len=$($homePage.Content.Length)" -ForegroundColor Green
 
 Write-Host "== Web contact stub ==" -ForegroundColor Cyan
-$cBody = '{"name":"Smoke","email":"smoke@example.com","message":"web-only integration test"}'
+$cBody = '{"name":"Smoke","email":"smoke@example.com","message":"web-only integration test","consent":true}'
 $contact = Invoke-WebRequest -Uri "$web/api/contact" -Method POST -ContentType 'application/json' -Body $cBody -UseBasicParsing
 $cj = $contact.Content | ConvertFrom-Json
 if (-not $cj.ok) { throw "contact failed: $($contact.Content)" }

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, X } from 'lucide-react';
-import type { ClientOffer } from '@/lib/client-offers';
+import { publicOfferWhen, type ClientOffer } from '@/lib/client-offers';
+import { formatEur } from '@/lib/category-pricing';
 
 function badgeClass(tone: ClientOffer['availability']['badgeTone']): string {
   switch (tone) {
@@ -32,14 +33,14 @@ type Props = {
   offer: ClientOffer;
   /** Highlight / scroll target id */
   id?: string;
-  /** Prefer pricing page quote price when provided */
-  priceOverrideEur?: number;
   compact?: boolean;
 };
 
-export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
+export function OfferCard({ offer, id, compact }: Props) {
   const [open, setOpen] = useState(false);
-  const ready = offer.availability.checkoutAllowed;
+  const ready = offer.saleStatus === 'READY_TO_BUY';
+  const quoteOnly = offer.saleStatus === 'REQUEST_QUOTE';
+  const when = publicOfferWhen(offer.when, offer.saleStatus, offer.billing);
   const priceSuffix =
     offer.billing === 'monthly' ? '/ mo' : offer.billing === 'yearly' ? '/ yr' : ' once';
 
@@ -68,12 +69,17 @@ export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
       <h3 className="mt-2 font-display text-xl font-semibold text-white">{offer.name}</h3>
       <p className="mt-1 text-sm font-medium text-emerald-200/90">{offer.promise}</p>
       <p className="mt-3 text-sm leading-relaxed text-slate-400">{offer.summary}</p>
-      {!ready && (
+      {quoteOnly ? (
+        <p className="mt-3 rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm text-violet-100">
+          Sold via quote. Tell us the scope and we send a written proposal — there is no self-serve Buy now for this
+          package.
+        </p>
+      ) : !ready ? (
         <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
           Currently under construction. This package is not for sale yet — contact us if you want early access and we
           will notify you when checkout opens.
         </p>
-      )}
+      ) : null}
 
       {!compact && (
         <div className="mt-4 space-y-2">
@@ -89,12 +95,10 @@ export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
         </div>
       )}
 
-      <p className="mt-4 text-xs text-slate-500">{offer.when}</p>
+      <p className="mt-4 text-xs text-slate-500">{when}</p>
 
       <p className="mt-4">
-        <span className="text-3xl font-bold text-gradient">
-          {priceOverrideEur != null ? `€${priceOverrideEur.toLocaleString('en-US')}` : `€${offer.priceEur.toLocaleString('en-US')}`}
-        </span>
+        <span className="text-3xl font-bold text-gradient">{formatEur(offer.priceEur)}</span>
         <span className="text-sm text-slate-500">{priceSuffix}</span>
       </p>
 
@@ -143,7 +147,7 @@ export function OfferCard({ offer, id, priceOverrideEur, compact }: Props) {
           </Link>
         ) : (
           <Link href={offer.contactHref} className="btn-glass block text-center text-sm">
-            Notify me when ready
+            {quoteOnly ? 'Request a quote' : 'Notify me when ready'}
           </Link>
         )}
         {ready && (

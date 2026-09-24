@@ -1,6 +1,12 @@
 import { query } from '../../../database/connection';
 
-export type OutboundStatus = 'draft' | 'queued' | 'sent' | 'failed' | 'blocked_warmup';
+export type OutboundStatus =
+  | 'draft'
+  | 'queued'
+  | 'sent'
+  | 'failed'
+  | 'dead_letter'
+  | 'blocked_warmup';
 
 export type OutboundMessageRow = {
   id: string;
@@ -18,6 +24,10 @@ export type OutboundMessageRow = {
   metadata: Record<string, unknown>;
   scheduled_at: Date | null;
   sent_at: Date | null;
+  attempt_count: number;
+  max_attempts: number;
+  next_attempt_at: Date | null;
+  last_error: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -83,6 +93,7 @@ export class OutboundQueueRepository {
     return query<OutboundMessageRow>(
       `SELECT * FROM outbound_messages
        WHERE status = 'queued'
+         AND (next_attempt_at IS NULL OR next_attempt_at <= NOW())
        ORDER BY created_at ASC
        LIMIT $1`,
       [limit]
@@ -118,6 +129,33 @@ export class OutboundQueueRepository {
        WHERE id = $1
        RETURNING *`,
       [id, status, patch?.sentAt ?? null]
+    );
+  }
+
+  recordTransientFailure(id: string, error: string) {
+    return query<OutboundMessageRow>(
+      `UPDATE outbound_messages
+       SET attempt_count = attempt_count + 1,
+           status = CASE
+             WHEN attempt_count + 1 >= max_attempts THEN 'dead_letter'
+             ELSE 'queued'
+           END,
+           next_attempt_at = CASE
+             WHEN attempt_count + 1 >= max_attempts THEN NULL
+             ELSE NOW() + LEAST(
+               POWER(2, attempt_count + 1)::int * INTERVAL '5 minutes',
+               INTERVAL '6 hours'
+             )
+           END,
+           last_error = $2,
+           metadata = metadata || jsonb_build_object(
+             'last_error', $2,
+             'last_failed_at', NOW()
+           ),
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [id, error.slice(0, 2000)],
     );
   }
 

@@ -10,10 +10,10 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 
 const links = [
   { href: '/', label: 'Home' },
-  { href: '/products', label: 'Packages' },
-  { href: '/solutions', label: 'Industries' },
-  { href: '/services', label: 'Services' },
+  { href: '/products', label: 'Platform' },
+  { href: '/solutions', label: 'Solutions' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/services', label: 'Expert services' },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -76,8 +76,8 @@ export function Navbar() {
             </Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={tapScale}>
-            <Link href="/contact" className="btn-primary text-sm">
-              Start a project
+            <Link href="/register" className="btn-primary text-sm">
+              Create workspace
             </Link>
           </motion.div>
         </div>
@@ -130,8 +130,8 @@ export function Navbar() {
                 <Link href="/login" className="btn-glass block text-center" onClick={() => setOpen(false)}>
                   Client portal
                 </Link>
-                <Link href="/contact" className="btn-primary block text-center" onClick={() => setOpen(false)}>
-                  Start a project
+                <Link href="/register" className="btn-primary block text-center" onClick={() => setOpen(false)}>
+                  Create workspace
                 </Link>
               </motion.div>
             </motion.div>

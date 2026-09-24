@@ -30,7 +30,7 @@ export default function BillingSuccessPage() {
           {sessionId ? `Session: ${sessionId.slice(0, 24)}…` : `Payment: ${paymentId}`}
         </p>
       )}
-      <Link href="/dashboard#billing" className="btn-primary mt-8 inline-block text-sm">
+      <Link href="/dashboard/billing" className="btn-primary mt-8 inline-block text-sm">
         Back to billing
       </Link>
     </div>

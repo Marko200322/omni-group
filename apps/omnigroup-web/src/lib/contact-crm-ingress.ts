@@ -12,6 +12,8 @@ export type ContactLeadInput = {
   category?: string;
   vertical?: string;
   topic?: string;
+  budget?: string;
+  timeline?: string;
 };
 
 export async function pushContactToCrm(
@@ -32,12 +34,16 @@ export async function pushContactToCrm(
   if (input.topic) tags.push(`topic:${input.topic}`);
   if (input.category) tags.push(`category:${input.category}`);
   if (input.vertical) tags.push(`vertical:${input.vertical}`);
+  if (input.budget) tags.push(`budget:${input.budget}`);
+  if (input.timeline) tags.push(`timeline:${input.timeline}`);
 
   const noteLines = [
     ...(input.service ? [`Service interest: ${input.service}`] : []),
     ...(input.topic ? [`Topic: ${input.topic}`] : []),
     ...(input.category ? [`Industry category: ${input.category}`] : []),
     ...(input.vertical ? [`Vertical niche: ${input.vertical}`] : []),
+    ...(input.budget ? [`Budget: ${input.budget}`] : []),
+    ...(input.timeline ? [`Timeline: ${input.timeline}`] : []),
     input.message,
   ];
 
@@ -69,6 +75,8 @@ export async function pushContactToCrm(
           ...(input.topic ? { topic: input.topic } : {}),
           ...(input.category ? { category: input.category } : {}),
           ...(input.vertical ? { vertical: input.vertical } : {}),
+          ...(input.budget ? { budget: input.budget } : {}),
+          ...(input.timeline ? { timeline: input.timeline } : {}),
         },
       }),
       cache: 'no-store',

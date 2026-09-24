@@ -8,6 +8,7 @@ import 'express-async-errors';
 
 import { moduleRegistry } from './ModuleRegistry';
 import { testConnection } from '../database/connection';
+import { testRedisConnection } from '../queue/redis-health';
 import { config } from '../config';
 import logger from '../utils/logger';
 import { firstCommaSegment, headerFirst } from '../utils/http-headers';
@@ -279,6 +280,12 @@ export class CoreEngine {
       } catch {
         dbHealthy = false;
       }
+      let redisHealthy = true;
+      try {
+        redisHealthy = await testRedisConnection();
+      } catch {
+        redisHealthy = false;
+      }
       let forge = {
         vaultPath: null as string | null,
         vaultSignal: 'unavailable' as 'available' | 'unavailable',
@@ -299,9 +306,11 @@ export class CoreEngine {
         // Keep /health resilient even if forge diagnostics fail unexpectedly.
       }
 
-      res.status(dbHealthy ? 200 : 503).json({
-        status: dbHealthy ? 'ok' : 'degraded',
+      const dependenciesHealthy = dbHealthy && redisHealthy;
+      res.status(dependenciesHealthy ? 200 : 503).json({
+        status: dependenciesHealthy ? 'ok' : 'degraded',
         db: dbHealthy ? 'up' : 'down',
+        redis: redisHealthy ? 'up' : 'down',
         version: '1.0.0',
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
@@ -323,6 +332,12 @@ export class CoreEngine {
         } catch {
           dbUp = 0;
         }
+        let redisUp = 1;
+        try {
+          redisUp = (await testRedisConnection()) ? 1 : 0;
+        } catch {
+          redisUp = 0;
+        }
         const mem = process.memoryUsage();
         const lines = [
           '# HELP atina_up 1 if the process is serving requests',
@@ -331,6 +346,9 @@ export class CoreEngine {
           '# HELP atina_db_up 1 if database ping succeeds',
           '# TYPE atina_db_up gauge',
           `atina_db_up ${dbUp}`,
+          '# HELP atina_redis_up 1 if Redis ping succeeds',
+          '# TYPE atina_redis_up gauge',
+          `atina_redis_up ${redisUp}`,
           '# HELP process_uptime_seconds Process uptime in seconds',
           '# TYPE process_uptime_seconds gauge',
           `process_uptime_seconds ${process.uptime()}`,

@@ -39,11 +39,11 @@ function LoginForm() {
     ? `/register?next=${encodeURIComponent(nextPath)}`
     : '/register';
   const demoEnabled = process.env.NODE_ENV !== 'production';
-  const [status, setStatus] = useState<'idle' | 'loading' | 'err'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'demo' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
 
   async function startDemo(variant: 'client' | 'admin') {
-    setStatus('loading');
+    setStatus('demo');
     setErrMsg('');
     try {
       const res = await fetch('/api/auth/demo', {
@@ -119,7 +119,7 @@ function LoginForm() {
             name="email"
             type="email"
             required
-            disabled={status === 'loading'}
+            disabled={status === 'loading' || status === 'demo'}
             placeholder="you@company.com"
             className="w-full rounded-xl border border-white/10 bg-black/40 py-3 pl-10 pr-4 text-white outline-none transition-shadow focus:border-violet-500/50 focus:shadow-[0_0_24px_rgba(139,92,246,0.2)]"
           />
@@ -133,7 +133,7 @@ function LoginForm() {
             name="password"
             type="password"
             required
-            disabled={status === 'loading'}
+            disabled={status === 'loading' || status === 'demo'}
             placeholder="••••••••"
             className="w-full rounded-xl border border-white/10 bg-black/40 py-3 pl-10 pr-4 text-white outline-none transition-shadow focus:border-violet-500/50 focus:shadow-[0_0_24px_rgba(139,92,246,0.2)]"
           />
@@ -141,7 +141,7 @@ function LoginForm() {
       </label>
       <motion.button
         type="submit"
-        disabled={status === 'loading'}
+        disabled={status === 'loading' || status === 'demo'}
         className="btn-primary w-full disabled:opacity-60"
         whileHover={{ scale: 1.03, y: -2 }}
         whileTap={tapScale}
@@ -173,13 +173,13 @@ function LoginForm() {
       {demoEnabled && (
         <motion.button
           type="button"
-          disabled={status === 'loading'}
+          disabled={status === 'loading' || status === 'demo'}
           className="btn-glass w-full text-center text-sm disabled:opacity-60"
           whileHover={{ scale: 1.02 }}
           whileTap={tapScale}
           onClick={() => startDemo('client')}
         >
-          Preview demo portal
+          {status === 'demo' ? 'Opening preview…' : 'Preview demo portal'}
         </motion.button>
       )}
     </motion.form>
@@ -222,7 +222,7 @@ export default function LoginPage() {
               Client <span className="text-gradient animate-gradient-text">portal</span>
             </h1>
             <p className="mt-4 max-w-md text-slate-400">
-              Track orders, projects, and support in one place. Bank payments, video consultations, and delivery
+              Track orders, projects, and support in one place. Card payments, video consultations, and delivery
               status — all at your fingertips.
             </p>
           </motion.div>

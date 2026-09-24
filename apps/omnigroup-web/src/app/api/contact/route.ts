@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { notifyContactSlack } from '@/lib/contact-slack-notify';
 import { notifyContactTelegram } from '@/lib/contact-telegram-notify';
 import { pushContactToCrm } from '@/lib/contact-crm-ingress';
+import {
+  contactBudgetLabel,
+  contactIntakeLines,
+  contactTimelineLabel,
+  parseContactBudget,
+  parseContactConsent,
+  parseContactTimeline,
+} from '@/lib/contact-intake';
 
 const MESSAGE_MAX_LEN = 5000;
 
@@ -24,8 +32,19 @@ export async function POST(req: Request) {
   const category = slugParam(body.category);
   const vertical = slugParam(body.vertical);
   const topic = slugParam(body.topic);
+  const budget = parseContactBudget(body.budget);
+  const timeline = parseContactTimeline(body.timeline);
   if (!email || !name) {
     return NextResponse.json({ ok: false, error: 'name_and_email_required' }, { status: 400 });
+  }
+  if (!parseContactConsent(body.consent)) {
+    return NextResponse.json({ ok: false, error: 'consent_required' }, { status: 400 });
+  }
+  if (body.budget !== undefined && body.budget !== null && body.budget !== '' && !budget) {
+    return NextResponse.json({ ok: false, error: 'budget_invalid' }, { status: 400 });
+  }
+  if (body.timeline !== undefined && body.timeline !== null && body.timeline !== '' && !timeline) {
+    return NextResponse.json({ ok: false, error: 'timeline_invalid' }, { status: 400 });
   }
 
   if (body.message !== undefined && body.message !== null) {
@@ -52,6 +71,8 @@ export async function POST(req: Request) {
     category,
     vertical,
     topic,
+    budget: budget ? contactBudgetLabel(budget) : undefined,
+    timeline: timeline ? contactTimelineLabel(timeline) : undefined,
   });
 
   const slack = await notifyContactSlack({
@@ -63,6 +84,8 @@ export async function POST(req: Request) {
     category,
     vertical,
     topic,
+    budget: budget ? contactBudgetLabel(budget) : undefined,
+    timeline: timeline ? contactTimelineLabel(timeline) : undefined,
   });
 
   const telegram = await notifyContactTelegram({
@@ -74,6 +97,8 @@ export async function POST(req: Request) {
     category,
     vertical,
     topic,
+    budget: budget ? contactBudgetLabel(budget) : undefined,
+    timeline: timeline ? contactTimelineLabel(timeline) : undefined,
   });
 
   const apiKey = process.env.RESEND_API_KEY?.trim();
@@ -112,6 +137,7 @@ export async function POST(req: Request) {
   const topicLine = topic ? `Topic: ${topic}` : '';
   const categoryLine = category ? `Category: ${category}` : '';
   const verticalLine = vertical ? `Vertical: ${vertical}` : '';
+  const intakeLines = contactIntakeLines({ budget, timeline });
   const text = [
     `Name: ${name}`,
     `Email: ${email}`,
@@ -120,6 +146,7 @@ export async function POST(req: Request) {
     topicLine,
     categoryLine,
     verticalLine,
+    ...intakeLines,
     '',
     'Message:',
     messageText,
@@ -133,7 +160,13 @@ export async function POST(req: Request) {
   const topicHtml = topic ? `<p><strong>Topic:</strong> ${escapeHtml(topic)}</p>` : '';
   const categoryHtml = category ? `<p><strong>Category:</strong> ${escapeHtml(category)}</p>` : '';
   const verticalHtml = vertical ? `<p><strong>Vertical:</strong> ${escapeHtml(vertical)}</p>` : '';
-  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${topicHtml}${categoryHtml}${verticalHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
+  const intakeHtml = intakeLines
+    .map((line) => {
+      const [label, value] = line.split(': ');
+      return `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value ?? '')}</p>`;
+    })
+    .join('');
+  const html = `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${companyHtml}${serviceHtml}${topicHtml}${categoryHtml}${verticalHtml}${intakeHtml}<p><strong>Message:</strong></p><pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(messageText)}</pre>`;
 
   let res: Response;
   try {

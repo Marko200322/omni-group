@@ -1,6 +1,7 @@
 import Bull from 'bull';
 import logger from '../utils/logger';
 import { executeScrapeUrl } from '../modules/tasks/task-executors';
+import { AutomationScheduledTaskProcessor } from '../modules/automation/service/automation-scheduled-task.processor';
 import { getQueue } from './queue';
 
 export function registerEmailQueueProcessor(queue: Bull.Queue): void {
@@ -23,12 +24,18 @@ export function registerScraperQueueProcessor(queue: Bull.Queue): void {
   });
 }
 
-/** Registers Bull processors for emails + scraper queues (best-effort if Redis up). */
+export function registerAutomationQueueProcessor(queue: Bull.Queue): void {
+  const processor = new AutomationScheduledTaskProcessor();
+  queue.process(async (job) => processor.process(job.data as Record<string, unknown>));
+}
+
+/** Registers Bull processors for emails, scraper, and scheduled automation jobs. */
 export function registerAuxiliaryQueueWorkers(): void {
   try {
     registerEmailQueueProcessor(getQueue('emails'));
     registerScraperQueueProcessor(getQueue('scraper'));
-    logger.info('Auxiliary queue workers registered (emails, scraper)');
+    registerAutomationQueueProcessor(getQueue('automation'));
+    logger.info('Auxiliary queue workers registered (emails, scraper, automation)');
   } catch (err) {
     logger.warn('Auxiliary queue workers could not start', {
       error: err instanceof Error ? err.message : String(err),

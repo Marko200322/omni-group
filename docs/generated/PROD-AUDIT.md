@@ -1,6 +1,6 @@
 # PROD-AUDIT (auto-generated)
 
-**Generated:** 2026-09-22 12:57  
+**Generated:** 2026-09-23 06:44  
 **Command:** `.\scripts\audit-prod-autonomous.ps1`  
 **Summary:** 13 PASS Â· 0 FAIL Â· 2 TI/DEFERRED
 
@@ -21,7 +21,7 @@ Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 | P3-A04 | Outbound send | **PASS** | send ON + warmup complete (marketing go-live) |
 | P3-E06 | catalog-quality BFF | **PASS** | Admin endpoint OK |
 | CONTACT | POST /api/contact | **PASS** | message=sent_via_resend |
-| P0-06 | Mystery shopper PDF inbox | **TI** | No invoice PDF in inbox (7d) â€” run mystery shopper E2E |
+| P0-06 | Mystery shopper PDF inbox | **PASS** | Gmail IMAP: 1 invoice PDF(s) â€ |
 | P0-07 | Legal counsel sign-off | **TI** | Formalni advokat - stranice u kodu |
 | P2 | Firma + Stripe LIVE + PayPal/Wise/Kriptoman | **DEFERRED** | Namerno na kraju (P2) |
 

@@ -7,10 +7,11 @@ import {
   DELIVERABLE_CATEGORY_LABELS,
   type DeliverableDefinition,
 } from './deliverable-catalog';
-import { calculateDeliverableQuote, formatBillingLabel, type PaymentProviderId } from './dynamic-pricing';
+import { formatBillingLabel } from './dynamic-pricing';
 import { formatEur } from './category-pricing';
 import { buildPricingHref } from './checkout-navigation';
 import { getPackageAvailability, getPackageDeliverySpec } from './package-delivery-spec';
+import { getPublicListPriceEur } from './client-offers';
 
 const CATEGORY_ICONS: Record<DeliverableDefinition['category'], CatalogCategory['icon']> = {
   implementation: Wrench,
@@ -30,13 +31,8 @@ const CATEGORY_SUBTITLES: Record<DeliverableDefinition['category'], string> = {
 
 export function buildDeliverableCatalogCategories(
   industryCategory?: string | null,
-  paymentProvider: PaymentProviderId = 'manual',
-  marketIntensity = 55,
   verticalSlug?: string | null,
 ): CatalogCategory[] {
-  const tamEstimateUsd = 50_000 + marketIntensity * 1200;
-  const competitionScore = Math.min(100, 30 + Math.round(marketIntensity / 2));
-
   const byCategory = new Map<DeliverableDefinition['category'], DeliverableDefinition[]>();
   for (const d of DELIVERABLE_CATALOG) {
     const list = byCategory.get(d.category) ?? [];
@@ -52,24 +48,16 @@ export function buildDeliverableCatalogCategories(
       subtitle: CATEGORY_SUBTITLES[cat],
       icon: CATEGORY_ICONS[cat],
       items: (byCategory.get(cat) ?? []).map((d) => {
-        const quote = calculateDeliverableQuote({
-          deliverableId: d.id,
-          industryCategory,
-          verticalSlug,
-          paymentProvider,
-          marketIntensity,
-          tamEstimateUsd,
-          competitionScore,
-        });
+        const priceEur = getPublicListPriceEur(d.id);
         const spec = getPackageDeliverySpec(d.id);
         const availability = getPackageAvailability(d.id);
         return {
           id: d.id,
           name: d.name,
           description: spec?.description ?? d.description,
-          priceLabel: `${formatEur(quote.clientPriceEur)} ${formatBillingLabel(d.billing)}`,
-          priceMonthly: d.billing === 'monthly' ? quote.clientPriceEur : undefined,
-          priceOnce: d.billing === 'one_time' ? quote.clientPriceEur : undefined,
+          priceLabel: `${formatEur(priceEur)} ${formatBillingLabel(d.billing)}`,
+          priceMonthly: d.billing === 'monthly' ? priceEur : undefined,
+          priceOnce: d.billing === 'one_time' ? priceEur : undefined,
           badge: availability.badge,
           badgeVariant: availability.badgeTone,
           href: buildPricingHref({

@@ -5,9 +5,12 @@ import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 import type { SolutionDetail } from '@/lib/public-site-api';
 import { formatEur } from '@/lib/category-pricing';
+import { getClientOffer, getPublicListPriceEur } from '@/lib/client-offers';
 import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
-import { getPackageAvailability, canCheckoutPackage, getPackageAnchorEur } from '@/lib/package-delivery-spec';
+import { getPackageAvailability } from '@/lib/package-delivery-spec';
 import { buildLoginNextForQuote } from '@/lib/checkout-navigation';
+import { buildVerticalLandingCopy } from '@/lib/vertical-landing-copy';
+import { formatPlanMoney, SAAS_PLANS } from '@/lib/saas-plans';
 
 type Props = {
   solution: SolutionDetail;
@@ -19,12 +22,20 @@ function deliverableDisplayName(id: string, fallback: string) {
 
 export function VerticalLanding({ solution }: Props) {
   const pack = solution.deliveryPack;
+  const verticalOffer = getClientOffer('vertical-package');
   const verticalAvailability = getPackageAvailability('vertical-package');
-  const verticalReady = canCheckoutPackage('vertical-package');
+  const verticalReady = verticalAvailability.saleStatus === 'READY_TO_BUY';
+  const verticalQuote = verticalAvailability.saleStatus === 'REQUEST_QUOTE';
   const verticalBuyHref = buildLoginNextForQuote({
     service: 'vertical-package',
     category: solution.category,
     vertical: solution.slug,
+  });
+  const copy = buildVerticalLandingCopy({
+    slug: solution.slug,
+    name: solution.name,
+    category: solution.category,
+    valueProp: pack.valueProp,
   });
 
   return (
@@ -32,11 +43,38 @@ export function VerticalLanding({ solution }: Props) {
       <div className="mx-auto max-w-5xl">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">
-            {solution.category.replace(/_/g, ' ')}
+            {copy.eyebrow}
           </p>
-          <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">{solution.name}</h1>
-          <p className="mt-4 max-w-3xl text-lg text-slate-300">{pack.valueProp}</p>
+          <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">{copy.headline}</h1>
+          <p className="mt-4 max-w-3xl text-lg text-slate-300">{copy.lede}</p>
+          {copy.regulated ? (
+            <p className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              This is a regulated or sensitive industry. Checkout sells scoped software and documents only — not legal,
+              medical, or financial advice. A human reviews the brief before fulfillment starts.
+            </p>
+          ) : null}
+          <ul className="mt-6 space-y-2 text-sm text-slate-400">
+            {copy.pains.map((pain) => (
+              <li key={pain}>• {pain}</li>
+            ))}
+          </ul>
         </motion.div>
+
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {SAAS_PLANS.map((plan) => (
+            <Link
+              key={plan.slug}
+              href={`/register?plan=${plan.slug}&utm_campaign=vertical-${solution.slug}`}
+              className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-violet-400/40"
+            >
+              <p className="font-medium text-white">{plan.name}</p>
+              <p className="mt-1 text-sm text-slate-400">
+                {formatPlanMoney(plan.monthly.EUR, 'EUR')} / {formatPlanMoney(plan.monthly.USD, 'USD')}
+              </p>
+              <p className="mt-2 text-xs text-slate-500">{copy.saasLine}</p>
+            </Link>
+          ))}
+        </div>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -76,8 +114,13 @@ export function VerticalLanding({ solution }: Props) {
                 {verticalAvailability.badge}
               </span>
             </div>
-            <p className="mt-3 text-3xl font-bold text-white">{formatEur(pack.verticalPackageQuoteEur)}/mo</p>
-            <p className="mt-2 text-sm text-slate-400">CRM, automations, and AI support tailored to the niche.</p>
+            <p className="mt-3 text-3xl font-bold text-white">
+              {formatEur(verticalOffer?.priceEur ?? getPublicListPriceEur('vertical-package'))}/mo
+            </p>
+            <p className="mt-2 text-sm text-slate-400">
+              Monthly industry pack: CRM setup, automations, and AI support for this niche — scoped deliverable, not a
+              custom rebuild of the whole practice.
+            </p>
             {!verticalReady && (
               <p className="mt-3 text-sm text-amber-100">
                 Currently under construction. This industry package is not for sale yet — it opens automatically when the factory reaches the required phase.
@@ -92,7 +135,7 @@ export function VerticalLanding({ solution }: Props) {
                 href={`/contact?service=vertical-package&vertical=${solution.slug}`}
                 className="btn-glass mt-6 inline-flex items-center gap-2 text-sm"
               >
-                Notify me when ready <ArrowRight className="h-4 w-4" />
+                {verticalQuote ? 'Request a quote' : 'Notify me when ready'} <ArrowRight className="h-4 w-4" />
               </Link>
             )}
           </motion.section>
@@ -115,16 +158,14 @@ export function VerticalLanding({ solution }: Props) {
                     billing: d.billing,
                   }))
               ).map((d) => {
-                const ready = canCheckoutPackage(d.id);
                 const availability = getPackageAvailability(d.id);
+                const ready = availability.saleStatus === 'READY_TO_BUY';
                 const href = buildLoginNextForQuote({
                   service: d.id,
                   category: solution.category,
                   vertical: solution.slug,
                 });
-                const price = formatEur(
-                  d.clientPriceEur > 0 ? d.clientPriceEur : getPackageAnchorEur(d.id),
-                );
+                const price = formatEur(getPublicListPriceEur(d.id));
                 return (
                   <li key={d.id} className="flex items-start justify-between gap-3 text-sm">
                     <span className="text-slate-300">
@@ -166,9 +207,7 @@ export function VerticalLanding({ solution }: Props) {
                     <span className="font-medium text-white">
                       {i + 1}. {step.step}
                     </span>
-                    <p className="mt-1 text-slate-400">
-                      {step.moduleSlug} · {step.action}
-                    </p>
+                    <p className="mt-1 text-slate-400">{step.action}</p>
                   </div>
                 </li>
               ))}
@@ -182,11 +221,11 @@ export function VerticalLanding({ solution }: Props) {
           viewport={{ once: true }}
           className="mt-12 flex flex-wrap gap-3"
         >
-          <Link href="/products" className="btn-glass text-sm">
-            All solutions
+          <Link href="/solutions" className="btn-glass text-sm">
+            All industries
           </Link>
           <Link href="/pricing" className="btn-glass text-sm">
-            Pricing calculator
+            Compare SaaS plans
           </Link>
         </motion.div>
       </div>

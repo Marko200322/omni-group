@@ -21,12 +21,15 @@ export async function GET() {
     atina.error = err instanceof Error ? err.message : 'unreachable';
   }
 
-  return NextResponse.json({
-    ok: atina.ok,
-    app: 'omnigroup-web',
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
-    atina: { ok: atina.ok, status: atina.status },
-    ts: new Date().toISOString(),
-  });
+  return NextResponse.json(
+    {
+      ok: atina.ok,
+      app: 'omnigroup-web',
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+      atina: { ok: atina.ok, status: atina.status },
+      ts: new Date().toISOString(),
+    },
+    { status: atina.ok ? 200 : 503 },
+  );
 }
 

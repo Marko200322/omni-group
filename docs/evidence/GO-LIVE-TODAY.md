@@ -13,4 +13,7 @@
 **M6 bump:** `.\scripts\m6-prod-rollout.ps1` (sets `factoryPhase=M6`, full profile, deploy, matrix verify).  
 **Repo scale verify on VPS:** `.\scripts\run-vps-finish-repo.ps1 -UseProdDeployPath` (test:ci + hunt + smoke on `/opt/omni-group`).
 
-Updated: 2026-09-22
+**Matrix KANON:** `fulfillment-matrix-prod-20260922_082458.csv` (1000 unique PASS).  
+**Matrix re-run:** `fulfillment-matrix-prod-20260923_040427.csv` — watch `MATRIX-WATCH-DUAL.md`.
+
+Updated: 2026-09-23

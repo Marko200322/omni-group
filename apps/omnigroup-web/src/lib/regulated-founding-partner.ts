@@ -8,6 +8,7 @@ import {
   resolvePricingTier,
   type PlanSlug,
 } from './category-pricing';
+import { getPublicListPriceEur } from './client-offers';
 
 export const REGULATED_FOUNDING_PARTNER = {
   maxSlots: 10,
@@ -24,8 +25,8 @@ export const REGULATED_FOUNDING_PARTNER = {
     year2: 0.25,
     year3: 0.25,
   },
-  /** Waived once for founding partners (list €890) */
-  waivedOnboardingEur: 890,
+  /** Waived once for founding partners — list price from the shared catalog. */
+  waivedOnboardingEur: getPublicListPriceEur('setup-full'),
   /** Optional 90-day regulated pilot instead of public Starter list */
   pilot: {
     durationDays: 90,
@@ -170,7 +171,7 @@ export const FOUNDING_PARTNER_PUBLIC_COPY = {
     'First 10 fit-based partners in healthcare, government, energy, and industrial — locked pricing, compliance bundle, and roadmap influence.',
   terms: [
     '40% off Growth (Pro) year one, 25% off years two and three, then standard regulated list',
-    'Full onboarding (€890) waived for founding partners',
+    `Full onboarding (${formatEur(getPublicListPriceEur('setup-full'))}) waived for founding partners`,
     'Regulated Ready compliance bundle included on Growth and above',
     'Annual invoice available for procurement',
     'Quarterly feedback call + case study or reference in exchange',

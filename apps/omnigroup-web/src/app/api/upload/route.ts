@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth-session';
+import { sessionHasOrgPermission } from '@/lib/org-permissions';
 import {
   ALLOWED_TYPES,
   maxUploadBytes,
@@ -12,6 +13,9 @@ export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session || session.demo) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+  if (!sessionHasOrgPermission(session.user, 'documents.write')) {
+    return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   }
 
   let formData: FormData;

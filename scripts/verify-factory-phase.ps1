@@ -98,7 +98,7 @@ if ($idx -ge 6) {
     exit 1
   }
   if ($deployCfg.stripeSecretKey) {
-    Write-Host 'M6 Stripe keys in deploy.config - PAYMENTS_MODE=live on deploy' -ForegroundColor DarkGray
+    Write-Host 'M6 Stripe keys in deploy.config - launch gate separately requires sk_live_/pk_live_ credentials' -ForegroundColor DarkGray
   } else {
     Write-Host 'M6 note: add stripe* + price IDs to deploy.config for live checkout' -ForegroundColor Yellow
   }

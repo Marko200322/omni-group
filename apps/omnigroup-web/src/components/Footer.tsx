@@ -4,13 +4,22 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeUp } from '@/lib/animations';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
+import { formatPlanMoney, getSaaSPlanPrice } from '@/lib/saas-plans';
 
 type FooterProps = {
   impressum?: string;
   supportEmail?: string;
 };
 
-export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: FooterProps) {
+const PUBLIC_SUPPORT_EMAIL = 'hello@omnigrouptech.com';
+
+function publicSupportEmail(value?: string): string {
+  const email = value?.trim() || PUBLIC_SUPPORT_EMAIL;
+  return /@(gmail|googlemail|outlook|hotmail|yahoo)\.com$/i.test(email) ? PUBLIC_SUPPORT_EMAIL : email;
+}
+
+export function Footer({ impressum, supportEmail = PUBLIC_SUPPORT_EMAIL }: FooterProps) {
+  supportEmail = publicSupportEmail(supportEmail);
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -34,8 +43,10 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
         <motion.div variants={fadeUp}>
           <OmniGroupLogo href="/" size="sm" />
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
-            Custom digital delivery — websites, audits, setup, and retainers built for your business. Bank transfer
-            (IBAN) or card at checkout.
+            AI operations platform for sales, delivery, billing, and support. Subscriptions start from{' '}
+            {formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'USD'), 'USD')} /{' '}
+            {formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'EUR'), 'EUR')}.
+            Payment methods shown after sign-in depend on what is enabled for your account.
           </p>
           <p className="mt-3 text-sm">
             <a href={`mailto:${supportEmail}`} className="text-violet-300 hover:text-white">
@@ -49,11 +60,12 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
             <span className="font-medium text-white">Company</span>
             {[
               { href: '/', label: 'Home' },
-              { href: '/products', label: 'Packages' },
-              { href: '/solutions', label: 'Industry catalog' },
-              { href: '/services', label: 'Services' },
+              { href: '/products', label: 'Platform' },
+              { href: '/solutions', label: 'Solutions' },
               { href: '/pricing', label: 'Pricing' },
+              { href: '/services', label: 'Expert services' },
               { href: '/contact', label: 'Contact' },
+              { href: '/status', label: 'System status' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">
@@ -65,9 +77,9 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
           <motion.div className="flex flex-col gap-2">
             <span className="font-medium text-white">For clients</span>
             {[
-              { href: '/login', label: 'Client portal' },
-              { href: '/pricing', label: 'Request a quote' },
-              { href: '/contact', label: 'Start a project' },
+              { href: '/login', label: 'Workspace' },
+              { href: '/register', label: 'Create workspace' },
+              { href: '/pricing', label: 'Compare plans' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">
@@ -94,11 +106,11 @@ export function Footer({ impressum, supportEmail = 'hello@omnigrouptech.com' }: 
             ))}
           </motion.div>
           <motion.div className="flex flex-col gap-2">
-            <span className="font-medium text-white">Deliverables</span>
+            <span className="font-medium text-white">Add-ons</span>
             {[
-              { href: '/solutions', label: 'Industry catalog' },
-              { href: '/services', label: 'Setup & onboarding' },
-              { href: '/pricing', label: 'Retainers' },
+              { href: '/solutions', label: 'Industry solutions' },
+              { href: '/services', label: 'Implementation' },
+              { href: '/pricing#plans', label: 'SaaS plans' },
             ].map(({ href, label }) => (
               <motion.div key={href} whileHover={{ x: 4 }}>
                 <Link href={href} className="text-slate-400 transition hover:text-white">

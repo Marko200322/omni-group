@@ -58,6 +58,7 @@ $body = @{
   email = ('smoke+' + [Guid]::NewGuid().ToString('N').Substring(0, 8) + '@omnigroup.local')
   company = 'Dev test'
   message = "Contact test $(Get-Date -Format o)"
+  consent = $true
 } | ConvertTo-Json -Compress
 
 Write-Host "== POST /api/contact ==" -ForegroundColor Cyan

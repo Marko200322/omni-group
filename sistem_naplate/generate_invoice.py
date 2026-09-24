@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 from config import BANK_NAME, BIC, CURRENCY, IBAN, ISSUER_EMAIL, ISSUER_NAME
 
@@ -48,39 +49,37 @@ def generate_invoice(
     def T(t: str) -> str:
         return _latin1_pdf_text(t)
 
-    pdf.cell(0, 10, "FAKTURA / INVOICE", ln=1, align="C")
-    pdf.cell(0, 10, T(f"Broj fakture: {invoice_id}"), ln=1)
-    pdf.cell(0, 10, T(f"Datum: {datetime.now().strftime('%d.%m.%Y')}"), ln=1)
+    def line(text: str, *, align: str = "L") -> None:
+        pdf.cell(0, 10, text, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align=align)
 
-    pdf.cell(0, 10, T(f"Izdavac: {ISSUER_NAME}"), ln=1)
-    pdf.cell(0, 10, f"Email: {ISSUER_EMAIL}", ln=1)
+    line("FAKTURA / INVOICE", align="C")
+    line(T(f"Broj fakture: {invoice_id}"))
+    line(T(f"Datum: {datetime.now().strftime('%d.%m.%Y')}"))
 
-    pdf.cell(0, 10, T(f"Klijent: {client_name}"), ln=1)
+    line(T(f"Izdavac: {ISSUER_NAME}"))
+    line(f"Email: {ISSUER_EMAIL}")
 
-    pdf.cell(0, 10, T(f"Opis usluge: {description}"), ln=1)
-    pdf.cell(0, 10, T(f"Iznos: {amount} {CURRENCY}"), ln=1)
-    pdf.cell(0, 10, T(f"UKUPNO ZA UPLATU: {amount} {CURRENCY}"), ln=1)
+    line(T(f"Klijent: {client_name}"))
 
-    pdf.cell(0, 10, T("PODACI ZA UPLATU:"), ln=1)
-    pdf.cell(0, 10, f"IBAN: {IBAN}", ln=1)
-    pdf.cell(0, 10, f"BIC/SWIFT: {BIC}", ln=1)
-    pdf.cell(0, 10, T(f"Banka: {BANK_NAME}"), ln=1)
-    pdf.cell(0, 10, T(f"Valuta: {CURRENCY}"), ln=1)
-    pdf.cell(0, 10, T(f"Svrha placanja: Faktura {invoice_id}"), ln=1)
+    line(T(f"Opis usluge: {description}"))
+    line(T(f"Iznos: {amount} {CURRENCY}"))
+    line(T(f"UKUPNO ZA UPLATU: {amount} {CURRENCY}"))
 
-    pdf.cell(0, 10, T("USLOVI PLACANJA:"), ln=1)
-    pdf.cell(0, 10, T("Usluga se aktivira isključivo nakon prijema uplate."), ln=1)
-    pdf.cell(0, 10, T("Bez evidentirane uplate, usluga nece biti isporucena."), ln=1)
-    pdf.cell(0, 10, T("NEMA UPLATE = NEMA USLUGE."), ln=1)
+    line(T("PODACI ZA UPLATU:"))
+    line(f"IBAN: {IBAN}")
+    line(f"BIC/SWIFT: {BIC}")
+    line(T(f"Banka: {BANK_NAME}"))
+    line(T(f"Valuta: {CURRENCY}"))
+    line(T(f"Svrha placanja: Faktura {invoice_id}"))
+
+    line(T("USLOVI PLACANJA:"))
+    line(T("Usluga se aktivira isključivo nakon prijema uplate."))
+    line(T("Bez evidentirane uplate, usluga nece biti isporucena."))
+    line(T("NEMA UPLATE = NEMA USLUGE."))
 
     if invoice_type == "subscription":
-        pdf.cell(0, 10, T("KASNJENJE PLACANJA:"), ln=1)
-        pdf.cell(
-            0,
-            10,
-            T("U slucaju da uplata ne bude izvrsena do roka, usluga se automatski suspenduje."),
-            ln=1,
-        )
+        line(T("KASNJENJE PLACANJA:"))
+        line(T("U slucaju da uplata ne bude izvrsena do roka, usluga se automatski suspenduje."))
 
     out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pdfs")
     os.makedirs(out_dir, exist_ok=True)

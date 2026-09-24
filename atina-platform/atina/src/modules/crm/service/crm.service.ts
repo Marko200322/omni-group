@@ -10,7 +10,7 @@ import { CrmRepository } from '../repository/crm.repository';
 export class CrmService {
   private readonly repo = new CrmRepository();
 
-  async listContacts(userId: string, query: ContactQueryDtoType) {
+  async listContacts(userId: string, query: ContactQueryDtoType, organizationId?: string) {
     const limit = query.limit;
     const offset = (query.page - 1) * limit;
     const [countResult, listResult] = await this.repo.listContacts(userId, {
@@ -18,39 +18,39 @@ export class CrmService {
       status: query.status,
       limit,
       offset,
-    });
+    }, organizationId);
     const total = parseInt(countResult.rows[0]?.count ?? '0', 10);
     return { rows: listResult.rows, total, page: query.page, limit };
   }
 
-  async getContact(id: string, userId: string) {
-    const { rows } = await this.repo.getContact(id, userId);
+  async getContact(id: string, userId: string, organizationId?: string) {
+    const { rows } = await this.repo.getContact(id, userId, organizationId);
     if (!rows[0]) throw new NotFoundError('Contact');
     return rows[0];
   }
 
-  async createContact(userId: string, dto: CreateContactDtoType) {
-    const { rows } = await this.repo.createContact(userId, dto);
+  async createContact(userId: string, dto: CreateContactDtoType, organizationId?: string) {
+    const { rows } = await this.repo.createContact(userId, dto, organizationId);
     return rows[0];
   }
 
-  async updateContact(id: string, userId: string, dto: UpdateContactDtoType) {
-    const { rows } = await this.repo.updateContact(id, userId, dto);
+  async updateContact(id: string, userId: string, dto: UpdateContactDtoType, organizationId?: string) {
+    const { rows } = await this.repo.updateContact(id, userId, dto, organizationId);
     if (!rows[0]) throw new NotFoundError('Contact');
     return rows[0];
   }
 
-  async deleteContact(id: string, userId: string) {
-    const { rowCount } = await this.repo.deleteContact(id, userId);
+  async deleteContact(id: string, userId: string, organizationId?: string) {
+    const { rowCount } = await this.repo.deleteContact(id, userId, organizationId);
     if (rowCount === 0) throw new NotFoundError('Contact');
   }
 
-  async bulkImport(userId: string, dto: BulkImportContactsDtoType) {
+  async bulkImport(userId: string, dto: BulkImportContactsDtoType, organizationId?: string) {
     if (!dto.contacts.length) return { imported: 0 };
     let imported = 0;
     for (const c of dto.contacts) {
       try {
-        await this.repo.bulkInsertContact(userId, c);
+        await this.repo.bulkInsertContact(userId, c, organizationId);
         imported++;
       } catch {
         /* skip bad records */
@@ -59,8 +59,8 @@ export class CrmService {
     return { imported };
   }
 
-  async stats(userId: string) {
-    const [total, byStatus, recentActivity] = await this.repo.stats(userId);
+  async stats(userId: string, organizationId?: string) {
+    const [total, byStatus, recentActivity] = await this.repo.stats(userId, organizationId);
     return {
       total: parseInt(total.rows[0]?.count ?? '0', 10),
       byStatus: Object.fromEntries(

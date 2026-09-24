@@ -15,6 +15,9 @@ import {
 } from './factory-phase';
 import type { ProdMode } from './prod-mode';
 import { getProdMode } from './prod-mode';
+import { saleStatusFromFlags, type OfferSaleStatus } from './sale-status';
+
+export type { OfferSaleStatus } from './sale-status';
 
 /** Recommended first-sale list — not a checkout gate. */
 export const BUDGET_LAUNCH_PACKAGE_IDS = [
@@ -47,6 +50,8 @@ export type PackageDeliverySpec = {
   phaseUnlocks?: PhaseUnlock[];
   leanCheckout: boolean;
   fullCheckout: boolean;
+  /** When true, never show Buy now — route to quote/contact. */
+  quoteOnly?: boolean;
 };
 
 export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
@@ -59,7 +64,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     includes: [
       'Downloadable setup PDF + markdown pack',
       'Portal modules: notifications, billing',
-      'Product factory project record',
+      'Project created in your workspace',
       'Onboarding checklist in PDF',
     ],
     excludes: ['Custom domain on your DNS', 'Dedicated VPS for the client'],
@@ -217,7 +222,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     includes: [
       'Welcome PDF',
       'Support automation task (SLA 24h)',
-      'Modules: notifications, support-avatar, AI-RAG',
+      'Notifications, AI support assistant, and ticket inbox',
       'Maintenance & support included in monthly subscription price',
     ],
     excludes: ['Unlimited dev hours', 'Emergency weekend SLA', 'Separate maintenance invoice (already included)'],
@@ -273,8 +278,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'landing',
-    description: 'Live landing page at /sites/{slug} with AI sales copy — hosted on omnigrouptech.com.',
-    descriptionSr: 'Live landing na /sites/{slug} sa AI copy-jem — host na omnigrouptech.com.',
+    description: 'Live landing page with AI sales copy — hosted on omnigrouptech.com.',
+    descriptionSr: 'Live landing sa AI copy-jem — host na omnigrouptech.com.',
     includes: ['Published live URL', 'AI-generated copy for niche', 'Contact section'],
     excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
     anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
@@ -305,9 +310,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'website-business',
-    description: 'Multi-page business site (5+ pages): services, pricing, contact — live at /sites/{slug}.',
-    descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na /sites/{slug}.',
-    includes: ['Live URL with 5+ pages', 'Product factory project linked', 'Services, pricing, contact pages'],
+    description: 'Multi-page business site (5+ pages): services, pricing, contact — live on omnigrouptech.com.',
+    descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na omnigrouptech.com.',
+    includes: ['Live URL with 5+ pages', 'Linked to your workspace project', 'Services, pricing, contact pages'],
     excludes: ['Custom domain', 'CMS training', 'Copywriting beyond AI first draft'],
     anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
     phaseUnlocks: [
@@ -354,7 +359,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     deliverableId: 'white-label-setup',
     description: 'White-label brand PDF plus live landing page for partner resale positioning.',
     descriptionSr: 'White-label brand PDF plus live landing za partnersku prodaju.',
-    includes: ['Brand & packaging PDF', 'Live landing page (/sites/{slug})'],
+    includes: ['Brand & packaging PDF', 'Live landing page on omnigrouptech.com'],
     excludes: ['Partner legal agreements', 'Custom domain for partner'],
     anchorByPhase: { M2: 1290, M4: 1790, M6: 2490 },
     minCheckoutPhase: 'M2',
@@ -398,13 +403,13 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly: lead-gen PDF, CRM pipeline, Titanis workspace run, lead report — requires outbound stack (M4+).',
-    descriptionSr: 'Mesečno: lead-gen PDF, CRM, Titanis, lead izveštaj — zahteva outbound stack (M4+).',
+      'Monthly: lead-gen PDF, CRM pipeline, outreach workspace, lead report — requires outbound stack.',
+    descriptionSr: 'Mesečno: lead-gen PDF, CRM, outreach workspace, lead izveštaj — zahteva outbound stack.',
     includes: [
       'Welcome PDF',
-      'CRM + hunter/titanis/outreach modules',
-      'Lead report artifact',
-      'Monthly cron tick',
+      'CRM and outreach workspace',
+      'Monthly lead report',
+      'Scheduled pipeline refresh',
       'Pipeline maintenance & outreach ops included in subscription',
     ],
     excludes: ['Guaranteed qualified meetings', 'Works fully in lean prod (scraper/outbound off)'],
@@ -432,9 +437,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     descriptionSr: 'Mesečno: AI support PDF, RAG seed, avatar — video zahteva HeyGen/D-ID.',
     includes: [
       'Welcome PDF',
-      'AI memory / RAG seed',
-      'Modules: support-avatar, video-meetings, ai-rag',
-      'Avatar provisioning artifact',
+      'AI knowledge base starter',
+      'AI assistant, video meetings, and support inbox',
+      'Support assistant setup pack',
       'AI support maintenance & knowledge updates included monthly',
     ],
     excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],
@@ -456,10 +461,10 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Starter codebase only: Node API + SPA scaffold, tests, handoff PDF — not a finished custom product or unlimited build hours.',
     descriptionSr: 'Samo starter kod: Node API + SPA scaffold, testovi, handoff PDF — nije gotov custom proizvod ni neograničeni razvoj.',
     includes: [
-      'Isolated greenfield project',
-      'Build/test gate metadata',
+      'Starter project in your workspace',
+      'Automated test checklist',
       'Software handoff PDF',
-      'Node 20 REST + static SPA scaffold',
+      'API and web app starter kit',
     ],
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
     anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },
@@ -580,6 +585,7 @@ export function resolvePackageOffer(
 export function canCheckoutPackage(deliverableId: string, mode?: ProdMode): boolean {
   const spec = getPackageDeliverySpec(deliverableId);
   if (!spec) return true;
+  if (spec.quoteOnly) return false;
   const m = mode ?? getProdMode();
   return m === 'full' ? spec.fullCheckout : spec.leanCheckout;
 }
@@ -588,6 +594,7 @@ export type PackageAvailabilityTone = 'available' | 'upcoming' | 'contact';
 
 export type PackageAvailability = {
   checkoutAllowed: boolean;
+  saleStatus: OfferSaleStatus;
   badge: string;
   badgeTone: PackageAvailabilityTone;
   statusLabel: string;
@@ -595,23 +602,40 @@ export type PackageAvailability = {
 
 /** UI label for pricing / products — matches factory phase and lean checkout gates. */
 export function getPackageAvailability(deliverableId: string, mode?: ProdMode): PackageAvailability {
-  const checkoutAllowed = canCheckoutPackage(deliverableId, mode);
-  if (checkoutAllowed) {
+  const spec = getPackageDeliverySpec(deliverableId);
+  const checkoutAllowed = canCheckoutPackage(deliverableId, mode) && !spec?.quoteOnly;
+  const saleStatus = saleStatusFromFlags({
+    checkoutAllowed,
+    quoteOnly: spec?.quoteOnly,
+  });
+
+  if (saleStatus === 'READY_TO_BUY') {
     return {
       checkoutAllowed: true,
+      saleStatus,
       badge: 'Ready to buy',
       badgeTone: 'available',
       statusLabel: 'Self-serve checkout is open for this package.',
     };
   }
 
-  const spec = getPackageDeliverySpec(deliverableId);
+  if (saleStatus === 'REQUEST_QUOTE') {
+    return {
+      checkoutAllowed: false,
+      saleStatus,
+      badge: 'Request a quote',
+      badgeTone: 'contact',
+      statusLabel: 'This package is sold via quote — contact us for a written proposal.',
+    };
+  }
+
   const phase = getFactoryPhase();
   const min = spec?.minCheckoutPhase;
   const opensAt = min && !phaseGte(phase, min) ? min : null;
 
   return {
     checkoutAllowed: false,
+    saleStatus,
     badge: 'Currently under construction',
     badgeTone: 'upcoming',
     statusLabel: opensAt
@@ -622,9 +646,10 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
 
 export function listCheckoutPackages(mode?: ProdMode): string[] {
   const m = mode ?? getProdMode();
-  return PACKAGE_DELIVERY_SPECS.filter((s) => (m === 'full' ? s.fullCheckout : s.leanCheckout)).map(
-    (s) => s.deliverableId,
-  );
+  return PACKAGE_DELIVERY_SPECS.filter((s) => {
+    if (s.quoteOnly) return false;
+    return m === 'full' ? s.fullCheckout : s.leanCheckout;
+  }).map((s) => s.deliverableId);
 }
 
 export function applyHonestCatalogDescription<T extends { id: string; description: string }>(item: T): T {

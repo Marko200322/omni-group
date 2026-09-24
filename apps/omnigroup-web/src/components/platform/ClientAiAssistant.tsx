@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react';
 import { PORTAL_QUICK_PROMPTS, PUBLIC_QUICK_PROMPTS } from '@/lib/client-portal-ai-context';
@@ -57,11 +58,15 @@ export function ClientAiAssistant({ userName }: Props) {
     setBooting(true);
     setError(null);
     try {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 8000);
       const res = await fetch('/api/atina/atina-assistant/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: '{}',
+        signal: controller.signal,
       });
+      window.clearTimeout(timer);
       const json = (await res.json()) as {
         ok?: boolean;
         data?: {
@@ -137,9 +142,10 @@ export function ClientAiAssistant({ userName }: Props) {
   /** Public marketing: avoid lone “Omi” floating over the cookie bar; portal keeps brand name. */
   const displayName = isClientPortal ? ASSISTANT_NAME : 'Help';
   const fabBottomClass = isClientPortal ? 'bottom-6' : 'bottom-28 sm:bottom-6';
-  const chips = audience === 'portal' ? PORTAL_QUICK_PROMPTS : PUBLIC_QUICK_PROMPTS;
-  const subtitle =
-    audience === 'portal'
+  const chips = isClientPortal || audience === 'portal' ? PORTAL_QUICK_PROMPTS : PUBLIC_QUICK_PROMPTS;
+  const subtitle = error
+    ? 'temporarily unavailable'
+    : isClientPortal || audience === 'portal'
       ? `${firstName ? `Hi ${firstName} · ` : ''}portal assistant · online`
       : 'Site assistant · online';
 
@@ -220,17 +226,28 @@ export function ClientAiAssistant({ userName }: Props) {
 
             <div className="border-t border-white/10 p-3">
               <div className="mb-2 flex flex-wrap gap-1.5">
-                {chips.map((chip) => (
-                  <button
-                    key={chip.label}
-                    type="button"
-                    disabled={booting || loading || !sessionId}
-                    onClick={() => void sendMessage(chip.message)}
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 transition hover:border-emerald-500/30 hover:text-emerald-100 disabled:opacity-40"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
+                {chips.map((chip) => {
+                  const chipClass =
+                    'rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-slate-300 transition hover:border-emerald-500/30 hover:text-emerald-100 disabled:opacity-40';
+                  if (sessionId) {
+                    return (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        disabled={loading}
+                        onClick={() => void sendMessage(chip.message)}
+                        className={chipClass}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  }
+                  return (
+                    <Link key={chip.label} href={chip.href} className={chipClass}>
+                      {chip.label}
+                    </Link>
+                  );
+                })}
               </div>
               <div className="flex gap-2">
                 <input
@@ -256,7 +273,14 @@ export function ClientAiAssistant({ userName }: Props) {
                   <Send className="h-4 w-4" />
                 </button>
               </div>
-              {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}
+              {error && (
+                <p className="mt-2 text-xs text-rose-300">
+                  {error}{' '}
+                  <Link href="/contact" className="underline underline-offset-2 hover:text-white">
+                    Contact
+                  </Link>
+                </p>
+              )}
             </div>
           </motion.div>
         )}

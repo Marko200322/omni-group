@@ -49,6 +49,7 @@ describe('PaymentsController', () => {
       'yearly',
       undefined,
       buyerMeta,
+      'EUR',
     );
     expect(r.status).toHaveBeenCalledWith(201);
     expect(r.json).toHaveBeenCalled();
@@ -67,6 +68,7 @@ describe('PaymentsController', () => {
       'monthly',
       undefined,
       buyerMeta,
+      'EUR',
     );
   });
 
@@ -118,7 +120,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'enterprise', billingCycle: 'monthly' } } as Request,
       r
     );
-    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined, buyerMeta);
+    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined, buyerMeta, 'EUR');
     expect(r.status).toHaveBeenCalledWith(201);
   });
 
@@ -137,7 +139,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'pro', billingCycle: 'yearly' } } as Request,
       r
     );
-    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined, buyerMeta);
+    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined, buyerMeta, 'EUR');
     expect(r.status).toHaveBeenCalledWith(201);
   });
 

@@ -1,0 +1,14 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+setup-quick,marketing,PASS,,2,370f4fed-7cfe-449b-b84a-c82a959570cd,"",9,2026-09-23T04:05:34.5501316+02:00
+setup-full,marketing,PASS,,4,f4363bc9-b035-4e8f-afab-b723281ed7c1,"",5,2026-09-23T04:05:49.1775508+02:00
+audit,marketing,PASS,,2,c6d29f79-cc7b-4149-9d3d-4ccaef504c9f,"",5,2026-09-23T04:06:03.7690018+02:00
+integration,marketing,PASS,,3,4b19e983-3e1b-4c7d-a5bf-61eadcd76592,"",5,2026-09-23T04:06:18.3264079+02:00
+workflow-design,marketing,PASS,,2,6e095eaf-3c7d-4fef-aa79-f2e4fae34804,"",5,2026-09-23T04:06:33.6449083+02:00
+support-priority,marketing,PASS,,2,788712e6-03ce-4b57-b3d9-a2b33ba3ad36,"",5,2026-09-23T04:06:48.3303185+02:00
+support-dedicated,marketing,PASS,,2,e704185c-89d4-41a2-ab9d-cb5b05f33f52,"",5,2026-09-23T04:07:02.8644453+02:00
+landing,marketing,PASS,,0,d1ed06cf-44d5-4dfa-8334-ba95afd92bf8,"",5,2026-09-23T04:07:17.4328921+02:00
+sales-enablement,marketing,PASS,,2,11758fd3-9d1a-4da3-b7f7-1d5b63b41baa,"",4,2026-09-23T04:07:31.9267478+02:00
+vertical-package,marketing,PASS,,2,44828aa7-ec6c-4bf8-84d8-25513a0c539e,"",5,2026-09-23T04:07:46.4589492+02:00
+lead-gen-retainer,marketing,PASS,,3,241c770b-adb8-4462-b522-1b9413e08a03,"",9,2026-09-23T04:08:05.4075669+02:00
+ai-support-retainer,marketing,PASS,,3,3caa9b3c-e5d6-4a86-92b7-488c5893eb8f,"",50,2026-09-23T04:09:05.6528155+02:00
+bundle-ops-clarity,marketing,PASS,,4,1e43e498-017f-4894-8dd2-5904eca8ccc2,"",4,2026-09-23T04:09:20.1562568+02:00

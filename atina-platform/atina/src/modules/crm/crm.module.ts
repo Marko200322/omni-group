@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requirePermission } from '../../api/middleware/auth.middleware';
 import { authSessionLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
@@ -31,6 +31,7 @@ export class CrmModule implements IModule {
     this.router.get(
       '/contacts',
       authenticate,
+      requirePermission('crm.read'),
       authSessionLimiter,
       validateQuery(ContactQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -39,6 +40,7 @@ export class CrmModule implements IModule {
     this.router.post(
       '/contacts/bulk',
       authenticate,
+      requirePermission('crm.write'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(BulkImportContactsDto),
@@ -47,6 +49,7 @@ export class CrmModule implements IModule {
     this.router.get(
       '/contacts/:id',
       authenticate,
+      requirePermission('crm.read'),
       authSessionLimiter,
       validateParams(ContactIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -56,6 +59,7 @@ export class CrmModule implements IModule {
     this.router.post(
       '/contacts',
       authenticate,
+      requirePermission('crm.write'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(CreateContactDto),
@@ -64,6 +68,7 @@ export class CrmModule implements IModule {
     this.router.patch(
       '/contacts/:id',
       authenticate,
+      requirePermission('crm.write'),
       authSessionLimiter,
       validateParams(ContactIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -73,6 +78,7 @@ export class CrmModule implements IModule {
     this.router.delete(
       '/contacts/:id',
       authenticate,
+      requirePermission('crm.write'),
       authSessionLimiter,
       validateParams(ContactIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
@@ -82,6 +88,7 @@ export class CrmModule implements IModule {
     this.router.get(
       '/stats',
       authenticate,
+      requirePermission('crm.read'),
       authSessionLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),

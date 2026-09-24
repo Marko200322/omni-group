@@ -38,9 +38,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">2. Orders and payment</h2>
             <p>
-              Payment is completed by card (Stripe) when enabled at checkout, or by bank transfer (IBAN) using the
-              reference on your proforma. Access and automated fulfillment begin after payment is confirmed (card:
-              automatically; bank transfer: after our team verifies funds).
+              Payment is completed by card (Stripe) at checkout. Access and automated fulfillment begin after Stripe
+              confirms payment.
             </p>
           </section>
           <section>

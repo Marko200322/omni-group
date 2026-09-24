@@ -1,6 +1,7 @@
 import * as queue from '../../../queue/queue';
 import {
   registerAuxiliaryQueueWorkers,
+  registerAutomationQueueProcessor,
   registerEmailQueueProcessor,
   registerScraperQueueProcessor,
 } from '../../../queue/register-workers';
@@ -8,6 +9,12 @@ import {
 jest.mock('../../../queue/queue');
 jest.mock('../../../modules/tasks/task-executors', () => ({
   executeScrapeUrl: jest.fn().mockResolvedValue({ status: 'scraped', url: 'https://x.com' }),
+}));
+const mockProcessAutomation = jest.fn().mockResolvedValue({ completed: true });
+jest.mock('../../../modules/automation/service/automation-scheduled-task.processor', () => ({
+  AutomationScheduledTaskProcessor: jest.fn().mockImplementation(() => ({
+    process: mockProcessAutomation,
+  })),
 }));
 
 const mockGetQueue = queue.getQueue as jest.MockedFunction<typeof queue.getQueue>;
@@ -38,13 +45,27 @@ describe('register-workers', () => {
     expect(executeScrapeUrl).toHaveBeenCalledWith({ url: 'https://x.com' });
   });
 
-  it('registerAuxiliaryQueueWorkers registers emails and scraper queues', () => {
+  it('registerAutomationQueueProcessor delegates scheduled jobs', async () => {
+    const handler = jest.fn();
+    const process = (fn: typeof handler) => {
+      handler.mockImplementation(fn);
+    };
+    registerAutomationQueueProcessor({ process } as never);
+    await handler({ id: 'j3', data: { taskId: 'task-1', workflowId: 'workflow-1' } });
+    expect(mockProcessAutomation).toHaveBeenCalledWith({
+      taskId: 'task-1',
+      workflowId: 'workflow-1',
+    });
+  });
+
+  it('registerAuxiliaryQueueWorkers registers emails, scraper, and automation queues', () => {
     const process = jest.fn();
     mockGetQueue.mockReturnValue({ process } as never);
     registerAuxiliaryQueueWorkers();
     expect(mockGetQueue).toHaveBeenCalledWith('emails');
     expect(mockGetQueue).toHaveBeenCalledWith('scraper');
-    expect(process).toHaveBeenCalledTimes(2);
+    expect(mockGetQueue).toHaveBeenCalledWith('automation');
+    expect(process).toHaveBeenCalledTimes(3);
   });
 
   it('registerAuxiliaryQueueWorkers swallows queue errors', () => {

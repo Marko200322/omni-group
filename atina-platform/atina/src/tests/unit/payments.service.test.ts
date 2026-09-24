@@ -224,10 +224,33 @@ describe('PaymentsService', () => {
             expect.objectContaining({
               price_data: expect.objectContaining({
                 currency: 'eur',
-                unit_amount: 2900,
+                unit_amount: 24900,
               }),
             }),
           ],
+        }),
+      );
+    });
+
+    it('uses the USD SaaS price book when checkout currency is USD', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
+      } as never);
+
+      await service.createStripeCheckoutSession('u1', 'pro', 'monthly', null, null, 'USD');
+
+      expect(testStripeApi.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          line_items: [
+            expect.objectContaining({
+              price_data: expect.objectContaining({
+                currency: 'usd',
+                unit_amount: 27900,
+              }),
+            }),
+          ],
+          metadata: expect.objectContaining({ currency: 'USD' }),
         }),
       );
     });
@@ -241,6 +264,72 @@ describe('PaymentsService', () => {
       await expect(service.handleStripeWebhook(Buffer.from('x'), 'sig')).rejects.toBeInstanceOf(PaymentError);
       expect(mockLogger.info).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('ignores a duplicate Stripe event that is already claimed', async () => {
+      testStripeApi.webhooks.constructEvent.mockReturnValue({
+        id: 'evt_duplicate',
+        type: 'checkout.session.completed',
+        data: { object: { metadata: { userId: 'u1', planSlug: 'pro' }, subscription: 'sub_x' } },
+      } as never);
+      mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+
+      await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
+
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO stripe_webhook_events'),
+        ['evt_duplicate', 'checkout.session.completed'],
+      );
+      expect(testStripeApi.subscriptions.retrieve).not.toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Stripe webhook already claimed',
+        expect.objectContaining({ eventId: 'evt_duplicate' }),
+      );
+    });
+
+    it('marks a claimed Stripe event completed after processing', async () => {
+      testStripeApi.webhooks.constructEvent.mockReturnValue({
+        id: 'evt_unhandled',
+        type: 'test.unhandled',
+        data: { object: {} },
+      } as never);
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ event_id: 'evt_unhandled' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+
+      await service.handleStripeWebhook(Buffer.from('{}'), 'sig');
+
+      expect(mockQuery).toHaveBeenLastCalledWith(
+        expect.stringContaining("status = 'completed'"),
+        ['evt_unhandled'],
+      );
+    });
+
+    it('marks a claimed Stripe event failed so a later delivery can retry', async () => {
+      testStripeApi.webhooks.constructEvent.mockReturnValue({
+        id: 'evt_retryable',
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            metadata: { userId: 'u1', planSlug: 'pro', billingCycle: 'monthly' },
+            subscription: 'sub_retry',
+            customer: 'cus_retry',
+          },
+        },
+      } as never);
+      testStripeApi.subscriptions.retrieve.mockRejectedValueOnce(new Error('stripe temporarily unavailable'));
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ event_id: 'evt_retryable' }], rowCount: 1 } as never)
+        .mockResolvedValueOnce({ rows: [], rowCount: 1 } as never);
+
+      await expect(service.handleStripeWebhook(Buffer.from('{}'), 'sig')).rejects.toThrow(
+        'stripe temporarily unavailable',
+      );
+
+      expect(mockQuery).toHaveBeenLastCalledWith(
+        expect.stringContaining("status = 'failed'"),
+        ['evt_retryable', 'stripe temporarily unavailable'],
+      );
     });
 
     it('handles checkout.session.completed', async () => {
@@ -890,7 +979,7 @@ describe('PaymentsService', () => {
       expect(out.instructions.reference).toBe(out.reference);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO payments'),
-        expect.arrayContaining([290])
+        expect.arrayContaining([2490])
       );
     });
 
@@ -904,7 +993,7 @@ describe('PaymentsService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO payments'),
-        expect.arrayContaining([29])
+        expect.arrayContaining([249])
       );
     });
 
@@ -998,13 +1087,22 @@ describe('PaymentsService', () => {
       (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = 'RS35100000000000000000';
     });
 
-    it('getPaymentMethods includes manual in manual mode', () => {
+    it('getPaymentMethods prefers Stripe over IBAN when a Stripe key is set', () => {
+      const out = service.getPaymentMethods();
+      expect(out.mode).toBe('sandbox');
+      expect(out.methods.some((m: { id: string; available: boolean }) => m.id === 'stripe' && m.available)).toBe(true);
+      expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(false);
+    });
+
+    it('getPaymentMethods includes manual only when Stripe is not configured', () => {
+      (config as { stripe: { secretKey: string } }).stripe.secretKey = '';
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('manual');
       expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(true);
     });
 
     it('marks manual as unavailable when bank details are missing', () => {
+      (config as { stripe: { secretKey: string } }).stripe.secretKey = '';
       (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.accountName = '';
       (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = '';
 
@@ -1062,6 +1160,20 @@ describe('PaymentsService', () => {
         ['manual-pay-1']
       );
       expect(paymentNotifyApi.notifyAdminPaymentPending).toHaveBeenCalled();
+    });
+
+    it('markManualPaymentSent hides another user payment and never updates it', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ user_id: 'different-user', status: 'pending' }],
+        rowCount: 1,
+      } as never);
+
+      await expect(
+        service.markManualPaymentSent('manual-pay-other', 'requesting-user')
+      ).rejects.toThrow('Payment not found');
+
+      expect(mockQuery).toHaveBeenCalledTimes(1);
+      expect(paymentNotifyApi.notifyAdminPaymentPending).not.toHaveBeenCalled();
     });
 
     it('confirmPendingPayment activates subscription for manual provider', async () => {

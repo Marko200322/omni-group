@@ -149,7 +149,7 @@ describe('PaymentNotificationsService', () => {
         userId: 'user-1',
         type: 'payment_confirmed',
         channel: 'in_app',
-        actionUrl: '/dashboard#billing',
+        actionUrl: '/dashboard/billing',
         metadata: { paymentId: 'pay-1' },
       }),
     );

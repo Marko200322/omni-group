@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../../../config';
-import { AuthRepository } from '../repository/auth.repository';
+import { AuthRepository, type UserRecord } from '../repository/auth.repository';
 import {
   AuthenticationError,
   ConflictError,
@@ -17,6 +17,7 @@ import { NotificationsService } from '../../notifications/service/notifications.
 export interface AuthServiceDeps {
   repo?: AuthRepository;
   postLoginBootstrap: AuthPostLoginBootstrap;
+  notifications?: Pick<NotificationsService, 'sendEmail'>;
 }
 
 export interface AuthTokens {
@@ -33,16 +34,20 @@ export interface LoginResult extends AuthTokens {
     role: string;
     planSlug: string | null;
     isEmailVerified: boolean;
+    organizationId?: string | null;
+    orgRole?: string | null;
   };
 }
 
 export class AuthService {
   private repo: AuthRepository;
   private readonly postLoginBootstrap: AuthPostLoginBootstrap;
+  private readonly notifications: Pick<NotificationsService, 'sendEmail'>;
 
   constructor(deps: AuthServiceDeps) {
     this.repo = deps.repo ?? new AuthRepository();
     this.postLoginBootstrap = deps.postLoginBootstrap;
+    this.notifications = deps.notifications ?? new NotificationsService();
   }
 
   async register(data: {
@@ -72,7 +77,8 @@ export class AuthService {
 
     logger.info('New user registered', { userId: user.id, email: user.email });
 
-    const tokens = this.generateTokens({ userId: user.id, email: user.email, role: user.role });
+    await this.attachWorkspace(user);
+    const tokens = this.generateTokens(this.toJwtPayload(user));
 
     await this.repo.saveRefreshToken({
       userId: user.id,
@@ -81,6 +87,25 @@ export class AuthService {
       ip: '',
       userAgent: '',
     });
+
+    if (user.email_verification_token) {
+      const verifyUrl =
+        `${config.app.url.replace(/\/$/, '')}/api/v1/auth/verify-email/` +
+        encodeURIComponent(user.email_verification_token);
+      try {
+        await this.notifications.sendEmail(
+          user.email,
+          'Verify your Omni Group email',
+          `<p>Welcome to Omni Group Tech.</p><p><a href="${verifyUrl}">Verify your email address</a></p>`,
+          `Verify your email address: ${verifyUrl}`,
+        );
+      } catch (error) {
+        logger.warn('Verification email failed after register', {
+          userId: user.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
 
     // Best-effort onboarding: create default workflow templates for new tenants.
     try {
@@ -105,6 +130,8 @@ export class AuthService {
         role: user.role,
         planSlug: 'starter',
         isEmailVerified: false,
+        organizationId: user.active_organization_id ?? null,
+        orgRole: user.org_role ?? 'owner',
       },
     };
   }
@@ -130,14 +157,8 @@ export class AuthService {
     const isFirstLogin = !user.last_login_at;
     await this.repo.updateLastLogin(user.id, ip);
 
-    const payload: JwtPayload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      planSlug: user.plan_slug,
-    };
-
-    const tokens = this.generateTokens(payload, rememberMe);
+    await this.attachWorkspace(user);
+    const tokens = this.generateTokens(this.toJwtPayload(user), rememberMe);
 
     const refreshExpiresAt = rememberMe
       ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
@@ -177,6 +198,8 @@ export class AuthService {
         role: user.role,
         planSlug: user.plan_slug || null,
         isEmailVerified: user.is_email_verified,
+        organizationId: user.active_organization_id ?? null,
+        orgRole: user.org_role ?? 'owner',
       },
     };
   }
@@ -198,14 +221,8 @@ export class AuthService {
     // Rotate token
     await this.repo.revokeRefreshToken(tokenHash);
 
-    const payload: JwtPayload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      planSlug: user.plan_slug,
-    };
-
-    const tokens = this.generateTokens(payload);
+    await this.attachWorkspace(user);
+    const tokens = this.generateTokens(this.toJwtPayload(user));
 
     await this.repo.saveRefreshToken({
       userId: user.id,
@@ -238,8 +255,7 @@ export class AuthService {
 
     const resetUrl = `${config.app.webUrl.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
     try {
-      const notifications = new NotificationsService();
-      await notifications.sendEmail(
+      await this.notifications.sendEmail(
         user.email,
         'Reset your Omni Group password',
         `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset password</a></p><p>This link expires in 1 hour. If you did not request this, ignore this email.</p>`,
@@ -302,6 +318,28 @@ export class AuthService {
       isEmailVerified: user.is_email_verified,
       lastLoginAt: user.last_login_at,
       createdAt: user.created_at,
+    };
+  }
+
+  private async attachWorkspace(user: UserRecord): Promise<void> {
+    if (typeof this.repo.ensureOrganization !== 'function') return;
+    try {
+      const workspace = await this.repo.ensureOrganization(user.id, user.name);
+      user.active_organization_id = workspace.id;
+      user.org_role = user.org_role ?? workspace.role;
+    } catch {
+      /* organizations table may be missing in older fixtures */
+    }
+  }
+
+  private toJwtPayload(user: UserRecord): JwtPayload {
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      planSlug: user.plan_slug,
+      organizationId: user.active_organization_id ?? undefined,
+      orgRole: user.org_role ?? undefined,
     };
   }
 

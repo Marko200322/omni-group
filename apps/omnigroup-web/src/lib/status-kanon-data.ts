@@ -18,7 +18,7 @@ export type KanonSection = {
   items: KanonItem[];
 };
 
-export const STATUS_KANON_UPDATED = '2026-09-17 20:50';
+export const STATUS_KANON_UPDATED = '2026-09-24 07:40';
 
 export const KANON_SECTIONS: KanonSection[] = [
   {
@@ -39,6 +39,8 @@ export const KANON_SECTIONS: KanonSection[] = [
       { id: 'LIVE-11', title: 'n8n outreach stub (nije live send)', status: 'DONE' },
       { id: 'LIVE-12', title: 'Legal stranice u kodu', status: 'DONE' },
       { id: 'LIVE-13', title: 'Redizajn UI', status: 'CANCELLED', note: 'Odbijen 2026-09-17' },
+      { id: 'LIVE-14', title: 'Public catalog SSOT (20/20 MATCH)', status: 'DONE', note: '2026-09-24' },
+      { id: 'LIVE-15', title: 'Prod schema 038–042', status: 'DONE', note: 'orgs, RBAC, dual currency' },
     ],
   },
   {
@@ -65,7 +67,7 @@ export const KANON_SECTIONS: KanonSection[] = [
       { id: 'P1-03', title: 'BFF package-context + DeliverableQuotePanel', status: 'DONE', owner: 'Agent' },
       { id: 'P1-04', title: 'InvoiceHistoryPanel + BFF /billing/invoices', status: 'DONE', owner: 'Agent' },
       { id: 'P1-05', title: 'Problem Hunter modul (API MVP)', status: 'DONE', owner: 'Agent' },
-      { id: 'P1-06', title: 'Migracija 037_problem_hunter.sql na prod', status: 'DONE', owner: 'Agent', note: 'Applied 17:56 UTC' },
+      { id: 'P1-06', title: 'Migracija 037–042 na prod', status: 'DONE', owner: 'Agent', note: '038–042 applied 2026-09-24' },
       { id: 'P1-07', title: 'Git commit + push P1 izmena', status: 'DONE', owner: 'Agent', note: 'c9f32d9' },
       { id: 'P1-08', title: 'Deploy na prod (SafeDeploy)', status: 'DONE', owner: 'Agent' },
     ],
@@ -91,7 +93,7 @@ export const KANON_SECTIONS: KanonSection[] = [
       { id: 'P3-A01', title: 'LUSHA_API_KEY', status: 'DEFERRED' },
       { id: 'P3-A02', title: 'TAVILY_API_KEY', status: 'DEFERRED' },
       { id: 'P3-A03', title: 'ZOOMINFO_API_KEY', status: 'DEFERRED' },
-      { id: 'P3-A04', title: 'Cold outbound send ON', status: 'BLOCKED', note: 'Posle P0-01, P0-03' },
+      { id: 'P3-A04', title: 'Cold outbound send ON', status: 'BLOCKED', note: 'P0 DNS/warmup DONE; Instantly plan expired 402' },
       { id: 'P3-A05', title: 'Live n8n workflow', status: 'DEFERRED' },
       { id: 'P3-A06', title: 'Ads €200–300', status: 'DEFERRED' },
     ],
@@ -101,7 +103,7 @@ export const KANON_SECTIONS: KanonSection[] = [
     title: 'P3 — Infra / ops',
     items: [
       { id: 'P3-D01', title: 'Staging VPS', status: 'DEFERRED' },
-      { id: 'P3-D02', title: 'UptimeRobot', status: 'DEFERRED' },
+      { id: 'P3-D02', title: 'UptimeRobot', status: 'DEFERRED', note: '/api/health/live + /status ready' },
       { id: 'P3-D03', title: 'Plausible analytics', status: 'DEFERRED' },
       { id: 'P3-D04', title: 'GitHub CI required checks', status: 'DEFERRED' },
       { id: 'P3-D05', title: 'DMARC p=quarantine', status: 'DEFERRED' },

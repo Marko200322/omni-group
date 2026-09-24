@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
-import { getClientOffer, listClientOffers } from '@/lib/client-offers';
+import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 
 export default function ServicesPage() {
   const [industryCategory, setIndustryCategory] = useState('');
@@ -13,23 +13,21 @@ export default function ServicesPage() {
     () => listClientOffers({ category: industryCategory || undefined }),
     [industryCategory],
   );
-
-  const setupAndConsulting = [...available, ...later].filter((o) =>
-    o.category === 'implementation' || o.category === 'consulting' || o.category === 'retainer' || o.category === 'growth',
-  );
-  const ready = setupAndConsulting.filter((o) => o.availability.checkoutAllowed);
-  const next = setupAndConsulting.filter((o) => !o.availability.checkoutAllowed);
+  const catalogStats = getPublicCatalogStats();
+  const ready = available;
+  const next = later;
 
   return (
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Services</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Expert services</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
             Setup, support, and growth
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Same packages as Pricing — written so you know what arrives after you pay. Use Read more for the full detail.
+            Expert services sit on top of the SaaS plans. Same {catalogStats.expertServiceCount} services and
+            the same list prices as Pricing and Packages. Use Read more for the full delivery detail.
           </p>
         </motion.div>
 
@@ -59,7 +57,7 @@ export default function ServicesPage() {
           <section className="mt-20">
             <h2 className="font-display text-2xl font-bold text-white">Currently under construction</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Not for sale yet. Opens automatically when the system is ready to deliver them.
+              Not for sale yet. Use Notify me when ready — there is no Buy now checkout on these packages.
             </p>
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {next.map((offer) => (

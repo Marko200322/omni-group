@@ -18,6 +18,12 @@ export function marketingOpenGraph(title: string, description?: string): Metadat
     siteName: 'Omni Group Tech',
     locale: 'en_US',
     type: 'website',
+    images: [{
+      url: `${url}/opengraph-image`,
+      width: 1200,
+      height: 630,
+      alt: 'Omni Group Tech — custom software and AI automation',
+    }],
   };
 }
 
@@ -26,6 +32,7 @@ export function marketingTwitter(title: string, description?: string): Metadata[
     card: 'summary_large_image',
     title,
     description: description ?? defaultDescription,
+    images: [`${getSiteUrl()}/opengraph-image`],
   };
 }
 

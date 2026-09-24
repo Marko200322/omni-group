@@ -69,7 +69,7 @@ export function getInvoicePreviewSamples(): InvoicePreviewSample[] {
     periodStart: '2026-05-27T00:00:00.000Z',
     periodEnd: '2027-05-27T00:00:00.000Z',
     purchasedAt: issueDate,
-    billingUrl: 'https://omnigrouptech.com/dashboard#billing',
+    billingUrl: 'https://omnigrouptech.com/dashboard/billing',
   });
 
   const admin = renderAdminPendingEmail({

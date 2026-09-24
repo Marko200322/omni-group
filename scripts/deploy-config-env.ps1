@@ -298,14 +298,16 @@ function Get-DeployConfigWebEnvPatches([object]$Config, [string]$SiteDomain) {
   if ($lookup.ContainsKey('COMPANY_ADDRESS')) {
     $patches['NEXT_PUBLIC_COMPANY_ADDRESS'] = $lookup['COMPANY_ADDRESS']
   }
+  $personalInbox = '@(gmail|googlemail|outlook|hotmail|yahoo)\.com$'
+  $noreplyInbox = '^(noreply|no-reply)@'
   $publicSupport = ''
   if ($Config.resend.contactFrom -and "$($Config.resend.contactFrom)".Trim() -match '@') {
     $from = "$($Config.resend.contactFrom)".Trim()
-    if ($from -notmatch '@gmail\.com$') { $publicSupport = $from }
+    if ($from -notmatch $personalInbox -and $from -notmatch $noreplyInbox) { $publicSupport = $from }
   }
   if (-not $publicSupport -and $lookup.ContainsKey('CONTACT_EMAIL_TO')) {
     $to = "$($lookup['CONTACT_EMAIL_TO'])".Trim()
-    if ($to -notmatch '@gmail\.com$') { $publicSupport = $to }
+    if ($to -notmatch $personalInbox -and $to -notmatch $noreplyInbox) { $publicSupport = $to }
   }
   if (-not $publicSupport) { $publicSupport = 'hello@omnigrouptech.com' }
   $patches['NEXT_PUBLIC_SUPPORT_EMAIL'] = $publicSupport

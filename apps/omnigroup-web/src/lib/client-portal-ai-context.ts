@@ -4,36 +4,36 @@ You are Omi, the in-app assistant on the Omni Group client portal. Help users fi
 
 Portal sections (sidebar links):
 - Overview — /dashboard
-- Orders — /dashboard#orders (project status)
-- Deliveries — /dashboard#deliveries (download finished work)
-- New order — /dashboard#quote (packages and checkout)
-- Billing — /dashboard#billing (pay, invoices, payment status)
-- Documents — /dashboard#documents (upload briefs and files)
-- Support — /dashboard#support (AI + live support call)
-- Consultations — /dashboard#consultation (scope and sales questions)
-- Account — /dashboard#account (name, email, plan)
+- Orders — /dashboard/orders (project status)
+- Deliveries — /dashboard/deliveries (download finished work)
+- Projects — /dashboard/projects (active work)
+- New order — /dashboard/order (expert services and checkout)
+- Billing — /dashboard/billing (SaaS plans, invoices, payment status)
+- Documents — /dashboard/documents (upload briefs and files)
+- Support — /dashboard/support (AI + live support call)
+- Consultations — /dashboard/consultation (scope and sales questions)
+- Account — /dashboard/account (name, email, plan)
 
 Rules:
 - Answer in the user's language (English or Serbian).
 - Be concise (2–4 sentences). Prefer concrete steps: "Open Billing in the sidebar" or "Go to New order".
-- For payments: packages checkout is under New order; subscription billing under Billing.
+- For payments: SaaS plans are under Billing; expert services checkout is under New order.
 - If you cannot fix it in-app, suggest Support section or /contact.
 - Never mention internal env vars, API keys, or admin-only tools.
 `;
 
 export const PORTAL_QUICK_PROMPTS = [
-  { label: 'Where is billing?', message: 'Where do I pay and see my invoices?' },
-  { label: 'Track my order', message: 'How do I check my order status?' },
-  { label: 'New package', message: 'How do I order a new package?' },
-  { label: 'Upload files', message: 'Where can I upload project documents?' },
-  { label: 'Talk to a human', message: 'I need to speak with your team.' },
+  { label: 'Where is billing?', message: 'Where do I pay and see my invoices?', href: '/dashboard/billing' },
+  { label: 'Track my order', message: 'How do I check my order status?', href: '/dashboard/orders' },
+  { label: 'New package', message: 'How do I order a new expert service?', href: '/dashboard/order' },
+  { label: 'Upload files', message: 'Where can I upload project documents?', href: '/dashboard/documents' },
+  { label: 'Talk to a human', message: 'I need to speak with your team.', href: '/dashboard/support' },
 ] as const;
 
 export const PUBLIC_QUICK_PROMPTS = [
-  { label: 'Pricing', message: 'What packages do you offer and how does pricing work?' },
-  { label: 'Start a project', message: 'How do I start a project with Omni Group?' },
-  { label: 'Industries', message: 'Which industries do you work with?' },
-  { label: 'Sign in', message: 'How do I access the client portal?' },
-  { label: 'Talk to a human', message: 'I want to contact your team.' },
+  { label: 'Pricing', message: 'What SaaS plans do you offer and how does pricing work?', href: '/pricing' },
+  { label: 'Start a workspace', message: 'How do I start a workspace with Omni Group?', href: '/register' },
+  { label: 'Industries', message: 'Which industries do you work with?', href: '/solutions' },
+  { label: 'Sign in', message: 'How do I access the client portal?', href: '/login' },
+  { label: 'Talk to a human', message: 'I want to contact your team.', href: '/contact' },
 ] as const;
-

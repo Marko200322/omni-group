@@ -100,6 +100,19 @@ export class AutomationRepository {
     return query(`UPDATE tasks SET status = 'queued', updated_at = NOW() WHERE id = $1`, [taskId]);
   }
 
+  getQueuedScheduledTask(taskId: string) {
+    return query<{
+      id: string;
+      user_id: string;
+      payload: Record<string, unknown> | string | null;
+    }>(
+      `SELECT id, user_id, payload
+       FROM tasks
+       WHERE id = $1 AND type = 'automation_workflow' AND status = 'queued'`,
+      [taskId],
+    );
+  }
+
   insertAutomationTask(
     userId: string,
     taskType: string,

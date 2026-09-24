@@ -47,7 +47,7 @@ export default function PayPalSuccessPage() {
             : 'Please wait…'}
       </p>
       {status !== 'loading' && (
-        <Link href="/dashboard#billing" className="btn-primary mt-8 inline-block text-sm">
+        <Link href="/dashboard/billing" className="btn-primary mt-8 inline-block text-sm">
           Back to billing
         </Link>
       )}

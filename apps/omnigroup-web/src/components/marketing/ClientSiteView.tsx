@@ -145,7 +145,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
 }
 
 export function ClientSiteView({ site }: Props) {
-  const pages = site.pages ?? [];
+  const pages = useMemo(() => site.pages ?? [], [site.pages]);
   const [activeSlug, setActiveSlug] = useState(pages[0]?.slug ?? 'home');
   const activePage = useMemo(
     () => pages.find((p) => p.slug === activeSlug) ?? pages[0],

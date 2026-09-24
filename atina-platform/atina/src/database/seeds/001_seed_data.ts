@@ -8,11 +8,11 @@ async function seedPlans(): Promise<void> {
 
   const plans = [
     {
-      name: 'Business',
+      name: 'Launch',
       slug: 'starter',
-      description: 'For founders and solo teams — dashboard, basic CRM, email support.',
-      price_monthly: 39.00,
-      price_yearly: 390.00,
+      description: 'For one business replacing disconnected tools — CRM, portal, billing, and AI support.',
+      price_monthly: 79.00,
+      price_yearly: 790.00,
       is_popular: false,
       sort_order: 1,
       features: {
@@ -36,9 +36,9 @@ async function seedPlans(): Promise<void> {
     {
       name: 'Growth',
       slug: 'pro',
-      description: 'For growing teams — automations, CRM, scraper, AI avatar support.',
-      price_monthly: 99.00,
-      price_yearly: 990.00,
+      description: 'For teams running sales and operations together — workflows, analytics, and API access.',
+      price_monthly: 249.00,
+      price_yearly: 2490.00,
       is_popular: true,
       sort_order: 2,
       features: {
@@ -62,11 +62,11 @@ async function seedPlans(): Promise<void> {
       },
     },
     {
-      name: 'Partner',
+      name: 'Scale',
       slug: 'enterprise',
-      description: 'For partners and larger organizations — all modules, white-label, SLA.',
-      price_monthly: 249.00,
-      price_yearly: 2490.00,
+      description: 'For agencies and multi-workspace operators — unlimited seats, white-label, and SLA.',
+      price_monthly: 429.00,
+      price_yearly: 4290.00,
       is_popular: false,
       sort_order: 3,
       features: {

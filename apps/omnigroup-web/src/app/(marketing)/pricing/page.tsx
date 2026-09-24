@@ -6,23 +6,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { RegulatedFoundingPartnerPanel } from '@/components/marketing/RegulatedFoundingPartnerPanel';
-import { FoundingClientPromoBanner } from '@/components/marketing/FoundingClientPromoBanner';
 import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
+import { SaaSPlanPricing } from '@/components/marketing/SaaSPlanPricing';
 import { isRegulatedIndustryCategory } from '@/lib/regulated-founding-partner';
-import { getFoundingClientPlanQuote, isFoundingClientPromoEnabled } from '@/lib/founding-client-promo';
-import { formatEur } from '@/lib/category-pricing';
-import { getClientOffer, listClientOffers } from '@/lib/client-offers';
-import { calculateDeliverableQuote, type PaymentProviderId } from '@/lib/dynamic-pricing';
+import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getIndustryCategory } from '@/lib/category-pricing';
-import { listCheckoutPackages } from '@/lib/package-delivery-spec';
 import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
 
 export default function PricingPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
   const [showAdjust, setShowAdjust] = useState(false);
-  const [paymentProvider] = useState<PaymentProviderId>('manual');
-  const intensity = 55;
 
   const { available, later } = useMemo(
     () =>
@@ -33,29 +27,8 @@ export default function PricingPage() {
     [industryCategory, industryMatrix],
   );
 
-  const quotePriceById = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const offer of [...available, ...later]) {
-      const q = calculateDeliverableQuote({
-        deliverableId: offer.id,
-        industryCategory: industryCategory || null,
-        paymentProvider,
-        marketIntensity: intensity,
-        tamEstimateUsd: 50_000 + intensity * 1200,
-        competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
-      });
-      map.set(offer.id, q.clientPriceEur);
-    }
-    return map;
-  }, [available, later, industryCategory, paymentProvider, intensity]);
-
   const categoryMeta = industryCategory ? getIndustryCategory(industryCategory) : null;
-  const readyCount = listCheckoutPackages().length;
-  const foundingPromo = isFoundingClientPromoEnabled();
-  const growthFounding =
-    industryCategory && !isRegulatedIndustryCategory(industryCategory)
-      ? getFoundingClientPlanQuote('pro', industryCategory)
-      : null;
+  const catalogStats = getPublicCatalogStats();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -85,25 +58,31 @@ export default function PricingPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Packages</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Simple global pricing</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Buy what is ready today
+            Run your business from one platform
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Each package shows exactly what you get, what is not included, and when it arrives.
-            {readyCount > 0 ? (
-              <span className="mt-2 block text-emerald-200/90">
-                {readyCount} packages open for purchase right now.
-              </span>
-            ) : (
-              <span className="mt-2 block text-amber-200/90">
-                No self-serve packages are open — contact us for a quote.
-              </span>
-            )}
+            CRM, workflows, delivery, billing, documents, and AI support in one subscription. Choose USD or EUR,
+            then add expert delivery only when you need it.
           </p>
         </motion.div>
 
-        <FoundingClientPromoBanner industryCategory={industryCategory} />
+        <SaaSPlanPricing />
+
+        <section className="mt-20 border-t border-white/10 pt-16">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Expert services</p>
+          <h2 className="mt-2 font-display text-3xl font-bold text-white">Optional implementation and delivery</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
+            The subscription is the product. These fixed-scope expert services are optional accelerators with a
+            defined output, timeline, and list price — the same prices as on Packages and Services.{' '}
+            {catalogStats.readyToBuyCount} are ready to buy now
+            {catalogStats.comingSoonCount > 0
+              ? `, ${catalogStats.comingSoonCount} are coming soon`
+              : ''}
+            .
+          </p>
+        </section>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-3">
           <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
@@ -127,15 +106,10 @@ export default function PricingPage() {
           </button>
           {showAdjust && (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-              Subscription plans start from {formatEur(39)}/mo (industry-adjusted). Package anchors reflect EU
-              productized-agency benchmarks; when you pick an industry, prices adjust for that segment (budget vs
-              regulated) — same deliverables, competitive positioning. Payment is bank transfer or Stripe after sign-in.
-              {foundingPromo && growthFounding?.active ? (
-                <span className="mt-2 block text-emerald-200/90">
-                  Founding client promo: Growth from {formatEur(growthFounding.foundingEur)}/mo (
-                  {growthFounding.discountPct}% off list).
-                </span>
-              ) : null}{' '}
+              SaaS subscription prices are fixed by currency and do not change by industry. Expert-service prices can
+              adjust for scope and regulated-industry requirements. Payment methods shown after sign-in depend on what
+              is enabled for your account.
+              {' '}
               Want something custom?{' '}
               <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
                 Contact us
@@ -177,11 +151,10 @@ export default function PricingPage() {
                     offer={
                       getClientOffer(offer.id, {
                         category: industryCategory || undefined,
-                        industryRow: industryMatrix.get(offer.id) ?? null,
+                        industryRow: industryCategory ? industryMatrix.get(offer.id) ?? null : null,
                       }) ?? offer
                     }
                     id={`offer-${offer.id}`}
-                    priceOverrideEur={quotePriceById.get(offer.id)}
                   />
                 </motion.div>
               ))}
@@ -208,11 +181,10 @@ export default function PricingPage() {
                     offer={
                       getClientOffer(offer.id, {
                         category: industryCategory || undefined,
-                        industryRow: industryMatrix.get(offer.id) ?? null,
+                        industryRow: industryCategory ? industryMatrix.get(offer.id) ?? null : null,
                       }) ?? offer
                     }
                     id={`offer-${offer.id}`}
-                    priceOverrideEur={quotePriceById.get(offer.id)}
                     compact
                   />
                 </motion.div>
@@ -238,7 +210,7 @@ export default function PricingPage() {
 
         <p className="mt-14 text-center text-sm text-slate-500">
           Already a client?{' '}
-          <Link href="/dashboard#quote" className="text-violet-300 underline-offset-2 hover:underline">
+          <Link href="/dashboard/order" className="text-violet-300 underline-offset-2 hover:underline">
             Open checkout in your dashboard
           </Link>
         </p>

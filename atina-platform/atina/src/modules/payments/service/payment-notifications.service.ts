@@ -157,7 +157,7 @@ export class PaymentNotificationsService {
         await push.notifyAdmins({
           title: 'New payment pending',
           body: `${input.userName} · ${formatMoney(input.amount, input.currency)} · ${input.planName}`,
-          url: '/admin/mobile',
+          url: '/admin/billing',
           tag: `payment-pending-${input.paymentId}`,
         });
       }
@@ -171,7 +171,7 @@ export class PaymentNotificationsService {
             type: 'payment_pending',
             title,
             message,
-            actionUrl: '/admin#billing',
+            actionUrl: '/admin/billing',
             metadata: {
               paymentId: input.paymentId,
               reference: input.reference,
@@ -186,7 +186,7 @@ export class PaymentNotificationsService {
   }
 
   async sendInvoiceConfirmationToClient(input: InvoicePaidEmailInput): Promise<void> {
-    const billingUrl = `${config.app.url.replace(/\/+$/, '')}/dashboard#billing`;
+    const billingUrl = `${config.app.url.replace(/\/+$/, '')}/dashboard/billing`;
     const { subject, html, text } = renderPaidInvoiceEmail({
       brand: invoiceBrand(),
       toName: input.toName,
@@ -272,7 +272,7 @@ export class PaymentNotificationsService {
         title,
         message,
         channel: 'in_app',
-        actionUrl: '/dashboard#billing',
+        actionUrl: '/dashboard/billing',
         metadata,
       });
     } catch (err) {

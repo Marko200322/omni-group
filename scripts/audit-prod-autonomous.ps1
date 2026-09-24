@@ -279,7 +279,7 @@ try {
 
 # Contact form (public)
 try {
-  $contactBody = (@{ name = 'Audit bot'; email = 'audit@omnigroup.local'; company = 'Audit'; message = "audit $ts" } | ConvertTo-Json -Compress)
+  $contactBody = (@{ name = 'Audit bot'; email = 'audit@omnigroup.local'; company = 'Audit'; message = "audit $ts"; consent = $true } | ConvertTo-Json -Compress)
   $cr = Invoke-WebRequest -Uri "$web/api/contact" -Method POST -ContentType 'application/json' -Body $contactBody -UseBasicParsing -TimeoutSec 60
   $crj = $cr.Content | ConvertFrom-Json
   if ($crj.ok) {

@@ -1,8 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchSolutionsList, type SolutionListItem } from '@/lib/public-site-api';
+import { getIndustryCategory } from '@/lib/category-pricing';
+import { getPublicCatalogStats } from '@/lib/client-offers';
 import { getGeneratedVerticalsIndex, listOnlineVerticalEntries } from '@/lib/generated-verticals';
+import { formatPublicTitle } from '@/lib/industry-catalog';
+import { SAAS_PLANS } from '@/lib/saas-plans';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
+import { buildVerticalLandingCopy } from '@/lib/vertical-landing-copy';
 
 export const metadata: Metadata = {
   title: 'Industries',
@@ -51,6 +56,7 @@ export default async function SolutionsPage({
   const items = useIndex
     ? fallback.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
     : apiList!.items;
+  const catalogStats = getPublicCatalogStats();
 
   return (
     <div className="px-4 py-20">
@@ -60,8 +66,9 @@ export default async function SolutionsPage({
           Industry catalog
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
-          {total} industry landings — each can buy any of the 17 delivery packages. Ready packages with
-          fixed scope are on{' '}
+          {total} industry landings. Each starts from one of {SAAS_PLANS.length} SaaS plans, then can add any of
+          the {catalogStats.expertServiceCount} expert services — same catalog and list prices as Pricing.
+          {catalogStats.readyToBuyCount} services are ready to buy now. Ready packages with fixed scope are on{' '}
           <Link href="/pricing" className="text-violet-300 hover:text-white">
             Pricing
           </Link>
@@ -76,16 +83,21 @@ export default async function SolutionsPage({
               className="group rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-violet-500/40 hover:bg-violet-500/5"
             >
               <p className="text-xs uppercase tracking-wide text-violet-300/80">
-                {item.category.replace(/_/g, ' ')}
+                {getIndustryCategory(item.category)?.name ?? item.category.replace(/_/g, ' ')}
               </p>
               <h2 className="mt-2 font-display text-lg font-semibold text-white group-hover:text-violet-100">
-                {item.name}
+                {formatPublicTitle(item.name)}
               </h2>
-              {item.valueProp ? (
-                <p className="mt-2 line-clamp-3 text-sm text-slate-400">{item.valueProp}</p>
-              ) : (
-                <p className="mt-2 text-sm text-slate-500">View the delivery pack and quote for this niche.</p>
-              )}
+              <p className="mt-2 line-clamp-3 text-sm text-slate-400">
+                {
+                  buildVerticalLandingCopy({
+                    slug: item.slug,
+                    name: item.name,
+                    category: item.category,
+                    valueProp: item.valueProp,
+                  }).lede
+                }
+              </p>
             </Link>
           ))}
         </div>

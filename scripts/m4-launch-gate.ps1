@@ -6,7 +6,9 @@ param(
   [switch]$SkipFulfillment,
   [switch]$SkipSmokeAll,
   [switch]$FullPackagesMatrix,
-  [switch]$SkipSlowPackages
+  [switch]$SkipSlowPackages,
+  [ValidateSet('', 'M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M6')]
+  [string]$FactoryPhase = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +21,16 @@ $repoRoot = Split-Path -Parent $scriptsDir
 $cfgPath = Join-Path $repoRoot 'deploy-secrets.local\deploy.config.json'
 if (-not (Test-Path $cfgPath)) { throw "Missing $cfgPath" }
 $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
+$configuredPhase = "$($cfg.factoryPhase)".Trim().ToUpperInvariant()
+if (-not $FactoryPhase) {
+  if ($cfg.factoryPhaseAuto -eq $true -or $configuredPhase -eq 'AUTO') {
+    $FactoryPhase = 'M6'
+  } elseif ($configuredPhase -match '^M[0-6]$') {
+    $FactoryPhase = $configuredPhase
+  } else {
+    $FactoryPhase = 'M4'
+  }
+}
 $email = [string]$cfg.adminEmail
 $pass = [string]$cfg.adminPassword
 if ([string]::IsNullOrWhiteSpace($email) -or [string]::IsNullOrWhiteSpace($pass)) {
@@ -28,12 +40,13 @@ if ([string]::IsNullOrWhiteSpace($email) -or [string]::IsNullOrWhiteSpace($pass)
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $reportDir = Join-Path $repoRoot 'docs\evidence'
 if (-not (Test-Path $reportDir)) { New-Item -ItemType Directory -Path $reportDir -Force | Out-Null }
-$reportPath = Join-Path $reportDir ("m4-launch-gate-{0}.md" -f $stamp)
+$phaseSlug = $FactoryPhase.ToLowerInvariant()
+$reportPath = Join-Path $reportDir ("{0}-launch-gate-{1}.md" -f $phaseSlug, $stamp)
 
 $passed = 0
 $failed = 0
 $lines = New-Object System.Collections.Generic.List[string]
-[void]$lines.Add("# M4 launch gate - $stamp")
+[void]$lines.Add("# $FactoryPhase launch gate - $stamp")
 [void]$lines.Add('')
 [void]$lines.Add("- Web: $web")
 [void]$lines.Add("- API: $api")
@@ -53,7 +66,7 @@ function Write-Result {
   if ($Ok) { $script:passed++ } else { $script:failed++ }
 }
 
-Write-Host '=== M4 LAUNCH GATE ===' -ForegroundColor Cyan
+Write-Host "=== $FactoryPhase LAUNCH GATE ===" -ForegroundColor Cyan
 Write-Host ("Web={0}  API={1}" -f $web, $api) -ForegroundColor DarkGray
 Write-Host ''
 
@@ -115,6 +128,25 @@ try {
   }
 } catch {
   Write-Result 'Factory status' $false $_.Exception.Message
+}
+
+if ($FactoryPhase -eq 'M6') {
+  Write-Host ''
+  Write-Host '== 3b M6 owner-controlled production prerequisites ==' -ForegroundColor Cyan
+  $legalReady =
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.companyLegalName) -and
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.companyTaxId) -and
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.companyAddress)
+  Write-Result 'Legal company identity configured' $legalReady 'name + tax ID + registered address'
+
+  $stripeLive =
+    ([string]$cfg.stripeSecretKey).StartsWith('sk_live_') -and
+    ([string]$cfg.stripePublishableKey).StartsWith('pk_live_') -and
+    ([string]$cfg.stripeWebhookSecret).StartsWith('whsec_') -and
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.starterPriceId) -and
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.proPriceId) -and
+    -not [string]::IsNullOrWhiteSpace([string]$cfg.enterprisePriceId)
+  Write-Result 'Stripe live checkout configured' $stripeLive 'live keys + webhook secret + 3 price IDs'
 }
 
 Write-Host ''
@@ -208,6 +240,7 @@ if ($SkipContact) {
       company = 'Omni M4 Launch Gate'
       message = "Automated M4 launch gate contact smoke at $stamp. Safe to ignore."
       website = ''
+      consent = $true
     } | ConvertTo-Json -Compress
     $cr = Invoke-WebRequest -Uri "$web/api/contact" -Method POST -ContentType 'application/json' `
       -Body $contactBody -UseBasicParsing -TimeoutSec 60
@@ -273,13 +306,13 @@ if ($SkipFulfillment) {
 }
 
 Write-Host ''
-Write-Host '== 8 Local verify-factory-phase M4 ==' -ForegroundColor Cyan
+Write-Host "== 8 Local verify-factory-phase $FactoryPhase ==" -ForegroundColor Cyan
 try {
   $budgetEur = 550
   if ($cfg.monthlyBudgetEur -and [int]$cfg.monthlyBudgetEur -gt 0) {
     $budgetEur = [int]$cfg.monthlyBudgetEur
   }
-  & (Join-Path $scriptsDir 'verify-factory-phase.ps1') -FactoryPhase M4 -MonthlyBudgetEur $budgetEur
+  & (Join-Path $scriptsDir 'verify-factory-phase.ps1') -FactoryPhase $FactoryPhase -MonthlyBudgetEur $budgetEur
   Write-Result 'verify-factory-phase.ps1' ($LASTEXITCODE -eq 0) ("exit={0} budgetEur={1}" -f $LASTEXITCODE, $budgetEur)
 } catch {
   Write-Result 'verify-factory-phase.ps1' $false $_.Exception.Message

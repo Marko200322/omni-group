@@ -2,13 +2,23 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { VerticalLanding } from '@/components/marketing/VerticalLanding';
 import { fetchSolution, fallbackSolutionFromIndex } from '@/lib/public-site-api';
+import { formatPublicTitle } from '@/lib/industry-catalog';
 import { marketingOpenGraph, marketingTwitter } from '@/lib/site-metadata';
+import { buildVerticalLandingCopy } from '@/lib/vertical-landing-copy';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-function isThinSolution(solution: NonNullable<Awaited<ReturnType<typeof fetchSolution>>>): boolean {
-  const prop = solution.deliveryPack.valueProp?.trim() ?? '';
-  return prop.length < 24 || solution.status === 'draft';
+function landingCopy(solution: NonNullable<Awaited<ReturnType<typeof fetchSolution>>>) {
+  return buildVerticalLandingCopy({
+    slug: solution.slug,
+    name: solution.name,
+    category: solution.category,
+    valueProp: solution.deliveryPack.valueProp,
+  });
+}
+
+function isDraftSolution(solution: { status: string }): boolean {
+  return solution.status === 'draft';
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,24 +27,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!solution) {
     const fallback = fallbackSolutionFromIndex(slug);
     if (!fallback) return { title: 'Industry solution' };
-    const description = fallback.deliveryPack.valueProp;
-    const thin = isThinSolution(fallback);
+    const description = landingCopy(fallback).lede;
+    const thin = isDraftSolution(fallback);
+    const title = formatPublicTitle(fallback.name);
     return {
-      title: fallback.name,
+      title,
       description,
       ...(thin ? { robots: { index: false, follow: true } } : {}),
-      openGraph: marketingOpenGraph(fallback.name, description),
-      twitter: marketingTwitter(fallback.name, description),
+      openGraph: marketingOpenGraph(title, description),
+      twitter: marketingTwitter(title, description),
     };
   }
-  const description = solution.deliveryPack.valueProp || `Delivery packages and pricing for ${solution.name}.`;
-  const thin = isThinSolution(solution);
+  const description = landingCopy(solution).lede;
+  const thin = isDraftSolution(solution);
+  const title = formatPublicTitle(solution.name);
   return {
-    title: solution.name,
+    title,
     description,
     ...(thin ? { robots: { index: false, follow: true } } : {}),
-    openGraph: marketingOpenGraph(solution.name, description),
-    twitter: marketingTwitter(solution.name, description),
+    openGraph: marketingOpenGraph(title, description),
+    twitter: marketingTwitter(title, description),
   };
 }
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { VideoMeetingsController } from './controller/video-meetings.controller';
-import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin, requirePermission } from '../../api/middleware/auth.middleware';
 import { authSessionLimiter, paymentsLimiter, publicChatLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
@@ -29,6 +29,7 @@ export class VideoMeetingsModule implements IModule {
 
   async initialize(): Promise<void> {
     const auth = [authenticate, authSessionLimiter];
+    const support = [...auth, requirePermission('support.use')];
 
     // Support (prioritet)
     this.router.get('/avatar/media-stack', validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.getAvatarMediaStack);
@@ -51,14 +52,14 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/support/book',
       paymentsLimiter,
-      ...auth,
+      ...support,
       validateQuery(StrictEmptyQueryDto),
       validateBody(BookMeetingDto),
       this.controller.bookSupport
     );
     this.router.get(
       '/support/mine',
-      ...auth,
+      ...support,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listMySupport
@@ -77,7 +78,7 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/support/avatar/session',
       paymentsLimiter,
-      ...auth,
+      ...support,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StartAvatarSessionDto),
       this.controller.startSupportAvatarSession
@@ -85,14 +86,14 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/support/avatar/chat',
       paymentsLimiter,
-      ...auth,
+      ...support,
       validateQuery(StrictEmptyQueryDto),
       validateBody(AvatarChatDto),
       this.controller.chatSupportAvatar
     );
     this.router.get(
       '/support/avatar/session/:sessionId/history',
-      ...auth,
+      ...support,
       validateParams(AvatarSessionParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),

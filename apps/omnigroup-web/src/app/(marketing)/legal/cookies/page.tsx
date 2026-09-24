@@ -27,16 +27,17 @@ export default function CookiesPage() {
           <section>
             <h2 className="text-xl font-semibold text-white">1. What we use</h2>
             <p>
-              {company.brand} uses <strong>essential cookies</strong> only: session login (`og_session`), CSRF
-              protection (`og_csrf`), and cookie consent preference. We do not use advertising or third-party
-              tracking cookies on the marketing site at this time.
+              {company.brand} uses <strong>essential cookies</strong> for session login (`og_session`), CSRF
+              protection (`og_csrf`), and cookie preference. Optional analytics or advertising scripts load only
+              when the matching public environment IDs are set.
             </p>
           </section>
           <section>
             <h2 className="text-xl font-semibold text-white">2. Analytics</h2>
             <p>
-              Web analytics (e.g. Plausible or Google Analytics) may be added later with an updated notice. When
-              enabled, we will update this page and the cookie banner before collecting analytics data.
+              If Plausible, Google Tag Manager, Google Ads, or Meta Pixel IDs are configured, those scripts measure
+              visits and conversion events such as sign-up and checkout start. They stay off until those IDs are
+              present. First-party UTM values are stored in session storage only for the current browser tab.
             </p>
           </section>
           <section>

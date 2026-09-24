@@ -15,6 +15,8 @@ import {
   Layers,
   Globe2,
 } from 'lucide-react';
+import { getPublicCatalogStats } from '@/lib/client-offers';
+import { formatPlanMoney, getSaaSPlanPrice } from '@/lib/saas-plans';
 
 export type HomeCatalogStats = {
   industryGroups: number;
@@ -29,8 +31,11 @@ export function HomePageClient({ catalogStats }: Props) {
   const stats = [
     { label: 'Industry groups', value: String(catalogStats.industryGroups) },
     { label: 'Vertical landing pages', value: String(catalogStats.verticalLandings) },
-    { label: 'Payment', value: 'Bank or card' },
-    { label: 'Support', value: '24h target' },
+    {
+      label: 'SaaS plans from',
+      value: `${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'USD'), 'USD')} / ${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'EUR'), 'EUR')}`,
+    },
+    { label: 'Expert services', value: String(getPublicCatalogStats().expertServiceCount) },
   ];
 
   return (
@@ -51,15 +56,15 @@ export function HomePageClient({ catalogStats }: Props) {
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             >
               <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-200">
-                <Sparkles className="h-3.5 w-3.5" /> Omni Group · Digital delivery
+                <Sparkles className="h-3.5 w-3.5" /> Omni Group · AI operations platform
               </p>
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl">
-                Custom software and automation{' '}
-                <span className="text-gradient">built for your business</span>
+                Run sales, delivery, and support{' '}
+                <span className="text-gradient">from one AI workspace</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400">
-                You get a finished digital deliverable — setup, websites, audits, and retainers — tested before handover.
-                Transparent EUR pricing. Bank transfer or card at checkout.
+                Replace disconnected CRM, project, billing, document, and support tools. Start with the platform, then
+                add fixed-scope expert delivery only when you need it.
               </p>
               <p className="mt-3 text-sm text-slate-500">
                 <Link href="/solutions" className="text-violet-300/90 hover:text-white">
@@ -73,13 +78,13 @@ export function HomePageClient({ catalogStats }: Props) {
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
-                  See packages <ArrowRight className="h-4 w-4" />
+                  Compare plans <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  What you get
+                  Explore platform
                 </Link>
-                <Link href="/contact" className="btn-glass">
-                  Start a project
+                <Link href="/register" className="btn-glass">
+                  Create workspace
                 </Link>
               </div>
               <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -105,7 +110,7 @@ export function HomePageClient({ catalogStats }: Props) {
             >
               <LogoRing />
               <div className="absolute -bottom-4 left-1/2 max-w-[90vw] -translate-x-1/2 whitespace-normal rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1 text-center text-xs text-cyan-200 sm:whitespace-nowrap">
-                Delivery engine · Atina / Astra / Titan
+                CRM · Workflows · Delivery · Billing · AI support
               </div>
             </motion.div>
           </div>
@@ -124,28 +129,28 @@ export function HomePageClient({ catalogStats }: Props) {
               Three pillars of <span className="text-gradient">one platform</span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-              Marketing site, client portal, and professional delivery — one brand, built around your business.
+              Customer operations, delivery, and optional expert help — connected around one source of truth.
             </p>
           </motion.div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
               {
                 icon: Server,
-                title: 'Web & API',
-                body: 'Next.js front end, Express/Nest backend, TypeORM, integrations.',
-                href: '/services',
+                title: 'CRM & operations',
+                body: 'Contacts, projects, documents, billing, and delivery status in one secured workspace.',
+                href: '/products',
               },
               {
                 icon: Bot,
-                title: 'Client workspace',
-                body: 'Dashboard, projects, automations, and billing — live when the API is available.',
-                href: '/dashboard',
+                title: 'AI workspace',
+                body: 'Contextual assistance, memory, workflows, and notifications tied to real business activity.',
+                href: '/login',
               },
               {
                 icon: Zap,
-                title: 'Support & delivery',
-                body: 'Track orders, documents, billing, and live support from your client portal.',
-                href: '/login',
+                title: 'Expert delivery',
+                body: 'Add setup, integrations, websites, audits, or retainers with transparent fixed scope.',
+                href: '/services',
               },
             ].map(({ icon: Icon, title, body, href }, i) => (
               <motion.div
@@ -240,14 +245,14 @@ export function HomePageClient({ catalogStats }: Props) {
             Ready for the next level?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Book a free intro call or sign in to the client portal — track orders and delivery status in real time.
+            Create your workspace, or compare the three plans before you begin.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link href="/contact" className="btn-primary">
-              Book a consultation
+            <Link href="/register" className="btn-primary">
+              Create workspace
             </Link>
-            <Link href="/login" className="btn-glass">
-              Client portal
+            <Link href="/pricing" className="btn-glass">
+              Compare plans
             </Link>
           </div>
         </motion.div>

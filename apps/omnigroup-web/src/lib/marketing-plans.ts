@@ -5,6 +5,7 @@ import {
   getPlanPriceForCategory,
   type PlanSlug,
 } from './category-pricing';
+import { getPublicListPriceEur } from './client-offers';
 
 export { formatEur };
 
@@ -38,7 +39,7 @@ const MARKETING_PLAN_META: Omit<MarketingPlan, 'priceMonthly' | 'priceYearly'>[]
       '1 user · up to 50 tasks per month',
     ],
     cta: 'Get started — Business',
-    href: '/login?next=/dashboard%23billing',
+    href: '/login?next=/dashboard/billing',
   },
   {
     slug: 'pro',
@@ -55,7 +56,7 @@ const MARKETING_PLAN_META: Omit<MarketingPlan, 'priceMonthly' | 'priceYearly'>[]
       'Up to 10 team members',
     ],
     cta: 'Most popular — Growth',
-    href: '/login?next=/dashboard%23billing',
+    href: '/login?next=/dashboard/billing',
   },
   {
     slug: 'enterprise',
@@ -94,20 +95,23 @@ export function getMarketingPlansForCategory(industryCategory?: string | null): 
 
 export const IMPLEMENTATION_ADDONS = [
   {
+    id: 'setup-quick',
     name: 'Quick setup',
-    price: '€290',
+    price: formatEur(getPublicListPriceEur('setup-quick')),
     once: true,
     desc: 'Env, login, manual billing, contact form — ready for first clients in 1–2 days.',
   },
   {
+    id: 'setup-full',
     name: 'Full onboarding',
-    price: '€890',
+    price: formatEur(getPublicListPriceEur('setup-full')),
     once: true,
     desc: 'Data migration, CRM, automations, team training, and 30 days of support.',
   },
   {
-    name: 'Custom project',
-    price: 'from €2,490',
+    id: 'setup-custom',
+    name: 'Custom deploy',
+    price: formatEur(getPublicListPriceEur('setup-custom')),
     once: true,
     desc: 'Integrations, custom workflows, deploy on your domain, and SLA.',
   },

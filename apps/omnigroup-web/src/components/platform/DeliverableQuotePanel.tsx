@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -13,12 +13,9 @@ import {
   canCheckoutPackage,
   listCheckoutPackages,
 } from '@/lib/package-delivery-spec';
-import { getClientOffer } from '@/lib/client-offers';
+import { getClientOffer, getPublicListPriceEur } from '@/lib/client-offers';
 import { isLeanProdMode } from '@/lib/prod-mode';
-import {
-  calculateDeliverableQuote,
-  formatBillingLabel,
-} from '@/lib/dynamic-pricing';
+import { formatBillingLabel } from '@/lib/dynamic-pricing';
 
 type ManualCheckout = {
   paymentId: string;
@@ -68,7 +65,6 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
   const verticalSlug = initialVertical;
   const [deliverableId, setDeliverableId] = useState(resolvedInitial);
-  const [intensity] = useState(55);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +84,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         };
         if (!cancelled && json.ok && json.data?.methods) {
           const stripeOn = json.data.methods.some((m) => m.id === 'stripe' && m.available);
-          setStripePreferred(stripeOn && json.data.mode !== 'manual');
+          setStripePreferred(stripeOn);
         }
       } catch {
         /* keep manual default */
@@ -108,23 +104,12 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     ...DELIVERABLE_CATALOG.filter((d) => !checkoutIds.includes(d.id)),
   ];
 
-  const quote = useMemo(() => {
-    if (!deliverable) return null;
-    return calculateDeliverableQuote({
-      deliverableId,
-      industryCategory: industryCategory || null,
-      verticalSlug: verticalSlug || null,
-      paymentProvider: stripePreferred ? 'stripe' : 'manual',
-      marketIntensity: intensity,
-      tamEstimateUsd: 50_000 + intensity * 1200,
-      competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
-    });
-  }, [deliverable, deliverableId, industryCategory, verticalSlug, intensity, stripePreferred]);
+  const listPriceEur = getPublicListPriceEur(deliverableId);
 
   useEffect(() => {
     setCheckout(null);
     setSent(false);
-  }, [deliverableId, industryCategory, verticalSlug, intensity]);
+  }, [deliverableId, industryCategory, verticalSlug]);
 
   useEffect(() => {
     if (!industryCategory || !deliverableId) {
@@ -168,7 +153,6 @@ export function DeliverableQuotePanel({ disabled }: Props) {
           body: JSON.stringify({
             deliverableId,
             industryCategory: industryCategory || undefined,
-            marketIntensity: intensity,
             ...(maintenanceTierId ? { maintenanceTierId } : {}),
           }),
         });
@@ -184,13 +168,12 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       const res = await fetch('/api/atina/payments/manual/deliverable-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          deliverableId,
-          industryCategory: industryCategory || undefined,
-          paymentProvider: 'manual',
-          marketIntensity: intensity,
-          ...(maintenanceTierId ? { maintenanceTierId } : {}),
-        }),
+          body: JSON.stringify({
+            deliverableId,
+            industryCategory: industryCategory || undefined,
+            paymentProvider: 'manual',
+            ...(maintenanceTierId ? { maintenanceTierId } : {}),
+          }),
       });
       const json = (await res.json()) as {
         ok?: boolean;
@@ -215,8 +198,6 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   }, [
     deliverableId,
     industryCategory,
-    verticalSlug,
-    intensity,
     checkoutAllowed,
     stripePreferred,
     maintenanceTierId,
@@ -247,7 +228,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     }
   }, [checkout?.paymentId]);
 
-  if (!deliverable || !quote) return null;
+  if (!deliverable || listPriceEur <= 0) return null;
 
   return (
     <motion.div className="mt-4 space-y-4">
@@ -372,8 +353,8 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       </div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm">
-        <span className="text-slate-400">Quoted price: </span>
-        <span className="text-xl font-bold text-white">{formatEur(quote.clientPriceEur)}</span>
+        <span className="text-slate-400">List price: </span>
+        <span className="text-xl font-bold text-white">{formatEur(listPriceEur)}</span>
         <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
         <span className="mt-1 block text-xs text-slate-500">
           {clientOffer?.when ?? 'After payment confirmation'}

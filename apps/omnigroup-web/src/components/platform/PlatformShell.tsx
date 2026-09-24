@@ -4,53 +4,31 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
-  LayoutDashboard,
-  CreditCard,
-  Search,
   Menu,
   X,
   LogOut,
   ChevronRight,
-  FolderKanban,
-  LifeBuoy,
-  MessageCircle,
-  UserCircle,
   Shield,
-  Package,
-  FileText,
-  Truck,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
 import { fadeUp, staggerContainer, tapScale } from '@/lib/animations';
 import { OmniGroupLogoMark } from '@/components/brand/OmniGroupLogoMark';
 import { NotificationBell } from '@/components/platform/NotificationBell';
-import { buildAdminNavItems, type PlatformNavItem } from '@/lib/platform-nav';
+import { buildAdminNavItems, buildClientNavItems, type PlatformNavItem } from '@/lib/platform-nav';
+import { isPlatformNavActive } from '@/lib/workspace-routes';
 import { getFactoryPhase } from '@/lib/factory-phase';
 import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
 import { isLeanProdMode } from '@/lib/prod-mode';
 
 export type PlatformVariant = 'admin' | 'client';
 
-const clientNav: PlatformNavItem[] = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard#orders', label: 'Orders', icon: Package },
-  { href: '/dashboard#deliveries', label: 'Deliveries', icon: Truck },
-  { href: '/dashboard#projects', label: 'Projects', icon: FolderKanban },
-  { href: '/dashboard#quote', label: 'New order', icon: CreditCard },
-  { href: '/dashboard#billing', label: 'Billing', icon: CreditCard },
-  { href: '/dashboard#documents', label: 'Documents', icon: FileText },
-  { href: '/dashboard#support', label: 'Support', icon: LifeBuoy },
-  { href: '/dashboard#consultation', label: 'Consultations', icon: MessageCircle },
-  { href: '/dashboard#account', label: 'Account', icon: UserCircle },
-];
-
 type Props = {
   variant: PlatformVariant;
   title: string;
   subtitle?: string;
   badge?: React.ReactNode;
-  sessionUser?: { name: string; email: string } | null;
+  sessionUser?: { name: string; email: string; role?: string | null; orgRole?: string | null } | null;
   isDemo?: boolean;
   /** Admin only — omit to use default client nav; pass from AdminClient for phase-aware links. */
   navItems?: PlatformNavItem[];
@@ -64,24 +42,6 @@ function initials(name: string): string {
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
 }
 
-function useRouteHash(): string {
-  const [hash, setHash] = useState('');
-  useEffect(() => {
-    const sync = () => setHash(window.location.hash);
-    sync();
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
-  return hash;
-}
-
-function isNavItemActive(pathname: string, hash: string, href: string): boolean {
-  const [path, fragment] = href.split('#');
-  if (pathname !== path) return false;
-  if (!fragment) return !hash || hash === '#';
-  const expected = `#${fragment}`;
-  return hash === expected || hash === fragment;
-}
 
 export function PlatformShell({
   variant,
@@ -95,7 +55,6 @@ export function PlatformShell({
 }: Props) {
   const pathname = usePathname();
   const router = useRouter();
-  const routeHash = useRouteHash();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const defaultAdminNav = useMemo(() => {
     const phase = getFactoryPhase();
@@ -105,15 +64,19 @@ export function PlatformShell({
       autonomyAllowed: isFactoryModuleAllowed('autonomy', phase),
     });
   }, []);
+  const clientNav = useMemo(() => buildClientNavItems(sessionUser), [sessionUser]);
   const nav = variant === 'admin' ? (navItems ?? defaultAdminNav) : clientNav;
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
   const brand = variant === 'admin' ? 'Omni Group Tech Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-    router.refresh();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
   }
 
   return (
@@ -141,7 +104,7 @@ export function PlatformShell({
         >
           <LayoutGroup id={`sidebar-${variant}`}>
           {nav.map((item, i) => {
-            const active = isNavItemActive(pathname, routeHash, item.href);
+            const active = isPlatformNavActive(pathname, item.href);
             return (
               <motion.div key={item.href} variants={fadeUp} custom={i}>
                 <motion.div whileHover={{ x: 4 }} whileTap={tapScale}>
@@ -199,7 +162,7 @@ export function PlatformShell({
           {variant === 'admin' && !isDemo && (
             <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
               <Shield className="h-3.5 w-3.5 shrink-0" />
-              Admin session — protect prod `.env`
+              Admin session — owner tools only
             </div>
           )}
         </div>
@@ -230,17 +193,23 @@ export function PlatformShell({
                 </button>
               </div>
               <nav className="flex-1 space-y-1 p-3">
-                {nav.map((item) => (
+                {nav.map((item) => {
+                  const active = isPlatformNavActive(pathname, item.href);
+                  return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-300 hover:bg-white/5"
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${
+                      active ? 'bg-white/10 text-white' : 'text-slate-300 hover:bg-white/5'
+                    }`}
+                    aria-current={active ? 'page' : undefined}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
                   </Link>
-                ))}
+                  );
+                })}
               </nav>
             </motion.aside>
           </>
@@ -257,21 +226,7 @@ export function PlatformShell({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div
-            className="hidden flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 md:flex md:max-w-md"
-            title="Global search is not available yet"
-          >
-            <Search className="h-4 w-4 text-slate-600" aria-hidden />
-            <input
-              type="search"
-              placeholder="Search (coming soon)"
-              disabled
-              tabIndex={-1}
-              aria-disabled="true"
-              aria-label="Search — coming soon"
-              className="w-full cursor-not-allowed bg-transparent text-sm text-slate-600 outline-none placeholder:text-slate-600"
-            />
-          </div>
+          <div className="hidden flex-1 md:block" aria-hidden />
           <div className="flex flex-1 items-center justify-end gap-3 lg:flex-none">
             <NotificationBell disabled={isDemo || !sessionUser} />
             <div className="hidden h-8 w-px bg-white/10 sm:block" />

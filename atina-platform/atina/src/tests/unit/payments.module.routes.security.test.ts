@@ -21,6 +21,7 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     }
     return next();
   },
+  requirePermission: () => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
 
 jest.mock('../../api/middleware/rate-limit.middleware', () => {

@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
-import { getClientOffer, listClientOffers } from '@/lib/client-offers';
-import { calculateDeliverableQuote, type PaymentProviderId } from '@/lib/dynamic-pricing';
+import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getGeneratedVerticalsIndex } from '@/lib/generated-verticals';
 import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
 import { getIndustryCategory } from '@/lib/category-pricing';
@@ -14,8 +13,6 @@ import { getIndustryCategory } from '@/lib/category-pricing';
 export default function ProductsPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
-  const paymentProvider: PaymentProviderId = 'manual';
-  const intensity = 55;
   const categoryMeta = industryCategory ? getIndustryCategory(industryCategory) : null;
   const { available, later } = useMemo(
     () =>
@@ -25,22 +22,8 @@ export default function ProductsPage() {
       }),
     [industryCategory, industryMatrix],
   );
-  const quotePriceById = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const offer of [...available, ...later]) {
-      const q = calculateDeliverableQuote({
-        deliverableId: offer.id,
-        industryCategory: industryCategory || null,
-        paymentProvider,
-        marketIntensity: intensity,
-        tamEstimateUsd: 50_000 + intensity * 1200,
-        competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
-      });
-      map.set(offer.id, q.clientPriceEur);
-    }
-    return map;
-  }, [available, later, industryCategory, paymentProvider, intensity]);
   const generatedCount = getGeneratedVerticalsIndex().count;
+  const catalogStats = getPublicCatalogStats();
 
   return (
     <div className="px-4 py-20">
@@ -76,7 +59,11 @@ export default function ProductsPage() {
 
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
-          <p className="mt-1 text-sm text-slate-400">Same packages and prices as on Pricing.</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Same {catalogStats.expertServiceCount} expert services and the same list prices as Pricing and
+            Services. {catalogStats.readyToBuyCount} are ready to buy
+            {catalogStats.comingSoonCount > 0 ? `; ${catalogStats.comingSoonCount} are coming soon` : ''}.
+          </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {available.map((offer, i) => (
               <motion.div
@@ -89,10 +76,9 @@ export default function ProductsPage() {
                   offer={
                     getClientOffer(offer.id, {
                       category: industryCategory || undefined,
-                      industryRow: industryMatrix.get(offer.id) ?? null,
+                      industryRow: industryCategory ? industryMatrix.get(offer.id) ?? null : null,
                     }) ?? offer
                   }
-                  priceOverrideEur={quotePriceById.get(offer.id)}
                 />
               </motion.div>
             ))}
@@ -125,7 +111,6 @@ export default function ProductsPage() {
                 >
                   <OfferCard
                     offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
-                    priceOverrideEur={quotePriceById.get(offer.id)}
                     compact
                   />
                 </motion.div>

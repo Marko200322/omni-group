@@ -92,7 +92,7 @@ Full explorer notes: see conversation map + `SYSTEM-MAP.md`.
 | P1-VERTICAL-CONTENT | 907 pages — heavy template duplication | Phased content upgrade; prioritize categories with traffic/sales |
 | P1-VERTICAL-DUP-NAMES | 15+ duplicate base names | Manual taxonomy review spreadsheet |
 | P1-TERMS | “Package” vs “Product” vs “Service” mixed in UI | Glossary in copy guide; align `/services` + `/products` headers |
-| P1-CONTACT-FIELDS | Prompt asks industry/budget/timeline/consent fields | Current: name, email, company, message + query context — extend form + API validation |
+| P1-CONTACT-FIELDS | Industry/budget/timeline/consent | DONE 2026-09-24 — form + API enum validation |
 | P1-ORDER-STATES | Full lifecycle enum in prompt vs Atina implementation | Map existing order/payment states; document in client portal |
 
 ---

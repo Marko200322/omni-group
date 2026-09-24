@@ -5,12 +5,13 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import type { AtinaPlanSummary } from '@/lib/atina';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { getIndustryCategory, type PlanSlug } from '@/lib/category-pricing';
 import {
-  formatEur,
-  getIndustryCategory,
-  getPlanPriceForCategory,
-  type PlanSlug,
-} from '@/lib/category-pricing';
+  formatPlanMoney,
+  getSaaSPlan,
+  getSaaSPlanPrice,
+  type BillingCurrency,
+} from '@/lib/saas-plans';
 import { describeAtinaError } from '@/lib/atina-errors';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 import { InvoiceHistoryPanel } from '@/components/platform/InvoiceHistoryPanel';
@@ -86,9 +87,17 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const initialCategory = searchParams.get('category') ?? '';
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [methodsLoaded, setMethodsLoaded] = useState(false);
-  const [mode, setMode] = useState<string>('manual');
-  const [planSlug, setPlanSlug] = useState('pro');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [planSlug, setPlanSlug] = useState(
+    ['starter', 'pro', 'enterprise'].includes(searchParams.get('plan') ?? '')
+      ? (searchParams.get('plan') as string)
+      : 'pro',
+  );
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(
+    searchParams.get('cycle') === 'yearly' ? 'yearly' : 'monthly',
+  );
+  const [currency, setCurrency] = useState<BillingCurrency>(
+    searchParams.get('currency')?.toUpperCase() === 'EUR' ? 'EUR' : 'USD',
+  );
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
   const [checkout, setCheckout] = useState<ManualCheckout | null>(null);
   const [kriptomanCheckout, setKriptomanCheckout] = useState<KriptomanCheckout | null>(null);
@@ -104,8 +113,8 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
 
   const quotedAmount = useMemo(() => {
     const slug = (['starter', 'pro', 'enterprise'].includes(planSlug) ? planSlug : 'pro') as PlanSlug;
-    return getPlanPriceForCategory(slug, billingCycle, industryCategory || null);
-  }, [planSlug, billingCycle, industryCategory]);
+    return getSaaSPlanPrice(slug, billingCycle, currency);
+  }, [planSlug, billingCycle, currency]);
 
   const categoryMeta = getIndustryCategory(industryCategory);
 
@@ -135,7 +144,6 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           data?: { mode?: string; methods?: PaymentMethod[] };
         };
         if (cancelled || !json.ok || !json.data) return;
-        setMode(json.data.mode ?? 'manual');
         setMethods(json.data.methods ?? []);
       } catch {
         if (!cancelled) setError('Unable to load payment methods.');
@@ -170,6 +178,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         body: JSON.stringify({
           planSlug,
           billingCycle,
+          currency,
           cryptoCurrency,
           ...(industryCategory ? { industryCategory } : {}),
           ...buyerBillingPayload(),
@@ -188,7 +197,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [planSlug, billingCycle, cryptoCurrency, industryCategory, buyerBillingPayload]);
+  }, [planSlug, billingCycle, currency, cryptoCurrency, industryCategory, buyerBillingPayload]);
 
   const syncKriptoman = useCallback(async () => {
     if (!kriptomanCheckout?.paymentId) return;
@@ -220,10 +229,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     () => ({
       planSlug,
       billingCycle,
+      currency,
       ...(industryCategory ? { industryCategory } : {}),
       ...buyerBillingPayload(),
     }),
-    [planSlug, billingCycle, industryCategory, buyerBillingPayload],
+    [planSlug, billingCycle, currency, industryCategory, buyerBillingPayload],
   );
 
   const startStripeCheckout = useCallback(async () => {
@@ -340,12 +350,12 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     }
   }, [checkout?.paymentId]);
 
-  const manualAvailable = methods.some((m) => m.id === 'manual' && m.available);
-  const kriptomanAvailable = methods.some((m) => m.id === 'kriptoman' && m.available);
   const stripeAvailable = methods.some((m) => m.id === 'stripe' && m.available);
   const paypalAvailable = methods.some((m) => m.id === 'paypal' && m.available);
   const wiseAvailable = methods.some((m) => m.id === 'wise' && m.available);
-  const ibanPrimary = mode === 'manual' && manualAvailable;
+  const kriptomanAvailable = methods.some((m) => m.id === 'kriptoman' && m.available);
+  const manualAvailable = !stripeAvailable && methods.some((m) => m.id === 'manual' && m.available);
+  const stripePrimary = stripeAvailable;
 
   return (
     <motion.div className="mt-4 space-y-4">
@@ -421,19 +431,18 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         </label>
       </div>
 
-      {ibanPrimary && (
+      {stripePrimary && (
         <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
-          <span className="font-medium text-white">Active payment method: Bank transfer (IBAN)</span>
+          <span className="font-medium text-white">Active payment method: Card (Stripe)</span>
           <span className="mt-1 block text-emerald-200/90">
-            Generate instructions below, pay using the reference on your proforma, then confirm when sent. Card and
-            crypto are not enabled for this account.
+            Pay by card. Bank transfer (IBAN) is not required.
           </span>
         </p>
       )}
 
-      {mode === 'manual' && !ibanPrimary && (
+      {!stripeAvailable && manualAvailable && (
         <p className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
-          Bank transfer billing — price depends on industry category; same amount shown on /pricing.
+          Card checkout is not configured yet. Bank transfer is available as a temporary fallback.
         </p>
       )}
 
@@ -448,7 +457,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         className="rounded-xl border border-white/5 bg-white/[0.02] p-3"
       />
 
-      <motion.div className="grid gap-3 sm:grid-cols-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="grid gap-3 sm:grid-cols-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <label className="block text-sm">
           <span className="text-slate-400">Plan</span>
           <select
@@ -459,14 +468,10 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           >
             {plans.map((p) => {
               const slug = (p.slug ?? 'pro') as PlanSlug;
-              const price = getPlanPriceForCategory(
-                slug,
-                billingCycle,
-                industryCategory || null,
-              );
+              const price = getSaaSPlanPrice(slug, billingCycle, currency);
               return (
                 <option key={p.slug ?? p.name} value={p.slug ?? 'pro'}>
-                  {p.name ?? p.slug} — {formatEur(price)}
+                  {getSaaSPlan(slug).name} — {formatPlanMoney(price, currency)}
                   {billingCycle === 'yearly' ? '/yr' : '/mo'}
                 </option>
               );
@@ -492,13 +497,25 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
             <option value="yearly">Annual</option>
           </select>
         </label>
+        <label className="block text-sm">
+          <span className="text-slate-400">Billing currency</span>
+          <select
+            className={CHECKOUT_SELECT_CLASS}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as BillingCurrency)}
+            disabled={disabled || loading}
+          >
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </label>
       </motion.div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
         Amount due:{' '}
-        <span className="font-semibold text-white">{formatEur(quotedAmount)}</span>
+        <span className="font-semibold text-white">{formatPlanMoney(quotedAmount, currency)}</span>
         {billingCycle === 'yearly' ? ' / year' : ' / month'}
-        {categoryMeta ? ` · ${categoryMeta.name}` : ' · standard tier'}
+        {categoryMeta ? ` · ${categoryMeta.name} workspace profile` : ''}
       </p>
 
       {kriptomanAvailable && (
@@ -562,11 +579,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         {manualAvailable && (
           <button
             type="button"
-            className={`text-sm disabled:opacity-50 ${ibanPrimary ? 'btn-primary' : 'btn-glass'}`}
+            className="btn-glass text-sm disabled:opacity-50"
             onClick={startManualCheckout}
             disabled={disabled || loading}
           >
-            {loading ? 'Generating…' : 'Bank transfer (IBAN)'}
+            {loading ? 'Generating…' : 'Bank transfer'}
           </button>
         )}
       </div>

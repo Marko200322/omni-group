@@ -33,6 +33,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let mockRepo: jest.Mocked<AuthRepository>;
   let postLoginBootstrapMock: { bootstrapTemplates: jest.Mock };
+  let notificationsMock: { sendEmail: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,7 +43,11 @@ describe('AuthService', () => {
     postLoginBootstrapMock = {
       bootstrapTemplates: jest.fn().mockResolvedValue({ totals: { created: 0 } }),
     };
-    service = new AuthService({ postLoginBootstrap: postLoginBootstrapMock });
+    notificationsMock = { sendEmail: jest.fn().mockResolvedValue(undefined) };
+    service = new AuthService({
+      postLoginBootstrap: postLoginBootstrapMock,
+      notifications: notificationsMock,
+    });
     mockRepo = MockAuthRepository.mock.instances[0] as jest.Mocked<AuthRepository>;
   });
 
@@ -124,6 +129,12 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
       expect(result.user.email).toBe('new@example.com');
+      expect(notificationsMock.sendEmail).toHaveBeenCalledWith(
+        'new@example.com',
+        'Verify your Omni Group email',
+        expect.stringContaining('/api/v1/auth/verify-email/token123'),
+        expect.stringContaining('/api/v1/auth/verify-email/token123'),
+      );
     });
 
     it('still registers when audit INSERT fails with non-Error rejection', async () => {

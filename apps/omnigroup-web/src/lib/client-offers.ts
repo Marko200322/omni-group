@@ -9,6 +9,7 @@ import {
   getPackageDeliverySpec,
   listCheckoutPackages,
   resolvePackageOffer,
+  type OfferSaleStatus,
   type PackageAvailability,
 } from './package-delivery-spec';
 import { getFactoryPhase } from './factory-phase';
@@ -18,7 +19,7 @@ import {
   type DeliverableDefinition,
 } from './deliverable-catalog';
 import { formatEur } from './category-pricing';
-import { calculateDeliverableQuote, formatBillingLabel } from './dynamic-pricing';
+import { formatBillingLabel } from './dynamic-pricing';
 import { buildLoginNextForQuote, buildPricingHref } from './checkout-navigation';
 import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
 import type { PackageIndustryMatrixRow } from './package-industry-matrix';
@@ -89,7 +90,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     summary:
       'We publish a professional one-page site with sales copy and a contact section — hosted and live under omnigrouptech.com.',
     readMore:
-      'You get a published URL at /sites/{your-slug}, AI-written copy for your niche, and a contact section. Custom domain DNS, stock photo licenses, and unlimited revision rounds are not included.',
+      'You get a published URL on omnigrouptech.com, AI-written copy for your niche, and a contact section. Custom domain DNS, stock photo licenses, and unlimited revision rounds are not included.',
     when: 'Usually 2–4 days after payment',
     youGet: ['Live public URL', 'Niche sales copy', 'Contact section'],
     notIncluded: ['Custom domain DNS', 'Unlimited revisions'],
@@ -108,8 +109,8 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Full portal onboarding with CRM and training pack.',
     summary: 'CRM sample pipeline, automation modules, migration template, and 30 days of support window.',
     readMore:
-      'Opens as the factory grows. Includes CRM seed, modules, CSV migration template, training outline PDF, and a registered 30-day support window. Hands-on legacy migration and live training calls need a support retainer.',
-    when: 'When this package opens for checkout',
+      'Includes CRM seed, modules, CSV migration template, training outline PDF, and a registered 30-day support window. Hands-on legacy migration and live training calls need a support retainer.',
+    when: 'Usually 5–7 days after payment',
     youGet: ['CRM + automation modules', 'Migration CSV template', 'Training outline PDF'],
     notIncluded: ['Hands-on data migration', 'Live training calls'],
   },
@@ -118,7 +119,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     summary: 'Deploy manifest, CRM seed, and enterprise setup PDF for your operations team.',
     readMore:
       'For teams that run their own servers. We do not deploy onto your infrastructure or run 24/7 SLA ops for you in this package.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 3–5 days after payment',
     youGet: ['Deploy manifest', 'CRM + modules', 'Enterprise setup PDF'],
     notIncluded: ['Deploy on your servers', '24/7 SLA ops'],
   },
@@ -127,7 +128,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     summary: 'PDF + config JSON with webhooks and auth notes — ready for your engineer.',
     readMore:
       'We do not live-connect your Stripe/ERP/CRM or register OAuth apps on third-party tools in this package.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 2–4 days after payment',
     youGet: ['Integration guide PDF', 'Config JSON download', 'Webhook map'],
     notIncluded: ['Live third-party wiring'],
   },
@@ -135,7 +136,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Dedicated monthly support with faster SLA.',
     summary: '8h response target, video meetings module, and monthly health-check.',
     readMore: 'Slack on your workspace is notify-via-webhook, not a private channel we create for you.',
-    when: 'Monthly · when package is open',
+    when: 'Starts after first payment · renews monthly',
     youGet: ['8h SLA queue', 'Video meetings module', 'Monthly health-check'],
     notIncluded: ['Private Slack on your workspace'],
   },
@@ -143,7 +144,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Demo storefront with catalog and checkout notes.',
     summary: 'Live demo shop with sample products and documented checkout path.',
     readMore: 'Not real inventory sync or your Stripe account wiring.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 5–8 days after payment',
     youGet: ['Live storefront URL', 'Demo catalog', 'Checkout notes'],
     notIncluded: ['Real payments wiring', 'Inventory sync'],
   },
@@ -151,7 +152,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Partner packaging + live landing for resale.',
     summary: 'Brand PDF and a live landing page positioned for partner sales.',
     readMore: 'Legal partner agreements and partner custom domains are separate.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 4–6 days after payment',
     youGet: ['Brand packaging PDF', 'Live landing page'],
     notIncluded: ['Legal agreements', 'Partner custom domain'],
   },
@@ -159,7 +160,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Sales scripts and FAQ your team can use.',
     summary: 'Demo script, outreach hooks, FAQ, and closing checklist in one PDF.',
     readMore: 'Does not include live sales calls or CRM setup for your sales team.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 2–3 days after payment',
     youGet: ['Sales enablement PDF', 'Industry hooks', 'FAQ + closing checklist'],
     notIncluded: ['Live sales calls'],
   },
@@ -167,23 +168,23 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     promise: 'Monthly industry pack: CRM + automations.',
     summary: 'Vertical brief, CRM pipeline, and core modules for your niche — billed monthly.',
     readMore: 'Video avatar and outbound campaigns are available on higher-tier retainers — ask us which package fits.',
-    when: 'Monthly · when package is open',
+    when: 'Starts after first payment · renews monthly',
     youGet: ['Vertical brief PDF', 'CRM pipeline', 'CRM + automation + billing'],
     notIncluded: ['Outbound hunting in lean mode'],
   },
   'lead-gen-retainer': {
     promise: 'Monthly lead gen into your CRM.',
-    summary: 'Lead report, CRM pipeline, and hunter workspace — needs outbound stack.',
+    summary: 'Lead report, CRM pipeline, and outreach workspace — needs outbound stack.',
     readMore: 'No guaranteed meetings. Full outbound prospecting is a separate engagement.',
-    when: 'Monthly · when package is open',
+    when: 'Starts after first payment · renews monthly',
     youGet: ['Monthly lead report', 'CRM + outreach modules'],
     notIncluded: ['Guaranteed meetings'],
   },
   'ai-support-retainer': {
     promise: 'Monthly AI support setup for your clients.',
-    summary: 'Support avatar modules, RAG seed, and setup PDF.',
+    summary: 'AI support inbox, knowledge starter, and setup PDF.',
     readMore: 'Ultra-realistic video avatars need HeyGen/D-ID keys configured.',
-    when: 'Monthly · when package is open',
+    when: 'Starts after first payment · renews monthly',
     youGet: ['AI support PDF', 'RAG knowledge seed', 'Avatar modules'],
     notIncluded: ['Video avatar without AI keys'],
   },
@@ -222,19 +223,25 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     summary: 'Isolated Node API + SPA starter with test gate and handoff PDF.',
     readMore:
       'Priced as a starter codebase. Not unlimited feature development, production launch on your infra, or app-store deployment.',
-    when: 'When this package opens for checkout',
+    when: 'Usually 7–10 days after payment',
     youGet: ['Isolated starter project', 'Test gate metadata', 'Handoff PDF'],
     notIncluded: ['Unlimited features', 'Full product build', 'App store deploy'],
   },
 };
 
+export type { OfferSaleStatus };
+
 export type ClientOffer = {
   id: string;
+  slug: string;
   name: string;
   category: DeliverableDefinition['category'];
   categoryLabel: string;
   billing: DeliverableDefinition['billing'];
+  billingPeriod: DeliverableDefinition['billing'];
+  currency: 'EUR';
   priceEur: number;
+  checkoutEnabled: boolean;
   priceLabel: string;
   promise: string;
   summary: string;
@@ -243,6 +250,7 @@ export type ClientOffer = {
   youGet: string[];
   notIncluded: string[];
   availability: PackageAvailability;
+  saleStatus: OfferSaleStatus;
   buyHref: string;
   detailsHref: string;
   contactHref: string;
@@ -251,6 +259,48 @@ export type ClientOffer = {
   industryRecommended?: boolean;
   industryPitch?: string;
 };
+
+/**
+ * Canonical public list price (EUR).
+ * This is the only number Pricing / Products / Services / detail / checkout / Stripe may show or charge.
+ * Do not substitute calculateDeliverableQuote — that M6 market engine is analytics-only
+ * (e.g. setup-quick list 549 vs quote@intensity55 = 1074).
+ */
+export function getPublicListPriceEur(deliverableId: string): number {
+  return getPackageAnchorEur(deliverableId);
+}
+
+export function saleStatusFromAvailability(availability: PackageAvailability): OfferSaleStatus {
+  return availability.saleStatus;
+}
+
+const OPENS_LATER_COPY = /when (this )?package opens|when package is open|opens? for checkout|factory grows/i;
+
+export function publicOfferWhen(
+  copyWhen: string,
+  saleStatus: OfferSaleStatus,
+  billing: DeliverableDefinition['billing'],
+): string {
+  if (saleStatus === 'REQUEST_QUOTE') return 'We reply with a scoped quote.';
+  if (saleStatus === 'COMING_SOON') {
+    return 'Not for sale yet — ask us for early access.';
+  }
+  if (OPENS_LATER_COPY.test(copyWhen)) {
+    return billing === 'monthly'
+      ? 'Starts after first payment · renews monthly'
+      : 'After payment confirmation';
+  }
+  return copyWhen;
+}
+
+export function getPublicCatalogStats() {
+  const { available, later } = listClientOffers();
+  return {
+    expertServiceCount: available.length + later.length,
+    readyToBuyCount: available.length,
+    comingSoonCount: later.length,
+  };
+}
 
 function fallbackCopy(d: DeliverableDefinition): ClientOfferCopy {
   const spec = getPackageDeliverySpec(d.id);
@@ -290,41 +340,43 @@ export function getClientOffer(
     row?.recommendedForIndustry && row.businessOutcome
       ? row.businessOutcome.split('—')[0]?.trim() || copy.promise
       : copy.promise;
-  const priceEur = opts?.category
-    ? calculateDeliverableQuote({
-        deliverableId: id,
-        industryCategory: opts.category,
-        paymentProvider: 'manual',
-        marketIntensity: 55,
-        tamEstimateUsd: 50_000 + 55 * 1200,
-        competitionScore: 58,
-      }).clientPriceEur
-    : getPackageAnchorEur(id);
+  const priceEur = getPublicListPriceEur(id);
   const availability = getPackageAvailability(id);
+  const saleStatus = saleStatusFromAvailability(availability);
   const category = opts?.category;
   const vertical = opts?.vertical;
+  const contactHref = `/contact?service=${encodeURIComponent(id)}${
+    category ? `&category=${encodeURIComponent(category)}` : ''
+  }`;
+  const buyHref =
+    saleStatus === 'READY_TO_BUY'
+      ? buildLoginNextForQuote({ service: id, category, vertical })
+      : contactHref;
   return {
     id: d.id,
+    slug: d.id,
     name: d.name,
     category: d.category,
     categoryLabel: DELIVERABLE_CATEGORY_LABELS[d.category],
     billing: d.billing,
+    billingPeriod: d.billing,
+    currency: 'EUR',
     priceEur,
+    checkoutEnabled: saleStatus === 'READY_TO_BUY',
     priceLabel: `${formatEur(priceEur)} ${formatBillingLabel(d.billing)}`,
     promise,
     summary,
     readMore: row?.industrySolutionPitch
       ? `${copy.readMore} ${row.industrySolutionPitch}`.trim()
       : copy.readMore,
-    when: copy.when,
+    when: publicOfferWhen(copy.when, saleStatus, d.billing),
     youGet: mergedYouGet,
     notIncluded: copy.notIncluded,
     availability,
-    buyHref: buildLoginNextForQuote({ service: id, category, vertical }),
+    saleStatus,
+    buyHref,
     detailsHref: buildPricingHref({ service: id, category, vertical }),
-    contactHref: `/contact?service=${encodeURIComponent(id)}${
-      category ? `&category=${encodeURIComponent(category)}` : ''
-    }`,
+    contactHref,
     industryPrimaryProblem: row?.primaryProblem,
     industryRecommended: row?.recommendedForIndustry,
     industryPitch: row?.industrySolutionPitch,
@@ -358,4 +410,10 @@ export function listClientOffers(opts?: {
     return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
   });
   return { available, later };
+}
+
+/** Flat public catalog — every marketing surface must iterate this, not a second list. */
+export function listPublicProducts(opts?: Parameters<typeof listClientOffers>[0]): ClientOffer[] {
+  const { available, later } = listClientOffers(opts);
+  return [...available, ...later];
 }

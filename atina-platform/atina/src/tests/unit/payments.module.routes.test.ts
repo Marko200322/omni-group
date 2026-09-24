@@ -23,6 +23,7 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     next();
   },
   requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
+  requirePermission: () => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
 
 jest.mock('../../api/middleware/rate-limit.middleware', () => ({
@@ -398,6 +399,6 @@ describe('PaymentsModule HTTP routes', () => {
       buyerBillingAddress: undefined,
       buyerCompany: undefined,
       buyerVatId: undefined,
-    });
+    }, 'EUR');
   });
 });

@@ -271,6 +271,21 @@ docker compose -f docker-compose.prod.yml --env-file .env.docker.prod ps
   $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $deployCmd -TimeOutSeconds 7200 -DryRun:$DryRun -Session $session
 
+  $opsCronCmd = @"
+set -e
+cd $RemotePath
+sed -i 's/\r$//' scripts/vps-atina-pg-backup.sh scripts/vps-atina-restore-drill.sh scripts/keep-warm-prod.sh
+chmod 700 scripts/vps-atina-pg-backup.sh scripts/vps-atina-restore-drill.sh scripts/keep-warm-prod.sh
+mkdir -p backups/postgres /var/log
+(crontab -l 2>/dev/null | grep -v 'vps-atina-pg-backup' | grep -v 'vps-atina-restore-drill' | grep -v 'keep-warm-prod' || true; \
+  echo '15 3 * * * ROOT=$RemotePath bash $RemotePath/scripts/vps-atina-pg-backup.sh >> /var/log/omni-backup.log 2>&1'; \
+  echo '15 4 * * 0 ROOT=$RemotePath bash $RemotePath/scripts/vps-atina-restore-drill.sh >> /var/log/omni-restore-drill.log 2>&1'; \
+  echo '*/5 * * * * KEEP_WARM_SITE_URL=https://$SiteDomain KEEP_WARM_API_URL=https://$ApiDomain bash $RemotePath/scripts/keep-warm-prod.sh >> /var/log/keep-warm-prod.log 2>&1') | crontab -
+crontab -l | grep -E 'vps-atina-pg-backup|vps-atina-restore-drill|keep-warm-prod'
+"@
+  $session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
+    -SshPassword $SshPassword -Command $opsCronCmd -TimeOutSeconds 120 -DryRun:$DryRun -Session $session
+
   Write-Host ''
   Write-Host '=== VPS deploy zavrsen ===' -ForegroundColor Green
   Write-Host "  Web:  https://$SiteDomain"

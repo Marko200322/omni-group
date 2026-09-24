@@ -250,8 +250,7 @@ export class PublicSiteService {
       /* non-fatal */
     }
 
-    const stripeReady =
-      Boolean(config.stripe.secretKey.trim()) && config.payments.mode !== 'manual';
+    const stripeReady = Boolean(config.stripe.secretKey.trim());
 
     if (stripeReady) {
       try {

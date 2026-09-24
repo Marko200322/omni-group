@@ -17,6 +17,8 @@ export interface UserRecord {
   created_at: Date;
   updated_at: Date;
   plan_slug?: string;
+  active_organization_id?: string | null;
+  org_role?: string | null;
 }
 
 export interface RefreshTokenRecord {
@@ -27,27 +29,45 @@ export interface RefreshTokenRecord {
   is_revoked: boolean;
 }
 
-export class AuthRepository {
-  async findUserByEmail(email: string): Promise<UserRecord | null> {
-    const { rows } = await query<UserRecord>(
-      `SELECT u.*, p.slug AS plan_slug
+function isMissingOrgSchema(error: unknown): boolean {
+  const err = error as { code?: string; message?: string };
+  return (
+    err.code === '42P01' ||
+    err.code === '42703' ||
+    /organization_memberships|organizations|active_organization_id/i.test(err.message ?? '')
+  );
+}
+
+const USER_WITH_ORG_SQL = `SELECT u.*, p.slug AS plan_slug, m.role AS org_role
        FROM users u
        LEFT JOIN plans p ON u.plan_id = p.id
-       WHERE u.email = $1`,
-      [email]
-    );
-    return rows[0] || null;
+       LEFT JOIN organization_memberships m
+         ON m.user_id = u.id
+        AND m.organization_id = u.active_organization_id
+        AND m.status = 'active'`;
+
+const USER_WITHOUT_ORG_SQL = `SELECT u.*, p.slug AS plan_slug, NULL::text AS org_role
+       FROM users u
+       LEFT JOIN plans p ON u.plan_id = p.id`;
+
+export class AuthRepository {
+  private async findUser(whereSql: string, param: string): Promise<UserRecord | null> {
+    try {
+      const { rows } = await query<UserRecord>(`${USER_WITH_ORG_SQL} ${whereSql}`, [param]);
+      return rows[0] || null;
+    } catch (error) {
+      if (!isMissingOrgSchema(error)) throw error;
+      const { rows } = await query<UserRecord>(`${USER_WITHOUT_ORG_SQL} ${whereSql}`, [param]);
+      return rows[0] || null;
+    }
+  }
+
+  async findUserByEmail(email: string): Promise<UserRecord | null> {
+    return this.findUser('WHERE u.email = $1', email);
   }
 
   async findUserById(id: string): Promise<UserRecord | null> {
-    const { rows } = await query<UserRecord>(
-      `SELECT u.*, p.slug AS plan_slug
-       FROM users u
-       LEFT JOIN plans p ON u.plan_id = p.id
-       WHERE u.id = $1`,
-      [id]
-    );
-    return rows[0] || null;
+    return this.findUser('WHERE u.id = $1', id);
   }
 
   async createUser(data: {
@@ -159,5 +179,38 @@ export class AuthRepository {
        VALUES ($1, $2, 'user', $1, 'info', $3)`,
       [userId, eventType, payloadJson]
     );
+  }
+
+  async ensureOrganization(userId: string, name: string): Promise<{ id: string; role: string }> {
+    const existing = await query<{ id: string; role: string }>(
+      `SELECT o.id, COALESCE(m.role, 'owner') AS role
+       FROM users u
+       LEFT JOIN organizations o ON o.id = u.active_organization_id
+       LEFT JOIN organization_memberships m
+         ON m.organization_id = o.id AND m.user_id = u.id AND m.status = 'active'
+       WHERE u.id = $1`,
+      [userId],
+    );
+    if (existing.rows[0]?.id) {
+      return { id: existing.rows[0].id, role: existing.rows[0].role };
+    }
+
+    const slug = `workspace-${userId.replace(/-/g, '')}`;
+    const created = await query<{ id: string }>(
+      `INSERT INTO organizations (name, slug, owner_user_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name
+       RETURNING id`,
+      [name.trim() || 'Workspace', slug, userId],
+    );
+    const organizationId = created.rows[0].id;
+    await query(
+      `INSERT INTO organization_memberships (organization_id, user_id, role, status, joined_at)
+       VALUES ($1, $2, 'owner', 'active', NOW())
+       ON CONFLICT (organization_id, user_id) DO NOTHING`,
+      [organizationId, userId],
+    );
+    await query('UPDATE users SET active_organization_id = $1 WHERE id = $2', [organizationId, userId]);
+    return { id: organizationId, role: 'owner' };
   }
 }

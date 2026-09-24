@@ -45,11 +45,55 @@ export function normalizeCategorySlug(slug: string): string {
   return s;
 }
 
+const TITLE_ACRONYMS: Record<string, string> = {
+  ai: 'AI',
+  llm: 'LLM',
+  seo: 'SEO',
+  crm: 'CRM',
+  hr: 'HR',
+  it: 'IT',
+  api: 'API',
+  saas: 'SaaS',
+  ppc: 'PPC',
+  ux: 'UX',
+  ui: 'UI',
+  iot: 'IoT',
+  nlp: 'NLP',
+  b2b: 'B2B',
+  b2c: 'B2C',
+  qa: 'QA',
+  kpi: 'KPI',
+  roi: 'ROI',
+  ios: 'iOS',
+  aws: 'AWS',
+  nft: 'NFT',
+  gdpr: 'GDPR',
+  rag: 'RAG',
+  ev: 'EV',
+  sem: 'SEM',
+};
+
+function titleCaseWord(word: string): string {
+  const mapped = TITLE_ACRONYMS[word.toLowerCase()];
+  if (mapped) return mapped;
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
 function titleCaseSubtype(s: string): string {
-  return s
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return s.split('-').map(titleCaseWord).join(' ');
+}
+
+/** Fix “Generative Ai” / “Llm Development” on generated catalog titles. */
+export function formatPublicTitle(name: string): string {
+  return name.replace(/\b([A-Za-z0-9]+)\b/g, titleCaseWord);
+}
+
+/** Swap known acronyms in sentences without Title Casing the rest. */
+export function fixPublicAcronyms(text: string): string {
+  return text.replace(
+    /\b(Ai|Llm|Seo|Crm|Hr|It|Api|Saas|Ppc|Ux|Ui|Iot|Nlp|B2b|B2c|Qa|Kpi|Roi|Ios|Aws|Nft|Gdpr|Rag|Ev|Sem)\b/g,
+    (word) => TITLE_ACRONYMS[word.toLowerCase()] ?? word,
+  );
 }
 
 export function resolveVerticalSlug(

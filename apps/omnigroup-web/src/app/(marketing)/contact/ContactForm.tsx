@@ -7,11 +7,17 @@ import { fadeUp } from '@/lib/animations';
 import { getIndustryCategory } from '@/lib/category-pricing';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 import { deliverableLabel } from '@/lib/display-text';
+import { getClientOffer } from '@/lib/public-catalog';
 import { LAUNCH_BUNDLE_SPECS } from '@/lib/launch-bundles';
+import { trackConversion } from '@/components/marketing/UtmCapture';
+import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
+import { CONTACT_BUDGETS, CONTACT_TIMELINES } from '@/lib/contact-intake';
+import Link from 'next/link';
 
 function topicLabel(topic: string): string {
   const bundle = LAUNCH_BUNDLE_SPECS.find((b) => b.contactTopic === topic);
-  if (bundle) return bundle.title;
+  if (bundle) return getClientOffer(bundle.id)?.name ?? bundle.id;
   if (topic === 'regulated-founding-partner') return 'Regulated founding partner';
   return topic.replace(/-/g, ' ');
 }
@@ -39,7 +45,7 @@ function buildDefaultMessage(
   if (verticalSlug) {
     lines.push(`Vertical niche: ${verticalSlug.replace(/-/g, ' ')}.`);
   }
-  lines.push('', 'Project details / timeline:');
+  lines.push('', 'Project details:');
   return lines.join('\n');
 }
 
@@ -74,6 +80,10 @@ export function ContactForm({
   );
 
   const [message, setMessage] = useState(defaultMessage);
+  const [industry, setIndustry] = useState(categorySlug);
+  const [budget, setBudget] = useState('');
+  const [timeline, setTimeline] = useState('');
+  const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
   const [okMsg, setOkMsg] = useState('');
@@ -81,6 +91,10 @@ export function ContactForm({
   useEffect(() => {
     setMessage(defaultMessage);
   }, [defaultMessage]);
+
+  useEffect(() => {
+    setIndustry(categorySlug);
+  }, [categorySlug]);
 
   const serviceLabel = deliverable
     ? deliverableLabel(deliverable)
@@ -107,9 +121,12 @@ export function ContactForm({
           company: String(fd.get('company') || ''),
           message: String(fd.get('message') || message),
           ...(serviceId ? { service: serviceId } : {}),
-          ...(categorySlug ? { category: categorySlug } : {}),
+          ...(industry || categorySlug ? { category: industry || categorySlug } : {}),
           ...(verticalSlug ? { vertical: verticalSlug } : {}),
           ...(topic ? { topic } : {}),
+          ...(budget ? { budget } : {}),
+          ...(timeline ? { timeline } : {}),
+          consent,
         };
         try {
           const res = await fetch('/api/contact', {
@@ -133,18 +150,25 @@ export function ContactForm({
               setErrMsg('email delivery is temporarily unavailable — please email us directly');
             } else if (err === 'email_provider_error' || err === 'email_send_failed') {
               setErrMsg('email delivery failed — please try again shortly');
+            } else if (err === 'consent_required') {
+              setErrMsg('please confirm we can contact you about this inquiry');
             } else {
               setErrMsg('please try again shortly');
             }
             return;
           }
           setStatus('ok');
+          trackConversion('generate_lead');
           setOkMsg('Message received. We will get back to you soon.');
           e.currentTarget.reset();
           setMessage(defaultMessage);
+          setIndustry(categorySlug);
+          setBudget('');
+          setTimeline('');
+          setConsent(false);
         } catch {
           setStatus('err');
-          setErrMsg('network');
+          setErrMsg('Network error. Check your connection and try again.');
         }
       }}
     >
@@ -178,6 +202,44 @@ export function ContactForm({
       <AnimatedInput required name="name" placeholder="Full name" delay={0.1} />
       <AnimatedInput required type="email" name="email" placeholder="Email address" delay={0.15} />
       <AnimatedInput name="company" placeholder="Company (optional)" delay={0.2} />
+      <IndustryCategorySelect
+        value={industry}
+        onChange={setIndustry}
+        showTierHint={false}
+        className="pt-1"
+      />
+      <label className="block text-sm">
+        <span className="text-slate-400">Budget</span>
+        <select
+          className={CHECKOUT_SELECT_CLASS}
+          name="budget"
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+        >
+          <option value="">Select a range (optional)</option>
+          {CONTACT_BUDGETS.map((row) => (
+            <option key={row.id} value={row.id}>
+              {row.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm">
+        <span className="text-slate-400">Timeline</span>
+        <select
+          className={CHECKOUT_SELECT_CLASS}
+          name="timeline"
+          value={timeline}
+          onChange={(e) => setTimeline(e.target.value)}
+        >
+          <option value="">When do you want to start? (optional)</option>
+          {CONTACT_TIMELINES.map((row) => (
+            <option key={row.id} value={row.id}>
+              {row.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <AnimatedTextarea
         required
         name="message"
@@ -197,7 +259,7 @@ export function ContactForm({
             exit="hidden"
             className="text-sm text-red-400"
           >
-            Send failed ({errMsg}). Please try again.
+            {errMsg || 'Unable to send the message right now. Please try again or email us directly.'}
           </motion.p>
         )}
         {status === 'ok' && (
@@ -213,10 +275,27 @@ export function ContactForm({
           </motion.p>
         )}
       </AnimatePresence>
+      <label className="flex items-start gap-3 text-sm text-slate-400">
+        <input
+          type="checkbox"
+          name="consent"
+          required
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-white/20 bg-black/40 text-violet-500 focus:ring-violet-500/40"
+        />
+        <span>
+          I agree to be contacted about this inquiry. See the{' '}
+          <Link href="/legal/privacy" className="text-violet-300 underline-offset-2 hover:underline">
+            privacy policy
+          </Link>
+          .
+        </span>
+      </label>
       <motion.button
         type="submit"
         className="btn-primary w-full"
-        disabled={status === 'loading'}
+        disabled={status === 'loading' || !consent}
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.97 }}
       >

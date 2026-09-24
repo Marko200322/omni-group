@@ -16,9 +16,9 @@ export type IndustryCategoryMeta = {
 };
 
 export const BASE_PLAN_PRICES: Record<PlanSlug, { monthly: number; yearly: number }> = {
-  starter: { monthly: 39, yearly: 390 },
-  pro: { monthly: 129, yearly: 1290 },
-  enterprise: { monthly: 299, yearly: 2990 },
+  starter: { monthly: 79, yearly: 790 },
+  pro: { monthly: 249, yearly: 2490 },
+  enterprise: { monthly: 429, yearly: 4290 },
 };
 
 export const PRICING_TIER_META: Record<

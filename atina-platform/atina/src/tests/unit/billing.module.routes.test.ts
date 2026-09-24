@@ -50,6 +50,7 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     }
     next();
   },
+  requirePermission: () => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
 
 const SAMPLE_INVOICE_UUID = '123e4567-e89b-12d3-a456-426614174000';

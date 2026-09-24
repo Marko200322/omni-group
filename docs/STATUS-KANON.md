@@ -1,6 +1,6 @@
 # STATUS-KANON — jedna lista za ceo projekat
 
-**Datum:** 2026-09-17 (P1 zatvoren 19:57)  
+**Datum:** 2026-09-24 (P1 zatvoren 19:57; katalog + migrate 038–042)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
 **Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.
@@ -38,6 +38,8 @@
 | LIVE-11 | n8n outreach stub + guardrails | PASS, **nije live send** |
 | LIVE-12 | Legal stranice u kodu | terms/privacy/refund/impressum/cookies |
 | LIVE-13 | Redizajn UI | **CANCELLED** — vidi P3-C01 |
+| LIVE-14 | Public catalog SSOT | `/pricing` `/products` `/services` checkout — `getPublicListPriceEur` · 20/20 MATCH 2026-09-24 |
+| LIVE-15 | Prod schema 038–042 | stripe idempotency · outbound DLQ · orgs · dual currency · RBAC |
 
 ---
 
@@ -66,7 +68,7 @@
 | P1-03 | BFF `package-context` + `DeliverableQuotePanel` | DONE | JA | — | prod 2026-09-17 |
 | P1-04 | `InvoiceHistoryPanel` + BFF `/billing/invoices` | DONE | JA | — | prod 2026-09-17 |
 | P1-05 | **Problem Hunter** modul (API MVP) | DONE | JA | — | `/api/v1/problem-hunter/*` |
-| P1-06 | Migracija **`037_problem_hunter.sql`** na prod VPS | DONE | JA | — | applied 2026-09-17 17:56 UTC |
+| P1-06 | Migracija **`037`–`042`** na prod VPS | DONE | JA | — | 037 applied 2026-09-17; 038–042 applied 2026-09-24 |
 | P1-07 | **Git commit + push** svih P1 izmena | DONE | JA | — | `c9f32d9` → origin |
 | P1-08 | **Deploy** na prod | DONE | JA | — | SafeDeploy + migrate rebuild |
 
@@ -100,7 +102,7 @@
 | P3-A01 | `LUSHA_API_KEY` | DEFERRED | enrich telefon |
 | P3-A02 | `TAVILY_API_KEY` | DEFERRED | Problem Hunter web_search + n8n |
 | P3-A03 | `ZOOMINFO_API_KEY` | DEFERRED | lead baze |
-| P3-A04 | Cold outbound send **ON** | BLOCKED | posle P0-01, P0-03 |
+| P3-A04 | Cold outbound send **ON** | BLOCKED | P0-01/P0-03 DONE; Instantly nalog **expired (402)** — upgrade plan |
 | P3-A05 | Live **n8n** workflow import | DEFERRED | `tools/outreach-engine/` |
 | P3-A06 | Ads budžet €200–300 | DEFERRED | marketing odluka |
 
@@ -120,7 +122,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 | ID | Stavka | Status |
 |----|--------|--------|
 | P3-D01 | Staging VPS | DEFERRED |
-| P3-D02 | UptimeRobot monitoring | DEFERRED |
+| P3-D02 | UptimeRobot monitoring | DEFERRED — probe ready (`/api/health/live`, `/status`) |
 | P3-D03 | Plausible analytics | DEFERRED |
 | P3-D04 | GitHub CI **required checks** na `main` | DEFERRED — branch protection DONE |
 | P3-D05 | DMARC `p=quarantine` (posle monitor faze) | DEFERRED |
@@ -190,4 +192,4 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 
 ---
 
-*Poslednja izmena: 2026-09-17 — inicijalni STATUS-KANON.*
+*Poslednja izmena: 2026-09-24 — katalog SSOT, migrate 038–042, contact intake.*

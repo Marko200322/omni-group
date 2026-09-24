@@ -27,6 +27,7 @@ const CheckoutDto = z
   .object({
     planSlug: z.enum(['starter', 'pro', 'enterprise']),
     billingCycle: z.enum(['monthly', 'yearly']).default('monthly'),
+    currency: z.enum(['EUR', 'USD']).default('EUR'),
     industryCategory: z
       .string()
       .trim()
@@ -64,6 +65,7 @@ export class PaymentsController {
         buyerVatId: body.buyerVatId,
         buyerBillingAddress: body.buyerBillingAddress,
       },
+      body.currency,
     );
     sendCreated(res, result, 'Checkout session created');
   };
@@ -103,6 +105,7 @@ export class PaymentsController {
         buyerVatId: body.buyerVatId,
         buyerBillingAddress: body.buyerBillingAddress,
       },
+      body.currency,
     );
     sendCreated(res, result);
   };
@@ -125,6 +128,7 @@ export class PaymentsController {
         buyerVatId: body.buyerVatId,
         buyerBillingAddress: body.buyerBillingAddress,
       },
+      body.currency,
     );
     sendCreated(res, result, 'Transfer instructions generated');
   };
@@ -156,6 +160,7 @@ export class PaymentsController {
         buyerVatId: body.buyerVatId,
         buyerBillingAddress: body.buyerBillingAddress,
       },
+      body.currency,
     );
     sendCreated(res, result, 'Bank transfer instructions generated');
   };
@@ -195,6 +200,7 @@ export class PaymentsController {
         buyerVatId: body.buyerVatId,
         buyerBillingAddress: body.buyerBillingAddress,
       },
+      body.currency,
     );
     sendCreated(res, result, 'Kriptoman checkout created');
   };

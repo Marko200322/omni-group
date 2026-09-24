@@ -2,8 +2,9 @@ import 'server-only';
 
 import { resolveAtinaApiBase } from './atina-api-base';
 import { getGeneratedVerticalsIndex } from './generated-verticals';
-import { getPackageAnchorEur } from './package-delivery-spec';
+import { getPublicListPriceEur } from './client-offers';
 import { DELIVERABLE_CATALOG } from './deliverable-catalog';
+import { buildVerticalLandingCopy } from './vertical-landing-copy';
 
 type AtinaEnvelope<T> = {
   success?: boolean;
@@ -114,9 +115,13 @@ export function fallbackSolutionFromIndex(slug: string): SolutionDetail | null {
   const entry = getGeneratedVerticalsIndex().verticals.find((v) => v.slug === slug && v.hasPage);
   if (!entry) return null;
   const name = entry.name?.trim() || slug.replace(/-/g, ' ');
-  const valueProp =
-    (entry.valueProp ?? '').trim() ||
-    `Industry landing for ${name}. Buy a delivery package or contact us for a tailored quote.`;
+  const generated = buildVerticalLandingCopy({
+    slug,
+    name,
+    category: entry.category ?? 'vertical',
+    valueProp: entry.valueProp,
+  });
+  const valueProp = generated.lede;
   return {
     slug,
     name,
@@ -133,10 +138,10 @@ export function fallbackSolutionFromIndex(slug: string): SolutionDetail | null {
         id: d.id,
         name: d.name,
         nameSr: d.nameSr,
-        clientPriceEur: getPackageAnchorEur(d.id),
+        clientPriceEur: getPublicListPriceEur(d.id),
         billing: d.billing,
       })),
-      verticalPackageQuoteEur: getPackageAnchorEur('vertical-package'),
+      verticalPackageQuoteEur: getPublicListPriceEur('vertical-package'),
       workflowSteps: [],
     },
   };

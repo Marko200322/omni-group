@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     deliverableId?: string;
     industryCategory?: string;
     paymentProvider?: string;
-    marketIntensity?: number;
+    maintenanceTierId?: string;
   } = {};
   try {
     body = (await req.json()) as typeof body;
@@ -21,16 +21,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'invalid_json' }, { status: 400 });
   }
 
-  if (!body.deliverableId?.trim()) {
+  const deliverableId = typeof body.deliverableId === 'string' ? body.deliverableId.trim() : '';
+  if (!/^[a-z0-9_-]+$/.test(deliverableId)) {
     return NextResponse.json({ ok: false, error: 'invalid_deliverable' }, { status: 400 });
   }
+
+  const industryCategory =
+    typeof body.industryCategory === 'string' && /^[a-z0-9_-]+$/.test(body.industryCategory)
+      ? body.industryCategory
+      : undefined;
 
   const r = await fetchAtinaForBff<Record<string, unknown>>(
     '/api/v1/payments/manual/deliverable-checkout',
     session,
     {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        deliverableId,
+        paymentProvider: 'manual',
+        ...(industryCategory ? { industryCategory } : {}),
+        ...(typeof body.maintenanceTierId === 'string' ? { maintenanceTierId: body.maintenanceTierId } : {}),
+      }),
     },
   );
 

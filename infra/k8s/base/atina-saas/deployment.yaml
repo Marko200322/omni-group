@@ -24,7 +24,6 @@ spec:
           envFrom:
             - secretRef:
                 name: atina-saas-env
-                optional: true
           env:
             - name: NODE_ENV
               value: production
@@ -36,12 +35,15 @@ spec:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               cpu: 250m

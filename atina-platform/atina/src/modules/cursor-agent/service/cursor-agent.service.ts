@@ -24,7 +24,7 @@ function buildEvolutionPrompt(taskType: string, targetPaths: string[]): string {
     case 'ui_improvement':
       return (
         `Improve the Omni Group operator UI for task "${taskType}". Targets: ${targets}. ${rules} ` +
-        'Focus on mobile admin (/admin/mobile) and platform panels if relevant.'
+        'Focus on the operator console (/admin) and platform panels if relevant.'
       );
     case 'research_gap':
       return (
@@ -170,9 +170,9 @@ export class CursorAgentService {
         : `${source}: ${prompt.slice(0, 72)}…`;
     try {
       if (userId) {
-        await this.push.sendToUser(userId, { title, body, url: '/admin/mobile', tag: 'cursor-run' });
+        await this.push.sendToUser(userId, { title, body, url: '/admin', tag: 'cursor-run' });
       } else {
-        await this.push.notifyAdmins({ title, body, url: '/admin/mobile', tag: 'cursor-run' });
+        await this.push.notifyAdmins({ title, body, url: '/admin', tag: 'cursor-run' });
       }
     } catch {
       /* push is best-effort */

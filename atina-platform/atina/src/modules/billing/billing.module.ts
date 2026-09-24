@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { BillingController } from './controller/billing.controller';
-import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin, requirePermission } from '../../api/middleware/auth.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -115,6 +115,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/subscription',
       authenticate,
+      requirePermission('billing.read'),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getCurrentSubscription
@@ -122,6 +123,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/invoices',
       authenticate,
+      requirePermission('billing.read'),
       validateQuery(BillingInvoicesListQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getInvoices
@@ -129,6 +131,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/invoices/:id',
       authenticate,
+      requirePermission('billing.read'),
       validateParams(BillingInvoiceIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -137,6 +140,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/limit/:key',
       authenticate,
+      requirePermission('billing.read'),
       validateParams(BillingLimitKeyParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -170,6 +174,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/fulfillment/jobs',
       authenticate,
+      requirePermission('billing.read'),
       validateQuery(BillingFulfillmentJobsQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listFulfillmentJobs
@@ -177,6 +182,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/fulfillment/jobs/:paymentId',
       authenticate,
+      requirePermission('billing.read'),
       validateParams(BillingPaymentIdParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -185,6 +191,7 @@ export class BillingModule implements IModule {
     this.router.get(
       '/fulfillment/jobs/:paymentId/artifacts/:filename',
       authenticate,
+      requirePermission('billing.read'),
       validateParams(BillingFulfillmentArtifactParamsDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),

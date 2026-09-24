@@ -24,7 +24,6 @@ spec:
           envFrom:
             - secretRef:
                 name: nest-api-env
-                optional: true
           env:
             - name: NODE_ENV
               value: production
@@ -40,3 +39,12 @@ spec:
               port: http
             initialDelaySeconds: 20
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3

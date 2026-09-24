@@ -10,6 +10,7 @@ import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
 import { staggerContainer, fadeUp, tapScale } from '@/lib/animations';
 import { safeInternalPath } from '@/lib/safe-internal-path';
 import { isPublicRegistrationOpen } from '@/lib/registration-public';
+import { trackConversion } from '@/components/marketing/UtmCapture';
 
 function friendlyRegisterError(code: string | undefined): string {
   switch (code) {
@@ -54,6 +55,14 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = safeInternalPath(searchParams.get('next'));
+  const plan = ['starter', 'pro', 'enterprise'].includes(searchParams.get('plan') ?? '')
+    ? searchParams.get('plan')
+    : null;
+  const cycle = searchParams.get('cycle') === 'yearly' ? 'yearly' : 'monthly';
+  const currency = searchParams.get('currency')?.toUpperCase() === 'EUR' ? 'EUR' : 'USD';
+  const billingNext = plan
+    ? `/dashboard/billing?plan=${plan}&cycle=${cycle}&currency=${currency}`
+    : '/dashboard/billing';
   const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : '/login';
   const [status, setStatus] = useState<'idle' | 'loading' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
@@ -90,7 +99,8 @@ function RegisterForm() {
             setErrMsg(friendlyRegisterError(data.error));
             return;
           }
-          const dest = nextPath ?? data.redirectTo ?? '/dashboard';
+          trackConversion('sign_up');
+          const dest = nextPath ?? data.redirectTo ?? billingNext;
           router.push(dest);
           router.refresh();
         } catch {

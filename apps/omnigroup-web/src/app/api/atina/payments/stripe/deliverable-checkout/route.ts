@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   let body: {
     deliverableId?: string;
     industryCategory?: string;
-    marketIntensity?: number;
+    maintenanceTierId?: string;
   } = {};
   try {
     body = (await req.json()) as typeof body;
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         deliverableId,
         ...(industryCategory ? { industryCategory } : {}),
-        ...(typeof body.marketIntensity === 'number' ? { marketIntensity: body.marketIntensity } : {}),
+        ...(typeof body.maintenanceTierId === 'string' ? { maintenanceTierId: body.maintenanceTierId } : {}),
       }),
     },
   );

@@ -7,6 +7,40 @@ export class PaymentsRepository {
     return transaction(fn);
   }
 
+  claimStripeWebhookEvent(eventId: string, eventType: string) {
+    return query<{ event_id: string }>(
+      `INSERT INTO stripe_webhook_events (event_id, event_type)
+       VALUES ($1, $2)
+       ON CONFLICT (event_id) DO UPDATE SET
+         status = 'processing',
+         attempts = stripe_webhook_events.attempts + 1,
+         last_error = NULL,
+         updated_at = NOW()
+       WHERE stripe_webhook_events.status = 'failed'
+          OR stripe_webhook_events.updated_at < NOW() - INTERVAL '10 minutes'
+       RETURNING event_id`,
+      [eventId, eventType],
+    );
+  }
+
+  completeStripeWebhookEvent(eventId: string) {
+    return query(
+      `UPDATE stripe_webhook_events
+       SET status = 'completed', processed_at = NOW(), updated_at = NOW()
+       WHERE event_id = $1`,
+      [eventId],
+    );
+  }
+
+  failStripeWebhookEvent(eventId: string, error: string) {
+    return query(
+      `UPDATE stripe_webhook_events
+       SET status = 'failed', last_error = $2, updated_at = NOW()
+       WHERE event_id = $1`,
+      [eventId, error.slice(0, 2000)],
+    );
+  }
+
   getUserById(userId: string) {
     return query<{ email: string; name: string }>(
       'SELECT email, name FROM users WHERE id = $1',
@@ -217,6 +251,7 @@ export class PaymentsRepository {
   insertPendingPayPalPayment(params: {
     userId: string;
     amount: number;
+    currency: string;
     orderId: string;
     description: string;
     metadataJson: string;
@@ -224,8 +259,8 @@ export class PaymentsRepository {
     return query(
       `INSERT INTO payments
          (user_id, amount, currency, status, provider, provider_payment_id, description, metadata)
-       VALUES ($1, $2, 'USD', 'pending', 'paypal', $3, $4, $5)`,
-      [params.userId, params.amount, params.orderId, params.description, params.metadataJson]
+       VALUES ($1, $2, $3, 'pending', 'paypal', $4, $5, $6)`,
+      [params.userId, params.amount, params.currency, params.orderId, params.description, params.metadataJson]
     );
   }
 

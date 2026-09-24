@@ -101,7 +101,7 @@ $rc = Invoke-WithRateLimitRetry -Label 'ai-memory recall' -Action {
 Write-Host "  OK recall items=$($rc.items.Count)" -ForegroundColor Green
 
 Write-Host "== Web contact stub ==" -ForegroundColor Cyan
-$cBody = '{"name":"Smoke","email":"smoke@example.com","message":"integration test"}'
+$cBody = '{"name":"Smoke","email":"smoke@example.com","message":"integration test","consent":true}'
 $contact = Invoke-WebRequest -Uri "$web/api/contact" -Method POST -ContentType 'application/json' -Body $cBody -UseBasicParsing -TimeoutSec $BffTimeoutSec
 $cj = $contact.Content | ConvertFrom-Json
 if (-not $cj.ok) { throw "contact failed: $($contact.Content)" }

@@ -481,7 +481,7 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
       photoUrl: rosterAgent?.photoUrl || null,
       heygenAvatarId: rosterAgent?.heygenAvatarId || null,
       heygenVoiceId: rosterAgent?.heygenVoiceId || null,
-      dashboardUrl: `${config.app.webUrl.replace(/\/$/, '')}/dashboard#${input.agentType === 'support' ? 'support' : 'sales'}`,
+      dashboardUrl: `${config.app.webUrl.replace(/\/$/, '')}${input.agentType === 'support' ? '/dashboard/support' : '/dashboard/consultation'}`,
       provisionedAt: new Date().toISOString(),
     };
 
@@ -568,8 +568,8 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     const setup = {
       clientName: input.clientName,
       industryCategory: input.industryCategory ?? 'general',
-      avatarSupportUrl: `${webBase}/dashboard#support`,
-      videoMeetingsUrl: `${webBase}/dashboard#support`,
+      avatarSupportUrl: `${webBase}/dashboard/support`,
+      videoMeetingsUrl: `${webBase}/dashboard/support`,
       modules: effectiveModules,
       ragNamespace: 'support-kb',
       voiceProvider: 'elevenlabs',

@@ -66,6 +66,8 @@ export async function POST(req: Request) {
         email: result.user.email,
         name: result.user.name,
         role: result.user.role,
+        organizationId: result.user.organizationId,
+        orgRole: result.user.orgRole,
       },
     });
     await setSessionCookie(session);
