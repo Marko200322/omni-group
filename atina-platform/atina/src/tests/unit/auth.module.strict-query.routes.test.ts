@@ -15,6 +15,7 @@ var authServiceMock: {
   forgotPassword: jest.Mock;
   resetPassword: jest.Mock;
   changePassword: jest.Mock;
+  completeTwoFactorLogin: jest.Mock;
 };
 
 jest.mock('../../modules/auth/service/auth.service', () => {
@@ -26,9 +27,11 @@ jest.mock('../../modules/auth/service/auth.service', () => {
     forgotPassword: jest.fn(),
     resetPassword: jest.fn(),
     changePassword: jest.fn(),
+    completeTwoFactorLogin: jest.fn(),
   };
   return {
     AuthService: jest.fn().mockImplementation(() => authServiceMock),
+    isTwoFactorChallenge: (result: { requiresTwoFactor?: boolean }) => result?.requiresTwoFactor === true,
   };
 });
 
@@ -172,5 +175,14 @@ describe('AuthModule public POSTs — strict empty query', () => {
       .send({ currentPassword: 'Old12345', newPassword: 'Abcd1234' });
     expectQueryValidation(res);
     expect(authServiceMock.changePassword).not.toHaveBeenCalled();
+  });
+
+  it('POST /auth/login/2fa returns 400 when query params are present', async () => {
+    const res = await request(server)
+      .post('/auth/login/2fa')
+      .query({ next: '/dash' })
+      .send({ challengeToken: 'ch', code: '123456' });
+    expectQueryValidation(res);
+    expect(authServiceMock.completeTwoFactorLogin).not.toHaveBeenCalled();
   });
 });

@@ -20,6 +20,7 @@ import { isPlatformNavActive } from '@/lib/workspace-routes';
 import { getFactoryPhase } from '@/lib/factory-phase';
 import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
 import { isLeanProdMode } from '@/lib/prod-mode';
+import { displayAccountLabel } from '@/lib/workspace-display';
 
 export type PlatformVariant = 'admin' | 'client';
 
@@ -230,9 +231,13 @@ export function PlatformShell({
           <div className="flex flex-1 items-center justify-end gap-3 lg:flex-none">
             <NotificationBell disabled={isDemo || !sessionUser} />
             <div className="hidden h-8 w-px bg-white/10 sm:block" />
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-medium text-white">{sessionUser?.name ?? title}</p>
-              {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+            <div className="hidden min-w-0 max-w-[14rem] text-right sm:block">
+              <p className="truncate text-sm font-medium text-white">
+                {displayAccountLabel(sessionUser?.name, sessionUser?.email) || title}
+              </p>
+              {sessionUser?.email ? (
+                <p className="truncate text-xs text-slate-500">{sessionUser.email}</p>
+              ) : null}
             </div>
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 p-[2px]">
               <div className="flex h-full w-full items-center justify-center rounded-full bg-[#0a0e18] text-xs font-bold text-white">
@@ -242,7 +247,7 @@ export function PlatformShell({
           </div>
         </header>
 
-        <main className="platform-scroll flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className={`platform-scroll flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 ${variant === 'client' ? 'pb-28' : ''}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

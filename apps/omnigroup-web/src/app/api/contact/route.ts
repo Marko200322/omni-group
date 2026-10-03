@@ -68,6 +68,11 @@ export async function POST(req: Request) {
   }
   const messageText = parsedMessage.message;
 
+  const attribution =
+    body.attribution && typeof body.attribution === 'object' && !Array.isArray(body.attribution)
+      ? (body.attribution as Record<string, string>)
+      : undefined;
+
   const crm = await pushContactToCrm({
     name,
     email,
@@ -79,6 +84,7 @@ export async function POST(req: Request) {
     topic,
     budget: budget ? contactBudgetLabel(budget) : undefined,
     timeline: timeline ? contactTimelineLabel(timeline) : undefined,
+    attribution,
   });
 
   const slack = await notifyContactSlack({

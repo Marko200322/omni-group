@@ -34,6 +34,10 @@ assert(pricing.includes("setCycle(value)"), 'Pricing UI must switch billing cycl
 assert(pricing.includes('Yearly · 2 months free'), 'Yearly toggle label must stay honest');
 assert(pricing.includes('billed yearly'), 'Yearly cards must show the billed-yearly amount');
 assert(
+  read('src/app/(marketing)/pricing/page.tsx').includes('FoundingClientPromoBanner'),
+  'Pricing must show the founding promo when it is enabled',
+);
+assert(
   pricing.includes('`/register?plan=${plan.slug}&cycle=${cycle}&currency=${currency}`'),
   'SaaS CTA must pass plan, cycle, and currency',
 );

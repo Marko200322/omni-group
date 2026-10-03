@@ -3,6 +3,7 @@ export const CSRF_HEADER = 'x-csrf-token';
 
 export const CSRF_EXEMPT_PATHS = new Set([
   '/api/auth/login',
+  '/api/auth/login/2fa',
   '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
@@ -19,5 +20,11 @@ export function newCsrfToken(): string {
 
 export function csrfValid(cookieValue: string | undefined, headerValue: string | null): boolean {
   if (!cookieValue || !headerValue) return false;
-  return cookieValue === headerValue;
+  if (cookieValue.length !== headerValue.length) return false;
+  // Constant-time compare (avoid early-exit string equality).
+  let diff = 0;
+  for (let i = 0; i < cookieValue.length; i += 1) {
+    diff |= cookieValue.charCodeAt(i) ^ headerValue.charCodeAt(i);
+  }
+  return diff === 0;
 }

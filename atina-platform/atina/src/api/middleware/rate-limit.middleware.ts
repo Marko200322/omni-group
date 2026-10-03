@@ -97,6 +97,39 @@ export const publicChatLimiter = rateLimit({
   skip: skipRateLimit,
 });
 
+/** OMI / avatar chat — IP per-minute (reuses express-rate-limit; conservative defaults). */
+export const omiChatIpMinuteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: toInt(process.env.OMI_IP_PER_MINUTE, 6),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+  keyGenerator: clientKey,
+  skip: skipRateLimit,
+});
+
+/** OMI / avatar chat — IP per-hour. */
+export const omiChatIpHourLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: toInt(process.env.OMI_IP_PER_HOUR, 40),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+  keyGenerator: clientKey,
+  skip: skipRateLimit,
+});
+
+/** Authenticated OMI chat — per user+IP per minute. */
+export const omiAuthChatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: toInt(process.env.OMI_AUTH_IP_PER_MINUTE, toInt(process.env.OMI_IP_PER_MINUTE, 10)),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler,
+  keyGenerator: (req) => `${clientKey(req)}:${req.user?.userId || 'anonymous'}`,
+  skip: skipRateLimit,
+});
+
 export const authSessionLimiter = rateLimit({
   windowMs: toInt(process.env.AUTH_SESSION_RATE_LIMIT_WINDOW_MS, 60 * 1000),
   max: toInt(process.env.AUTH_SESSION_RATE_LIMIT_MAX, 60),

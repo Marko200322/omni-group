@@ -116,6 +116,12 @@ assert(availability.includes('quoteOnly'), 'Availability must support REQUEST_QU
 assert(offerCard.includes("saleStatus === 'READY_TO_BUY'"), 'Buy now only when READY_TO_BUY');
 assert(offerCard.includes("saleStatus === 'REQUEST_QUOTE'"), 'Quote CTA only when REQUEST_QUOTE');
 assert(offerCard.includes('Buy now'), 'Ready packages keep a Buy now CTA');
+assert(offerCard.includes('Best for:'), 'OfferCard must render Best for from catalog when present');
+assert(offers.includes('bestFor: d.bestFor'), 'ClientOffer must pass through catalog bestFor');
+assert(catalog.includes("bestFor?: string"), 'Deliverable catalog must define optional bestFor');
+assert(catalog.includes("bestFor: 'founders who need a tech audit"), 'Ops clarity bundle must have Best for copy');
+assert(catalog.includes("bestFor: 'niche businesses wanting industry CRM"), 'Vertical solution must have Best for copy');
+assert(catalog.includes("bestFor: 'agencies and partners reselling"), 'White-label packaging must have Best for copy');
 assert(!/ready \?[\s\S]*Buy now[\s\S]*:[\s\S]*Buy now/.test(offerCard), 'COMING_SOON must not render Buy now');
 assert(payments.includes('getPackageAnchorEur'), 'Atina checkout must import the shared list-price function');
 assert(payments.includes('const amount = listPriceEur'), 'Atina deliverable checkout must charge the list price');

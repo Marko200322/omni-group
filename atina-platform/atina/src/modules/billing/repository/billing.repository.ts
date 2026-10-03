@@ -37,19 +37,33 @@ export class BillingRepository {
        FROM subscriptions s
        JOIN plans p ON s.plan_id = p.id
        WHERE s.user_id = $1
-       ORDER BY s.created_at DESC
+       ORDER BY
+         CASE
+           WHEN s.status = 'active'
+            AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
+           THEN 0
+           ELSE 1
+         END,
+         s.created_at DESC
        LIMIT 1`,
       [userId]
     );
   }
 
   countUserInvoices(userId: string) {
-    return query<{ count: string }>('SELECT COUNT(*) FROM invoices WHERE user_id = $1', [userId]);
+    return query<{ count: string }>(
+      `SELECT COUNT(*) FROM invoices
+       WHERE user_id = $1
+         AND (subscription_id IS NOT NULL OR stripe_invoice_id IS NOT NULL)`,
+      [userId]
+    );
   }
 
   listUserInvoices(userId: string, limit: number, offset: number) {
     return query(
-      `SELECT * FROM invoices WHERE user_id = $1
+      `SELECT * FROM invoices
+       WHERE user_id = $1
+         AND (subscription_id IS NOT NULL OR stripe_invoice_id IS NOT NULL)
        ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       [userId, limit, offset]
     );

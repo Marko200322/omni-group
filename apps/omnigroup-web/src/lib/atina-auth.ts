@@ -22,6 +22,19 @@ export type AtinaLoginResult = {
   user: AtinaLoginUser;
 };
 
+export type AtinaTwoFactorChallenge = {
+  requiresTwoFactor: true;
+  challengeToken: string;
+};
+
+export type AtinaLoginOutcome = AtinaLoginResult | AtinaTwoFactorChallenge;
+
+export function isAtinaTwoFactorChallenge(
+  result: AtinaLoginOutcome,
+): result is AtinaTwoFactorChallenge {
+  return 'requiresTwoFactor' in result && result.requiresTwoFactor === true;
+}
+
 type AtinaEnvelope<T> = {
   success?: boolean;
   data?: T;
@@ -116,8 +129,8 @@ export async function atinaLogin(input: {
   email: string;
   password: string;
   rememberMe?: boolean;
-}): Promise<AtinaLoginResult> {
-  const r = await fetchAtina<AtinaLoginResult>('/api/v1/auth/login', {
+}): Promise<AtinaLoginOutcome> {
+  const r = await fetchAtina<AtinaLoginResult & Partial<AtinaTwoFactorChallenge>>('/api/v1/auth/login', {
     method: 'POST',
     body: JSON.stringify({
       email: input.email,
@@ -125,8 +138,28 @@ export async function atinaLogin(input: {
       rememberMe: input.rememberMe ?? false,
     }),
   });
+  if (r.ok && r.data?.requiresTwoFactor && typeof r.data.challengeToken === 'string') {
+    return { requiresTwoFactor: true, challengeToken: r.data.challengeToken };
+  }
   if (!r.ok || !r.data?.accessToken || !r.data.refreshToken || !r.data.user) {
     throw new Error(r.message ?? `login_failed_${r.status}`);
+  }
+  return r.data;
+}
+
+export async function atinaCompleteTwoFactorLogin(input: {
+  challengeToken: string;
+  code: string;
+}): Promise<AtinaLoginResult> {
+  const r = await fetchAtina<AtinaLoginResult>('/api/v1/auth/login/2fa', {
+    method: 'POST',
+    body: JSON.stringify({
+      challengeToken: input.challengeToken,
+      code: input.code,
+    }),
+  });
+  if (!r.ok || !r.data?.accessToken || !r.data.refreshToken || !r.data.user) {
+    throw new Error(r.message ?? `login_2fa_failed_${r.status}`);
   }
   return r.data;
 }

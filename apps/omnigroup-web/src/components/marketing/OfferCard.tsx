@@ -43,11 +43,12 @@ export function OfferCard({ offer, id, compact }: Props) {
   const when = publicOfferWhen(offer.when, offer.saleStatus, offer.billing);
   const priceSuffix =
     offer.billing === 'monthly' ? '/ mo' : offer.billing === 'yearly' ? '/ yr' : ' once';
+  const domId = !id ? `offer-${offer.id}` : id.startsWith('offer-') ? id : `offer-${id}`;
 
   return (
     <motion.article
       layout
-      id={id ?? `offer-${offer.id}`}
+      id={domId}
       className={`flex h-full flex-col rounded-2xl border bg-white/[0.03] p-6 ${borderClass(offer.availability.badgeTone)}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -75,6 +76,11 @@ export function OfferCard({ offer, id, compact }: Props) {
 
       <h3 className="mt-2 font-display text-xl font-semibold text-white">{offer.name}</h3>
       <p className="mt-1 text-sm font-medium text-emerald-200/90">{offer.promise}</p>
+      {offer.bestFor ? (
+        <p className="mt-2 text-sm text-slate-300">
+          <span className="font-medium text-slate-200">Best for:</span> {offer.bestFor}
+        </p>
+      ) : null}
       <p className="mt-3 text-sm leading-relaxed text-slate-400">{offer.summary}</p>
       {quoteOnly ? (
         <p className="mt-3 rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm text-violet-100">
@@ -115,6 +121,23 @@ export function OfferCard({ offer, id, compact }: Props) {
         <span className="text-sm text-slate-500">{priceSuffix}</span>
       </p>
 
+      <div className="mt-4 flex flex-col gap-2">
+        {ready ? (
+          <Link href={offer.buyHref} className="btn-primary block text-center text-sm">
+            Buy now
+          </Link>
+        ) : (
+          <Link href={offer.contactHref} className="btn-glass block text-center text-sm">
+            {quoteOnly ? 'Request a quote' : 'Notify me when ready'}
+          </Link>
+        )}
+        {ready && (
+          <Link href={offer.contactHref} className="btn-glass block text-center text-sm">
+            Ask a question
+          </Link>
+        )}
+      </div>
+
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -152,23 +175,6 @@ export function OfferCard({ offer, id, compact }: Props) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="mt-auto flex flex-col gap-2 pt-5">
-        {ready ? (
-          <Link href={offer.buyHref} className="btn-primary block text-center text-sm">
-            Buy now
-          </Link>
-        ) : (
-          <Link href={offer.contactHref} className="btn-glass block text-center text-sm">
-            {quoteOnly ? 'Request a quote' : 'Notify me when ready'}
-          </Link>
-        )}
-        {ready && (
-          <Link href={offer.contactHref} className="btn-glass block text-center text-sm">
-            Ask a question
-          </Link>
-        )}
-      </div>
     </motion.article>
   );
 }

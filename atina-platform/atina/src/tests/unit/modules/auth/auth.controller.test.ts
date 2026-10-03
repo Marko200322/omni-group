@@ -11,6 +11,11 @@ var authServiceMock: {
   resetPassword: jest.Mock;
   changePassword: jest.Mock;
   verifyEmail: jest.Mock;
+  completeTwoFactorLogin: jest.Mock;
+  getTwoFactorStatus: jest.Mock;
+  startTwoFactorSetup: jest.Mock;
+  confirmTwoFactorSetup: jest.Mock;
+  disableTwoFactor: jest.Mock;
 };
 
 jest.mock('../../../../modules/auth/service/auth.service', () => {
@@ -24,9 +29,15 @@ jest.mock('../../../../modules/auth/service/auth.service', () => {
     resetPassword: jest.fn(),
     changePassword: jest.fn(),
     verifyEmail: jest.fn(),
+    completeTwoFactorLogin: jest.fn(),
+    getTwoFactorStatus: jest.fn(),
+    startTwoFactorSetup: jest.fn(),
+    confirmTwoFactorSetup: jest.fn(),
+    disableTwoFactor: jest.fn(),
   };
   return {
     AuthService: jest.fn().mockImplementation(() => authServiceMock),
+    isTwoFactorChallenge: (result: { requiresTwoFactor?: boolean }) => result?.requiresTwoFactor === true,
   };
 });
 
@@ -188,5 +199,24 @@ describe('AuthController', () => {
     const r = res();
     await controller.verifyEmail({ params: { token: 'verify-xyz' } } as unknown as Request, r);
     expect(authServiceMock.verifyEmail).toHaveBeenCalledWith('verify-xyz');
+  });
+
+  it('completeTwoFactorLogin forwards challenge, code, IP and user-agent', async () => {
+    authServiceMock.completeTwoFactorLogin.mockResolvedValue({ accessToken: 'a', user: {} });
+    const r = res();
+    await controller.completeTwoFactorLogin(
+      {
+        body: { challengeToken: 'ch', code: '123456' },
+        headers: { 'x-forwarded-for': '203.0.113.1', 'user-agent': 'jest-agent' },
+        socket: { remoteAddress: '::1' },
+      } as unknown as Request,
+      r,
+    );
+    expect(authServiceMock.completeTwoFactorLogin).toHaveBeenCalledWith(
+      'ch',
+      '123456',
+      '203.0.113.1',
+      'jest-agent',
+    );
   });
 });

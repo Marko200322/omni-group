@@ -102,4 +102,19 @@ export class AvatarClientMemoryProvider {
         .catch(() => undefined);
     }
   }
+
+  /** Rolling long-chat summary via the existing remember path — not a second summarizer. */
+  rememberLongChatSummary(
+    userId: string,
+    agentType: AgentType,
+    agentId: string,
+    history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  ): void {
+    if (!this.enabled() || history.length < 12) return;
+    const condensed = history
+      .slice(-12)
+      .map((h) => `${h.role === 'user' ? 'Client' : 'Omi'}: ${h.content.slice(0, 100)}`)
+      .join(' | ');
+    this.rememberTurn(userId, agentType, agentId, '[long-chat-summary]', condensed.slice(0, 800));
+  }
 }

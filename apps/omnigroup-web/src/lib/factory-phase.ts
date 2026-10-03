@@ -73,7 +73,7 @@ export function getFactoryPhaseLabel(phase: FactoryPhase = getFactoryPhase()): s
     M3: 'Deliver & upsell — sites + retainers',
     M4: 'Lead machine — Hunter + outreach send',
     M5: 'Autonomy reinvest — marketing loop',
-    M6: 'Full factory — Stripe + premium modules',
+    M6: 'Full factory — card checkout + premium modules',
   };
   return labels[phase];
 }

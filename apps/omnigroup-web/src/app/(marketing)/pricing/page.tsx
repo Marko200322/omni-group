@@ -8,15 +8,18 @@ import { IndustryCategorySelect } from '@/components/marketing/IndustryCategoryS
 import { RegulatedFoundingPartnerPanel } from '@/components/marketing/RegulatedFoundingPartnerPanel';
 import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { SaaSPlanPricing } from '@/components/marketing/SaaSPlanPricing';
+import { FoundingClientPromoBanner } from '@/components/marketing/FoundingClientPromoBanner';
 import { isRegulatedIndustryCategory } from '@/lib/regulated-founding-partner';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getIndustryCategory } from '@/lib/category-pricing';
 import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
+import type { BillingCurrency } from '@/lib/saas-plans';
 
 export default function PricingPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [currency, setCurrency] = useState<BillingCurrency>('USD');
 
   const { available, later } = useMemo(
     () =>
@@ -69,7 +72,8 @@ export default function PricingPage() {
           </p>
         </motion.div>
 
-        <SaaSPlanPricing />
+        <FoundingClientPromoBanner industryCategory={industryCategory} currency={currency} />
+        <SaaSPlanPricing currency={currency} onCurrencyChange={setCurrency} />
 
         <section className="mt-20 border-t border-white/10 pt-16">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Expert services</p>

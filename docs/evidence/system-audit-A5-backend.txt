@@ -1,0 +1,175 @@
+Omni Group Tech — System Audit Agent 5 (Atina Backend Integrity)
+Date: 2026-10-03
+Repo: C:\dev\omni group
+Scope: modules, migrations, config, unit tests (atina-platform/atina)
+Secrets: NONE printed or copied into this file. deploy-secrets not read.
+
+================================================================================
+BLOCKERS FIRST
+================================================================================
+B1) LOCAL DB MIGRATIONS 043–047 NOT APPLIED
+    - schema_migrations max version on Docker DB (atina_postgres / atina_saas_db): 042_organization_rbac_permissions
+    - 04x rows present: 040, 041, 042 only
+    - to_regclass checks: reinvestment_accounts, monitoring_services, marketing_channels,
+      marketing_email_events → ALL NULL (tables missing)
+    - Files exist under src/database/migrations/ and are picked up by migrate.ts (sort + track)
+    - Impact: Marketing / Monitoring / Reinvestment engines will fail at runtime against this DB
+      until `npm run migrate` (or docker migrate) is run
+    - Action required: apply migrations on every environment that should run these engines
+
+B2) LIVE PAYMENT / LEGAL DEFERRED (known, not code bugs)
+    - Firma registration (legal entity) — P2 deferred (docs/REPO-STATUS-NOW.md, generated/PROD-AUDIT.md)
+    - Stripe LIVE card + webhook human test — deferred until firma + sk_live keys
+    - Code path ready (sandbox/unit coverage); human LIVE webhook proof still open
+
+B3) .env.example LIVE KEY PLACEHOLDERS (expected template gaps; fill for prod)
+    - Empty / placeholder for live ops: AI_KEY, OPENROUTER_API_KEY, FINANCE_KEY/STRIPE_*,
+      STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY, price IDs, RESEND_API_KEY,
+      COMMS_*/SCRAPER_*/aggregator keys, JWT_SECRET=change-me-in-development
+    - Marketing LIVE ads intentionally gated: MARKETING_ADS_LIVE_SYNC=false;
+      GOOGLE_ADS_* / META_ADS_* / RESEND_WEBHOOK_SECRET commented empty
+    - PAYMENTS_MODE=sandbox (not live)
+    - Do not treat empty .env.example as a secret leak; real secrets stay out of git
+
+================================================================================
+VERDICT
+================================================================================
+Unit tests (focused pattern):     PASS — 40 suites / 485 tests
+Module registration (CoreEngine): PASS — marketing, monitoring, reinvestment registered
+Module phase registry:            FIXED — marketing (+ problem-hunter) were missing; now v1/v2
+Migrations 043–047 (files):       PASS — present, latest in tree
+Migrations 043–047 (local DB):    FAIL — not applied (blocker B1)
+Config LIVE readiness:            GAP — placeholders + deferred firma/Stripe LIVE
+
+Overall A5 gate: CONDITIONAL PASS (code + unit tests OK; DB migrate required for engine tables)
+
+Fix applied (no commit):
+  - atina-platform/atina/src/core/module-phase-registry.ts
+    added marketing: 'v1', problem-hunter: 'v2'
+
+================================================================================
+1) UNIT TESTS
+================================================================================
+Command (cwd: atina-platform/atina):
+  npx jest --runInBand --forceExit --testPathIgnorePatterns=integration \
+    --testPathPattern='(marketing|reinvestment|monitoring\.|totp|two-factor|omi-budget|omi-page-context|omi-consult|payments|billing|auth)'
+
+Result:
+  Test Suites: 40 passed, 40 total
+  Tests:       485 passed, 485 total
+  Time:        ~195s
+  Exit:        0
+
+Suites covered (selected):
+  marketing.module.routes, marketing-core, marketing-bridge
+  reinvestment.service, reinvestment.module.routes, reinvestment-core, reinvestment-bridge
+  monitoring.service, monitoring.module.routes
+  totp, auth.* (incl. routes/security/controller/middleware/dto), billing.*, payments.*
+  omi-budget-guard, omi-consult, omi-page-context
+  Note: no dedicated file name matched "two-factor"; 2FA covered via totp + auth suites
+
+================================================================================
+2) MODULE REGISTRATION
+================================================================================
+CoreEngine.registerModules() (always registered, with comments):
+  - MonitoringModule  — observability only; no spend / no reinvestment mutation
+  - MarketingModule   — observe/recommend; opportunities → reinvestment only
+  - ReinvestmentModule — always on for admin visibility; dry_run / kill_switch gate money
+
+Also related:
+  - MarketingGrowthModule (slug marketing-growth) — separate from MarketingModule
+  - Raw body middleware for /api/v1/marketing/webhooks/resend
+
+module-phase-registry.ts (after fix):
+  reinvestment: 'v1'
+  monitoring:   'v1'
+  marketing:    'v1'   ← was MISSING (phase guard fail-opened; now gated at v1)
+  problem-hunter: 'v2' ← was also missing from registry vs CoreEngine
+
+Config flags (src/config/index.ts + .env.example):
+  REINVESTMENT_ENABLED=true (bankProvider mock)
+  MONITORING_ENABLED=true
+  MARKETING_ENGINE_ENABLED=true
+  MARKETING_AUTONOMY_LEVEL=1
+  MARKETING_ADS_LIVE_SYNC=false
+
+Mount: /api/v1/{slug} via moduleRegistry + createPhaseActivationGuard
+
+================================================================================
+3) MIGRATIONS 043–047
+================================================================================
+Files (all exist; newest in migrations/):
+  043_notifications_updated_at.sql
+    — ADD notifications.updated_at (trigger fix for is_read updates)
+  044_reinvestment_engine.sql
+    — reinvestment_* accounts, balances, policies, opportunities, approvals, ledger, …
+  045_monitoring_engine.sql
+    — monitoring_services, health_checks, metric_samples, incidents, …
+  046_marketing_engine.sql
+    — marketing_channels/campaigns/spend/touchpoints/attribution/… seed channels
+  047_marketing_email_and_package_matrix.sql
+    — marketing_email_events, marketing_package_channel_stats, unique campaign external_id
+
+Runner: src/database/migrate.ts
+  - Reads *.sql sorted; records version = filename without .sql in schema_migrations
+  - 043–047 do not self-INSERT into schema_migrations (correct; runner inserts)
+
+Local applied status (Docker atina_postgres, atina_saas_db):
+  applied through 042 only → 043–047 PENDING
+
+.env.example / comments:
+  - No claim that 043–047 are auto-applied
+  - REINVESTMENT / MONITORING / MARKETING flags default enabled → assumes schema present
+  - Ops docs expect `npm run migrate` / docker compose migrate after pull
+
+================================================================================
+4) CONFIG GAPS (.env.example only — no real secrets)
+================================================================================
+Required for LIVE checkout/webhooks (empty in template):
+  FINANCE_KEY / STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PUBLISHABLE_KEY
+  STARTER/PRO/ENTERPRISE_*_PRICE_ID (+ yearly), FOUNDING_STRIPE_COUPON_ID
+
+AI / OMI LIVE (empty):
+  AI_KEY, OPENROUTER_API_KEY, OMI_*_MODEL (optional inherit AI_MODEL)
+
+Marketing LIVE adapters (commented / off):
+  MARKETING_ADS_LIVE_SYNC=false
+  GOOGLE_ADS_*, META_ADS_*, RESEND_WEBHOOK_SECRET
+
+Dev defaults that must change for prod:
+  JWT_SECRET / JWT_REFRESH_SECRET change-me placeholders
+  ADMIN_PASSWORD=Admin@123456
+  PAYMENTS_MODE=sandbox
+  REGISTRATION_ENABLED=true (prod closed unless explicitly true)
+  REINVESTMENT_BANK_PROVIDER=mock
+
+Aggregators 1–10 URL/KEY mostly blank (= local without live providers) — intentional.
+
+================================================================================
+5) KNOWN DEFERRED ITEMS
+================================================================================
+- Firma (legal entity) registration — owner P2, after revenue / readiness
+- Stripe LIVE card payment + webhook human test (Send test webhook → HTTP 200)
+- PayPal/Wise/Kriptoman LIVE API cutover — same P2 bucket
+- Google/Meta ads LIVE sync — off until credentials + MARKETING_ADS_LIVE_SYNC=true
+
+================================================================================
+6) FIXES / NON-FIXES
+================================================================================
+Fixed:
+  module-phase-registry missing marketing + problem-hunter
+
+Not fixed (env/ops, not code bugs):
+  Apply 043–047 on local/prod DB — operator must run migrate
+  Fill LIVE keys — owner secrets, not committed
+
+No commit created (per instructions).
+
+================================================================================
+FOLLOW-UP 2026-10-04
+================================================================================
+Local DB migrations 043-047 APPLIED via docker exec psql (npm run migrate failed: .env DB password mismatch 28P01).
+schema_migrations now includes 043-047.
+to_regclass: reinvestment_accounts, monitoring_services, marketing_channels, marketing_email_events � all present.
+module-phase-registry marketing + problem-hunter already present in tree (agent fix).
+A5 local blocker B1 CLEARED.

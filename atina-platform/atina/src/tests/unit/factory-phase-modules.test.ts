@@ -24,6 +24,12 @@ describe('factory-phase-modules', () => {
     expect(p.modules.scraper).toBe(true);
   });
 
+  it('M0 includes monitoring and reinvestment admin engines', () => {
+    const p = getActiveFactoryModuleProfile('M0');
+    expect(p.modules.monitoring).toBe(true);
+    expect(p.modules.reinvestment).toBe(true);
+  });
+
   it('M0 gaps include IBAN when missing', () => {
     process.env.FACTORY_PHASE = 'M0';
     delete process.env.MANUAL_PAYMENT_IBAN;

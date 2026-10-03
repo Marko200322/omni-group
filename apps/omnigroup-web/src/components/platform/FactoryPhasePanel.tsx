@@ -34,6 +34,10 @@ type FactoryStatus = {
   runtime?: {
     modules?: Array<{ module: string; minPhase: string; enabled: boolean }>;
   };
+  stripe?: {
+    configured?: boolean;
+    livemode?: boolean;
+  };
 };
 
 type Props = {
@@ -85,8 +89,8 @@ export function FactoryPhasePanel({ initial }: Props) {
             </p>
             <p className="text-xs text-violet-200/70">
               {auto?.enabled
-                ? `AUTO mode · effective ${auto.effective ?? phase} · ceiling ${auto.ceiling ?? 'M6'}`
-                : 'Manual ceiling — set factoryPhaseAuto true in deploy.config for self-advance'}
+                ? `Auto-advance on · effective ${auto.effective ?? phase}`
+                : 'Manual factory ceiling'}
             </p>
           </div>
         </div>
@@ -117,6 +121,16 @@ export function FactoryPhasePanel({ initial }: Props) {
           {(auto.metrics.estimatedMrrEur ?? 0).toFixed(0)} · Fulfilled{' '}
           {auto.metrics.fulfilledPackageCount ?? 0}
           {auto.blockedNext ? ` · Next ${auto.blockedNext}: ${auto.blockedReason ?? ''}` : ''}
+        </p>
+      )}
+
+      {status?.stripe && (
+        <p className="mt-2 text-xs text-slate-400">
+          {status.stripe.livemode
+            ? 'Stripe live — real card charges.'
+            : status.stripe.configured
+              ? 'Stripe TEST — no live charges.'
+              : 'Stripe is not configured.'}
         </p>
       )}
 

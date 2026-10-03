@@ -31,7 +31,23 @@ export class CrmService {
 
   async createContact(userId: string, dto: CreateContactDtoType, organizationId?: string) {
     const { rows } = await this.repo.createContact(userId, dto, organizationId);
-    return rows[0];
+    const contact = rows[0];
+    // Fail-soft: Marketing observer must never break CRM create.
+    try {
+      const attr =
+        dto.customFields && typeof dto.customFields === 'object'
+          ? (dto.customFields as { attribution?: Record<string, string> }).attribution
+          : undefined;
+      const { recordLeadTouchpoint } = await import('../../marketing/lib/touchpoint-record');
+      await recordLeadTouchpoint({
+        contactId: typeof contact?.id === 'string' ? contact.id : null,
+        attribution: attr,
+        eventType: 'lead',
+      });
+    } catch {
+      /* ignore */
+    }
+    return contact;
   }
 
   async updateContact(id: string, userId: string, dto: UpdateContactDtoType, organizationId?: string) {

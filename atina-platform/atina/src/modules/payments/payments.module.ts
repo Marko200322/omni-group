@@ -166,6 +166,13 @@ export class PaymentsModule implements IModule {
       validateBody(StrictEmptyBodyDto),
       this.controller.getPaymentMethods
     );
+    this.router.get(
+      '/founding-promo',
+      paymentsLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getFoundingPromo
+    );
     this.router.post(
       '/manual/checkout',
       paymentsLimiter,

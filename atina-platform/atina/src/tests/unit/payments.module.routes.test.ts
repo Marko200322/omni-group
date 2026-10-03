@@ -95,11 +95,22 @@ describe('PaymentsModule HTTP routes', () => {
       .spyOn(PaymentsService.prototype, 'getPaymentMethods')
       .mockReturnValue({
         mode: 'manual',
+        stripeLivemode: false,
         methods: [],
         manualConfigured: false,
         manualSetupMissing: true,
         note: undefined,
       });
+    jest.spyOn(PaymentsService.prototype, 'getFoundingPromoStatus').mockResolvedValue({
+      enabled: false,
+      active: false,
+      discountPct: 15,
+      lockMonths: 12,
+      maxSlots: 50,
+      redeemed: 0,
+      remaining: 0,
+      couponId: null,
+    });
     createManualCheckoutSpy = jest
       .spyOn(PaymentsService.prototype, 'createManualCheckout')
       .mockResolvedValue({ paymentId: 'p-manual', reference: 'ATINA-X', amount: 29, currency: 'EUR', instructions: {} });
@@ -379,6 +390,12 @@ describe('PaymentsModule HTTP routes', () => {
     const res = await request(server).get('/payments/methods');
     expect(res.status).toBe(200);
     expect(getPaymentMethodsSpy).toHaveBeenCalled();
+  });
+
+  it('GET /payments/founding-promo is public', async () => {
+    const res = await request(server).get('/payments/founding-promo');
+    expect(res.status).toBe(200);
+    expect(res.body.data.active).toBe(false);
   });
 
   it('POST /payments/manual/checkout requires auth', async () => {

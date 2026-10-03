@@ -9,7 +9,7 @@ import { getDeliverable } from '@/lib/deliverable-catalog';
 import { deliverableLabel } from '@/lib/display-text';
 import { getClientOffer } from '@/lib/public-catalog';
 import { LAUNCH_BUNDLE_SPECS } from '@/lib/launch-bundles';
-import { trackConversion } from '@/components/marketing/UtmCapture';
+import { readAttribution, trackConversion } from '@/components/marketing/UtmCapture';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 import {
@@ -132,6 +132,7 @@ export function ContactForm({
           ...(budget ? { budget } : {}),
           ...(timeline ? { timeline } : {}),
           consent,
+          attribution: readAttribution(),
         };
         try {
           const res = await fetch('/api/contact', {

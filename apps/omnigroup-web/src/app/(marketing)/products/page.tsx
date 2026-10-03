@@ -78,6 +78,7 @@ export default function ProductsPage() {
                 transition={{ delay: i * 0.04 }}
               >
                 <OfferCard
+                  id={`offer-${offer.id}`}
                   offer={
                     getClientOffer(offer.id, {
                       category: industryCategory || undefined,
@@ -115,6 +116,7 @@ export default function ProductsPage() {
                   transition={{ delay: i * 0.03 }}
                 >
                   <OfferCard
+                    id={`offer-${offer.id}`}
                     offer={getClientOffer(offer.id, { category: industryCategory || undefined }) ?? offer}
                     compact
                   />

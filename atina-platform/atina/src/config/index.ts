@@ -39,10 +39,19 @@ export type PaymentsMode = 'manual' | 'sandbox' | 'live';
 
 function resolvePaymentsMode(): PaymentsMode {
   const raw = optional('PAYMENTS_MODE', '').trim().toLowerCase();
+  const stripeKey = envFirst('FINANCE_KEY', 'STRIPE_SECRET_KEY').trim();
+
+  // Never report live charges when the secret key is test/missing.
+  if (raw === 'live' && !stripeKey.startsWith('sk_live_')) {
+    if (stripeKey.startsWith('sk_test_') || stripeKey || optional('PAYPAL_CLIENT_ID', '').trim()) {
+      return 'sandbox';
+    }
+    return optional('NODE_ENV', 'development') === 'production' ? 'sandbox' : 'manual';
+  }
+
   if (raw === 'manual' || raw === 'sandbox' || raw === 'live') {
     return raw;
   }
-  const stripeKey = envFirst('FINANCE_KEY', 'STRIPE_SECRET_KEY').trim();
   if (stripeKey.startsWith('sk_live_')) return 'live';
   if (stripeKey || optional('PAYPAL_CLIENT_ID', '').trim()) return 'sandbox';
   return optional('NODE_ENV', 'development') === 'production' ? 'sandbox' : 'manual';
@@ -125,6 +134,16 @@ export const config = {
       key: envFirst('AI_KEY', 'OPENROUTER_API_KEY'),
     },
     aiModel: optional('AI_MODEL', 'openrouter/auto'),
+    /**
+     * OMI chat model routing (server-side only). Empty → fall back to AI_MODEL.
+     * Conceptual defaults: Luna (simple), Sol (primary consult), Astra (rare expert).
+     * Set real provider IDs for your AI_URL (OpenRouter / OpenAI-compatible).
+     */
+    omiSimpleModel: optional('OMI_SIMPLE_MODEL', ''),
+    omiPrimaryModel: optional('OMI_PRIMARY_MODEL', ''),
+    omiExpertModel: optional('OMI_EXPERT_MODEL', ''),
+    omiHistoryTurns: optionalNumber('OMI_HISTORY_TURNS', 6),
+    omiMaxContextChars: optionalNumber('OMI_MAX_CONTEXT_CHARS', 3500),
     businessDev: {
       url: optional('BUSINESS_AND_DEV_URL', ''),
       key: optional('BUSINESS_AND_DEV_KEY', ''),
@@ -203,6 +222,11 @@ export const config = {
     internalLaneEnabled: optionalBool('PRODUCT_FACTORY_INTERNAL_LANE', true),
     maxInternalPerTick: optionalNumber('PRODUCT_FACTORY_MAX_INTERNAL_PER_TICK', 1),
   },
+  /** Admin-only reinvestment engine. Always registered; dry_run default true in DB policy. */
+  reinvestment: {
+    enabled: optionalBool('REINVESTMENT_ENABLED', true),
+    bankProvider: optional('REINVESTMENT_BANK_PROVIDER', 'mock'),
+  },
   deliverableFulfillment: {
     enabled: optionalBool('DELIVERABLE_FULFILLMENT_ENABLED', true),
     /** false = fully automatic client delivery (no admin QA gate). */
@@ -234,7 +258,11 @@ export const config = {
       starter: optional('STARTER_PRICE_ID', 'price_starter'),
       pro: optional('PRO_PRICE_ID', 'price_pro'),
       enterprise: optional('ENTERPRISE_PRICE_ID', 'price_enterprise'),
+      starterYearly: optional('STARTER_YEARLY_PRICE_ID', ''),
+      proYearly: optional('PRO_YEARLY_PRICE_ID', ''),
+      enterpriseYearly: optional('ENTERPRISE_YEARLY_PRICE_ID', ''),
     },
+    foundingCouponId: optional('FOUNDING_STRIPE_COUPON_ID', ''),
   },
   paypal: {
     clientId: optional('PAYPAL_CLIENT_ID', ''),
@@ -353,6 +381,20 @@ export const config = {
     windowMs: optionalNumber('RATE_LIMIT_WINDOW_MS', 900000),
     max: optionalNumber('RATE_LIMIT_MAX', 2000),
   },
+  /** OMI assistant spend guards — see modules/omi/omi-usage-config.ts for full env list. */
+  omiUsage: {
+    monthlyBudgetUsd: optionalNumber('OMI_MONTHLY_BUDGET_USD', 50),
+    dailyBudgetUsd: optionalNumber('OMI_DAILY_BUDGET_USD', 5),
+    budgetReservePercent: optionalNumber('OMI_BUDGET_RESERVE_PERCENT', 20),
+    anonymousDailyMessages: optionalNumber('OMI_ANONYMOUS_DAILY_MESSAGES', 20),
+    anonymousHourlyMessages: optionalNumber('OMI_ANONYMOUS_HOURLY_MESSAGES', 8),
+    authDailyMessages: optionalNumber('OMI_AUTH_DAILY_MESSAGES', 60),
+    authMonthlyMessages: optionalNumber('OMI_AUTH_MONTHLY_MESSAGES', 500),
+    ipPerMinute: optionalNumber('OMI_IP_PER_MINUTE', 6),
+    ipPerHour: optionalNumber('OMI_IP_PER_HOUR', 40),
+    maxMessagesPerConversation: optionalNumber('OMI_MAX_MESSAGES_PER_CONVERSATION', 40),
+    maxConcurrency: optionalNumber('OMI_MAX_CONCURRENCY', 2),
+  },
   logging: {
     level: optional('LOG_LEVEL', 'info'),
     file: optional('LOG_FILE', 'logs/atina.log'),
@@ -363,10 +405,19 @@ export const config = {
     hardStopMode: optionalBool('FORGE_HARD_STOP_MODE', false),
   },
   monitoring: {
+    enabled: optionalBool('MONITORING_ENABLED', true),
     workflowTemplateSuccessAlertThreshold: optionalNumber(
       'WORKFLOW_TEMPLATE_SUCCESS_ALERT_THRESHOLD',
       80
     ),
+  },
+  /** Admin marketing intelligence — observe/recommend only (autonomyLevel default 1). */
+  marketing: {
+    enabled: optionalBool('MARKETING_ENGINE_ENABLED', true),
+    autonomyLevel: optionalNumber('MARKETING_AUTONOMY_LEVEL', 1),
+    /** When true + credentials present, Google/Meta adapters pull LIVE spend. */
+    adsLiveSync: optionalBool('MARKETING_ADS_LIVE_SYNC', false),
+    resendWebhookSecret: optional('RESEND_WEBHOOK_SECRET', ''),
   },
   features: {
     scraper: optionalBool('ENABLE_SCRAPER', true),

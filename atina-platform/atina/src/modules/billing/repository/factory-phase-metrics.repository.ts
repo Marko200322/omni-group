@@ -19,7 +19,12 @@ export class FactoryPhaseMetricsRepository {
            COUNT(*)::text AS count,
            COALESCE(SUM(amount), 0)::text AS revenue
          FROM payments
-         WHERE status = 'completed'`,
+         WHERE status = 'completed'
+           AND (
+             subscription_id IS NOT NULL
+             OR COALESCE(metadata->>'purchaseType', '') = 'platform_plan'
+             OR COALESCE(metadata->>'planSlug', '') IN ('starter', 'pro', 'enterprise')
+           )`,
       );
 
       const { rows: fulfillRows } = await query<{ count: string }>(
@@ -32,7 +37,8 @@ export class FactoryPhaseMetricsRepository {
       const { rows: mrrRows } = await query<{ mrr: string }>(
         `SELECT COALESCE(SUM(amount), 0)::text AS mrr
          FROM subscriptions
-         WHERE status = 'active'`,
+         WHERE status = 'active'
+           AND (current_period_end IS NULL OR current_period_end > NOW())`,
       );
 
       return {

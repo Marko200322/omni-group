@@ -1,26 +1,15 @@
 ﻿# Fulfillment matrix watch
 
-**Updated:** 2026-09-23 04:10:52
-**CSV:** docs\evidence\fulfillment-matrix-prod-20260923_040427.csv
+**Updated:** 2026-10-01 22:22:33
+**Stamp:** 20261001_174500
 
 | Metric | Value |
 |--------|-------|
-| Completed rows | 1 / 1000 (0.1%) |
-| PASS |  |
+| Completed rows | 1000 / 1000 |
+| PASS | 1000 |
 | FAIL | 0 |
 | SKIP | 0 |
-| Process running | yes (PID 16156) |
+| Shards alive | 0 / 4 |
 
-## Log tail
-
-```
-Login OK (admin@atina.io)
-== Prod fulfillment matrix ==
-  Web: https://omnigrouptech.com
-  Packages: 20  Industries: 50  Cells: 1000
-  Report: C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20260923_040427.csv
-
-[1/1000] -- setup-quick @ admin_support --
-  PASS artifacts=2 checklist=pct (s)
-```
-
+## Shards
+- MERGED FINAL PASS=1000 FAIL=0

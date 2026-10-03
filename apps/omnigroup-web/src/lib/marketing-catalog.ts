@@ -38,6 +38,8 @@ export type CatalogItem = {
   id: string;
   name: string;
   description: string;
+  /** Buyer cue for abstract names — rendered as "Best for: …" when set. */
+  bestFor?: string;
   priceLabel: string;
   priceMonthly?: number;
   priceOnce?: number;

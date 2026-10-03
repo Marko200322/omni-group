@@ -1,0 +1,172 @@
+Omni Group Tech — Production Readiness Audit
+Agent: A1 (LIVE production health & smoke surfaces)
+Date (UTC): 2026-10-03T22:02Z
+Repo root: C:\dev\omni group
+Targets: https://omnigrouptech.com , https://api.omnigrouptech.com
+Mode: report-only (no code changes, no commit)
+
+================================================================================
+VERDICT SUMMARY
+================================================================================
+Overall: PASS (live stack healthy; all required smokes green)
+
+Blockers: none
+
+Non-blocking observations:
+  1) GET https://omnigrouptech.com/api/health/live returns HTTP 200 ok:true but
+     X-Nextjs-Cache: HIT with stale ts=2026-10-01T06:22:02.003Z (should be now).
+     Uptime monitors that only check HTTP 200 / ok still pass; timestamp is wrong.
+  2) GET https://api.omnigrouptech.com/health/live -> 404 (API exposes /health only;
+     documented on API root links.health).
+  3) smoke-web-integration WARN on live-call avatar stub session
+     ("null-valued expression"); script still exited 0 / all checks passed.
+
+================================================================================
+1) HEALTH / LIVE ENDPOINTS
+================================================================================
+
+--- Web: https://omnigrouptech.com ---
+
+GET /api/health
+  HTTP 200
+  {"ok":true,"app":"omnigroup-web","siteUrl":"https://omnigrouptech.com",
+   "atina":{"ok":true,"status":200},"ts":"2026-10-03T22:01:49.753Z"}
+  RESULT: PASS
+
+GET /api/health/live
+  HTTP 200
+  {"ok":true,"app":"omnigroup-web","probe":"live","ts":"2026-10-01T06:22:02.003Z"}
+  Headers: X-Nextjs-Cache: HIT ; Via: 1.1 Caddy ; Content-Type: application/json
+  RESULT: PASS (HTTP/ok) with WARN (stale cached timestamp ~2 days old)
+
+GET /  (HTML home)
+  HTTP 200
+  RESULT: PASS
+
+GET /health (proxied/shared Atina health body observed via web host)
+  HTTP 200
+  {"status":"ok","db":"up","redis":"up",...,"environment":"production",...}
+  RESULT: PASS (informational; primary web probes are /api/health*)
+
+--- API: https://api.omnigrouptech.com ---
+
+GET /
+  HTTP 200
+  {"success":true,"name":"ATINA",...,"links":{"health":"/health","metrics":"/metrics",
+   "api":"/api/v1","web":"https://omnigrouptech.com"}}
+  RESULT: PASS
+
+GET /health
+  HTTP 200
+  {"status":"ok","db":"up","redis":"up","version":"1.0.0",
+   "uptime":229140.386417667,"timestamp":"2026-10-03T22:01:50.013Z",
+   "environment":"production",
+   "forge":{"vaultPath":"/var/omni/forge/vault.db","vaultSignal":"available",
+            "lastForgeEventAgeMs":null,"lastForgeEventFresh":null}}
+  RESULT: PASS (db/redis up, production env)
+
+GET /health/live
+  HTTP 404
+  RESULT: N/A / expected absent (canonical probe is /health)
+
+================================================================================
+2) SMOKE SCRIPTS (remote, SkipEnsure*)
+================================================================================
+
+A) scripts\smoke-platform-full.ps1 -WebBase https://omnigrouptech.com
+   Log: docs/evidence/_a1-smoke-platform-full.log
+   Note: remote WebBase auto-skipped local :3010 ensure
+   Result: smoke-platform-full: 36 passed, 0 failed
+   Exit: 0
+   Highlights:
+     - Marketing pages: /, /services, /pricing, /products, /contact, /login,
+       /invoices/preview -> 200
+     - Guest redirects: /dashboard, /admin, /admin/mobile, /dev/docs -> 307
+     - BFF login -> /admin
+     - Authenticated /dashboard, /admin, /admin/mobile -> 200
+     - Billing success/cancel pages -> 200
+     - BFF APIs incl. billing, admin, autonomy-loop, product-factory,
+       ai-memory, marketing/overview|health|email-engagement|package-matrix,
+       billing/quote POST, video-meetings support agents -> PASS
+   VERDICT: PASS
+
+B) scripts\smoke-web-integration.ps1
+     -WebBase https://omnigrouptech.com
+     -AtinaBase https://api.omnigrouptech.com
+     -SkipEnsureWeb -SkipEnsureAtina
+   Log: docs/evidence/_a1-smoke-web-integration.log
+   Creds: prod admin (admin@atina.io)
+   Result: smoke-web-integration: all checks passed.
+   Exit: 0
+   Highlights:
+     - Atina /health OK
+     - Web /api/health OK
+     - BFF login OK redirect=/admin
+     - ai-memory recall items=14
+     - contact stub sent_via_resend
+     - /dashboard session len=47860
+     - payments mode=live ; checkout paymentId created
+     - admin overview users=38
+     - avatar agents=5 ; session+chat OK
+     - live-call status OK (enabled=True) ; stub session WARN (null expression)
+     - hunting readiness score=100
+   VERDICT: PASS (with non-blocking live-call WARN)
+
+C) scripts\smoke-hunting-integration.ps1
+     -WebBase https://omnigrouptech.com
+     -AtinaBase https://api.omnigrouptech.com
+     -SkipPipeline -SkipEnsureWeb -SkipEnsureAtina
+   Log: docs/evidence/_a1-smoke-hunting-integration.log
+   Result: smoke-hunting-integration: all checks passed.
+   Exit: 0
+   Highlights:
+     - BFF login role=admin
+     - hunting readiness score=100
+     - hunting bootstrap workspaces=7
+     - workflow templates=27 nurtureSteps=5
+   VERDICT: PASS
+
+================================================================================
+3) PUBLIC PAGE SPOT-CHECKS (HTTP 200)
+================================================================================
+Base: https://omnigrouptech.com (no redirect follow for status)
+
+  /                    -> 200  len=41396     PASS
+  /pricing             -> 200  len=116121    PASS
+  /products            -> 200  len=102478    PASS
+  /services            -> 200  len=102113    PASS
+  /contact             -> 200  len=32415     PASS
+  /login               -> 200  len=19505     PASS
+  /legal/privacy       -> 200  len=39911     PASS
+  /legal/terms         -> 200  len=30155     PASS
+  /legal/cookies       -> 200  len=26756     PASS
+  /legal/refund        -> 200  len=28413     PASS
+  /legal/impressum     -> 200  len=27833     PASS
+  /status              -> 200  len=29767     PASS
+  /solutions           -> 200  len=115020    PASS
+
+================================================================================
+4) AUTH-GATED REDIRECTS (guest)
+================================================================================
+curl -sI:
+
+  GET /dashboard -> HTTP 307 Location: /login?next=%2Fdashboard   PASS
+  GET /admin     -> HTTP 307 Location: /login?next=%2Fadmin       PASS
+
+Follow redirects (Invoke-WebRequest):
+  /dashboard final -> 200 https://omnigrouptech.com/login?next=/dashboard  PASS
+  /admin final     -> 200 https://omnigrouptech.com/login?next=/admin      PASS
+
+Also confirmed by smoke-platform-full guest redirect suite (307).
+
+================================================================================
+5) FIXES APPLIED
+================================================================================
+None. Prefer report over drive-by; no clear outage/blocker requiring a hotfix
+in this A1 scope. Recommended follow-ups (non-blocking):
+  - Mark /api/health/live as force-dynamic / no-store so ts is not Next-cached.
+  - Harden live-call avatar stub smoke path (null response handling).
+
+================================================================================
+END A1
+================================================================================

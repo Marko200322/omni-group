@@ -52,6 +52,26 @@ export const ChangePasswordDto = z
   })
   .strict();
 
+export const TwoFactorLoginDto = z
+  .object({
+    challengeToken: z.string().min(1).max(4096),
+    code: z.string().min(6).max(32),
+  })
+  .strict();
+
+export const TwoFactorConfirmDto = z
+  .object({
+    code: z.string().min(6).max(32),
+  })
+  .strict();
+
+export const TwoFactorDisableDto = z
+  .object({
+    password: z.string().min(1),
+    code: z.string().min(6).max(32),
+  })
+  .strict();
+
 /** POST `/logout` — optional `refreshToken`; rejects unknown body keys. */
 export const LogoutBodyDto = z.preprocess(
   bodyToObject,
@@ -69,3 +89,6 @@ export type ForgotPasswordDtoType = z.infer<typeof ForgotPasswordDto>;
 export type ResetPasswordDtoType = z.infer<typeof ResetPasswordDto>;
 export type ChangePasswordDtoType = z.infer<typeof ChangePasswordDto>;
 export type LogoutBodyDtoType = z.infer<typeof LogoutBodyDto>;
+export type TwoFactorLoginDtoType = z.infer<typeof TwoFactorLoginDto>;
+export type TwoFactorConfirmDtoType = z.infer<typeof TwoFactorConfirmDto>;
+export type TwoFactorDisableDtoType = z.infer<typeof TwoFactorDisableDto>;

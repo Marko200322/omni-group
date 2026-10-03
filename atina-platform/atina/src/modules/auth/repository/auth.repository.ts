@@ -19,6 +19,7 @@ export interface UserRecord {
   plan_slug?: string;
   active_organization_id?: string | null;
   org_role?: string | null;
+  metadata?: unknown;
 }
 
 export interface RefreshTokenRecord {
@@ -142,6 +143,16 @@ export class AuthRepository {
       [tokenHash]
     );
     return rows[0] || null;
+  }
+
+  async setTwoFactorRecord(userId: string, record: Record<string, unknown>): Promise<void> {
+    await query(
+      `UPDATE users
+       SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{twoFactor}', $2::jsonb, true),
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId, JSON.stringify(record)],
+    );
   }
 
   async updatePassword(userId: string, passwordHash: string): Promise<void> {

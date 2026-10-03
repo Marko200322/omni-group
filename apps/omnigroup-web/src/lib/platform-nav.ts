@@ -10,6 +10,9 @@ import {
   ShoppingCart,
   Activity,
   Crosshair,
+  Landmark,
+  Radar,
+  Megaphone,
 } from 'lucide-react';
 import {
   ADMIN_SECTION_META,
@@ -50,6 +53,9 @@ export function buildAdminNavItems(options: AdminNavOptions): PlatformNavItem[] 
   items.push(
     { href: ADMIN_SECTION_META.customers.href, label: ADMIN_SECTION_META.customers.label, icon: Users },
     { href: ADMIN_SECTION_META.billing.href, label: ADMIN_SECTION_META.billing.label, icon: CreditCard },
+    { href: ADMIN_SECTION_META.reinvestment.href, label: ADMIN_SECTION_META.reinvestment.label, icon: Landmark },
+    { href: ADMIN_SECTION_META.monitoring.href, label: ADMIN_SECTION_META.monitoring.label, icon: Radar },
+    { href: ADMIN_SECTION_META.marketing.href, label: ADMIN_SECTION_META.marketing.label, icon: Megaphone },
     { href: ADMIN_SECTION_META.system.href, label: ADMIN_SECTION_META.system.label, icon: Activity },
     { href: ADMIN_SECTION_META.settings.href, label: ADMIN_SECTION_META.settings.label, icon: Settings },
     { href: ADMIN_SECTION_META.workflows.href, label: ADMIN_SECTION_META.workflows.label, icon: Workflow },

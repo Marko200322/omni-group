@@ -44,6 +44,11 @@ export const ROLE_PERMISSIONS: Record<OrgRole, readonly OrgPermission[]> = {
 
 const PLATFORM_ADMIN_ROLES = new Set(['admin', 'superadmin', 'owner', 'operator']);
 
+/** Platform roles that may access admin APIs (aligned with web isAdminRole). */
+export function isPlatformAdminRole(role: string | null | undefined): boolean {
+  return Boolean(role && PLATFORM_ADMIN_ROLES.has(role.trim().toLowerCase()));
+}
+
 export function isOrgRole(value: string | null | undefined): value is OrgRole {
   return Boolean(value && (ORG_ROLES as readonly string[]).includes(value));
 }

@@ -44,6 +44,10 @@ import { AiMemoryPanel } from '@/components/platform/AiMemoryPanel';
 import { getFactoryPhase, getFactoryPhaseLabel } from '@/lib/factory-phase';
 import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
 import { FactoryPhasePanel } from '@/components/platform/FactoryPhasePanel';
+import { OmiUsagePanel } from '@/components/platform/OmiUsagePanel';
+import { ReinvestmentPanel } from '@/components/platform/ReinvestmentPanel';
+import { MonitoringPanel } from '@/components/platform/MonitoringPanel';
+import { MarketingPanel } from '@/components/platform/MarketingPanel';
 import { isLeanProdMode } from '@/lib/prod-mode';
 import { getMonthlyBudgetEur, getBudgetAllocationHint, isBudgetLaunchMode } from '@/lib/prod-budget';
 import { getSellablePackageHint } from '@/lib/sellable-packages';
@@ -150,7 +154,6 @@ export default function AdminClient({
           >
             <p className={`text-sm font-medium ${leanProd ? 'text-amber-100' : 'text-emerald-100'}`}>
               Factory {factoryPhase} — {getFactoryPhaseLabel(factoryPhase)} · €{budgetEur}/mo budget
-              {!leanProd ? ' · prodMode full' : ' · prodMode lean'}
             </p>
             <p className={`mt-1 text-sm ${leanProd ? 'text-amber-200/80' : 'text-emerald-200/80'}`}>
               {getSellablePackageHint()}
@@ -204,9 +207,9 @@ export default function AdminClient({
               delay={0}
             />
             <StatCard
-              label="Recorded revenue"
+              label="SaaS revenue"
               value={metrics.mrr}
-              sub="Confirmed payments · not MRR"
+              sub={metrics.revenueNote ?? 'Confirmed SaaS payments · not MRR'}
               icon={CreditCard}
               accent="cyan"
               trend={metrics.trends?.mrr}
@@ -333,6 +336,8 @@ export default function AdminClient({
               ))}
             </ul>
           </GlassCard>
+
+          <OmiUsagePanel />
         </div>
       ) : null}
 
@@ -403,11 +408,23 @@ export default function AdminClient({
         </>
       ) : null}
 
+      {section === 'reinvestment' ? (
+        <ReinvestmentPanel disabled={operatorLocked} />
+      ) : null}
+
+      {section === 'monitoring' ? (
+        <MonitoringPanel disabled={operatorLocked} />
+      ) : null}
+
+      {section === 'marketing' ? (
+        <MarketingPanel disabled={operatorLocked} />
+      ) : null}
+
       {section === 'factory' ? (
         leanProd ? (
           <LockedModule
             title="Product Factory"
-            reason="Hidden in lean mode — enable after MRR gate (prodMode: full)."
+            reason="Hidden in the limited ops profile — enable after the MRR gate."
           />
         ) : (
           <GlassCard delay={0.38}>
@@ -456,7 +473,7 @@ export default function AdminClient({
         ) : (
           <LockedModule
             title="Resource shop"
-            reason="Available when Hunting is unlocked and prodMode is full."
+            reason="Available when Hunting is unlocked and the full ops profile is on."
           />
         )
       ) : null}

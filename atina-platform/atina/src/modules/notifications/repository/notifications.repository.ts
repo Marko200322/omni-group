@@ -68,6 +68,16 @@ export class NotificationsRepository {
     return query('DELETE FROM notifications WHERE id = $1 AND user_id = $2', [id, userId]);
   }
 
+  markStaleRead(userId: string, olderThanDays = 14) {
+    const days = Math.max(1, Math.floor(olderThanDays));
+    return query(
+      `UPDATE notifications SET is_read = true, read_at = NOW()
+       WHERE user_id = $1 AND is_read = false
+         AND created_at < NOW() - make_interval(days => $2::int)`,
+      [userId, days]
+    );
+  }
+
   unreadCount(userId: string) {
     return query<{ count: string }>(
       'SELECT COUNT(*)::text AS count FROM notifications WHERE user_id = $1 AND is_read = false',

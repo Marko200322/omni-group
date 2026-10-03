@@ -1,0 +1,217 @@
+Omni Group Tech — System Audit Agent 4 (Billing / Fulfillment / Commerce / Engines)
+Date: 2026-10-03
+Repo: C:\dev\omni group
+Scope: billing, fulfillment, commerce E2E, industry×package matrix, marketing/monitoring/reinvestment
+Secrets: NONE printed. Admin login via deploy-secrets.local/deploy.config.json (password not logged).
+
+================================================================================
+VERDICTS (summary)
+================================================================================
+Commerce E2E (prod):              PASS
+Industry×package matrix gate:     PASS (50×20 + marketing engine matrix)
+Matrix 1000 evidence recompute:   PASS (1000 unique PASS; full 50×20 cartesian)
+Marketing engine (auth BFF/UI):   PASS (with known UNAVAILABLE adapter/email cells)
+Monitoring engine (auth BFF/UI):  PASS
+Reinvestment engine (auth BFF/UI): FAIL_PARTIAL — lists/pages OK; /status + /engine/run 500
+Stripe honesty:                   TEST checkout sessions; PAYMENTS_MODE reports live; not LIVE charges
+
+================================================================================
+1) COMMERCE E2E — scripts\e2e-commerce-prod.ps1
+================================================================================
+Command: powershell -File .\scripts\e2e-commerce-prod.ps1
+Result: EXIT=0 — e2e-commerce-prod: PASS
+Web: https://omnigrouptech.com
+Deliverable: setup-quick / plan=starter
+
+Observed path:
+  admin login OK → invite test user → user login OK
+  payments/methods: stripe=yes, mode=live
+  Stripe plan checkout session OK (hosted Checkout URL)
+  Stripe deliverable session OK amount=549 (catalog match)
+  Manual deliverable checkout → mark-sent → admin confirm
+  Fulfillment completed artifacts=2
+  Client deliveries list OK; client orders/projects OK
+
+Notes:
+  - Fulfillment path exercised via manual confirm → fulfillment job (same post-pay hook as webhook).
+  - Stripe LIVE card → webhook is NOT covered by this script (by design; see Stripe section).
+  - Log: docs/evidence/_a4-e2e-commerce-run.log
+
+================================================================================
+2) MATRIX GATE — scripts\verify-industry-package-matrix-prod.ps1
+================================================================================
+Command: powershell -File .\scripts\verify-industry-package-matrix-prod.ps1
+Result: EXIT=0 — ALL PASS (50*20 catalog cells + marketing engine)
+
+Catalog cells:
+  PASS Industry categories — count=50
+  PASS Deliverables catalog — count=20
+  PASS Matrix 20xN — 50 industries × 20 packages OK
+  PASS Matrix SKU set — sample=admin_support
+
+Marketing engine matrix (included by gate script):
+  PASS Admin login / CSRF
+  PASS overview/health/channels/attribution/economics/reconciliation — kind=ACTUAL
+  PASS Email engagement — kind=UNAVAILABLE (open counter present=0)
+  PASS Package × channel matrix — kind=ACTUAL, rows=20
+  PASS Ads LIVE adapters sync — adapters=2 (google_ads, meta_ads) status=unavailable each
+  PASS Marketing engine run — version=1.0.0
+  PASS Admin /admin/marketing — HTTP 200
+  PASS Resend webhook gated — HTTP 503 (expected without secret)
+  PASS Autonomy LEVEL <= 1 — level=1
+
+Log: docs/evidence/_a4-matrix-gate-run.log
+
+================================================================================
+3) MATRIX 1000 RECOMPUTE — fulfillment-matrix-prod-MERGED-20261001_174500.csv
+================================================================================
+File: docs/evidence/fulfillment-matrix-prod-MERGED-20261001_174500.csv
+Columns: deliverableId, industryCategory, status, score, artifacts, paymentId, error, elapsedSec, checkedAt
+
+Recomputed stats (Import-Csv):
+  TOTAL_ROWS:                 1000
+  UNIQUE (industry|package): 1000
+  DUPLICATE PAIRS:           0
+  STATUS PASS:               1000
+  STATUS non-PASS:           0
+  UNIQUE industries:         50
+  UNIQUE packages:           20
+  FULL CARTESIAN 50×20:      TRUE
+
+Packages present (20):
+  ai-support-retainer, audit, bundle-ops-clarity, bundle-portal-presence,
+  bundle-sales-launch, custom-software, integration, landing, lead-gen-retainer,
+  sales-enablement, setup-custom, setup-full, setup-quick, support-dedicated,
+  support-priority, vertical-package, website-business, website-ecommerce,
+  white-label-setup, workflow-design
+
+VERDICT: Truly 1000 unique PASS (20 pkgs × 50 industries).
+
+================================================================================
+4) MARKETING / MONITORING / REINVESTMENT — BFF + admin pages (authenticated)
+================================================================================
+Auth: admin session via deploy.config.json (email present; password not printed).
+Unauthenticated GETs → 401 for marketing/monitoring/reinvestment overview|status.
+
+Source routes present:
+  apps/omnigroup-web/src/lib/{marketing,monitoring,reinvestment}-bff.ts
+  apps/omnigroup-web/src/app/admin/{marketing,monitoring,reinvestment}/page.tsx
+  BFF route trees under src/app/api/atina/{marketing,monitoring,reinvestment}/
+
+Authenticated probes (prod web BFF):
+
+MARKETING
+  GET /api/atina/marketing/overview         200 ok kind=ACTUAL
+  GET /api/atina/marketing/health           200 ok kind=ACTUAL
+  GET /api/atina/marketing/channels         200 ok kind=ACTUAL
+  GET /api/atina/marketing/package-matrix   200 ok kind=ACTUAL
+  POST /api/atina/marketing/engine/run      200 ok engineVersion=1.0.0
+  GET /admin/marketing                      200 html marker=true
+
+MONITORING
+  GET /api/atina/monitoring/overview        200 ok
+  GET /api/atina/monitoring/health          200 ok
+  GET /api/atina/monitoring/attention       200 ok
+  GET /api/atina/monitoring/incidents       200 ok
+  GET /api/atina/monitoring/costs           200 ok kind=ACTUAL
+  POST /api/atina/monitoring/engine/run     200 ok overall=OPERATIONAL
+  GET /admin/monitoring                     200 html marker=true
+
+REINVESTMENT
+  GET /api/atina/reinvestment/opportunities 200 ok
+  GET /api/atina/reinvestment/investments   200 ok
+  GET /api/atina/reinvestment/policies      200 ok (1 policy mapped; dryRun=true autonomyLevel=0)
+  GET /api/atina/reinvestment/approvals     200 ok
+  GET /api/atina/reinvestment/alerts        200 ok
+  GET /admin/reinvestment                   200 html marker=true
+  GET /api/atina/reinvestment/status        500 error=reinvestment_unavailable
+  POST /api/atina/reinvestment/engine/run   500 error=reinvestment_unavailable
+
+Upstream API (Bearer admin accessToken, message only — no secrets):
+  GET  /api/v1/reinvestment/status          500 INTERNAL_ERROR
+  POST /api/v1/reinvestment/engine/run      500 INTERNAL_ERROR
+  POST /api/v1/reinvestment/transactions    500 INTERNAL_ERROR
+  GET  /api/v1/reinvestment/policies        200
+  GET  /api/v1/reinvestment/budgets         200 []
+  GET  /api/v1/reinvestment/investments     200 []
+
+Root cause (code):
+  reinvestment.repository upsertDerivedBalance ON CONFLICT SET updated_at = NOW()
+  but migration 044 reinvestment_account_balances has NO updated_at column.
+  Any path calling syncDerivedBalances() (status, engine/run, propose transaction) 500s.
+
+Fix applied locally (NOT committed; NOT deployed):
+  atina-platform/atina/src/modules/reinvestment/repository/reinvestment.repository.ts
+  — removed updated_at from upsertDerivedBalance UPDATE clause (as_of already tracks freshness).
+
+Missing web BFF routes (404 HTML) vs upstream API exists:
+  /api/atina/reinvestment/budgets
+  /api/atina/reinvestment/forecast
+  /api/atina/reinvestment/transactions
+  /api/atina/reinvestment/audit
+  /api/atina/reinvestment/policies/active (PATCH)
+  /api/atina/reinvestment/engine/dry-run-year
+  Admin panel primary paths (status/engine/run/lists) are the ones that matter; lists work.
+
+Log: docs/evidence/_a4-engine-bff-probe.log
+
+================================================================================
+5) STRIPE / PAYMENTS_MODE (no secrets exposed)
+================================================================================
+From authenticated GET /api/atina/payments/methods (prod):
+  mode:              live          ← PAYMENTS_MODE resolves to live
+  stripeLivemode:    false         ← secret key is NOT sk_live_
+  stripe available:  true
+  method description/note: "Stripe TEST mode. No live charges."
+
+From E2E + admin checkout:
+  Checkout session prefix: cs_test_ (not cs_live_)
+  Plan + deliverable hosted Checkout session creation: OK
+
+From deploy-secrets.local/deploy.config.json (presence only, values not printed):
+  starter/pro/enterprise monthly price IDs: PRESENT (price_* shape)
+  starter/pro/enterprise yearly price IDs:  PRESENT (price_* shape)
+  stripe secret/publishable keys:           PRESENT, test-key shape (sk_test_/pk_test_)
+  stripe webhook secret:                    PRESENT (whsec_ shape; value not logged)
+  PAYMENTS_MODE key in deploy.config:       absent (mode comes from runtime env)
+
+Local atina-platform/atina/.env (presence only; not prod runtime):
+  PAYMENTS_MODE=sandbox
+  price IDs present; Stripe keys test-shaped
+
+Honest Stripe status:
+  - Session creation / TEST Checkout path: PROVEN by E2E
+  - LIVE card charge + webhook as paid event: STILL HUMAN / NOT DONE
+  - Config mismatch: PAYMENTS_MODE reports "live" while keys+sessions are TEST
+  - Do not treat mode=live as proof of live charging
+
+================================================================================
+HUMAN BLOCKERS REMAINING
+================================================================================
+H1) Stripe LIVE card through hosted Checkout → webhook HTTP 200 as the paid event
+    (requires sk_live_ keys + live webhook endpoint; firma/legal may still gate this)
+H2) Reconcile PAYMENTS_MODE=live vs actual sk_test_/cs_test_ operation
+    (either set PAYMENTS_MODE=sandbox to match keys, or install live keys intentionally)
+H3) Deploy reinvestment upsertDerivedBalance fix so /status and /engine/run stop 500ing
+H4) Marketing ads adapters google_ads/meta_ads remain status=unavailable (credentials/sync)
+H5) Marketing email engagement kind=UNAVAILABLE (Resend webhook/secret not live)
+H6) Optional: add missing reinvestment BFF routes if admin UI needs budgets/forecast/transactions
+
+================================================================================
+CODE CHANGE THIS AUDIT (uncommitted)
+================================================================================
+- FIX: reinvestment upsertDerivedBalance no longer references non-existent updated_at
+- Prices: NOT changed
+- No git commit
+
+================================================================================
+END A4
+================================================================================
+
+================================================================================
+FOLLOW-UP 2026-10-04
+================================================================================
+Deployed atina-api with:
+1) upsertDerivedBalance without updated_at (status 200)
+2) insertEngineRun fixed inconsistent $2 types via $10 boolean finished flag
+Prod verify: GET /api/atina/reinvestment/status 200; POST /api/atina/reinvestment/engine/run 200 (dry-run analyze completed)

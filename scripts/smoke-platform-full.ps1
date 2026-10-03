@@ -20,8 +20,13 @@ if (-not $Password) {
   $Password = $creds.Password
 }
 
-& (Join-Path $scriptsDir 'ensure-web-dev.ps1') | Out-Null
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$isLocalWeb = $web -match '127\.0\.0\.1|localhost'
+if ($isLocalWeb) {
+  & (Join-Path $scriptsDir 'ensure-web-dev.ps1') | Out-Null
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+} else {
+  Write-Host "Remote WebBase=$web - skip local :3010 ensure" -ForegroundColor Cyan
+}
 
 $passed = 0
 $failed = 0
@@ -170,6 +175,10 @@ $bffRoutes = @(
   '/api/atina/autonomy-loop/categories/status'
   '/api/atina/product-factory/stats'
   '/api/atina/ai-memory/recall?namespace=global&key=smoke'
+  '/api/atina/marketing/overview'
+  '/api/atina/marketing/health'
+  '/api/atina/marketing/email-engagement'
+  '/api/atina/marketing/package-matrix'
 )
 foreach ($route in $bffRoutes) {
   Test-BffJson -Label $route -Uri "$web$route" -Session $session | Out-Null

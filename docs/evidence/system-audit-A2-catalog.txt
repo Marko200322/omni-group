@@ -1,0 +1,210 @@
+Omni Group Tech — System Audit Agent 2 (Catalog / Pricing / CTAs / Industry / SEO honesty)
+Date: 2026-10-03
+Repo: C:\dev\omni group
+Scope: deliverable catalog SSOT, public pricing/CTAs, founding promo consistency, industry landings, SEO honesty
+No prices/branding/business-model changes. No commit.
+
+================================================================================
+VERDICT (blockers first)
+================================================================================
+BLOCKERS: none
+
+qa:production:           PASS 19 / FAIL 0
+test:catalog:live:       PASS (20 products MATCH + 20×3 CTA surfaces ok)
+
+Overall A2 gate: PASS
+
+Minor SSOT copy/ops drift found (not price drift). One clear founding-promo honesty bug fixed in source (not yet deployed to prod).
+
+================================================================================
+1) TEST RUNS
+================================================================================
+
+1a) apps/omnigroup-web: npm run qa:production
+    Exit: 0
+    PRODUCTION READINESS CHECKS: 19  PASS: 19  FAILED: 0
+
+    PASS Catalog / price consistency
+    PASS Catalog surfaces
+    PASS Checkout / auth surfaces
+    PASS Contact validation
+    PASS Delivery honesty
+    PASS Industry landings (907)     ← label in qa.mjs; live index count is 906 (cosmetic)
+    PASS Industry SKU mapping
+    PASS Industry intelligence
+    PASS Buy Now intent preservation
+    PASS Fulfillment map
+    PASS Marketing Intelligence engine
+    PASS SaaS monthly/yearly cycle
+    PASS Legal consistency
+    PASS Isolation source guards
+    PASS SEO public sources
+    PASS SaaS plan-limit documentation
+    PASS Workspace routes
+    PASS Atina normalize
+    PASS OMI page context
+
+    NEEDS HUMAN (from qa.mjs; not A2 blockers):
+      - Stripe TEST/LIVE card through hosted Checkout (webhook = paid event)
+      - Yearly paid subscription; password-reset inbox; refund in Stripe Dashboard
+      - Formal company registration details
+      - Align marketing plan limits (workspaces/users/contacts) with DB seed keys
+
+1b) apps/omnigroup-web: npm run test:catalog:live
+    Exit: 0
+    Target: https://omnigrouptech.com
+    audit-public-catalog-live: ok (20 products)
+    audit-public-catalog-ctas: ok (20 products × 3 surfaces)
+
+    All 20 SKUs: PRICING | PRODUCTS | SERVICES | CHECKOUT prices MATCH; STATUS READY_TO_BUY
+
+    Sample list prices verified live (EUR):
+      setup-quick 549, setup-full 1690, setup-custom 4900, audit 790,
+      integration 1990, workflow-design 990, support-priority 399,
+      support-dedicated 1190, landing 1290, website-business 2990,
+      website-ecommerce 4900, white-label-setup 2490, sales-enablement 1190,
+      vertical-package 790, lead-gen-retainer 990, ai-support-retainer 690,
+      custom-software 7900, bundle-portal-presence 1090, bundle-sales-launch 1590,
+      bundle-ops-clarity 1190
+
+1c) Post-fix rechecks (source):
+    test-saas-cycle: ok
+    test-public-catalog-consistency: ok
+    test-delivery-honesty: ok
+    test-seo-public: ok
+    audit-industry-landings: ok
+      pages=906, INVALID=0, GENERIC=0, unique headlines/ledes/pain-sets=906
+
+================================================================================
+2) SSOT ALIGNMENT — deliverable-catalog / package-delivery-spec / client-offers / marketing-catalog
+================================================================================
+
+2a) deliverable-catalog.ts (web ↔ Atina)
+    Counts: 20 / 20 — ID set identical
+    Raw fields checked: id, name, billing, category, anchorEur — NO DRIFT
+    Structural difference (OK):
+      - Web exports DELIVERABLE_CATALOG via withPhaseAwareCatalog + getDeliverable
+      - Atina also maps honest descriptions + exports listDeliverables()
+    Public list price is NOT raw anchorEur; it is getPackageAnchorEur(phase) overlay
+    (e.g. setup-quick raw 449 → public M6 list 549). Live prod matches M6 anchors.
+
+2b) package-delivery-spec.ts (web ↔ Atina)
+    Counts: 20 / 20 — deliverableId set identical
+    anchorByPhase values: NO DRIFT (commerce SSOT OK)
+    leanCheckout / fullCheckout / minCheckoutPhase: NO DRIFT observed in parse
+
+    COPY / OPS DRIFT (not list-price):
+      setup-quick includes:
+        web: "Project created in your workspace"
+        atina: "Product factory project record"
+      support-priority / website-business / white-label-setup / lead-gen-retainer /
+      ai-support-retainer / custom-software: similar customer-facing vs internal wording drift
+      (web more buyer-facing; Atina more module/factory-facing)
+
+    BUDGET_LAUNCH_PACKAGE_IDS DRIFT:
+      web:   setup-quick, audit, landing, website-business, workflow-design, support-priority
+      atina: setup-quick, audit, landing, bundle-portal-presence, website-business,
+             workflow-design, support-priority
+      → Atina recommends bundle-portal-presence in budget launch list; web does not.
+        Not a public price bug; ops recommendation list only.
+
+    STRUCTURAL DRIFT (web marketing layer only):
+      web has quoteOnly?, saleStatus / getPackageAvailability helpers
+      Atina mirror has neither (checkout uses catalog + payments reprice from anchors)
+      Intentional asymmetry for public CTA enum; NOT a charge-amount drift.
+
+2c) client-offers.ts
+    Explicit copy keys: 17 SKUs
+    Missing dedicated copy (uses fallbackCopy): audit, integration, landing — OK
+    Public prices via getPublicListPriceEur → getPackageAnchorEur (SSOT)
+
+2d) marketing-catalog.ts
+    SERVICE_CATEGORIES overlay uses getPublicListPriceEur for real deliverable IDs
+    support-basic is NOT a sellable catalog SKU (included-in-Launch label) — intentional
+    Platform PRODUCT_CATEGORIES use SaaS price book labels (not leftover €99) — consistency gate passes
+    Some SKUs (websites, verticals, bundles, custom-software) are primarily exposed via
+    listClientOffers on /pricing|/products|/services, not the SERVICE_CATEGORIES grid —
+    live catalog:live confirms those surfaces still MATCH
+
+2e) SaaS price book
+    web saas-plans.ts ↔ Atina saas-price-book.ts: IDENTICAL
+      Launch 79/89 → yearly 790/890
+      Growth 249/279 → 2490/2790
+      Scale 429/469 → 4290/4690
+    category-pricing BASE_PLAN_PRICES web ↔ Atina: IDENTICAL
+    Yearly = 10× monthly: enforced by test-saas-cycle (PASS)
+
+================================================================================
+3) FOUNDING PROMO / SaaS PRICING SURFACES
+================================================================================
+
+Sources:
+  apps/omnigroup-web/src/lib/founding-client-promo.ts
+  apps/omnigroup-web/src/components/marketing/FoundingClientPromoBanner.tsx
+  apps/omnigroup-web/src/components/marketing/SaaSPlanPricing.tsx
+  apps/omnigroup-web/src/components/platform/BillingCheckoutPanel.tsx
+  apps/omnigroup-web/src/app/api/atina/payments/founding-promo/route.ts
+  atina-platform/atina/src/modules/payments/lib/founding-promo.ts
+
+Findings:
+  - List prices remain in saas-plans / category-pricing; promo is overlay — correct
+  - Regulated industries excluded from founding client discount — correct
+  - Live /pricing shows founding copy + discounted USD (e.g. Growth $237 vs $279 list)
+
+CLEAR BUG FIXED (honesty / consistency; no price-book change):
+  - FoundingClientPromoBanner hardcoded "Yearly is 15% off…" even when discountPct
+    comes from API/env. Now uses {discountPct}%.
+  - foundingDiscountedAmount(list, discountPct?) now accepts runtime pct so
+    SaaSPlanPricing + BillingCheckoutPanel + banner use status.discountPct when loaded
+    (fallback remains build-time NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT default 15).
+
+No list prices changed.
+
+================================================================================
+4) INDUSTRY LANDING INTEGRITY (sample + audit)
+================================================================================
+
+Source audit (qa + direct): PASS — 906 public slugs, 0 INVALID / 0 GENERIC,
+  unique titles/descriptions/pain-sets.
+
+Live samples (200 OK, niche in title/H1/desc, CTAs preserve plan+cycle, no banned
+generic pains):
+  /solutions/healthcare-chiropractic
+  /solutions/legal-arbitration
+  /solutions/ecommerce-amazon-fba
+  /solutions/fitness-boxing
+  /solutions/hospitality-bakery
+
+Note: category-only paths (/solutions/healthcare) 404 — expected; routes are niche
+slugs from generated-verticals-index.json.
+
+Cosmetic: qa.mjs area label still says "Industry landings (907)" while index has 906.
+
+SEO honesty gates (test-seo-public, delivery-honesty): PASS
+  - Public catalog does not hardcode euro prices on pricing/products/services pages
+  - Checkout / list prices use package anchors, not quote-engine amounts
+
+================================================================================
+5) FIXES APPLIED (no commit)
+================================================================================
+  - FoundingClientPromoBanner.tsx: dynamic discountPct in yearly copy
+  - founding-client-promo.ts: optional discountPct arg on foundingDiscountedAmount
+  - SaaSPlanPricing.tsx + BillingCheckoutPanel.tsx: pass status.discountPct into amount math
+
+Not fixed (non-blocking drift / out of scope):
+  - package-delivery-spec includes wording web↔Atina
+  - BUDGET_LAUNCH_PACKAGE_IDS Atina extra bundle-portal-presence
+  - qa.mjs "907" label vs 906 pages
+  - Human plan-limit marketing vs DB seed keys (qa note)
+
+================================================================================
+6) A2 SCORECARD
+================================================================================
+qa:production ............... 19 PASS / 0 FAIL
+catalog:live ................ 20/20 MATCH + CTA ok
+Commerce SSOT (prices) ...... PASS (no list-price drift web↔Atina)
+Copy/ops SSOT ............... DRIFT (includes + budget-launch list) — non-blocking
+Founding promo honesty ...... FIXED in source (was clear bug)
+Industry landings ........... PASS (906)
+SEO / delivery honesty ...... PASS
+Blockers .................... NONE

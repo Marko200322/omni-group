@@ -11,10 +11,11 @@ export type SaaSPlan = {
   monthly: Record<BillingCurrency, number>;
   yearly: Record<BillingCurrency, number>;
   features: string[];
+  /** Enforced DB seed keys (see atina seeds/001_seed_data.ts) — not marketing fiction. */
   limits: {
-    workspaces: number | 'unlimited';
-    users: number | 'unlimited';
-    contacts: number | 'unlimited';
+    tasksPerMonth: number | 'unlimited';
+    teamMembers: number | 'unlimited';
+    storageGb: number | 'unlimited';
   };
 };
 
@@ -38,8 +39,9 @@ export const SAAS_PLANS: readonly SaaSPlan[] = [
       'Invoices, documents, and notifications',
       'AI assistant and guided onboarding',
       'Core workflow automations',
+      'Up to 50 tasks/month · 1 team seat · 1 GB storage',
     ],
-    limits: { workspaces: 1, users: 5, contacts: 2500 },
+    limits: { tasksPerMonth: 50, teamMembers: 1, storageGb: 1 },
   },
   {
     slug: 'pro',
@@ -53,9 +55,9 @@ export const SAAS_PLANS: readonly SaaSPlan[] = [
       'Advanced workflows and automation runs',
       'AI memory, analytics, and priority support',
       'API access and custom integrations',
-      'Three separate workspaces',
+      'Up to 500 tasks/month · 10 team seats · 25 GB storage',
     ],
-    limits: { workspaces: 3, users: 25, contacts: 25000 },
+    limits: { tasksPerMonth: 500, teamMembers: 10, storageGb: 25 },
   },
   {
     slug: 'enterprise',
@@ -66,12 +68,12 @@ export const SAAS_PLANS: readonly SaaSPlan[] = [
     yearly: { EUR: 4290, USD: 4690 },
     features: [
       'Everything in Growth',
-      'Unlimited workspaces, users, and contacts',
+      'Unlimited tasks and team seats · 500 GB storage',
       'White-label client experience',
       'Advanced RBAC, audit exports, and named response targets',
       'Dedicated onboarding and migration plan',
     ],
-    limits: { workspaces: 'unlimited', users: 'unlimited', contacts: 'unlimited' },
+    limits: { tasksPerMonth: 'unlimited', teamMembers: 'unlimited', storageGb: 500 },
   },
 ] as const;
 

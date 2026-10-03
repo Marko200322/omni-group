@@ -6,7 +6,7 @@ import { PaymentsRepository } from '../repository/payments.repository';
 import { PaymentError, NotFoundError } from '../../../utils/errors';
 import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
-import { getIndustryCategory, resolvePricingTier, type PlanSlug } from '../../billing/lib/category-pricing';
+import { getIndustryCategory, type PlanSlug } from '../../billing/lib/category-pricing';
 import {
   getSaaSPrice,
   normalizeBillingCurrency,
@@ -16,6 +16,13 @@ import { getDeliverable } from '../../billing/lib/deliverable-catalog';
 import { canCheckoutPackage, getPackageAnchorEur } from '../../billing/lib/package-delivery-spec';
 import { resolveOptionalMaintenanceTier } from '../../billing/lib/package-maintenance-tiers';
 import { buildDeliverableStripeSessionParams } from '../lib/deliverable-stripe-checkout';
+import {
+  buildFoundingPromoStatus,
+  readFoundingPromoSettings,
+  shouldApplyFoundingCoupon,
+  type FoundingCouponInventory,
+  type FoundingPromoStatus,
+} from '../lib/founding-promo';
 import { resolvePlanDeliverableId } from '../../billing/lib/plan-deliverable-map';
 import { type PaymentProviderId } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
@@ -67,40 +74,14 @@ function resolveCheckoutAmount(
   plan: { slug: string; price_monthly: number; price_yearly: number },
   billingCycle: 'monthly' | 'yearly',
   currency: BillingCurrency,
-  industryCategory?: string | null,
+  _industryCategory?: string | null,
 ): number {
   const slug = plan.slug as PlanSlug;
   const list =
     ['starter', 'pro', 'enterprise'].includes(slug)
       ? getSaaSPrice(slug, billingCycle, currency)
       : toMoneyNumber(billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly);
-  return applyFoundingPromoDiscount(list, industryCategory);
-}
-
-function envFlagOn(value: string | undefined): boolean {
-  const v = (value ?? '').trim().toLowerCase();
-  return v === 'true' || v === '1' || v === 'yes';
-}
-
-function isFoundingPromoEnabled(): boolean {
-  return envFlagOn(process.env.FOUNDING_CLIENT_PROMO) || envFlagOn(process.env.NEXT_PUBLIC_FOUNDING_CLIENT_PROMO);
-}
-
-function foundingDiscountPct(): number {
-  const n = Number(
-    process.env.FOUNDING_CLIENT_DISCOUNT_PCT || process.env.NEXT_PUBLIC_FOUNDING_CLIENT_DISCOUNT_PCT || 15,
-  );
-  return Number.isFinite(n) && n > 0 && n < 100 ? n : 15;
-}
-
-function isFoundingPromoActive(industryCategory?: string | null): boolean {
-  if (!isFoundingPromoEnabled()) return false;
-  return resolvePricingTier(industryCategory) !== 'regulated';
-}
-
-function applyFoundingPromoDiscount(amount: number, industryCategory?: string | null): number {
-  if (!isFoundingPromoActive(industryCategory)) return amount;
-  return Math.max(9, Math.round(amount * (1 - foundingDiscountPct() / 100)));
+  return list;
 }
 
 function categoryCheckoutLabel(industryCategory?: string | null): string {
@@ -141,6 +122,15 @@ function isPlaceholderStripePriceId(id: string | null | undefined): boolean {
   return ['price_starter', 'price_pro', 'price_enterprise'].includes(id.trim());
 }
 
+const ENV_STRIPE_PRICE_KEY: Record<
+  string,
+  Record<'monthly' | 'yearly', keyof typeof config.stripe.priceIds>
+> = {
+  starter: { monthly: 'starter', yearly: 'starterYearly' },
+  pro: { monthly: 'pro', yearly: 'proYearly' },
+  enterprise: { monthly: 'enterprise', yearly: 'enterpriseYearly' },
+};
+
 function resolveStripePriceId(
   plan: { stripe_price_id_monthly?: string | null; stripe_price_id_yearly?: string | null },
   planSlug: string,
@@ -149,8 +139,9 @@ function resolveStripePriceId(
   const fromDb =
     billingCycle === 'yearly' ? plan.stripe_price_id_yearly : plan.stripe_price_id_monthly;
   if (!isPlaceholderStripePriceId(fromDb)) return fromDb!;
-  const envId = config.stripe.priceIds[planSlug as keyof typeof config.stripe.priceIds];
-  if (!isPlaceholderStripePriceId(envId)) return envId;
+  const envKey = ENV_STRIPE_PRICE_KEY[planSlug]?.[billingCycle];
+  const envId = envKey ? config.stripe.priceIds[envKey] : undefined;
+  if (!isPlaceholderStripePriceId(envId)) return envId!;
   return null;
 }
 
@@ -211,20 +202,42 @@ function dispatchRevenueAllocation(input: {
   const purchaseType = String(input.metadata.purchaseType ?? 'platform_plan');
   const normalizedCurrency = normalizeBillingCurrency(input.currency);
   let grossEur = toMoneyNumber(input.amount);
+  const planSlug = String(input.metadata.planSlug ?? '') as PlanSlug;
+  const billingCycle = String(input.metadata.billingCycle ?? 'monthly') as 'monthly' | 'yearly';
 
-  if (normalizedCurrency === 'USD') {
-    const planSlug = String(input.metadata.planSlug ?? '') as PlanSlug;
-    const billingCycle = String(input.metadata.billingCycle ?? 'monthly') as 'monthly' | 'yearly';
-    if (!['starter', 'pro', 'enterprise'].includes(planSlug)) {
-      logger.warn('Revenue allocation skipped: USD payment has no canonical EUR price', {
-        paymentId: input.paymentId,
-        purchaseType,
-      });
-      return;
-    }
+  if (normalizedCurrency === 'USD' && ['starter', 'pro', 'enterprise'].includes(planSlug)) {
     const usdPrice = getSaaSPrice(planSlug, billingCycle, 'USD');
     const eurPrice = getSaaSPrice(planSlug, billingCycle, 'EUR');
     grossEur = Math.round((grossEur * eurPrice / usdPrice) * 100) / 100;
+  }
+
+  // Marketing attribution first (fail-soft) — even if revenue allocation later skips.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { dispatchPaymentAttribution } = require('../../marketing/lib/payment-attribution') as {
+      dispatchPaymentAttribution: (i: {
+        paymentId: string;
+        userId: string;
+        amountEur: number;
+        metadata: Record<string, unknown>;
+      }) => void;
+    };
+    dispatchPaymentAttribution({
+      paymentId: input.paymentId,
+      userId: input.userId,
+      amountEur: grossEur,
+      metadata: input.metadata,
+    });
+  } catch {
+    /* marketing optional */
+  }
+
+  if (normalizedCurrency === 'USD' && !['starter', 'pro', 'enterprise'].includes(planSlug)) {
+    logger.warn('Revenue allocation skipped: USD payment has no canonical EUR price', {
+      paymentId: input.paymentId,
+      purchaseType,
+    });
+    return;
   }
 
   dispatchPaymentSideEffect(
@@ -275,6 +288,44 @@ function stripeSubscriptionId(ref: string | Stripe.Subscription | null | undefin
 
 export class PaymentsService {
   private readonly db = new PaymentsRepository();
+  private foundingCouponCache: { at: number; id: string; inventory: FoundingCouponInventory | null } | null = null;
+
+  private foundingSettings() {
+    return readFoundingPromoSettings(process.env, config.stripe.foundingCouponId);
+  }
+
+  private async foundingCouponInventory(): Promise<FoundingCouponInventory | null> {
+    const settings = this.foundingSettings();
+    const id = settings.couponId;
+    if (!id) return null;
+    const now = Date.now();
+    if (this.foundingCouponCache && this.foundingCouponCache.id === id && now - this.foundingCouponCache.at < 15_000) {
+      return this.foundingCouponCache.inventory;
+    }
+    try {
+      const coupon = await requireStripe().coupons.retrieve(id);
+      const inventory: FoundingCouponInventory = {
+        couponId: coupon.id,
+        maxRedemptions: coupon.max_redemptions ?? null,
+        timesRedeemed: coupon.times_redeemed ?? 0,
+        valid: coupon.valid !== false,
+      };
+      this.foundingCouponCache = { at: now, id, inventory };
+      return inventory;
+    } catch (err) {
+      logger.warn('Founding coupon retrieve failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      this.foundingCouponCache = { at: now, id, inventory: null };
+      return null;
+    }
+  }
+
+  async getFoundingPromoStatus(): Promise<FoundingPromoStatus> {
+    const settings = this.foundingSettings();
+    const inventory = settings.enabled ? await this.foundingCouponInventory() : null;
+    return buildFoundingPromoStatus(settings, inventory);
+  }
 
   // ========================
   // STRIPE
@@ -293,8 +344,15 @@ export class PaymentsService {
     const amount = resolveCheckoutAmount(plan, billingCycle, currency, industryCategory);
     const priceId = resolveStripePriceId(plan, planSlug, billingCycle);
     const useDynamicPrice =
-      currency !== 'EUR' || Boolean(industryCategory?.trim()) || !priceId || isFoundingPromoActive(industryCategory);
+      currency !== 'EUR' || Boolean(industryCategory?.trim()) || !priceId;
     const buyerMeta = buyerBillingMeta(buyer);
+    const foundingSettings = this.foundingSettings();
+    const foundingInventory = foundingSettings.enabled ? await this.foundingCouponInventory() : null;
+    const applyFoundingCoupon = shouldApplyFoundingCoupon(
+      foundingSettings,
+      foundingInventory,
+      industryCategory,
+    );
 
     const { rows: userRows } = await this.db.getUserWithStripeCustomer(userId);
 
@@ -332,6 +390,9 @@ export class PaymentsService {
       mode: 'subscription',
       success_url: `${webAppUrl('/dashboard/billing/success')}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: webAppUrl('/dashboard/billing/cancel'),
+      ...(applyFoundingCoupon && foundingSettings.couponId
+        ? { discounts: [{ coupon: foundingSettings.couponId }] }
+        : {}),
       metadata: {
         userId,
         planSlug,
@@ -339,7 +400,7 @@ export class PaymentsService {
         currency,
         industryCategory: industryCategory ?? '',
         ...buyerMeta,
-        ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
+        ...(applyFoundingCoupon ? { foundingPromo: '1' } : {}),
       },
       subscription_data: {
         metadata: {
@@ -348,9 +409,9 @@ export class PaymentsService {
           currency,
           industryCategory: industryCategory ?? '',
           ...buyerMeta,
-          ...(isFoundingPromoActive(industryCategory) ? { foundingPromo: '1' } : {}),
+          ...(applyFoundingCoupon ? { foundingPromo: '1' } : {}),
         },
-        trial_period_days: planSlug === 'starter' ? 14 : 0,
+        ...(planSlug === 'starter' ? { trial_period_days: 14 } : {}),
       },
     });
 
@@ -1176,13 +1237,17 @@ export class PaymentsService {
     const mode = config.payments.mode;
     const manual = getManualPaymentConfig();
     const methods: Array<{ id: string; label: string; description: string; available: boolean }> = [];
-    const stripeReady = Boolean(config.stripe.secretKey?.trim());
+    const stripeKey = config.stripe.secretKey?.trim() ?? '';
+    const stripeReady = Boolean(stripeKey);
+    const stripeLivemode = stripeKey.startsWith('sk_live_');
 
     if (stripeReady) {
       methods.push({
         id: 'stripe',
         label: 'Card (Stripe)',
-        description: 'Pay by card — Stripe Checkout (test or live).',
+        description: stripeLivemode
+          ? 'Pay by card — Stripe live checkout.'
+          : 'Pay by card — Stripe TEST mode. No live charges.',
         available: true,
       });
     }
@@ -1227,12 +1292,25 @@ export class PaymentsService {
       });
     }
 
+    // Effective mode: never advertise live when the Stripe secret is test-shaped.
+    const effectiveMode =
+      stripeLivemode
+        ? 'live'
+        : stripeReady
+          ? 'sandbox'
+          : mode === 'manual'
+            ? 'manual'
+            : 'sandbox';
+
     return {
-      mode: stripeReady && mode === 'manual' ? 'sandbox' : mode,
+      mode: effectiveMode,
+      stripeLivemode,
       methods,
       manualConfigured: Boolean(config.payments.manual.accountName && config.payments.manual.iban),
       note: stripeReady
-        ? 'Card checkout via Stripe. Bank transfer (IBAN) is not required.'
+        ? stripeLivemode
+          ? 'Card checkout via Stripe live.'
+          : 'Card checkout via Stripe TEST. Live charges are not enabled.'
         : mode === 'manual'
           ? 'Card checkout is not configured yet. Add STRIPE_SECRET_KEY (sk_test_…) to enable Stripe.'
           : undefined,
@@ -1477,7 +1555,6 @@ export class PaymentsService {
         industryCategory: input.industryCategory ?? null,
         billing: deliverable.billing,
         listPriceEur,
-        foundingPromo: isFoundingPromoActive(input.industryCategory) || undefined,
         maintenanceTierId: maintenanceTier?.id ?? null,
         maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
         maintenanceLabel: maintenanceTier?.label ?? null,

@@ -1,11 +1,12 @@
 import { loadAtinaPublicSnapshot } from '@/lib/atina';
-import { fetchUnreadNotificationCount } from '@/lib/atina-bff';
+import { fetchUnreadNotificationCount, fetchAtinaForBff } from '@/lib/atina-bff';
 import { fetchAtinaDashboardLive } from '@/lib/atina-dashboard';
 import { describeAtinaError } from '@/lib/atina-errors';
 import { getServerSession } from '@/lib/auth-session';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
 import type { AtinaDashboardLive } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
+import type { BillingSubscriptionLike } from '@/lib/billing-status';
 
 export type DashboardPageData = {
   snapshot: AtinaPublicSnapshot;
@@ -14,6 +15,7 @@ export type DashboardPageData = {
   isDemo: boolean;
   unreadCount: number | null;
   unreadError?: string;
+  subscription: BillingSubscriptionLike | null;
 };
 
 export async function loadDashboardPageData(): Promise<DashboardPageData> {
@@ -24,6 +26,10 @@ export async function loadDashboardPageData(): Promise<DashboardPageData> {
     session && !session.demo
       ? await fetchUnreadNotificationCount(session)
       : { count: null as number | null, error: session?.demo ? 'demo_session' : 'no_session' };
+  const subRes =
+    session && !session.demo
+      ? await fetchAtinaForBff<BillingSubscriptionLike>('/api/v1/billing/subscription', session)
+      : null;
 
   return {
     snapshot,
@@ -32,5 +38,6 @@ export async function loadDashboardPageData(): Promise<DashboardPageData> {
     isDemo: session?.demo ?? false,
     unreadCount: unread.count,
     unreadError: unread.error ? describeAtinaError(unread.error) : undefined,
+    subscription: subRes?.ok ? subRes.data : null,
   };
 }

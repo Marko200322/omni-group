@@ -17,6 +17,11 @@ var authServiceMock: {
   resetPassword: jest.Mock;
   changePassword: jest.Mock;
   verifyEmail: jest.Mock;
+  completeTwoFactorLogin: jest.Mock;
+  getTwoFactorStatus: jest.Mock;
+  startTwoFactorSetup: jest.Mock;
+  confirmTwoFactorSetup: jest.Mock;
+  disableTwoFactor: jest.Mock;
 };
 
 jest.mock('../../modules/auth/service/auth.service', () => {
@@ -30,9 +35,15 @@ jest.mock('../../modules/auth/service/auth.service', () => {
     resetPassword: jest.fn(),
     changePassword: jest.fn(),
     verifyEmail: jest.fn(),
+    completeTwoFactorLogin: jest.fn(),
+    getTwoFactorStatus: jest.fn(),
+    startTwoFactorSetup: jest.fn(),
+    confirmTwoFactorSetup: jest.fn(),
+    disableTwoFactor: jest.fn(),
   };
   return {
     AuthService: jest.fn().mockImplementation(() => authServiceMock),
+    isTwoFactorChallenge: (result: { requiresTwoFactor?: boolean }) => result?.requiresTwoFactor === true,
   };
 });
 
@@ -115,6 +126,16 @@ describe('AuthModule HTTP routes', () => {
     authServiceMock.resetPassword.mockResolvedValue(undefined);
     authServiceMock.changePassword.mockResolvedValue(undefined);
     authServiceMock.verifyEmail.mockResolvedValue(undefined);
+    authServiceMock.completeTwoFactorLogin.mockResolvedValue({
+      user: { id: 'u1' },
+      accessToken: 'a',
+      refreshToken: 'r',
+      expiresIn: '7d',
+    });
+    authServiceMock.getTwoFactorStatus.mockResolvedValue({ enabled: false, pending: false });
+    authServiceMock.startTwoFactorSetup.mockResolvedValue({ secret: 'SECRET', otpauthUrl: 'otpauth://totp/x' });
+    authServiceMock.confirmTwoFactorSetup.mockResolvedValue({ enabled: true, backupCodes: ['abcd-1234'] });
+    authServiceMock.disableTwoFactor.mockResolvedValue(undefined);
   });
 
   it('POST /auth/register returns 201 and calls register', async () => {
@@ -142,6 +163,28 @@ describe('AuthModule HTTP routes', () => {
       'supertest',
       true
     );
+  });
+
+  it('POST /auth/login/2fa completes the challenge', async () => {
+    const res = await request(server)
+      .post('/auth/login/2fa')
+      .set('x-forwarded-for', '203.0.113.1')
+      .set('user-agent', 'supertest')
+      .send({ challengeToken: 'ch', code: '123456' });
+    expect(res.status).toBe(200);
+    expect(authServiceMock.completeTwoFactorLogin).toHaveBeenCalledWith(
+      'ch',
+      '123456',
+      '203.0.113.1',
+      'supertest',
+    );
+  });
+
+  it('rejects unauthenticated GET /auth/2fa/status', async () => {
+    authMiddlewareAccept = false;
+    const res = await request(server).get('/auth/2fa/status');
+    expect(res.status).toBe(401);
+    expect(authServiceMock.getTwoFactorStatus).not.toHaveBeenCalled();
   });
 
   it('POST /auth/login returns 401-shaped payload when service rejects invalid credentials', async () => {

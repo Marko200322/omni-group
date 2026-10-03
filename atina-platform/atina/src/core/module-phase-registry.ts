@@ -14,10 +14,13 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   'follow-up': 'v2',
   'follow-up-automation': 'v2',
   'client-hunter': 'v2',
+  'problem-hunter': 'v2',
   'lead-scoring': 'v2',
   'proxy-rotation': 'v2',
   outreach: 'v2',
   'marketing-growth': 'v2',
+  /** Observe/recommend only — no ad spend authority */
+  marketing: 'v1',
   'cursor-agent': 'v2',
   'resource-procurement': 'v2',
   contracts: 'v2',
@@ -65,6 +68,10 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   'autonomy-loop': 'v2',
   'public-site': 'v2',
   'product-factory': 'v2',
+  /** Internal financial decision engine — dry-run by default */
+  reinvestment: 'v1',
+  /** Observability / Admin Control Center — no spend authority */
+  monitoring: 'v1',
   /** F6 v6 — 125k edge swarm koordinator (task dominus_swarm_batch) */
   'edge-swarm': 'v6',
   /** F6 v6 — stranični PDF aligned legal sign-off */

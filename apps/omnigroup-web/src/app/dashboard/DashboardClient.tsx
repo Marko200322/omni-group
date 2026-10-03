@@ -18,6 +18,8 @@ import type { AtinaDashboardLive } from '@/lib/atina-live-types';
 import type { SessionUser } from '@/lib/auth-session';
 import { buildClientMetrics } from '@/lib/platform-metrics';
 import { describeAtinaError } from '@/lib/atina-errors';
+import { displayFirstName, formatUnreadCount } from '@/lib/workspace-display';
+import type { BillingSubscriptionLike } from '@/lib/billing-status';
 import { PlatformShell } from '@/components/platform/PlatformShell';
 import { WorkspaceHashRedirect } from '@/components/platform/WorkspaceHashRedirect';
 import { StatCard } from '@/components/ui/StatCard';
@@ -29,6 +31,7 @@ import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel
 import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
 import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
 import { FileUploadPanel } from '@/components/platform/FileUploadPanel';
+import { TwoFactorSettings } from '@/components/platform/TwoFactorSettings';
 import { StatusPill } from '@/components/ui/StatusPill';
 import {
   CLIENT_SECTION_META,
@@ -44,6 +47,7 @@ type Props = {
   isDemo: boolean;
   unreadCount: number | null;
   unreadError?: string;
+  subscription?: BillingSubscriptionLike | null;
   section?: ClientWorkspaceSection;
 };
 
@@ -71,12 +75,16 @@ export default function DashboardClient({
   isDemo,
   unreadCount,
   unreadError,
+  subscription = null,
   section = 'overview',
 }: Props) {
-  const metrics = buildClientMetrics(snapshot, live, { authenticated: !isDemo && Boolean(sessionUser) });
+  const metrics = buildClientMetrics(snapshot, live, {
+    authenticated: !isDemo && Boolean(sessionUser),
+    subscription,
+  });
   const status =
     live?.me || live?.tasks.length ? 'live' : snapshot.source === 'live' ? 'live' : snapshot.source;
-  const firstName = sessionUser?.name?.split(' ')[0] ?? 'there';
+  const firstName = displayFirstName(sessionUser?.name, sessionUser?.email);
   const meta = CLIENT_SECTION_META[section];
   const title = section === 'overview' ? `Welcome, ${firstName}` : meta.title;
   const subtitle = isDemo
@@ -138,13 +146,11 @@ export default function DashboardClient({
             />
             <StatCard
               label="Notifications"
-              value={
+              value={formatUnreadCount(
                 unreadCount !== null
-                  ? String(unreadCount)
-                  : metrics.notifications.length > 0
-                    ? String(metrics.notifications.filter((n) => !n.read).length)
-                    : '0'
-              }
+                  ? unreadCount
+                  : metrics.notifications.filter((n) => !n.read).length,
+              )}
               sub="unread"
               icon={Headphones}
               accent="violet"
@@ -410,6 +416,7 @@ export default function DashboardClient({
               Contact
             </Link>
           </div>
+          {sessionUser ? <TwoFactorSettings isDemo={isDemo} /> : null}
         </GlassCard>
       ) : null}
     </PlatformShell>

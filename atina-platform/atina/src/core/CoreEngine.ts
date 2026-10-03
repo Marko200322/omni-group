@@ -43,6 +43,9 @@ import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { ScraperModule } from '../modules/scraper/scraper.module';
 import { NotificationsModule } from '../modules/notifications/notifications.module';
 import { AdminModule } from '../modules/admin/admin.module';
+import { MonitoringModule } from '../modules/monitoring/monitoring.module';
+import { MarketingModule } from '../modules/marketing/marketing.module';
+import { ReinvestmentModule } from '../modules/reinvestment/reinvestment.module';
 import { ResourceProcurementModule } from '../modules/resource-procurement/resource-procurement.module';
 import { TitanMasterModule } from '../modules/titan-master/titan-master.module';
 import { Dominus360Module } from '../modules/dominus360/dominus360.module';
@@ -148,6 +151,12 @@ export class CoreEngine {
     if (config.features.analytics) moduleRegistry.register(new AnalyticsModule());
     moduleRegistry.register(new NotificationsModule());
     moduleRegistry.register(new AdminModule());
+    // Observability only — never authorizes spend / never mutates reinvestment balances.
+    moduleRegistry.register(new MonitoringModule());
+    // Marketing observer/optimizer — never authorizes ad spend; opportunities → reinvestment only.
+    moduleRegistry.register(new MarketingModule());
+    // Always register for admin visibility; policy dry_run / kill_switch gate money movement.
+    moduleRegistry.register(new ReinvestmentModule());
     moduleRegistry.register(new CursorAgentModule());
     moduleRegistry.register(new ResourceProcurementModule());
     moduleRegistry.register(new TitanMasterModule());
@@ -208,9 +217,10 @@ export class CoreEngine {
     // Compression
     this.app.use(compression());
 
-    // Body parsing — stripe webhooks need raw body
+    // Body parsing — stripe / kriptoman / Resend webhooks need raw body for signatures
     this.app.use('/api/v1/payments/stripe/webhook', express.raw({ type: 'application/json' }));
     this.app.use('/api/v1/payments/kriptoman/webhook', express.raw({ type: 'application/json' }));
+    this.app.use('/api/v1/marketing/webhooks/resend', express.raw({ type: 'application/json' }));
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

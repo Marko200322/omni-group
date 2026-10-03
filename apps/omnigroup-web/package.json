@@ -13,6 +13,7 @@
     "qa:production": "node scripts/qa.mjs",
     "test:catalog": "node scripts/test-public-catalog-consistency.mjs && node scripts/test-public-catalog-surfaces.mjs",
     "test:industry": "node scripts/audit-industry-landings.mjs",
+    "test:omi": "node scripts/test-omi-page-context.mjs",
     "test:honesty": "node scripts/test-delivery-honesty.mjs",
     "test:legal": "node scripts/test-legal-consistency.mjs",
     "test:saas": "node scripts/test-saas-cycle.mjs",

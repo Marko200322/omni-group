@@ -39,7 +39,12 @@ export type AtinaDashboardLive = {
 export type AtinaAdminOverview = {
   users?: { total?: number; active?: number };
   subscriptions?: { total?: number; active?: number };
-  payments?: { total?: number; totalRevenue?: number };
+  payments?: {
+    total?: number;
+    totalRevenue?: number;
+    recordedTotal?: number;
+    recordedRevenue?: number;
+  };
   tasks?: { total?: number; failed?: number };
   logs?: { last24h?: number };
   workflowTemplatesExecutionSummary?: {

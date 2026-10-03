@@ -22,6 +22,7 @@ jest.mock('bcryptjs', () => ({
 
 jest.mock('jsonwebtoken', () => ({
   sign: jest.fn().mockReturnValue('jwt-token'),
+  verify: jest.fn(),
 }));
 
 import logger from '../../utils/logger';
@@ -39,6 +40,7 @@ describe('AuthService', () => {
     jest.clearAllMocks();
     (bcrypt.compare as jest.Mock).mockReset();
     (jwt.sign as jest.Mock).mockReturnValue('jwt-token');
+    (jwt.verify as jest.Mock).mockReset();
     mockQuery.mockResolvedValue({ rows: [], rowCount: 0 } as any);
     postLoginBootstrapMock = {
       bootstrapTemplates: jest.fn().mockResolvedValue({ totals: { created: 0 } }),
@@ -354,7 +356,7 @@ describe('AuthService', () => {
       mockRepo.saveRefreshToken.mockResolvedValue(undefined);
 
       const r = await service.login('ok@example.com', 'Valid@123', '127.0.0.1', 'ua', false);
-      expect(r.user.email).toBe('ok@example.com');
+      expect(r).toMatchObject({ user: { email: 'ok@example.com' } });
       expect(mockRepo.updateLastLogin).toHaveBeenCalled();
     });
 
@@ -408,7 +410,7 @@ describe('AuthService', () => {
       postLoginBootstrapMock.bootstrapTemplates.mockRejectedValueOnce(new Error('first boot fail'));
 
       const r = await service.login('firstfail@example.com', 'Valid@123');
-      expect(r.user.email).toBe('firstfail@example.com');
+      expect(r).toMatchObject({ user: { email: 'firstfail@example.com' } });
       expect(logger.warn).toHaveBeenCalledWith(
         'Workflow template bootstrap failed after first login',
         expect.objectContaining({ userId: 'uid' })
@@ -467,6 +469,125 @@ describe('AuthService', () => {
 
       await service.login('r@example.com', 'p', '', '', true);
       expect(mockRepo.saveRefreshToken).toHaveBeenCalled();
+    });
+
+    it('returns a challenge instead of tokens when 2FA is enabled', async () => {
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockRepo.findUserByEmail.mockResolvedValue({
+        id: 'uid',
+        email: '2fa@example.com',
+        password_hash: '$2b$12$ok',
+        name: 'Two',
+        role: 'user',
+        plan_id: null,
+        plan_slug: 'starter',
+        is_active: true,
+        is_email_verified: true,
+        email_verification_token: null,
+        password_reset_token: null,
+        password_reset_expires: null,
+        last_login_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+        metadata: { twoFactor: { enabled: true, secretEnc: 'enc' } },
+      });
+
+      const r = await service.login('2fa@example.com', 'Valid@123');
+      expect(r).toEqual({ requiresTwoFactor: true, challengeToken: 'jwt-token' });
+      expect(mockRepo.updateLastLogin).not.toHaveBeenCalled();
+      expect(mockRepo.saveRefreshToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('completeTwoFactorLogin', () => {
+    it('rejects an invalid challenge token', async () => {
+      (jwt.verify as jest.Mock).mockImplementation(() => {
+        throw new Error('bad');
+      });
+      await expect(service.completeTwoFactorLogin('bad', '123456')).rejects.toThrow(AuthenticationError);
+    });
+
+    it('issues tokens after a valid TOTP code', async () => {
+      const { generateTotpSecret, generateTotpCode } = await import('../../modules/auth/lib/totp');
+      const { encryptTotpSecret } = await import('../../modules/auth/lib/totp-secret');
+      const secret = generateTotpSecret();
+      (jwt.verify as jest.Mock).mockReturnValue({ userId: 'uid', rememberMe: false, typ: '2fa' });
+      mockRepo.findUserById.mockResolvedValue({
+        id: 'uid',
+        email: '2fa@example.com',
+        password_hash: '$2b$12$ok',
+        name: 'Two',
+        role: 'user',
+        plan_id: null,
+        plan_slug: 'starter',
+        is_active: true,
+        is_email_verified: true,
+        email_verification_token: null,
+        password_reset_token: null,
+        password_reset_expires: null,
+        last_login_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+        metadata: { twoFactor: { enabled: true, secretEnc: encryptTotpSecret(secret) } },
+      });
+      mockRepo.updateLastLogin.mockResolvedValue(undefined);
+      mockRepo.saveRefreshToken.mockResolvedValue(undefined);
+
+      const r = await service.completeTwoFactorLogin('challenge', generateTotpCode(secret));
+      expect(r.user.email).toBe('2fa@example.com');
+      expect(r.accessToken).toBe('jwt-token');
+      expect(mockRepo.updateLastLogin).toHaveBeenCalled();
+    });
+  });
+
+  describe('two-factor setup', () => {
+    it('starts setup and stores a pending encrypted secret', async () => {
+      mockRepo.findUserById.mockResolvedValue({
+        id: 'uid',
+        email: 'ok@example.com',
+        password_hash: '$2b$12$ok',
+        name: 'Ok',
+        role: 'user',
+        plan_id: null,
+        plan_slug: 'starter',
+        is_active: true,
+        is_email_verified: true,
+        email_verification_token: null,
+        password_reset_token: null,
+        password_reset_expires: null,
+        last_login_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      mockRepo.setTwoFactorRecord.mockResolvedValue(undefined);
+      const r = await service.startTwoFactorSetup('uid');
+      expect(r.secret).toMatch(/^[A-Z2-7]+$/);
+      expect(r.otpauthUrl).toContain('otpauth://totp/');
+      expect(mockRepo.setTwoFactorRecord).toHaveBeenCalledWith(
+        'uid',
+        expect.objectContaining({ enabled: false, pendingSecretEnc: expect.any(String) }),
+      );
+    });
+
+    it('refuses setup when 2FA is already enabled', async () => {
+      mockRepo.findUserById.mockResolvedValue({
+        id: 'uid',
+        email: 'ok@example.com',
+        password_hash: '$2b$12$ok',
+        name: 'Ok',
+        role: 'user',
+        plan_id: null,
+        is_active: true,
+        is_email_verified: true,
+        email_verification_token: null,
+        password_reset_token: null,
+        password_reset_expires: null,
+        last_login_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+        metadata: { twoFactor: { enabled: true, secretEnc: 'enc' } },
+      });
+      await expect(service.startTwoFactorSetup('uid')).rejects.toThrow(ValidationError);
     });
   });
 
@@ -734,6 +855,7 @@ describe('AuthService', () => {
       const me = await service.getMe('u1');
       expect(me.email).toBe('a@b.com');
       expect(me.planSlug).toBe('starter');
+      expect(me.twoFactorEnabled).toBe(false);
     });
 
     it('returns planSlug null when plan_slug is missing', async () => {

@@ -27,15 +27,29 @@ export class AdminRepository {
   fetchOverviewSubscriptionsCount() {
     return query<{ count: string; active: string }>(
       `SELECT COUNT(*) AS count,
-              SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active
+              SUM(CASE
+                    WHEN status = 'active'
+                     AND (current_period_end IS NULL OR current_period_end > NOW())
+                    THEN 1 ELSE 0
+                  END) AS active
        FROM subscriptions`
     );
   }
 
   fetchOverviewPaymentsCount() {
-    return query<{ count: string; total_revenue: string }>(
+    return query<{ count: string; total_revenue: string; saas_count: string; saas_revenue: string }>(
       `SELECT COUNT(*) AS count,
-              COALESCE(SUM(amount), 0) AS total_revenue
+              COALESCE(SUM(amount), 0) AS total_revenue,
+              COUNT(*) FILTER (
+                WHERE subscription_id IS NOT NULL
+                   OR COALESCE(metadata->>'purchaseType', '') = 'platform_plan'
+                   OR COALESCE(metadata->>'planSlug', '') IN ('starter', 'pro', 'enterprise')
+              ) AS saas_count,
+              COALESCE(SUM(amount) FILTER (
+                WHERE subscription_id IS NOT NULL
+                   OR COALESCE(metadata->>'purchaseType', '') = 'platform_plan'
+                   OR COALESCE(metadata->>'planSlug', '') IN ('starter', 'pro', 'enterprise')
+              ), 0) AS saas_revenue
        FROM payments WHERE status = 'completed'`
     );
   }

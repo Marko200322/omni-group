@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Crosshair, Flame, Globe2, Play, RefreshCw, Rocket, ShieldCheck, Zap } from 'lucide-react';
 import { isDevClient } from '@/lib/is-dev-client';
+import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 
 type ReadinessCheck = {
   id: string;
@@ -205,7 +206,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="min-h-[28rem] space-y-5 text-slate-200">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Crosshair className="h-5 w-5 text-cyan-400" />
@@ -216,10 +217,15 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
             </strong>
           </span>
         </div>
-        <button type="button" className="btn-ghost text-xs text-violet-300" onClick={() => void load()} disabled={loading}>
-          <RefreshCw className={`mr-1 inline h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <a href="/admin/marketing" className="btn-ghost text-xs text-cyan-300">
+            Marketing economics →
+          </a>
+          <button type="button" className="btn-ghost text-xs text-violet-300" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={`mr-1 inline h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -227,7 +233,14 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {(readiness?.checks ?? []).map((check, idx) => (
+        {loading && (readiness?.checks ?? []).length === 0
+          ? [0, 1, 2].map((idx) => (
+              <div key={idx} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Loading</p>
+                <p className="mt-1 text-sm text-slate-400">Checking hunting readiness…</p>
+              </div>
+            ))
+          : (readiness?.checks ?? []).map((check, idx) => (
           <div key={check.id ?? idx} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
             <p className={`text-xs font-semibold uppercase tracking-wider ${statusColor[check.status] ?? 'text-slate-400'}`}>
               {check.status ?? 'unknown'}
@@ -240,9 +253,9 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
 
       <div className="grid gap-4 md:grid-cols-3">
         <label className="block text-sm">
-          <span className="text-slate-400">Vertical (verticalSlug)</span>
+          <span className="text-slate-400">Industry</span>
           <select
-            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900/80 px-3 py-2 text-white"
+            className={CHECKOUT_SELECT_CLASS}
             value={verticalSlug}
             onChange={(e) => setVerticalSlug(e.target.value)}
           >
@@ -256,7 +269,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
         <label className="block text-sm">
           <span className="text-slate-400">Workflow template</span>
           <select
-            className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900/80 px-3 py-2 text-white"
+            className={CHECKOUT_SELECT_CLASS}
             value={templateKey}
             onChange={(e) => setTemplateKey(e.target.value)}
           >

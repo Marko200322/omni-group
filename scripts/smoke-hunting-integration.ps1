@@ -27,7 +27,8 @@ $repoRoot = Split-Path $scriptsDir -Parent
 . (Join-Path $scriptsDir 'resolve-admin-credentials.ps1')
 
 if (-not $Password) {
-  $creds = Get-AdminCredentials -RepoRoot $repoRoot
+  $useProdCreds = (Test-ProdWebBase -WebBase $web)
+  $creds = if ($useProdCreds) { Get-AdminCredentials -RepoRoot $repoRoot -Prod } else { Get-AdminCredentials -RepoRoot $repoRoot }
   $Email = $creds.Email
   $Password = $creds.Password
 }

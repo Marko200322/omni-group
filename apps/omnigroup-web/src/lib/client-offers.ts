@@ -262,6 +262,8 @@ export type ClientOffer = {
   when: string;
   youGet: string[];
   notIncluded: string[];
+  /** From deliverable catalog — shown when package naming is abstract. */
+  bestFor?: string;
   availability: PackageAvailability;
   saleStatus: OfferSaleStatus;
   buyHref: string;
@@ -395,6 +397,7 @@ export function getClientOffer(
     when: publicOfferWhen(copy.when, saleStatus, d.billing),
     youGet: mergedYouGet,
     notIncluded: copy.notIncluded,
+    bestFor: d.bestFor,
     availability,
     saleStatus,
     buyHref,

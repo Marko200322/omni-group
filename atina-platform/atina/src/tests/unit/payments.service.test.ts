@@ -20,6 +20,7 @@ jest.mock('../../utils/logger', () => ({
 // eslint-disable-next-line no-var
 var testStripeApi: {
   customers: { create: jest.Mock };
+  coupons: { retrieve: jest.Mock };
   checkout: { sessions: { create: jest.Mock } };
   webhooks: { constructEvent: jest.Mock };
   subscriptions: { retrieve: jest.Mock; update: jest.Mock };
@@ -29,6 +30,14 @@ var testStripeApi: {
 jest.mock('stripe', () => {
   testStripeApi = {
     customers: { create: jest.fn().mockResolvedValue({ id: 'cus_new' }) },
+    coupons: {
+      retrieve: jest.fn().mockResolvedValue({
+        id: 'omni_founding_15_12m',
+        max_redemptions: 50,
+        times_redeemed: 0,
+        valid: true,
+      }),
+    },
     checkout: {
       sessions: {
         create: jest.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.test' }),
@@ -128,9 +137,18 @@ describe('PaymentsService', () => {
     jest.clearAllMocks();
     mockLogger.info.mockClear();
     mockLogger.debug.mockClear();
-    (config as { stripe: { secretKey: string } }).stripe.secretKey = 'sk_test_unit';
+    (config as { stripe: { secretKey: string; foundingCouponId?: string } }).stripe.secretKey = 'sk_test_unit';
+    (config as { stripe: { foundingCouponId?: string } }).stripe.foundingCouponId = '';
+    process.env.FOUNDING_CLIENT_PROMO = 'false';
+    process.env.NEXT_PUBLIC_FOUNDING_CLIENT_PROMO = 'false';
     (config as { payments: { mode: string } }).payments.mode = 'sandbox';
     testStripeApi.customers.create.mockResolvedValue({ id: 'cus_new' });
+    testStripeApi.coupons.retrieve.mockResolvedValue({
+      id: 'omni_founding_15_12m',
+      max_redemptions: 50,
+      times_redeemed: 0,
+      valid: true,
+    });
     testStripeApi.checkout.sessions.create.mockResolvedValue({ id: 'cs_1', url: 'https://checkout.test' });
     testStripeApi.subscriptions.retrieve.mockResolvedValue({
       id: 'sub_ret',
@@ -202,6 +220,96 @@ describe('PaymentsService', () => {
           subscription_data: expect.objectContaining({ trial_period_days: 14 }),
         })
       );
+    });
+
+    it('omits trial_period_days for Growth and Scale', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
+      } as never);
+
+      await service.createStripeCheckoutSession('u1', 'pro', 'monthly');
+
+      const payload = testStripeApi.checkout.sessions.create.mock.calls[0][0] as {
+        subscription_data?: { trial_period_days?: number };
+      };
+      expect(payload.subscription_data?.trial_period_days).toBeUndefined();
+    });
+
+    it('attaches the founding coupon to list prices instead of baking in a discount', async () => {
+      process.env.FOUNDING_CLIENT_PROMO = 'true';
+      (config as { stripe: { foundingCouponId?: string } }).stripe.foundingCouponId = 'omni_founding_15_12m';
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
+      } as never);
+
+      await service.createStripeCheckoutSession('u1', 'pro', 'monthly');
+
+      expect(testStripeApi.coupons.retrieve).toHaveBeenCalledWith('omni_founding_15_12m');
+      expect(testStripeApi.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          line_items: [{ price: 'price_m', quantity: 1 }],
+          discounts: [{ coupon: 'omni_founding_15_12m' }],
+          metadata: expect.objectContaining({ foundingPromo: '1' }),
+        }),
+      );
+    });
+
+    it('charges list price without a coupon when founding slots are full', async () => {
+      process.env.FOUNDING_CLIENT_PROMO = 'true';
+      (config as { stripe: { foundingCouponId?: string } }).stripe.foundingCouponId = 'omni_founding_15_12m';
+      testStripeApi.coupons.retrieve.mockResolvedValueOnce({
+        id: 'omni_founding_15_12m',
+        max_redemptions: 50,
+        times_redeemed: 50,
+        valid: true,
+      });
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
+      } as never);
+
+      await service.createStripeCheckoutSession('u1', 'pro', 'monthly');
+
+      const payload = testStripeApi.checkout.sessions.create.mock.calls[0][0] as {
+        discounts?: unknown;
+        metadata?: { foundingPromo?: string };
+      };
+      expect(payload.discounts).toBeUndefined();
+      expect(payload.metadata?.foundingPromo).toBeUndefined();
+    });
+
+    it('uses yearly env price id instead of monthly', async () => {
+      const priceIds = config.stripe.priceIds as {
+        pro?: string;
+        proYearly?: string;
+      };
+      const prevPro = priceIds.pro;
+      const prevYearly = priceIds.proYearly;
+      priceIds.pro = 'price_env_m';
+      priceIds.proYearly = 'price_env_y';
+      billingApi.getPlanBySlug.mockResolvedValueOnce({
+        ...planFull,
+        stripe_price_id_monthly: null,
+        stripe_price_id_yearly: null,
+      } as never);
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ email: 'a@b.com', name: 'A', stripe_customer_id: 'cus_old' }],
+        rowCount: 1,
+      } as never);
+
+      try {
+        await service.createStripeCheckoutSession('u1', 'pro', 'yearly');
+        expect(testStripeApi.checkout.sessions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            line_items: [{ price: 'price_env_y', quantity: 1 }],
+          }),
+        );
+      } finally {
+        priceIds.pro = prevPro;
+        priceIds.proYearly = prevYearly;
+      }
     });
 
     it('uses dynamic price_data when Stripe price missing', async () => {
@@ -1120,6 +1228,8 @@ describe('PaymentsService', () => {
     it('getPaymentMethods prefers Stripe over IBAN when a Stripe key is set', () => {
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('sandbox');
+      expect(out.stripeLivemode).toBe(false);
+      expect(out.note).toMatch(/TEST/);
       expect(out.methods.some((m: { id: string; available: boolean }) => m.id === 'stripe' && m.available)).toBe(true);
       expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(false);
     });

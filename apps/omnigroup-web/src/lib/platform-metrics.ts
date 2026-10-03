@@ -2,6 +2,7 @@ import type { AtinaPublicSnapshot } from './atina';
 import type { AtinaAdminOverview } from './atina-live-types';
 import type { AtinaDashboardLive } from './atina-live-types';
 import { formatRelativeTime, mapTaskStatus, taskProgress } from './atina-live-utils';
+import { currentPlanLabel, type BillingSubscriptionLike } from './billing-status';
 
 export type SparkPoint = { label: string; value: number };
 
@@ -12,6 +13,7 @@ export type AdminMetrics = {
   openAlerts: string;
   sparkWorkflow: SparkPoint[];
   sparkRevenue: SparkPoint[];
+  revenueNote?: string;
   recentEvents: { time: string; type: string; message: string; severity: 'info' | 'warn' | 'error' }[];
   trends?: {
     activeUsers?: { value: string; positive: boolean };
@@ -64,6 +66,12 @@ export function buildAdminMetrics(
 
   const activeCount = overview?.users?.active;
   const totalUsers = overview?.users?.total;
+  const saasRevenue = overview?.payments?.totalRevenue;
+  const recordedRevenue = overview?.payments?.recordedRevenue;
+  const hiddenHistory =
+    typeof recordedRevenue === 'number' &&
+    typeof saasRevenue === 'number' &&
+    recordedRevenue > saasRevenue + 0.5;
   const trends =
     overview && typeof activeCount === 'number' && typeof totalUsers === 'number' && totalUsers > 0
       ? {
@@ -71,9 +79,11 @@ export function buildAdminMetrics(
             value: `${Math.round((activeCount / totalUsers) * 100)}% of users active`,
             positive: activeCount >= totalUsers * 0.5,
           },
-          mrr: overview.payments?.total
+          mrr: overview.payments?.total != null
             ? {
-                value: `${overview.payments.total} payments recorded`,
+                value: hiddenHistory
+                  ? 'SaaS only · test/history hidden'
+                  : `${overview.payments.total} SaaS payments`,
                 positive: (overview.payments.total ?? 0) > 0,
               }
             : undefined,
@@ -84,9 +94,12 @@ export function buildAdminMetrics(
     activeUsers:
       overview?.users?.active != null ? overview.users.active.toLocaleString('en-US') : '—',
     mrr:
-      overview?.payments?.totalRevenue != null
-        ? `€${overview.payments.totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+      saasRevenue != null
+        ? `€${saasRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
         : '—',
+    revenueNote: hiddenHistory
+      ? 'SaaS only · test/history hidden'
+      : 'Confirmed SaaS payments · not MRR',
     workflowSuccess: successRate,
     openAlerts: alerts == null ? '—' : String(alerts),
     sparkWorkflow,
@@ -105,7 +118,7 @@ export function buildAdminMetrics(
           {
             time: 'live',
             type: 'billing',
-            message: `${overview.subscriptions?.active ?? 0} active subscriptions · ${overview.payments?.total ?? 0} payments`,
+            message: `${overview.subscriptions?.active ?? 0} active subscriptions · ${overview.payments?.total ?? 0} SaaS payments`,
             severity: 'info' as const,
           },
           {
@@ -136,15 +149,12 @@ export function buildAdminMetrics(
 export function buildClientMetrics(
   snapshot: AtinaPublicSnapshot,
   live?: AtinaDashboardLive | null,
-  options?: { authenticated?: boolean },
+  options?: { authenticated?: boolean; subscription?: BillingSubscriptionLike | null },
 ): ClientMetrics {
   const authenticated = options?.authenticated ?? false;
-  const primaryPlan = snapshot.plans[0];
-  const planName =
-    live?.me?.planSlug?.toUpperCase() ??
-    live?.me?.name ??
-    (authenticated ? primaryPlan?.name : 'Demo') ??
-    'No active plan';
+  const planName = authenticated
+    ? currentPlanLabel(options?.subscription)
+    : snapshot.plans[0]?.name ?? 'Demo';
 
   const hasLive = Boolean(live?.me || live?.tasks.length);
   const wf = live?.workflowStats;

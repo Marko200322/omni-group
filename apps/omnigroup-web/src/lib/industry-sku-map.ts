@@ -86,6 +86,8 @@ const CATEGORY_CLUSTER: Record<string, CapabilityCluster> = {
   beauty: 'local_services',
   fitness: 'local_services',
   hospitality: 'local_services',
+  restaurant: 'local_services',
+  restaurants: 'local_services',
   automotive: 'local_services',
   home_services: 'local_services',
   pets: 'local_services',
@@ -124,8 +126,26 @@ const CATEGORY_CLUSTER: Record<string, CapabilityCluster> = {
   hr_recruiting: 'professional',
 };
 
+export const INDUSTRY_CATEGORY_KEYS = Object.keys(CATEGORY_CLUSTER);
+
 export function normalizeIndustryCategory(category: string): string {
   return category.trim().toLowerCase().replace(/-/g, '_');
+}
+
+export function resolveIndustryCategory(slugOrCategory: string): string | undefined {
+  const raw = slugOrCategory.trim().toLowerCase();
+  if (!raw) return undefined;
+  if (CATEGORY_CLUSTER[raw] || CATEGORY_CLUSTER[normalizeIndustryCategory(raw)]) {
+    return CATEGORY_CLUSTER[raw] ? raw : normalizeIndustryCategory(raw);
+  }
+  const keys = INDUSTRY_CATEGORY_KEYS.slice().sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    const prefix = key.replace(/_/g, '-');
+    if (raw === prefix || raw.startsWith(`${prefix}-`) || normalizeIndustryCategory(raw).startsWith(`${key}_`)) {
+      return key;
+    }
+  }
+  return undefined;
 }
 
 export function capabilityClusterFor(category: string): CapabilityCluster {

@@ -47,6 +47,7 @@ jest.mock('../../modules/payments/controller/payments.controller', () => ({
     confirmWisePayment: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     getPaymentHistory: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     getPaymentMethods: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    getFoundingPromo: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     createManualCheckout: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
     createDeliverableManualCheckout: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
     createDeliverableStripeCheckout: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),

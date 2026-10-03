@@ -74,6 +74,11 @@ if ($sample) {
   Write-AssertResult $same 'Matrix SKU set' ("sample={0}" -f $sample)
 }
 
+# Marketing Intelligence engine cells (LIVE adapters / email / package×channel)
+Write-Host ''
+& (Join-Path $scriptsDir 'verify-marketing-engine-matrix-prod.ps1') -WebBase $web -ApiBase $api
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 if ($fail -gt 0) { exit 1 }
-Write-Host "ALL PASS ($($slugs.Count)*$ExpectedPackages catalog cells)" -ForegroundColor Green
+Write-Host "ALL PASS ($($slugs.Count)*$ExpectedPackages catalog cells + marketing engine)" -ForegroundColor Green
 exit 0

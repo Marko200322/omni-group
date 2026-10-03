@@ -11,14 +11,17 @@ type SessionPayload = {
 };
 
 export async function POST(req: Request) {
-  let body: { agentId?: string } = {};
+  let body: { agentId?: string; freshConsultation?: boolean } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
     body = {};
   }
 
-  const payload = JSON.stringify(body.agentId ? { agentId: body.agentId } : {});
+  const payload = JSON.stringify({
+    ...(typeof body.agentId === 'string' && body.agentId.trim() ? { agentId: body.agentId.trim() } : {}),
+    ...(body.freshConsultation === true ? { freshConsultation: true } : {}),
+  });
   const session = await getServerSession();
 
   if (session && !session.demo) {

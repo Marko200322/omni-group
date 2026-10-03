@@ -380,10 +380,23 @@ describe('NotificationsModule HTTP routes', () => {
   });
 
   it('GET /notifications/unread-count', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [{ count: '5' }], rowCount: 1 } as never);
+    mockQuery
+      .mockResolvedValueOnce({ rows: [], rowCount: 12 } as never)
+      .mockResolvedValueOnce({ rows: [{ count: '5' }], rowCount: 1 } as never);
     const res = await request(server).get('/notifications/unread-count');
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual({ count: 5 });
+  });
+
+  it('GET /notifications/unread-count clears a flooded inbox', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [], rowCount: 12 } as never)
+      .mockResolvedValueOnce({ rows: [{ count: '99' }], rowCount: 1 } as never)
+      .mockResolvedValueOnce({ rows: [], rowCount: 99 } as never);
+    const res = await request(server).get('/notifications/unread-count');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ count: 0 });
+    expect(mockQuery.mock.calls[2][0]).toContain('is_read = false');
   });
 
   it('GET /notifications returns 400 when body is not strictly empty', async () => {

@@ -204,7 +204,28 @@ export class NotificationsService {
   }
 
   async unreadCount(userId: string) {
+    try {
+      await this.repo.markStaleRead(userId, 14);
+    } catch (err) {
+      logger.warn('Failed to auto-clear stale notifications', {
+        userId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
     const { rows } = await this.repo.unreadCount(userId);
-    return parseInt(rows[0]?.count ?? '0', 10);
+    const count = parseInt(rows[0]?.count ?? '0', 10);
+    if (count >= 99) {
+      try {
+        await this.repo.markAllRead(userId);
+        return 0;
+      } catch (err) {
+        logger.warn('Failed to clear flooded notification inbox', {
+          userId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return 99;
+      }
+    }
+    return count;
   }
 }

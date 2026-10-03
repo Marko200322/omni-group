@@ -1,32 +1,34 @@
 'use client';
 
+import { formatPlanMoney, getSaaSPlanPrice } from '@/lib/saas-plans';
 import {
+  foundingDiscountedAmount,
   getFoundingClientDiscountPct,
   getFoundingClientLockMonths,
   getFoundingClientMaxSlots,
-  getFoundingClientPlanQuote,
   isFoundingClientPromoEnabled,
 } from '@/lib/founding-client-promo';
-import { formatEur } from '@/lib/category-pricing';
 import { isRegulatedIndustryCategory } from '@/lib/regulated-founding-partner';
+import { useFoundingPromoStatus } from '@/hooks/useFoundingPromoStatus';
 
 type Props = {
   industryCategory?: string;
+  currency?: 'EUR' | 'USD';
 };
 
-export function FoundingClientPromoBanner({ industryCategory }: Props) {
-  if (!isFoundingClientPromoEnabled()) return null;
+export function FoundingClientPromoBanner({ industryCategory, currency = 'USD' }: Props) {
+  const { status } = useFoundingPromoStatus();
+  const buildOn = isFoundingClientPromoEnabled();
+  if (status ? !status.enabled : !buildOn) return null;
 
-  const maxSlots = getFoundingClientMaxSlots();
-  const lockMonths = getFoundingClientLockMonths();
-  const discountPct = getFoundingClientDiscountPct();
+  const maxSlots = status?.maxSlots ?? getFoundingClientMaxSlots();
+  const lockMonths = status?.lockMonths ?? getFoundingClientLockMonths();
+  const discountPct = status?.discountPct ?? getFoundingClientDiscountPct();
+  const remaining = status?.remaining;
+  const soldOut = status?.active === false && status?.enabled === true;
   const regulated = Boolean(industryCategory && isRegulatedIndustryCategory(industryCategory));
-  const quote =
-    industryCategory && !regulated
-      ? getFoundingClientPlanQuote('pro', industryCategory)
-      : getFoundingClientPlanQuote('pro', null);
-
-  if (!quote.active && !regulated) return null;
+  const list = getSaaSPlanPrice('pro', 'monthly', currency);
+  const founding = foundingDiscountedAmount(list, discountPct);
 
   return (
     <section
@@ -40,26 +42,27 @@ export function FoundingClientPromoBanner({ industryCategory }: Props) {
           Subscription founding discount applies to non-regulated industries. Your category uses{' '}
           <strong className="text-white">regulated founding partner</strong> pricing below.
         </p>
-      ) : industryCategory && quote.active ? (
+      ) : soldOut ? (
         <>
-          <p className="mt-2 font-display text-xl font-bold text-white">
-            Growth from {formatEur(quote.foundingEur)}/mo
-            <span className="ml-2 text-base font-normal text-slate-400 line-through">
-              {formatEur(quote.listEur)}
-            </span>
-          </p>
-          <p className="mt-1 text-sm text-emerald-200/90">
-            {quote.discountPct}% off list — locked {lockMonths} mo, {maxSlots} slots total.
+          <p className="mt-2 font-display text-xl font-bold text-white">Founding slots are full</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Checkout now uses the published list: Launch, Growth, and Scale.
           </p>
         </>
       ) : (
         <>
           <p className="mt-2 font-display text-xl font-bold text-white">
-            {discountPct}% off Growth subscription
+            {discountPct}% off for the first {lockMonths} months
           </p>
-          <p className="mt-1 text-sm text-slate-400">
-            Example: Growth from {formatEur(quote.foundingEur)}/mo (was {formatEur(quote.listEur)}).{' '}
-            {maxSlots} founding slots — select your industry below for your exact rate.
+          <p className="mt-1 text-sm text-slate-300">
+            Growth is {formatPlanMoney(founding, currency)}/mo for {lockMonths} months, then the list{' '}
+            {formatPlanMoney(list, currency)}/mo. Same for Launch and Scale. Yearly is {discountPct}% off the first
+            year, then list.
+          </p>
+          <p className="mt-2 text-sm text-emerald-200/90">
+            {typeof remaining === 'number'
+              ? `${remaining} of ${maxSlots} founding slots left.`
+              : `${maxSlots} founding slots total.`}
           </p>
         </>
       )}

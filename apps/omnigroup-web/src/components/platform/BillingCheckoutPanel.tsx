@@ -15,6 +15,10 @@ import {
 import { describeAtinaError } from '@/lib/atina-errors';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 import { InvoiceHistoryPanel } from '@/components/platform/InvoiceHistoryPanel';
+import { foundingDiscountedAmount } from '@/lib/founding-client-promo';
+import { useFoundingPromoStatus } from '@/hooks/useFoundingPromoStatus';
+import { isSubscriptionCurrentlyActive, saasPlanLabel } from '@/lib/billing-status';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 function atinaCheckoutError(json: { error?: string; detail?: string }, fallback: string): string {
   return describeAtinaError(json.error ?? fallback);
@@ -87,6 +91,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const initialCategory = searchParams.get('category') ?? '';
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [methodsLoaded, setMethodsLoaded] = useState(false);
+  const [methodsNote, setMethodsNote] = useState<string | null>(null);
   const [planSlug, setPlanSlug] = useState(
     ['starter', 'pro', 'enterprise'].includes(searchParams.get('plan') ?? '')
       ? (searchParams.get('plan') as string)
@@ -110,6 +115,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [purchase, setPurchase] = useState<BillingSummary | null>(null);
+  const { status: foundingStatus } = useFoundingPromoStatus();
 
   const quotedAmount = useMemo(() => {
     const slug = (['starter', 'pro', 'enterprise'].includes(planSlug) ? planSlug : 'pro') as PlanSlug;
@@ -117,12 +123,16 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   }, [planSlug, billingCycle, currency]);
 
   const categoryMeta = getIndustryCategory(industryCategory);
+  const foundingActive = Boolean(foundingStatus?.active) && categoryMeta?.tier !== 'regulated';
+  const dueNow = foundingActive
+    ? foundingDiscountedAmount(quotedAmount, foundingStatus?.discountPct)
+    : quotedAmount;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/atina/billing/summary');
+        const res = await csrfFetch('/api/atina/billing/summary');
         const json = (await res.json()) as { ok?: boolean; data?: BillingSummary };
         if (!cancelled && json.ok && json.data) setPurchase(json.data);
       } catch {
@@ -138,13 +148,14 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/atina/payments/methods');
+        const res = await csrfFetch('/api/atina/payments/methods');
         const json = (await res.json()) as {
           ok?: boolean;
-          data?: { mode?: string; methods?: PaymentMethod[] };
+          data?: { mode?: string; methods?: PaymentMethod[]; note?: string };
         };
         if (cancelled || !json.ok || !json.data) return;
         setMethods(json.data.methods ?? []);
+        setMethodsNote(typeof json.data.note === 'string' ? json.data.note : null);
       } catch {
         if (!cancelled) setError('Unable to load payment methods.');
       } finally {
@@ -172,7 +183,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setError(null);
     setKriptomanCheckout(null);
     try {
-      const res = await fetch('/api/atina/payments/kriptoman/checkout', {
+      const res = await csrfFetch('/api/atina/payments/kriptoman/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -204,7 +215,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/kriptoman/sync/${kriptomanCheckout.paymentId}`, {
+      const res = await csrfFetch(`/api/atina/payments/kriptoman/sync/${kriptomanCheckout.paymentId}`, {
         method: 'POST',
       });
       const json = (await res.json()) as {
@@ -240,7 +251,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/atina/payments/stripe/checkout', {
+      const res = await csrfFetch('/api/atina/payments/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkoutPayload()),
@@ -261,7 +272,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/atina/payments/paypal/order', {
+      const res = await csrfFetch('/api/atina/payments/paypal/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkoutPayload()),
@@ -290,7 +301,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setCheckout(null);
     setKriptomanCheckout(null);
     try {
-      const res = await fetch('/api/atina/payments/wise/transfer', {
+      const res = await csrfFetch('/api/atina/payments/wise/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkoutPayload()),
@@ -313,7 +324,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setSent(false);
     setKriptomanCheckout(null);
     try {
-      const res = await fetch('/api/atina/payments/manual/checkout', {
+      const res = await csrfFetch('/api/atina/payments/manual/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkoutPayload()),
@@ -335,7 +346,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/manual/mark-sent/${checkout.paymentId}`, {
+      const res = await csrfFetch(`/api/atina/payments/manual/mark-sent/${checkout.paymentId}`, {
         method: 'POST',
       });
       const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
@@ -356,6 +367,9 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
   const kriptomanAvailable = methods.some((m) => m.id === 'kriptoman' && m.available);
   const manualAvailable = !stripeAvailable && methods.some((m) => m.id === 'manual' && m.available);
   const stripePrimary = stripeAvailable;
+  const subscriptionActive = isSubscriptionCurrentlyActive(purchase?.subscription);
+  const subscriptionExpired =
+    Boolean(purchase?.subscription) && !subscriptionActive;
 
   return (
     <motion.div className="mt-4 space-y-4">
@@ -365,26 +379,47 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
           Loading payment options…
         </p>
       )}
-      {purchase?.subscription?.status === 'active' && (
+      {subscriptionActive && purchase?.subscription && (
         <motion.div
           className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 text-sm text-slate-200"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <p className="font-medium text-white">Your subscription (active)</p>
+          <p className="font-medium text-white">Your subscription is active</p>
           <ul className="mt-3 space-y-1 text-sm">
             <li>
               <span className="text-slate-500">Plan:</span>{' '}
-              {purchase.subscription.plan_name ?? purchase.subscription.plan_slug}
+              {saasPlanLabel(purchase.subscription.plan_slug, purchase.subscription.plan_name)}
             </li>
             <li>
               <span className="text-slate-500">Type:</span> {formatCycle(purchase.subscription.billing_cycle)}
             </li>
             <li>
-              <span className="text-slate-500">Valid until:</span>{' '}
+              <span className="text-slate-500">Renews:</span>{' '}
               {formatDate(purchase.subscription.current_period_end)}
             </li>
           </ul>
+        </motion.div>
+      )}
+
+      {subscriptionExpired && purchase?.subscription && (
+        <motion.div
+          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-slate-200"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <p className="font-medium text-white">Your subscription ended</p>
+          <ul className="mt-3 space-y-1 text-sm">
+            <li>
+              <span className="text-slate-500">Last plan:</span>{' '}
+              {saasPlanLabel(purchase.subscription.plan_slug, purchase.subscription.plan_name)}
+            </li>
+            <li>
+              <span className="text-slate-500">Ended:</span>{' '}
+              {formatDate(purchase.subscription.current_period_end)}
+            </li>
+          </ul>
+          <p className="mt-3 text-xs text-amber-100/80">Choose a plan below to start a new subscription.</p>
         </motion.div>
       )}
 
@@ -435,7 +470,7 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
         <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
           <span className="font-medium text-white">Active payment method: Card (Stripe)</span>
           <span className="mt-1 block text-emerald-200/90">
-            Pay by card. Bank transfer (IBAN) is not required.
+            {methodsNote ?? 'Pay by card. Bank transfer (IBAN) is not required.'}
           </span>
         </p>
       )}
@@ -513,8 +548,11 @@ export function BillingCheckoutPanel({ plans, disabled }: Props) {
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100">
         Amount due:{' '}
-        <span className="font-semibold text-white">{formatPlanMoney(quotedAmount, currency)}</span>
+        <span className="font-semibold text-white">{formatPlanMoney(dueNow, currency)}</span>
         {billingCycle === 'yearly' ? ' / year' : ' / month'}
+        {foundingActive
+          ? ` · founding ${foundingStatus?.discountPct ?? 15}% for ${foundingStatus?.lockMonths ?? 12} months, then ${formatPlanMoney(quotedAmount, currency)} list`
+          : ''}
         {categoryMeta ? ` · ${categoryMeta.name} workspace profile` : ''}
       </p>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { atinaLogin } from '@/lib/atina-auth';
-import { buildAuthSession, isAdminRole, setSessionCookie } from '@/lib/auth-session';
+import { atinaLogin, isAtinaTwoFactorChallenge } from '@/lib/atina-auth';
+import { completeWebLogin } from '@/lib/complete-web-login';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -34,23 +34,16 @@ export async function POST(req: Request) {
     );
   }
 
-  try {
-    const session = buildAuthSession({
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      rememberMe: body.rememberMe,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        role: result.user.role,
-        organizationId: result.user.organizationId,
-        orgRole: result.user.orgRole,
-      },
+  if (isAtinaTwoFactorChallenge(result)) {
+    return NextResponse.json({
+      ok: true,
+      requiresTwoFactor: true,
+      challengeToken: result.challengeToken,
     });
-    await setSessionCookie(session);
+  }
 
-    const redirectTo = isAdminRole(session.user.role) ? '/admin' : '/dashboard';
+  try {
+    const { session, redirectTo } = await completeWebLogin(result, body.rememberMe);
     return NextResponse.json({
       ok: true,
       redirectTo,
@@ -58,9 +51,6 @@ export async function POST(req: Request) {
       demo: false,
     });
   } catch (err) {
-    // Credentials were valid but the session could not be sealed (e.g. missing
-    // SESSION_SECRET in production). Surface a server error instead of a
-    // misleading "invalid credentials" message.
     const message = err instanceof Error ? err.message : 'session_error';
     return NextResponse.json(
       { ok: false, error: 'server_error', ...(isDev ? { detail: message } : {}) },

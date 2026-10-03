@@ -80,6 +80,11 @@ export function CatalogSection({ categories, showIncluded = false }: Props) {
                       </span>
                     )}
                   </div>
+                  {item.bestFor ? (
+                    <p className="mt-2 text-sm text-slate-300">
+                      <span className="font-medium text-slate-200">Best for:</span> {item.bestFor}
+                    </p>
+                  ) : null}
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{item.description}</p>
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-emerald-300">{item.priceLabel}</span>

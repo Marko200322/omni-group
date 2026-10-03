@@ -185,6 +185,22 @@ describe('VideoMeetingsModule HTTP routes', () => {
       .post('/video-meetings/public/avatar/chat')
       .send({ sessionId: MEETING_UUID, message: 'What do you sell?' });
     expect(res.status).toBe(200);
-    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?');
+    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?', undefined);
+  });
+
+  it('POST /public/avatar/chat forwards sanitized pageContext', async () => {
+    authOn = false;
+    const chatGuest = jest.spyOn(AvatarAgentService.prototype, 'chatGuest').mockResolvedValue({
+      sessionId: MEETING_UUID,
+      audience: 'public',
+      message: { id: 'm1', role: 'assistant', text: 'See /pricing' },
+    } as never);
+    const res = await request(server).post('/video-meetings/public/avatar/chat').send({
+      sessionId: MEETING_UUID,
+      message: 'What do you sell?',
+      pageContext: { path: '/pricing', customerId: 'forged' },
+    });
+    expect(res.status).toBe(200);
+    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?', { path: '/pricing' });
   });
 });

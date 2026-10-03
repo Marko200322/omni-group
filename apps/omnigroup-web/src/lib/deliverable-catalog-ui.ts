@@ -55,6 +55,7 @@ export function buildDeliverableCatalogCategories(
           id: d.id,
           name: d.name,
           description: spec?.description ?? d.description,
+          bestFor: d.bestFor,
           priceLabel: `${formatEur(priceEur)} ${formatBillingLabel(d.billing)}`,
           priceMonthly: d.billing === 'monthly' ? priceEur : undefined,
           priceOnce: d.billing === 'one_time' ? priceEur : undefined,

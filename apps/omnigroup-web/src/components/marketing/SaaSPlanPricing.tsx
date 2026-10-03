@@ -10,6 +10,8 @@ import {
   type BillingCurrency,
   type SaaSBillingCycle,
 } from '@/lib/saas-plans';
+import { foundingDiscountedAmount, isFoundingClientPromoEnabled } from '@/lib/founding-client-promo';
+import { useFoundingPromoStatus } from '@/hooks/useFoundingPromoStatus';
 import { trackConversion } from '@/components/marketing/UtmCapture';
 
 function competitorComparison() {
@@ -25,12 +27,21 @@ function competitorComparison() {
   ] as const;
 }
 
-export function SaaSPlanPricing() {
-  const [currency, setCurrency] = useState<BillingCurrency>('USD');
+type Props = {
+  currency?: BillingCurrency;
+  onCurrencyChange?: (currency: BillingCurrency) => void;
+};
+
+export function SaaSPlanPricing({ currency: currencyProp, onCurrencyChange }: Props = {}) {
+  const [internalCurrency, setInternalCurrency] = useState<BillingCurrency>('USD');
+  const currency = currencyProp ?? internalCurrency;
+  const setCurrency = onCurrencyChange ?? setInternalCurrency;
   const [cycle, setCycle] = useState<SaaSBillingCycle>('monthly');
+  const { status } = useFoundingPromoStatus();
+  const foundingActive = status ? Boolean(status.active) : isFoundingClientPromoEnabled();
 
   return (
-    <section id="plans" className="mt-12 scroll-mt-24">
+    <section id="plans" className="mt-12 scroll-mt-24 pb-24">
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-300">SaaS plans</p>
@@ -80,6 +91,12 @@ export function SaaSPlanPricing() {
         {SAAS_PLANS.map((plan) => {
           const amount = plan[cycle][currency];
           const monthlyEquivalent = cycle === 'yearly' ? amount / 10 : amount;
+          const discountPct = status?.discountPct;
+          const foundingAmount = foundingActive ? foundingDiscountedAmount(amount, discountPct) : amount;
+          const foundingMonthly =
+            cycle === 'yearly'
+              ? foundingDiscountedAmount(amount, discountPct) / 10
+              : foundingDiscountedAmount(amount, discountPct);
           return (
             <article
               key={plan.slug}
@@ -98,10 +115,18 @@ export function SaaSPlanPricing() {
               <p className="mt-2 min-h-10 text-sm text-slate-400">{plan.tagline}</p>
               <div className="mt-6">
                 <span className="font-display text-4xl font-bold text-white">
-                  {formatPlanMoney(monthlyEquivalent, currency)}
+                  {formatPlanMoney(foundingActive ? foundingMonthly : monthlyEquivalent, currency)}
                 </span>
                 <span className="text-sm text-slate-500">/mo</span>
-                {cycle === 'yearly' ? (
+                {foundingActive ? (
+                  <p className="mt-1 text-xs text-emerald-300">
+                    First {status?.lockMonths ?? 12} months, then {formatPlanMoney(monthlyEquivalent, currency)}/mo
+                    list
+                    {cycle === 'yearly'
+                      ? ` · first year ${formatPlanMoney(foundingAmount, currency)}, then ${formatPlanMoney(amount, currency)}`
+                      : ''}
+                  </p>
+                ) : cycle === 'yearly' ? (
                   <p className="mt-1 text-xs text-emerald-300">
                     {formatPlanMoney(amount, currency)} billed yearly
                   </p>

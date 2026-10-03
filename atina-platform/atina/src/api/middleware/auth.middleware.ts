@@ -5,7 +5,11 @@ import { config } from '../../config';
 import { AuthenticationError, AuthorizationError } from '../../utils/errors';
 import { headerFirst } from '../../utils/http-headers';
 import { query } from '../../database/connection';
-import { hasOrgPermission, type OrgPermission } from '../../modules/auth/lib/org-permissions';
+import {
+  hasOrgPermission,
+  isPlatformAdminRole,
+  type OrgPermission,
+} from '../../modules/auth/lib/org-permissions';
 
 export interface JwtPayload {
   userId: string;
@@ -130,7 +134,14 @@ export function requireRole(...roles: string[]) {
   };
 }
 
-export const requireAdmin = requireRole('admin');
+/** Admin gate — same platform roles as web `isAdminRole` (admin|superadmin|owner|operator). */
+export function requireAdmin(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.user) throw new AuthenticationError();
+  if (!isPlatformAdminRole(req.user.role)) {
+    throw new AuthorizationError('Insufficient permissions');
+  }
+  next();
+}
 
 export function requirePermission(...permissions: OrgPermission[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {

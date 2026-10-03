@@ -56,6 +56,9 @@ function Build-DeployConfigKeyLookup([object]$Config) {
   & $set 'STARTER_PRICE_ID' (Get-DeployConfigTrim $Config 'starterPriceId')
   & $set 'PRO_PRICE_ID' (Get-DeployConfigTrim $Config 'proPriceId')
   & $set 'ENTERPRISE_PRICE_ID' (Get-DeployConfigTrim $Config 'enterprisePriceId')
+  & $set 'STARTER_YEARLY_PRICE_ID' (Get-DeployConfigTrim $Config 'starterYearlyPriceId')
+  & $set 'PRO_YEARLY_PRICE_ID' (Get-DeployConfigTrim $Config 'proYearlyPriceId')
+  & $set 'ENTERPRISE_YEARLY_PRICE_ID' (Get-DeployConfigTrim $Config 'enterpriseYearlyPriceId')
   & $set 'SLACK_WEBHOOK_URL' (Get-DeployConfigTrim $Config 'slackWebhookUrl')
   & $set 'TELEGRAM_BOT_TOKEN' (Get-DeployConfigTrim $Config 'telegramBotToken')
   & $set 'TELEGRAM_CHAT_ID' (Get-DeployConfigTrim $Config 'telegramChatId')
@@ -342,6 +345,8 @@ function Get-FoundingClientPromoEnvMap([object]$Config) {
   if ($slots) { $map['NEXT_PUBLIC_FOUNDING_CLIENT_MAX_SLOTS'] = $slots }
   $lockMo = Get-DeployConfigTrim $Config 'foundingClientLockMonths'
   if ($lockMo) { $map['NEXT_PUBLIC_FOUNDING_CLIENT_LOCK_MONTHS'] = $lockMo }
+  $coupon = Get-DeployConfigTrim $Config 'foundingCouponId'
+  if ($coupon) { $map['FOUNDING_STRIPE_COUPON_ID'] = $coupon }
   return $map
 }
 
@@ -425,6 +430,9 @@ function Merge-KljuceviIntoDeployConfig([object]$Cfg, [hashtable]$Keys) {
     STARTER_PRICE_ID         = 'starterPriceId'
     PRO_PRICE_ID             = 'proPriceId'
     ENTERPRISE_PRICE_ID      = 'enterprisePriceId'
+    STARTER_YEARLY_PRICE_ID  = 'starterYearlyPriceId'
+    PRO_YEARLY_PRICE_ID      = 'proYearlyPriceId'
+    ENTERPRISE_YEARLY_PRICE_ID = 'enterpriseYearlyPriceId'
     OPENROUTER_API_KEY       = 'openRouterApiKey'
     ELEVENLABS_API_KEY       = 'elevenLabsApiKey'
     TELEGRAM_BOT_TOKEN           = 'telegramBotToken'
@@ -542,6 +550,9 @@ function Get-KljuceviSyncFromDeployConfig([object]$Config) {
     STARTER_PRICE_ID             = Get-DeployConfigTrim $Config 'starterPriceId'
     PRO_PRICE_ID                 = Get-DeployConfigTrim $Config 'proPriceId'
     ENTERPRISE_PRICE_ID          = Get-DeployConfigTrim $Config 'enterprisePriceId'
+    STARTER_YEARLY_PRICE_ID      = Get-DeployConfigTrim $Config 'starterYearlyPriceId'
+    PRO_YEARLY_PRICE_ID          = Get-DeployConfigTrim $Config 'proYearlyPriceId'
+    ENTERPRISE_YEARLY_PRICE_ID   = Get-DeployConfigTrim $Config 'enterpriseYearlyPriceId'
     SLACK_WEBHOOK_URL            = Get-DeployConfigTrim $Config 'slackWebhookUrl'
     CONTACT_SLACK_WEBHOOK_URL    = Get-DeployConfigTrim $Config 'contactSlackWebhookUrl'
     OUTREACH_DOMAIN_WARMUP_COMPLETE = Get-DeployConfigTrim $Config 'outreachDomainWarmupComplete'
@@ -655,8 +666,11 @@ function Apply-DeployConfigProdEnvFiles {
   }
 
   if ($Config.stripeSecretKey) {
-    Set-EnvLineInDeployFile $atinaEnv 'STRIPE_SECRET_KEY' $Config.stripeSecretKey.Trim()
-    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MODE' 'live'
+    $stripeSecret = $Config.stripeSecretKey.Trim()
+    Set-EnvLineInDeployFile $atinaEnv 'STRIPE_SECRET_KEY' $stripeSecret
+    # Match mode to key shape — never claim live with sk_test_.
+    $paymentsMode = if ($stripeSecret.StartsWith('sk_live_')) { 'live' } else { 'sandbox' }
+    Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MODE' $paymentsMode
     # Keep IBAN/manual for admin confirm + fulfillment matrix E2E (Stripe is primary, not exclusive)
     Set-EnvLineInDeployFile $atinaEnv 'PAYMENTS_MANUAL_ENABLED' 'true'
     if ($Config.stripePublishableKey) { Set-EnvLineInDeployFile $atinaEnv 'STRIPE_PUBLISHABLE_KEY' $Config.stripePublishableKey.Trim() }
@@ -664,6 +678,9 @@ function Apply-DeployConfigProdEnvFiles {
     if ($Config.starterPriceId) { Set-EnvLineInDeployFile $atinaEnv 'STARTER_PRICE_ID' $Config.starterPriceId.Trim() }
     if ($Config.proPriceId) { Set-EnvLineInDeployFile $atinaEnv 'PRO_PRICE_ID' $Config.proPriceId.Trim() }
     if ($Config.enterprisePriceId) { Set-EnvLineInDeployFile $atinaEnv 'ENTERPRISE_PRICE_ID' $Config.enterprisePriceId.Trim() }
+    if ($Config.starterYearlyPriceId) { Set-EnvLineInDeployFile $atinaEnv 'STARTER_YEARLY_PRICE_ID' $Config.starterYearlyPriceId.Trim() }
+    if ($Config.proYearlyPriceId) { Set-EnvLineInDeployFile $atinaEnv 'PRO_YEARLY_PRICE_ID' $Config.proYearlyPriceId.Trim() }
+    if ($Config.enterpriseYearlyPriceId) { Set-EnvLineInDeployFile $atinaEnv 'ENTERPRISE_YEARLY_PRICE_ID' $Config.enterpriseYearlyPriceId.Trim() }
   }
 
   $smtpOn = $false

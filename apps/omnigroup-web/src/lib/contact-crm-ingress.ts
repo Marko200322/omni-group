@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { atinaLogin } from './atina-auth';
+import { atinaLogin, isAtinaTwoFactorChallenge } from './atina-auth';
 import { resolveAtinaApiBase } from './atina-api-base';
 
 export type ContactLeadInput = {
@@ -14,6 +14,7 @@ export type ContactLeadInput = {
   topic?: string;
   budget?: string;
   timeline?: string;
+  attribution?: Record<string, string>;
 };
 
 export async function pushContactToCrm(
@@ -53,6 +54,9 @@ export async function pushContactToCrm(
       password: ingressPassword,
       rememberMe: false,
     });
+    if (isAtinaTwoFactorChallenge(login)) {
+      return { ok: false, error: 'crm_ingress_2fa_required' };
+    }
     const apiBase = resolveAtinaApiBase('http://127.0.0.1:3000');
     const res = await fetch(`${apiBase}/api/v1/crm/contacts`, {
       method: 'POST',
@@ -77,6 +81,9 @@ export async function pushContactToCrm(
           ...(input.vertical ? { vertical: input.vertical } : {}),
           ...(input.budget ? { budget: input.budget } : {}),
           ...(input.timeline ? { timeline: input.timeline } : {}),
+          ...(input.attribution && Object.keys(input.attribution).length
+            ? { attribution: input.attribution }
+            : {}),
         },
       }),
       cache: 'no-store',

@@ -165,4 +165,9 @@ export class AdminController {
     if (endpoint) await this.webPush.removeSubscription(req.user!.userId, endpoint);
     sendSuccess(res, { unsubscribed: true });
   };
+
+  getOmiUsage = async (_req: Request, res: Response): Promise<void> => {
+    const data = await this.service.getOmiUsage();
+    sendSuccess(res, data);
+  };
 }

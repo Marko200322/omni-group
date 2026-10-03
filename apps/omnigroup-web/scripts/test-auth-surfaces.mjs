@@ -28,6 +28,7 @@ const payments = readRepo('atina-platform/atina/src/modules/payments/service/pay
 assert(middleware.includes("'/dashboard'"), 'Dashboard must be a protected prefix');
 assert(middleware.includes("'/admin'"), 'Admin must be a protected prefix');
 assert(middleware.includes("'/api/auth/login'"), 'Login must be rate-limited');
+assert(middleware.includes("'/api/auth/login/2fa'"), '2FA login must be rate-limited');
 assert(middleware.includes("'/api/auth/register'"), 'Register must be rate-limited');
 assert(middleware.includes("'/api/auth/forgot-password'"), 'Forgot-password must be rate-limited');
 assert(middleware.includes("'/api/auth/reset-password'"), 'Reset-password must be rate-limited');

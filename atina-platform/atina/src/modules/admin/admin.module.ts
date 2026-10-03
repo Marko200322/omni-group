@@ -217,6 +217,14 @@ export class AdminModule implements IModule {
     );
 
     this.router.get(
+      '/omi-usage',
+      ...auth,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getOmiUsage
+    );
+
+    this.router.get(
       '/push/vapid-public-key',
       ...auth,
       validateQuery(StrictEmptyQueryDto),

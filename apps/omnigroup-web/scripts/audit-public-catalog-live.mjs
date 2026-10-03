@@ -37,7 +37,7 @@ function extractCard(html, id) {
   const marker = `id="offer-${id}"`;
   const start = html.indexOf(marker);
   if (start < 0) return null;
-  const slice = html.slice(start, start + 4500);
+  const slice = html.slice(start, start + 12000);
   const name = (slice.match(/<h3[^>]*>([^<]+)<\/h3>/i) || [])[1]?.trim() ?? null;
   const price = parseEuro(slice);
   const buyNow = /Buy now/i.test(slice);

@@ -168,6 +168,7 @@ export async function conversationTurnViaAggregator(input: {
   agent: AvatarAgentDefinition;
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
+  verifiedContext?: string;
 }): Promise<AggregatorTurnResult | null> {
   if (!useAiAggregatorForAvatars()) return null;
   const ai = getAiClient();
@@ -179,7 +180,7 @@ export async function conversationTurnViaAggregator(input: {
     agent: {
       name: input.agent.name,
       title: input.agent.title,
-      persona: input.agent.persona,
+      persona: [input.agent.persona, input.verifiedContext?.trim()].filter(Boolean).join('\n\n'),
       avatarUrl: input.agent.avatarUrl || undefined,
       voiceId: input.agent.voiceId || undefined,
     },
@@ -209,7 +210,11 @@ export async function conversationTurnLocal(input: {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
   clientMemoryContext?: string;
+  verifiedContext?: string;
   audience?: ChatAudience;
+  budgetCeiling?: 'sol' | 'luna' | 'none';
+  allowAi?: boolean;
+  maxTokens?: number;
 }): Promise<AggregatorTurnResult> {
   let text: string;
   let replySource: 'ai' | 'fallback' = 'fallback';
@@ -224,7 +229,11 @@ export async function conversationTurnLocal(input: {
       history: input.history,
       userMessage: input.userMessage ?? '',
       clientMemoryContext: input.clientMemoryContext,
+      verifiedContext: input.verifiedContext,
       audience: input.audience,
+      budgetCeiling: input.budgetCeiling,
+      allowAi: input.allowAi,
+      maxTokens: input.maxTokens,
     });
     text = reply.content;
     replySource = reply.source;
@@ -262,8 +271,16 @@ export async function runConversationTurn(input: {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   userMessage?: string;
   clientMemoryContext?: string;
+  verifiedContext?: string;
   audience?: ChatAudience;
+  budgetCeiling?: 'sol' | 'luna' | 'none';
+  allowAi?: boolean;
+  maxTokens?: number;
 }): Promise<AggregatorTurnResult> {
+  // Budget fail-closed / Luna ceiling: skip aggregator paid path and use local (guarded) reply.
+  if (input.allowAi === false || input.budgetCeiling === 'none' || input.budgetCeiling === 'luna') {
+    return conversationTurnLocal(input);
+  }
   if (input.audience !== 'public') {
     const fromAgg = await conversationTurnViaAggregator(input);
     if (fromAgg) {

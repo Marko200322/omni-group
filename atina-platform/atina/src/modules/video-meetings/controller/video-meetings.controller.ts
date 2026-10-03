@@ -55,18 +55,26 @@ export class VideoMeetingsController {
     const session = await this.avatarService.startSession(
       req.user!.userId,
       'support',
-      req.body?.agentId
+      req.body?.agentId,
+      { freshConsultation: req.body?.freshConsultation === true },
     );
     sendCreated(res, session, 'Support avatar session started');
   };
 
   startPublicAvatarSession = async (req: Request, res: Response): Promise<void> => {
-    const session = await this.avatarService.startGuestSession(req.body?.agentId);
+    const session = await this.avatarService.startGuestSession(req.body?.agentId, {
+      freshConsultation: req.body?.freshConsultation === true,
+    });
     sendCreated(res, session, 'Public assistant session started');
   };
 
   chatPublicAvatar = async (req: Request, res: Response): Promise<void> => {
-    const result = await this.avatarService.chatGuest(req.body.sessionId, req.body.message);
+    const result = await this.avatarService.chatGuest(
+      req.body.sessionId,
+      req.body.message,
+      req.body.pageContext,
+      { ip: req.ip || req.socket.remoteAddress },
+    );
     sendSuccess(res, result);
   };
 
@@ -75,8 +83,48 @@ export class VideoMeetingsController {
       req.user!.userId,
       'support',
       req.body.sessionId,
-      req.body.message
+      req.body.message,
+      req.body.pageContext,
+      { ip: req.ip || req.socket.remoteAddress },
     );
+    sendSuccess(res, result);
+  };
+
+  feedbackPublicAvatar = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.avatarService.recordFeedback({
+      sessionId: req.body.sessionId,
+      guest: true,
+      messageId: req.body.messageId,
+      rating: req.body.rating,
+      note: req.body.note,
+    });
+    sendSuccess(res, result);
+  };
+
+  feedbackSupportAvatar = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.avatarService.recordFeedback({
+      sessionId: req.body.sessionId,
+      userId: req.user!.userId,
+      messageId: req.body.messageId,
+      rating: req.body.rating,
+      note: req.body.note,
+    });
+    sendSuccess(res, result);
+  };
+
+  handoffPublicAvatar = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.avatarService.buildHandoffSummary({
+      sessionId: req.body.sessionId,
+      guest: true,
+    });
+    sendSuccess(res, result);
+  };
+
+  handoffSupportAvatar = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.avatarService.buildHandoffSummary({
+      sessionId: req.body.sessionId,
+      userId: req.user!.userId,
+    });
     sendSuccess(res, result);
   };
 
@@ -93,7 +141,8 @@ export class VideoMeetingsController {
     const session = await this.avatarService.startSession(
       req.user!.userId,
       'sales',
-      req.body?.agentId
+      req.body?.agentId,
+      { freshConsultation: req.body?.freshConsultation === true },
     );
     sendCreated(res, session, 'Sales avatar session started');
   };
@@ -103,7 +152,9 @@ export class VideoMeetingsController {
       req.user!.userId,
       'sales',
       req.body.sessionId,
-      req.body.message
+      req.body.message,
+      req.body.pageContext,
+      { ip: req.ip || req.socket.remoteAddress },
     );
     sendSuccess(res, result);
   };

@@ -21,6 +21,9 @@ const PROFILES: FactoryModuleProfile[] = [
       billing: true,
       fulfillment: true,
       crm: true,
+      monitoring: true,
+      reinvestment: true,
+      marketing_intelligence: true,
       scraper: false,
       outreach_send: false,
       lead_db: false,
@@ -118,7 +121,7 @@ const PROFILES: FactoryModuleProfile[] = [
   },
   {
     phase: 'M6',
-    label: 'Full factory — Stripe live + avatar + lead F5',
+    label: 'Full factory — card checkout + avatar + lead F5',
     modules: {
       stripe_live: true,
       avatar: true,
@@ -200,7 +203,7 @@ export function auditFactoryPhaseGaps(phase: FactoryPhase = getFactoryPhase()): 
 
   if (phaseGte(phase, 'M6')) {
     if (process.env.PAYMENTS_MODE?.trim() !== 'live') {
-      gaps.push({ key: 'PAYMENTS_MODE', kind: 'required', message: 'Stripe live not enabled (PAYMENTS_MODE≠live)' });
+      gaps.push({ key: 'PAYMENTS_MODE', kind: 'required', message: 'Stripe is still TEST — PAYMENTS_MODE is not live' });
     }
     if (!envPresent('HEYGEN_API_KEY') && !envPresent('DID_API_KEY')) {
       gaps.push({ key: 'HEYGEN_API_KEY', kind: 'optional', message: 'No avatar provider key (HeyGen or D-ID)' });
@@ -259,6 +262,10 @@ export function buildFactoryPhaseStatus() {
     gaps,
     ready: gaps.filter((g) => g.kind === 'required' || g.kind === 'module_off').length === 0,
     auto,
+    stripe: {
+      configured: Boolean((process.env.FINANCE_KEY || process.env.STRIPE_SECRET_KEY || '').trim()),
+      livemode: (process.env.FINANCE_KEY || process.env.STRIPE_SECRET_KEY || '').trim().startsWith('sk_live_'),
+    },
     externalAiStack: buildExternalAiStackStatus(),
   };
 }

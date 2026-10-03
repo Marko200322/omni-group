@@ -254,7 +254,8 @@ function Apply-FactoryPhaseEnvFiles(
   $atinaMap['FACTORY_PHASE_AUTO'] = if ($auto) { 'true' } else { 'false' }
 
   if (($phase -eq 'M6' -or $auto) -and $DeployConfig.stripeSecretKey) {
-    $atinaMap.PAYMENTS_MODE = 'live'
+    $sk = [string]$DeployConfig.stripeSecretKey.Trim()
+    $atinaMap.PAYMENTS_MODE = if ($sk.StartsWith('sk_live_')) { 'live' } else { 'sandbox' }
     $atinaMap.ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION = 'true'
   }
 
@@ -331,7 +332,8 @@ function Test-FactoryPhaseEnvFiles(
     $expected.OUTREACH_SEND_ENABLED = 'true'
   }
   if ($phase -eq 'M6' -and $DeployConfig.stripeSecretKey) {
-    $expected.PAYMENTS_MODE = 'live'
+    $sk = [string]$DeployConfig.stripeSecretKey.Trim()
+    $expected.PAYMENTS_MODE = if ($sk.StartsWith('sk_live_')) { 'live' } else { 'sandbox' }
     $expected.ALLOW_MANUAL_PAYMENTS_IN_PRODUCTION = 'true'
   }
   $atinaEnv = Join-Path $RepoRoot 'atina-platform\atina\.env.vps.prod'

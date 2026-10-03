@@ -21,7 +21,11 @@ export function LaunchBundlesPanel() {
           const ready = bundle.offer.saleStatus === 'READY_TO_BUY';
           const quote = bundle.offer.saleStatus === 'REQUEST_QUOTE';
           return (
-            <div key={bundle.id} className="rounded-xl border border-white/10 bg-[#0a1218]/80 p-4">
+            <div
+              key={bundle.id}
+              id={`offer-${bundle.id}`}
+              className="rounded-xl border border-white/10 bg-[#0a1218]/80 p-4"
+            >
               <h3 className="font-semibold text-white">{bundle.title}</h3>
               <p className="mt-1 text-xs text-slate-400">{bundle.description}</p>
               <p className="mt-3 text-2xl font-bold text-emerald-200">{formatEur(bundle.bundleEur)}</p>

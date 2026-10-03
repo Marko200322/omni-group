@@ -11,7 +11,7 @@ type ChatPayload = {
 };
 
 export async function POST(req: Request) {
-  let body: { sessionId?: string; message?: string } = {};
+  let body: { sessionId?: string; message?: string; pageContext?: unknown } = {};
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -24,7 +24,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'invalid_body' }, { status: 400 });
   }
 
-  const payload = JSON.stringify({ sessionId, message });
+  const payload = JSON.stringify({
+    sessionId,
+    message,
+    pageContext: body.pageContext && typeof body.pageContext === 'object' ? body.pageContext : undefined,
+  });
   const session = await getServerSession();
 
   if (session && !session.demo) {

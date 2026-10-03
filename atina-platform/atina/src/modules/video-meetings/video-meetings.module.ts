@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
 import { VideoMeetingsController } from './controller/video-meetings.controller';
 import { authenticate, requireAdmin, requirePermission } from '../../api/middleware/auth.middleware';
-import { authSessionLimiter, paymentsLimiter, publicChatLimiter } from '../../api/middleware/rate-limit.middleware';
+import { authSessionLimiter, paymentsLimiter, publicChatLimiter, omiChatIpMinuteLimiter, omiChatIpHourLimiter, omiAuthChatLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -11,6 +11,8 @@ import {
   ConfirmMeetingDto,
   MeetingIdParamsDto,
   AvatarChatDto,
+  AvatarFeedbackDto,
+  AvatarHandoffDto,
   AvatarSessionParamsDto,
   StartAvatarSessionDto,
 } from './dto/video-meetings.dto';
@@ -45,9 +47,25 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/public/avatar/chat',
       publicChatLimiter,
+      omiChatIpMinuteLimiter,
+      omiChatIpHourLimiter,
       validateQuery(StrictEmptyQueryDto),
       validateBody(AvatarChatDto),
       this.controller.chatPublicAvatar
+    );
+    this.router.post(
+      '/public/avatar/feedback',
+      publicChatLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AvatarFeedbackDto),
+      this.controller.feedbackPublicAvatar
+    );
+    this.router.post(
+      '/public/avatar/handoff-summary',
+      publicChatLimiter,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AvatarHandoffDto),
+      this.controller.handoffPublicAvatar
     );
     this.router.post(
       '/support/book',
@@ -86,10 +104,28 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/support/avatar/chat',
       paymentsLimiter,
+      omiAuthChatLimiter,
+      omiChatIpMinuteLimiter,
       ...support,
       validateQuery(StrictEmptyQueryDto),
       validateBody(AvatarChatDto),
       this.controller.chatSupportAvatar
+    );
+    this.router.post(
+      '/support/avatar/feedback',
+      paymentsLimiter,
+      ...support,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AvatarFeedbackDto),
+      this.controller.feedbackSupportAvatar
+    );
+    this.router.post(
+      '/support/avatar/handoff-summary',
+      paymentsLimiter,
+      ...support,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(AvatarHandoffDto),
+      this.controller.handoffSupportAvatar
     );
     this.router.get(
       '/support/avatar/session/:sessionId/history',
@@ -122,6 +158,8 @@ export class VideoMeetingsModule implements IModule {
     this.router.post(
       '/sales/avatar/chat',
       paymentsLimiter,
+      omiAuthChatLimiter,
+      omiChatIpMinuteLimiter,
       ...auth,
       validateQuery(StrictEmptyQueryDto),
       validateBody(AvatarChatDto),

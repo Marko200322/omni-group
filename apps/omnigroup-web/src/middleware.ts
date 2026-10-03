@@ -7,6 +7,7 @@ import { checkRateLimit, clientIpFromRequest } from '@/lib/bff-rate-limit';
 const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/dev'];
 const AUTH_RATE_LIMIT_PATHS = new Set([
   '/api/auth/login',
+  '/api/auth/login/2fa',
   '/api/auth/register',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',

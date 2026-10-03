@@ -255,8 +255,10 @@ export class AdminService {
           active: parseInt(subscriptions.rows[0].active || '0', 10),
         },
         payments: {
-          total: parseInt(payments.rows[0].count, 10),
-          totalRevenue: parseFloat(payments.rows[0].total_revenue),
+          total: parseInt(payments.rows[0].saas_count || '0', 10),
+          totalRevenue: parseFloat(payments.rows[0].saas_revenue || '0'),
+          recordedTotal: parseInt(payments.rows[0].count, 10),
+          recordedRevenue: parseFloat(payments.rows[0].total_revenue || '0'),
         },
         tasks: {
           total: parseInt(tasks.rows[0].count, 10),
@@ -746,6 +748,11 @@ If anything looks wrong, reply to this email and we will help.`
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
       };
+  }
+
+  async getOmiUsage() {
+    const { getOmiUsageDashboard } = await import('../../omi/omi-usage-admin');
+    return getOmiUsageDashboard();
   }
 
   async listOnboardingStatus(query: AdminOnboardingStatusListQueryDtoType) {

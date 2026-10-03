@@ -18,6 +18,7 @@ const jobs = [
   { priority: 'P1', area: 'Industry intelligence', file: 'scripts/analyze-industry-intelligence.mjs' },
   { priority: 'P0', area: 'Buy Now intent preservation', file: 'scripts/test-buy-now-intent.mjs' },
   { priority: 'P0', area: 'Fulfillment map', file: 'scripts/test-fulfillment-map.mjs' },
+  { priority: 'P0', area: 'Marketing Intelligence engine', file: 'scripts/test-marketing-engine.mjs' },
   { priority: 'P1', area: 'SaaS monthly/yearly cycle', file: 'scripts/test-saas-cycle.mjs' },
   { priority: 'P1', area: 'Legal consistency', file: 'scripts/test-legal-consistency.mjs' },
   { priority: 'P0', area: 'Isolation source guards', file: 'scripts/test-isolation-guards.mjs' },
@@ -25,6 +26,7 @@ const jobs = [
   { priority: 'P1', area: 'SaaS plan-limit documentation', file: 'scripts/test-plan-limits.mjs' },
   { priority: 'P2', area: 'Workspace routes', file: 'scripts/test-workspace-routes.mjs' },
   { priority: 'P2', area: 'Atina normalize', file: 'scripts/test-atina-normalize.mjs' },
+  { priority: 'P1', area: 'OMI page context', file: 'scripts/test-omi-page-context.mjs' },
 ];
 
 const rows = [];
@@ -67,7 +69,7 @@ console.log(
   'NEEDS HUMAN TEST: Stripe TEST/LIVE card through hosted Checkout so the webhook (not admin confirm) is the paid event; yearly paid subscription; password-reset inbox; refund in Stripe Dashboard.',
 );
 console.log(
-  'NEEDS HUMAN DECISION: formal company registration details; align marketing plan limits (workspaces/users/contacts) with DB seed keys (tasks/team_members/modules).',
+  'NEEDS HUMAN DECISION: formal company registration details; Stripe LIVE card through webhook when ready.',
 );
 
 if (failed) process.exit(1);

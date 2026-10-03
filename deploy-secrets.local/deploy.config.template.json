@@ -38,6 +38,8 @@
   "foundingClientDiscountPct": 15,
   "foundingClientMaxSlots": 50,
   "foundingClientLockMonths": 12,
+  "foundingCouponId": "",
+  "_foundingCouponId_comment": "Stripe coupon: 15% repeating 12 months, max 50 redemptions (TEST or LIVE matching the secret key)",
 
   "manualPayment": {
     "accountName": "Omni Group DOO",
@@ -116,6 +118,9 @@
   "starterPriceId": "",
   "proPriceId": "",
   "enterprisePriceId": "",
+  "starterYearlyPriceId": "",
+  "proYearlyPriceId": "",
+  "enterpriseYearlyPriceId": "",
 
   "outreachDomainWarmupComplete": "false",
   "_outreachDomainWarmupComplete_comment": "Set true after Instantly/domain warmup confirmed",

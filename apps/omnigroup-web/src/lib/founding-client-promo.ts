@@ -43,6 +43,11 @@ export function getFoundingClientDiscountPct(): number {
   return DISCOUNT_PCT;
 }
 
+export function foundingDiscountedAmount(listAmount: number, discountPct: number = DISCOUNT_PCT): number {
+  const pct = Math.min(50, Math.max(0, Number(discountPct) || 0));
+  return Math.max(9, Math.round(listAmount * (1 - pct / 100)));
+}
+
 export function foundingClientPromoEligible(tier: PricingTier): boolean {
   return tier !== 'regulated';
 }

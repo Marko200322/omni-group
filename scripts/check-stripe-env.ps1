@@ -51,12 +51,16 @@ $checks = @(
   @{ Key = 'FINANCE_KEY'; Required = $true; Prefix = 'sk_'; Note = 'Stripe secret (sk_test_ ili sk_live_) — config.stripe.secretKey' },
   @{ Key = 'STRIPE_WEBHOOK_SECRET'; Required = $true; Prefix = 'whsec_'; Note = 'Webhook signing secret' },
   @{ Key = 'STRIPE_PUBLISHABLE_KEY'; Required = $true; Prefix = 'pk_'; Note = 'Publishable key za frontend' },
-  @{ Key = 'STARTER_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Starter plan' },
-  @{ Key = 'PRO_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Pro plan' },
-  @{ Key = 'ENTERPRISE_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Enterprise plan' }
+  @{ Key = 'STARTER_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Launch monthly' },
+  @{ Key = 'PRO_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Growth monthly' },
+  @{ Key = 'ENTERPRISE_PRICE_ID'; Required = $true; Prefix = 'price_'; Note = 'Stripe Price ID - Scale monthly' }
 )
 
 $optionalChecks = @(
+  @{ Key = 'STARTER_YEARLY_PRICE_ID'; Note = 'Stripe Price ID - Launch yearly (10x monthly)' },
+  @{ Key = 'PRO_YEARLY_PRICE_ID'; Note = 'Stripe Price ID - Growth yearly' },
+  @{ Key = 'ENTERPRISE_YEARLY_PRICE_ID'; Note = 'Stripe Price ID - Scale yearly' },
+  @{ Key = 'FOUNDING_STRIPE_COUPON_ID'; Note = 'Stripe coupon 15% x 12 months, max 50' },
   @{ Key = 'PAYPAL_CLIENT_ID'; Note = 'PayPal (direktno ili preko FINANCE agregatora)' },
   @{ Key = 'PAYPAL_CLIENT_SECRET'; Note = 'PayPal secret' },
   @{ Key = 'PAYPAL_MODE'; Note = 'sandbox ili live' },

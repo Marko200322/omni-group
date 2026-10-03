@@ -1,0 +1,197 @@
+Omni Group Tech — System Audit Agent 3 (Auth / Session / CSRF / 2FA / Isolation / BFF)
+Date: 2026-10-03
+Repo: C:\dev\omni group
+Scope: auth, session/CSRF, 2FA, customer isolation, BFF security
+Secrets: NONE printed or copied into this file.
+
+================================================================================
+VERDICT
+================================================================================
+Isolation (live A/B):     PASS
+Auth surfaces (source):   PASS
+Isolation guards (source): PASS
+
+Overall A3 gate: PASS (no blockers found that fail the required scripts)
+
+No code fixes applied. No commit.
+
+================================================================================
+1) TEST RUNS
+================================================================================
+
+1a) scripts\e2e-isolation-prod.ps1
+    Exit: 0
+    Result: e2e-isolation-prod: PASS
+    Summary (no secrets):
+      - Created customers A and B on prod web
+      - A fulfillment OK (artifacts=2)
+      - DENIED B GET fulfillment job HTTP 403
+      - DENIED B GET A payment HTTP 404
+      - DENIED B GET A project HTTP 404
+      - DENIED B download A artifact HTTP 403
+      - DENIED B list does not include A job
+      - deniedChecks=5, ok=true
+
+1b) apps/omnigroup-web: node scripts/test-auth-surfaces.mjs
+    Exit: 0
+    Result: test-auth-surfaces: ok
+    Checks covered (source-level):
+      - middleware protects /dashboard and /admin
+      - auth rate limits include login, login/2fa, register, forgot/reset password
+      - Stripe plan + deliverable checkout BFFs do not accept client-supplied amounts
+      - Atina payments reprice deliverables from catalog
+
+1c) apps/omnigroup-web: node scripts/test-isolation-guards.mjs
+    Exit: 0
+    Result: test-isolation-guards: ok (source guards; live A/B is scripts/e2e-isolation-prod.ps1)
+    Checks covered (source-level):
+      - fulfillment jobs scoped to owner + AuthorizationError
+      - invoices loaded with owner id
+      - payment history uses session user
+      - shop checkout reprices from catalog (not client priceEur)
+      - deliverable checkout BFF rejects client amounts
+
+================================================================================
+2) MIDDLEWARE / CSRF / SESSION REVIEW
+================================================================================
+
+Files:
+  apps/omnigroup-web/src/middleware.ts
+  apps/omnigroup-web/src/lib/bff-csrf.ts
+  apps/omnigroup-web/src/lib/atina-auth.ts
+  apps/omnigroup-web/src/lib/auth-session.ts
+  apps/omnigroup-web/src/lib/safe-internal-path.ts
+  apps/omnigroup-web/src/lib/complete-web-login.ts
+
+Protected page prefixes: /dashboard, /admin, /dev
+  - Missing session → redirect /login?next=<path>
+  - /admin and /dev require isAdminRole(session.user.role)
+  - Demo sessions blocked from /admin|/dev in production unless ALLOW_DEMO_AUTH=true
+  - Admin layout ALSO rejects demo sessions always (defense in depth)
+
+CSRF (mutating /api/* except GET/HEAD):
+  - Exempt: login, login/2fa, register, forgot/reset, demo, contact, public billing quote(s)
+  - Non-exempt: require csrf cookie==header OR same-origin Origin/Referer
+  - Production: missing Origin+Referer fails unless CSRF header matches (good)
+  - CSRF cookie: og_csrf, SameSite=Lax, httpOnly=false (double-submit style)
+  - Session cookie: og_session, httpOnly=true, SameSite=Lax, secure via COOKIE_SECURE / HTTPS site URL / production default
+  - SESSION_SECRET required in production (openSession returns null if missing)
+
+Open redirects:
+  - Login/register use safeInternalPath() — blocks //, ://, \, decoded equivalents
+  - Post-login redirectTo from completeWebLogin is role-based /admin or /dashboard only
+  - Client may use ?next= but only after safeInternalPath; non-admins hitting /admin still bounce via middleware/layout
+
+Auth rate limits (middleware):
+  - login, login/2fa, register, forgot-password, reset-password
+  - contact form separately rate-limited
+
+Demo auth:
+  - /api/auth/demo disabled in production unless ALLOW_DEMO_AUTH=true
+  - Demo sessions cannot call live Atina (fetchAtinaAuthenticated returns 403 demo_session)
+
+Session contents:
+  - Sealed HMAC cookie stores accessToken + refreshToken (BFF pattern)
+  - Login JSON response returns user profile + redirectTo, NOT tokens
+  - 2FA challenge path returns challengeToken only (5m JWT, separate secret from Bearer)
+
+================================================================================
+3) ADMIN VS CLIENT ROUTE GUARDS
+================================================================================
+
+Nav / routes:
+  - CLIENT_WORKSPACE_SECTIONS → /dashboard/*
+  - ADMIN_WORKSPACE_SECTIONS → /admin/* (includes reinvestment, monitoring, marketing)
+  - platform-nav buildAdminNavItems / buildClientNavItems align with workspace-routes
+  - Client section permissions use orgRole (billing/docs/support), not platform admin
+
+Guards:
+  - middleware: admin/dev require isAdminRole
+  - admin/layout.tsx: session + !demo + isAdminRole
+  - dashboard/layout.tsx: session required (admins may also use client portal — intentional)
+
+BFF admin gates:
+  - marketing-bff / monitoring-bff / reinvestment-bff → requireAdminSession()
+  - bff-admin-gate rejects demo + non-admin
+  - Many /api/atina/admin/* and operator routes check isAdminRole
+
+Role set note:
+  - Web isAdminRole: admin | superadmin | operator | owner
+  - Atina requireAdmin middleware: role === 'admin' only
+  - users.role DB default/check historically admin|user|moderator
+  - orgRole (owner/admin/…) is separate from platform role — login maps both correctly
+  - Not an isolation failure for normal invited clients (role=user), but role vocabulary is inconsistent across layers (see findings)
+
+================================================================================
+4) 2FA WIRING (no live secrets invented or exercised)
+================================================================================
+
+Web BFF routes (present):
+  POST /api/auth/2fa/setup      → session required, proxies Atina /api/v1/auth/2fa/setup
+  POST /api/auth/2fa/confirm    → session required, code body
+  POST /api/auth/2fa/disable    → session required, password + code
+  GET  /api/auth/2fa/status     → session required (demo returns enabled:false)
+  POST /api/auth/login/2fa      → challengeToken + code → completeWebLogin
+
+Atina auth.module routes (present):
+  POST /login/2fa (public, rate-limited)
+  GET  /2fa/status (authenticate)
+  POST /2fa/setup | /confirm | /disable (authenticate + rate limit)
+
+UI:
+  - login/page.tsx: challenge flow wired to /api/auth/login then /api/auth/login/2fa
+  - TwoFactorSettings.tsx: setup/confirm/disable/status wired
+  - test-auth-surfaces asserts login/2fa rate-limit presence in middleware
+
+Challenge token: JWT typ=2fa, 5m expiry, signed with distinct twoFactorChallengeSecret (not Bearer-usable)
+
+CSRF: 2FA setup/confirm/disable are NOT in CSRF_EXEMPT_PATHS (good). UI relies on same-origin fetch (Origin), not x-csrf-token header.
+
+================================================================================
+5) SECURITY FINDINGS (severity, blockers first)
+================================================================================
+
+BLOCKERS: none
+
+[MEDIUM] CSRF double-submit token largely unused by browser clients
+  Evidence: og_csrf is set in middleware, but app fetch() call sites (login, 2FA settings, etc.)
+  do not send x-csrf-token. Protection effectively depends on Origin/Referer same-origin check
+  + SameSite=Lax session cookie. Acceptable for modern browsers; weaker for non-browser or
+  Origin-stripping clients that still present cookies.
+  Recommendation: centralize fetch helper that always attaches CSRF header from og_csrf cookie
+  for mutating BFF calls (do not weaken Origin check).
+
+[MEDIUM] Platform admin role vocabulary mismatch (web vs Atina)
+  Evidence: web isAdminRole includes superadmin/operator/owner; Atina requireAdmin is admin-only;
+  users.role CHECK historically admin|user|moderator. Risk is confusion / uneven enforcement
+  if roles are expanded without aligning both layers.
+  Recommendation: single shared allowlist; keep platform role distinct from orgRole=owner.
+
+[LOW] problem-hunter BFF status/signals lack requireAdminSession
+  Evidence: apps/.../problem-hunter/status|signals only require authenticated non-demo session;
+  Atina /status and /signals also authenticate-only (search/run is requireAdmin).
+  listSignals is userId-scoped (not cross-tenant). status leaks tavilyConfigured boolean.
+  Recommendation: if hunting is operator-only product surface, gate BFF + Atina with requireAdmin.
+
+[LOW] csrfValid uses non-constant-time string equality
+  Evidence: bff-csrf.ts cookie === header. Low practical risk for CSRF tokens.
+  Recommendation: timing-safe compare if tightening CSRF.
+
+[LOW / INFO] Session cookie embeds refresh token (sealed)
+  Standard BFF pattern; theft of og_session is full account access until expiry.
+  Mitigations present: httpOnly, secure defaults, HMAC seal, demo sandbox.
+
+[INFO] CSRF exemptions for public auth + contact + quote are intentional
+  Login/register/forgot/reset/demo/contact/quote must work without prior CSRF cookie.
+  Mitigated by rate limits on auth + contact.
+
+================================================================================
+6) WHAT WAS NOT DONE
+================================================================================
+- No live 2FA enroll/disable against production with real TOTP secrets
+- No password-reset email delivery proof (test-auth-surfaces explicitly does not claim this)
+- No commit, no dependency changes, no security weakening
+
+================================================================================
+END A3
+================================================================================

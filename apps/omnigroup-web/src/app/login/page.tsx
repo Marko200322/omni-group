@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Lock, Mail, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Lock, Mail, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useState, Suspense } from 'react';
 import { AnimatedBackground } from '@/components/platform/AnimatedBackground';
 import { OmniGroupLogo } from '@/components/brand/OmniGroupLogo';
@@ -20,6 +20,10 @@ function friendlyLoginError(code: string | undefined, status: number): string {
       return 'Incorrect email or password. Please try again.';
     case 'email_and_password_required':
       return 'Please enter both your email and password.';
+    case 'invalid_code':
+      return 'That authenticator code was not accepted. Try a new code, or a backup code.';
+    case 'code_required':
+      return 'Enter the 6-digit code from your authenticator app.';
     case 'rate_limited':
       return 'Too many attempts. Please wait a few minutes and try again.';
     case 'server_error':
@@ -41,6 +45,8 @@ function LoginForm() {
   const demoEnabled = process.env.NODE_ENV !== 'production';
   const [status, setStatus] = useState<'idle' | 'loading' | 'demo' | 'err'>('idle');
   const [errMsg, setErrMsg] = useState('');
+  const [challengeToken, setChallengeToken] = useState('');
+  const [code, setCode] = useState('');
 
   async function startDemo(variant: 'client' | 'admin') {
     setStatus('demo');
@@ -74,12 +80,28 @@ function LoginForm() {
         setStatus('loading');
         setErrMsg('');
         const fd = new FormData(e.currentTarget);
-        const payload = {
-          email: String(fd.get('email') || ''),
-          password: String(fd.get('password') || ''),
-          rememberMe: false,
-        };
         try {
+          if (challengeToken) {
+            const res = await fetch('/api/auth/login/2fa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ challengeToken, code: String(fd.get('code') || code) }),
+            });
+            const data = (await res.json()) as { ok?: boolean; redirectTo?: string; error?: string };
+            if (!res.ok || !data.ok) {
+              setStatus('err');
+              setErrMsg(friendlyLoginError(data.error, res.status));
+              return;
+            }
+            router.push(nextPath ?? data.redirectTo ?? '/dashboard');
+            router.refresh();
+            return;
+          }
+          const payload = {
+            email: String(fd.get('email') || ''),
+            password: String(fd.get('password') || ''),
+            rememberMe: false,
+          };
           const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -89,15 +111,20 @@ function LoginForm() {
             ok?: boolean;
             redirectTo?: string;
             error?: string;
-            detail?: string;
+            requiresTwoFactor?: boolean;
+            challengeToken?: string;
           };
           if (!res.ok || !data.ok) {
             setStatus('err');
             setErrMsg(friendlyLoginError(data.error, res.status));
             return;
           }
-          const dest = nextPath ?? data.redirectTo ?? '/dashboard';
-          router.push(dest);
+          if (data.requiresTwoFactor && data.challengeToken) {
+            setChallengeToken(data.challengeToken);
+            setStatus('idle');
+            return;
+          }
+          router.push(nextPath ?? data.redirectTo ?? '/dashboard');
           router.refresh();
         } catch {
           setStatus('err');
@@ -111,6 +138,54 @@ function LoginForm() {
           {errMsg}
         </p>
       )}
+      {challengeToken ? (
+        <>
+          <p className="flex items-start gap-2 text-sm text-slate-300">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" />
+            Enter the 6-digit code from your authenticator app, or a backup code.
+          </p>
+          <label className="block text-sm text-slate-400">
+            Authentication code
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <input
+                name="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                autoFocus
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                disabled={status === 'loading'}
+                placeholder="123456"
+                className="w-full rounded-xl border border-white/10 bg-black/40 py-3 pl-10 pr-4 text-white outline-none transition-shadow focus:border-violet-500/50 focus:shadow-[0_0_24px_rgba(139,92,246,0.2)]"
+              />
+            </div>
+          </label>
+          <motion.button
+            type="submit"
+            disabled={status === 'loading'}
+            className="btn-primary w-full disabled:opacity-60"
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={tapScale}
+          >
+            {status === 'loading' ? 'Verifying…' : 'Verify and continue'}
+          </motion.button>
+          <button
+            type="button"
+            className="w-full text-center text-xs text-slate-500 underline-offset-2 hover:underline"
+            onClick={() => {
+              setChallengeToken('');
+              setCode('');
+              setErrMsg('');
+              setStatus('idle');
+            }}
+          >
+            Use a different account
+          </button>
+        </>
+      ) : (
+        <>
       <label className="block text-sm text-slate-400">
         Email
         <div className="relative mt-1">
@@ -148,6 +223,10 @@ function LoginForm() {
       >
         {status === 'loading' ? 'Signing in…' : 'Sign in'}
       </motion.button>
+        </>
+      )}
+      {!challengeToken ? (
+        <>
       <p className="text-center text-xs text-slate-500">
         <Link href="/forgot-password" className="text-violet-300 underline-offset-2 hover:underline">
           Forgot password?
@@ -182,6 +261,8 @@ function LoginForm() {
           {status === 'demo' ? 'Opening preview…' : 'Preview demo portal'}
         </motion.button>
       )}
+        </>
+      ) : null}
     </motion.form>
   );
 }

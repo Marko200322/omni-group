@@ -32,7 +32,7 @@ const ids = [
 function card(html, id) {
   const i = html.indexOf(`id="offer-${id}"`);
   if (i < 0) return null;
-  return html.slice(i, i + 4500);
+  return html.slice(i, i + 12000);
 }
 
 const errors = [];

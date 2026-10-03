@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../service/auth.service';
+import { AuthService, isTwoFactorChallenge } from '../service/auth.service';
 import { createWorkflowChainAuthBootstrapAdapter } from '../service/workflow-chain-auth-bootstrap.adapter';
 import { sendSuccess, sendCreated } from '../../../utils/response';
 import { config } from '../../../config';
@@ -24,7 +24,41 @@ export class AuthController {
     const ip = clientIpFromForwardedFor(req.headers, req.socket.remoteAddress);
     const userAgent = headerFirst(req.headers['user-agent']) || '';
     const result = await this.service.login(email, password, ip, userAgent, rememberMe ?? false);
+    if (isTwoFactorChallenge(result)) {
+      sendSuccess(res, result, 'Two-factor authentication required');
+      return;
+    }
     sendSuccess(res, result, 'Login successful');
+  };
+
+  completeTwoFactorLogin = async (req: Request, res: Response): Promise<void> => {
+    const { challengeToken, code } = req.body;
+    const ip = clientIpFromForwardedFor(req.headers, req.socket.remoteAddress);
+    const userAgent = headerFirst(req.headers['user-agent']) || '';
+    const result = await this.service.completeTwoFactorLogin(challengeToken, code, ip, userAgent);
+    sendSuccess(res, result, 'Login successful');
+  };
+
+  getTwoFactorStatus = async (req: Request, res: Response): Promise<void> => {
+    const status = await this.service.getTwoFactorStatus(req.user!.userId);
+    sendSuccess(res, status);
+  };
+
+  startTwoFactorSetup = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.service.startTwoFactorSetup(req.user!.userId);
+    sendSuccess(res, result, 'Scan the QR code with your authenticator app');
+  };
+
+  confirmTwoFactorSetup = async (req: Request, res: Response): Promise<void> => {
+    const { code } = req.body;
+    const result = await this.service.confirmTwoFactorSetup(req.user!.userId, code);
+    sendSuccess(res, result, 'Two-factor authentication enabled');
+  };
+
+  disableTwoFactor = async (req: Request, res: Response): Promise<void> => {
+    const { password, code } = req.body;
+    await this.service.disableTwoFactor(req.user!.userId, password, code);
+    sendSuccess(res, { enabled: false }, 'Two-factor authentication disabled');
   };
 
   refreshToken = async (req: Request, res: Response): Promise<void> => {

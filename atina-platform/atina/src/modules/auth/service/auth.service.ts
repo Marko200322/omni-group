@@ -13,6 +13,19 @@ import { JwtPayload } from '../../../api/middleware/auth.middleware';
 import logger from '../../../utils/logger';
 import type { AuthPostLoginBootstrap } from './auth-post-login-bootstrap';
 import { NotificationsService } from '../../notifications/service/notifications.service';
+import { readTwoFactorRecord, type TwoFactorRecord } from '../lib/two-factor-record';
+import {
+  decryptTotpSecret,
+  encryptTotpSecret,
+  twoFactorChallengeSecret,
+} from '../lib/totp-secret';
+import {
+  buildOtpAuthUrl,
+  generateBackupCodes,
+  generateTotpSecret,
+  normalizeBackupCode,
+  verifyTotpCode,
+} from '../lib/totp';
 
 export interface AuthServiceDeps {
   repo?: AuthRepository;
@@ -37,6 +50,17 @@ export interface LoginResult extends AuthTokens {
     organizationId?: string | null;
     orgRole?: string | null;
   };
+}
+
+export type TwoFactorChallengeResult = {
+  requiresTwoFactor: true;
+  challengeToken: string;
+};
+
+export type LoginOutcome = LoginResult | TwoFactorChallengeResult;
+
+export function isTwoFactorChallenge(result: LoginOutcome): result is TwoFactorChallengeResult {
+  return 'requiresTwoFactor' in result && result.requiresTwoFactor === true;
 }
 
 export class AuthService {
@@ -142,7 +166,7 @@ export class AuthService {
     ip = '',
     userAgent = '',
     rememberMe = false
-  ): Promise<LoginResult> {
+  ): Promise<LoginOutcome> {
     const user = await this.repo.findUserByEmail(email.toLowerCase().trim());
 
     if (!user || !user.is_active) {
@@ -154,54 +178,136 @@ export class AuthService {
       throw new AuthenticationError('Invalid email or password');
     }
 
-    const isFirstLogin = !user.last_login_at;
-    await this.repo.updateLastLogin(user.id, ip);
-
-    await this.attachWorkspace(user);
-    const tokens = this.generateTokens(this.toJwtPayload(user), rememberMe);
-
-    const refreshExpiresAt = rememberMe
-      ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-    await this.repo.saveRefreshToken({
-      userId: user.id,
-      tokenHash: this.hashToken(tokens.refreshToken),
-      expiresAt: refreshExpiresAt,
-      ip,
-      userAgent,
-    });
-
-    if (isFirstLogin) {
-      try {
-        const report = await this.postLoginBootstrap.bootstrapTemplates(user.id, false);
-        await this.logBootstrapAudit(user.id, 'auth_first_login_bootstrap', report);
-      } catch (error) {
-        logger.warn('Workflow template bootstrap failed after first login', {
-          userId: user.id,
-          error: error instanceof Error ? error.message : 'unknown',
-        });
-        await this.logBootstrapAudit(user.id, 'auth_first_login_bootstrap_failed', {
-          error: error instanceof Error ? error.message : 'unknown',
-        });
-      }
+    const twoFactor = readTwoFactorRecord(user.metadata);
+    if (twoFactor.enabled && twoFactor.secretEnc) {
+      const challengeToken = jwt.sign(
+        { userId: user.id, rememberMe, typ: '2fa' },
+        twoFactorChallengeSecret(),
+        { expiresIn: '5m' },
+      );
+      logger.info('Two-factor challenge issued', { userId: user.id });
+      return { requiresTwoFactor: true, challengeToken };
     }
 
-    logger.info('User logged in', { userId: user.id });
+    return this.issueLoginSession(user, ip, userAgent, rememberMe);
+  }
+
+  async completeTwoFactorLogin(
+    challengeToken: string,
+    code: string,
+    ip = '',
+    userAgent = '',
+  ): Promise<LoginResult> {
+    const payload = this.readTwoFactorChallenge(challengeToken);
+    const user = await this.repo.findUserById(payload.userId);
+    if (!user || !user.is_active) {
+      throw new AuthenticationError('Invalid or expired two-factor challenge');
+    }
+
+    const twoFactor = readTwoFactorRecord(user.metadata);
+    if (!twoFactor.enabled || !twoFactor.secretEnc) {
+      throw new AuthenticationError('Invalid or expired two-factor challenge');
+    }
+
+    const consumed = await this.consumeTwoFactorCode(twoFactor, code);
+    if (!consumed) {
+      throw new AuthenticationError('Invalid authentication code');
+    }
+    if (consumed !== 'totp') {
+      await this.repo.setTwoFactorRecord(user.id, consumed);
+    }
+
+    return this.issueLoginSession(user, ip, userAgent, payload.rememberMe);
+  }
+
+  async getTwoFactorStatus(userId: string): Promise<{ enabled: boolean; pending: boolean }> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) throw new NotFoundError('User');
+    const twoFactor = readTwoFactorRecord(user.metadata);
+    return {
+      enabled: twoFactor.enabled === true,
+      pending: Boolean(twoFactor.pendingSecretEnc) && !twoFactor.enabled,
+    };
+  }
+
+  async startTwoFactorSetup(userId: string): Promise<{ secret: string; otpauthUrl: string }> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) throw new NotFoundError('User');
+    const current = readTwoFactorRecord(user.metadata);
+    if (current.enabled) {
+      throw new ValidationError('Two-factor authentication is already enabled');
+    }
+
+    const secret = generateTotpSecret();
+    await this.repo.setTwoFactorRecord(userId, {
+      enabled: false,
+      pendingSecretEnc: encryptTotpSecret(secret),
+      backupHashes: [],
+    });
 
     return {
-      ...tokens,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        planSlug: user.plan_slug || null,
-        isEmailVerified: user.is_email_verified,
-        organizationId: user.active_organization_id ?? null,
-        orgRole: user.org_role ?? 'owner',
-      },
+      secret,
+      otpauthUrl: buildOtpAuthUrl({ email: user.email, secret }),
     };
+  }
+
+  async confirmTwoFactorSetup(
+    userId: string,
+    code: string,
+  ): Promise<{ enabled: true; backupCodes: string[] }> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) throw new NotFoundError('User');
+    const current = readTwoFactorRecord(user.metadata);
+    if (current.enabled) {
+      throw new ValidationError('Two-factor authentication is already enabled');
+    }
+    if (!current.pendingSecretEnc) {
+      throw new ValidationError('Start two-factor setup before confirming');
+    }
+
+    let secret: string;
+    try {
+      secret = decryptTotpSecret(current.pendingSecretEnc);
+    } catch {
+      throw new ValidationError('Start two-factor setup before confirming');
+    }
+    if (!verifyTotpCode(secret, code)) {
+      throw new ValidationError('Invalid authentication code');
+    }
+
+    const backupCodes = generateBackupCodes();
+    const backupHashes = await Promise.all(backupCodes.map((item) => bcrypt.hash(normalizeBackupCode(item), 12)));
+    await this.repo.setTwoFactorRecord(userId, {
+      enabled: true,
+      secretEnc: encryptTotpSecret(secret),
+      backupHashes,
+      confirmedAt: new Date().toISOString(),
+    });
+    logger.info('Two-factor authentication enabled', { userId });
+    return { enabled: true, backupCodes };
+  }
+
+  async disableTwoFactor(userId: string, password: string, code: string): Promise<void> {
+    const user = await this.repo.findUserById(userId);
+    if (!user) throw new NotFoundError('User');
+
+    const passwordOk = await bcrypt.compare(password, user.password_hash);
+    if (!passwordOk) {
+      throw new ValidationError('Current password is incorrect');
+    }
+
+    const current = readTwoFactorRecord(user.metadata);
+    if (!current.enabled || !current.secretEnc) {
+      throw new ValidationError('Two-factor authentication is not enabled');
+    }
+
+    const consumed = await this.consumeTwoFactorCode(current, code);
+    if (!consumed) {
+      throw new ValidationError('Invalid authentication code');
+    }
+
+    await this.repo.setTwoFactorRecord(userId, { enabled: false });
+    logger.info('Two-factor authentication disabled', { userId });
   }
 
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
@@ -309,6 +415,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.repo.findUserById(userId);
     if (!user) throw new NotFoundError('User');
+    const twoFactor = readTwoFactorRecord(user.metadata);
     return {
       id: user.id,
       email: user.email,
@@ -318,7 +425,110 @@ export class AuthService {
       isEmailVerified: user.is_email_verified,
       lastLoginAt: user.last_login_at,
       createdAt: user.created_at,
+      twoFactorEnabled: twoFactor.enabled === true,
     };
+  }
+
+  private async issueLoginSession(
+    user: UserRecord,
+    ip: string,
+    userAgent: string,
+    rememberMe: boolean,
+  ): Promise<LoginResult> {
+    const isFirstLogin = !user.last_login_at;
+    await this.repo.updateLastLogin(user.id, ip);
+
+    await this.attachWorkspace(user);
+    const tokens = this.generateTokens(this.toJwtPayload(user), rememberMe);
+
+    const refreshExpiresAt = rememberMe
+      ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await this.repo.saveRefreshToken({
+      userId: user.id,
+      tokenHash: this.hashToken(tokens.refreshToken),
+      expiresAt: refreshExpiresAt,
+      ip,
+      userAgent,
+    });
+
+    if (isFirstLogin) {
+      try {
+        const report = await this.postLoginBootstrap.bootstrapTemplates(user.id, false);
+        await this.logBootstrapAudit(user.id, 'auth_first_login_bootstrap', report);
+      } catch (error) {
+        logger.warn('Workflow template bootstrap failed after first login', {
+          userId: user.id,
+          error: error instanceof Error ? error.message : 'unknown',
+        });
+        await this.logBootstrapAudit(user.id, 'auth_first_login_bootstrap_failed', {
+          error: error instanceof Error ? error.message : 'unknown',
+        });
+      }
+    }
+
+    logger.info('User logged in', { userId: user.id });
+
+    return {
+      ...tokens,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        planSlug: user.plan_slug || null,
+        isEmailVerified: user.is_email_verified,
+        organizationId: user.active_organization_id ?? null,
+        orgRole: user.org_role ?? 'owner',
+      },
+    };
+  }
+
+  private readTwoFactorChallenge(challengeToken: string): { userId: string; rememberMe: boolean } {
+    try {
+      const payload = jwt.verify(challengeToken, twoFactorChallengeSecret()) as {
+        userId?: unknown;
+        rememberMe?: unknown;
+        typ?: unknown;
+      };
+      if (payload?.typ !== '2fa' || typeof payload.userId !== 'string' || !payload.userId) {
+        throw new AuthenticationError('Invalid or expired two-factor challenge');
+      }
+      return { userId: payload.userId, rememberMe: payload.rememberMe === true };
+    } catch (error) {
+      if (error instanceof AuthenticationError) throw error;
+      throw new AuthenticationError('Invalid or expired two-factor challenge');
+    }
+  }
+
+  private async consumeTwoFactorCode(
+    record: TwoFactorRecord,
+    code: string,
+  ): Promise<TwoFactorRecord | 'totp' | null> {
+    if (record.secretEnc) {
+      try {
+        const secret = decryptTotpSecret(record.secretEnc);
+        if (verifyTotpCode(secret, code)) return 'totp';
+      } catch {
+        return null;
+      }
+    }
+
+    const normalized = normalizeBackupCode(code);
+    if (!normalized || !record.backupHashes?.length) return null;
+
+    const remaining: string[] = [];
+    let matched = false;
+    for (const hash of record.backupHashes) {
+      if (!matched && (await bcrypt.compare(normalized, hash))) {
+        matched = true;
+        continue;
+      }
+      remaining.push(hash);
+    }
+    if (!matched) return null;
+    return { ...record, backupHashes: remaining };
   }
 
   private async attachWorkspace(user: UserRecord): Promise<void> {

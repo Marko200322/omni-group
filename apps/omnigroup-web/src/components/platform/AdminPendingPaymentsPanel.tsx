@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 import type { AtinaAdminPayment } from '@/lib/atina-live-types';
 import { getDeliverable } from '@/lib/deliverable-catalog';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 function parseMetadata(raw: AtinaAdminPayment['metadata']): Record<string, unknown> {
   if (!raw) return {};
@@ -42,7 +43,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/atina/admin/payments?status=processing&limit=50');
+      const res = await csrfFetch('/api/atina/admin/payments?status=processing&limit=50');
       const body = (await res.json()) as { ok: boolean; data?: AtinaAdminPayment[]; error?: string; detail?: string };
       if (!body.ok) throw new Error(body.detail ?? body.error ?? 'refresh_failed');
       setPayments(body.data ?? []);
@@ -58,7 +59,7 @@ export function AdminPendingPaymentsPanel({ initialPayments, disabled }: Props) 
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
+      const res = await csrfFetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
         method: 'POST',
       });
       const body = (await res.json()) as { ok: boolean; detail?: string; error?: string };
