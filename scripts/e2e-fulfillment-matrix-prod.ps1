@@ -54,7 +54,9 @@ function Get-CsrfHeaders {
 
 function Get-IndustrySlugs {
   param([string]$Base, $Session)
-  $raw = (Invoke-WebRequest -Uri "$Base/api/atina/billing/industry-catalog" -WebSession $Session -UseBasicParsing -TimeoutSec 60).Content
+  $raw = Invoke-WithRateLimitRetry -Label 'industry-catalog' -MaxAttempts $RateLimitMaxAttempts -Action {
+    (Invoke-WebRequest -Uri "$Base/api/atina/billing/industry-catalog" -WebSession $Session -UseBasicParsing -TimeoutSec 120).Content
+  }
   $j = $raw | ConvertFrom-Json
   $cats = @()
   if ($j.data.categories) { $cats = @($j.data.categories) }

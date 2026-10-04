@@ -35,14 +35,20 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
   requirePermission: () => (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
 }));
 
-jest.mock('../../api/middleware/rate-limit.middleware', () => ({
-  authSessionLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
-  paymentsLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
-  publicChatLimiter: (_req: express.Request, _res: express.Response, next: express.NextFunction) => next(),
-}));
+jest.mock('../../api/middleware/rate-limit.middleware', () => {
+  const passthrough = (_req: express.Request, _res: express.Response, next: express.NextFunction) => next();
+  return {
+    authSessionLimiter: passthrough,
+    paymentsLimiter: passthrough,
+    publicChatLimiter: passthrough,
+    omiChatIpMinuteLimiter: passthrough,
+    omiChatIpHourLimiter: passthrough,
+    omiAuthChatLimiter: passthrough,
+  };
+});
 
 describe('VideoMeetingsModule HTTP routes', () => {
-  let server: http.Server;
+  let server: http.Server | undefined;
   let getAgentsSpy: jest.SpyInstance;
   let getMethodsSpy: jest.SpyInstance;
   let bookSpy: jest.SpyInstance;
@@ -69,7 +75,15 @@ describe('VideoMeetingsModule HTTP routes', () => {
   });
 
   afterAll(async () => {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    if (!server) return;
+    const s = server;
+    server = undefined;
+    if (typeof (s as http.Server & { closeAllConnections?: () => void }).closeAllConnections === 'function') {
+      (s as http.Server & { closeAllConnections: () => void }).closeAllConnections();
+    }
+    await new Promise<void>((resolve, reject) => {
+      s.close((err) => (err ? reject(err) : resolve()));
+    });
   });
 
   beforeEach(() => {
@@ -185,7 +199,12 @@ describe('VideoMeetingsModule HTTP routes', () => {
       .post('/video-meetings/public/avatar/chat')
       .send({ sessionId: MEETING_UUID, message: 'What do you sell?' });
     expect(res.status).toBe(200);
-    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?', undefined);
+    expect(chatGuest).toHaveBeenCalledWith(
+      MEETING_UUID,
+      'What do you sell?',
+      undefined,
+      expect.objectContaining({ ip: expect.any(String) }),
+    );
   });
 
   it('POST /public/avatar/chat forwards sanitized pageContext', async () => {
@@ -201,6 +220,11 @@ describe('VideoMeetingsModule HTTP routes', () => {
       pageContext: { path: '/pricing', customerId: 'forged' },
     });
     expect(res.status).toBe(200);
-    expect(chatGuest).toHaveBeenCalledWith(MEETING_UUID, 'What do you sell?', { path: '/pricing' });
+    expect(chatGuest).toHaveBeenCalledWith(
+      MEETING_UUID,
+      'What do you sell?',
+      { path: '/pricing' },
+      expect.objectContaining({ ip: expect.any(String) }),
+    );
   });
 });

@@ -1,0 +1,90 @@
+{
+  "agent": "ATINA-FIX",
+  "date": "2026-10-04",
+  "cwd": "C:\\dev\\omni group\\atina-platform\\atina",
+  "sourceFailLog": "docs/evidence/test-run-atina-unit-20261004.txt",
+  "before": {
+    "command": "npm run test:unit",
+    "result": "FAIL",
+    "testSuites": { "failed": 4, "passed": 399, "total": 403 },
+    "tests": { "failed": 15, "passed": 3804, "total": 3819 },
+    "timeSeconds": 10939.921,
+    "exitCode": 1,
+    "failingSuites": [
+      {
+        "file": "src/tests/unit/client-hunter.module.routes.test.ts",
+        "issues": [
+          "POST /:id/run Exceeded timeout 30000ms",
+          "POST /:id/run idempotency reuse Exceeded timeout 30000ms",
+          "afterAll server.close Exceeded timeout 30000ms"
+        ]
+      },
+      {
+        "file": "src/tests/unit/workflow-chain.templates.test.ts",
+        "issues": [
+          "uses normalized analytics completion events Exceeded timeout 30000ms",
+          "keeps minPhase aligned Exceeded timeout 30000ms"
+        ]
+      },
+      {
+        "file": "src/tests/unit/video-meetings.module.routes.test.ts",
+        "issues": [
+          "Route.post undefined callback (omiChatIpMinuteLimiter missing from rate-limit mock)",
+          "afterAll server.close on undefined server"
+        ]
+      },
+      {
+        "file": "src/tests/unit/client-hunter-scraper.service.test.ts",
+        "issues": [
+          "aggregates scrape hits on hunt mode Exceeded timeout 30000ms"
+        ]
+      }
+    ]
+  },
+  "fixes": [
+    {
+      "file": "src/tests/unit/client-hunter.module.routes.test.ts",
+      "changes": [
+        "Mock getScraperClient and getLeadDatabaseService",
+        "Mock HotClientsService.recordFromHunt to avoid DB hang",
+        "Guard afterAll and call closeAllConnections"
+      ]
+    },
+    {
+      "file": "src/tests/unit/workflow-chain.templates.test.ts",
+      "changes": [
+        "Mock database/connection query for previewTemplate"
+      ]
+    },
+    {
+      "file": "src/tests/unit/video-meetings.module.routes.test.ts",
+      "changes": [
+        "Add omiChatIpMinuteLimiter, omiChatIpHourLimiter, omiAuthChatLimiter to rate-limit mock",
+        "Guard afterAll when server undefined; closeAllConnections",
+        "Expect chatGuest clientMeta { ip } 4th argument"
+      ]
+    },
+    {
+      "file": "src/tests/unit/client-hunter-scraper.service.test.ts",
+      "changes": [
+        "Mock HotClientsService to avoid hung hot_clients inserts during hunt"
+      ]
+    }
+  ],
+  "after": {
+    "command": "npx jest --runInBand src/tests/unit/client-hunter.module.routes.test.ts src/tests/unit/workflow-chain.templates.test.ts src/tests/unit/video-meetings.module.routes.test.ts src/tests/unit/client-hunter-scraper.service.test.ts",
+    "result": "PASS",
+    "testSuites": { "failed": 0, "passed": 4, "total": 4 },
+    "tests": { "failed": 0, "passed": 44, "total": 44 },
+    "timeSeconds": 64.729,
+    "exitCode": 0,
+    "perFile": [
+      { "file": "src/tests/unit/client-hunter.module.routes.test.ts", "result": "PASS" },
+      { "file": "src/tests/unit/workflow-chain.templates.test.ts", "result": "PASS" },
+      { "file": "src/tests/unit/video-meetings.module.routes.test.ts", "result": "PASS" },
+      { "file": "src/tests/unit/client-hunter-scraper.service.test.ts", "result": "PASS" }
+    ]
+  },
+  "productionSecurityChanged": false,
+  "committed": false
+}

@@ -1,0 +1,70 @@
+===== ATINA-FIX unit re-verify 2026-10-04 =====
+agent: ATINA-FIX
+date: 2026-10-04
+cwd: C:\dev\omni group\atina-platform\atina
+source_fail_log: docs/evidence/test-run-atina-unit-20261004.txt
+
+----- BEFORE (from test-run-atina-unit-20261004.txt) -----
+command: npm run test:unit
+result: FAIL
+Test Suites: 4 failed, 399 passed, 403 total
+Tests:       15 failed, 3804 passed, 3819 total
+Time:        10939.921 s
+exitCode: 1 (process hung on open handles after summary; killed)
+
+failing_suites:
+  1. src/tests/unit/client-hunter.module.routes.test.ts
+     - POST /:id/run Exceeded timeout 30000ms
+     - POST /:id/run reuses response... Exceeded timeout 30000ms
+     - afterAll server.close Exceeded timeout 30000ms
+  2. src/tests/unit/workflow-chain.templates.test.ts
+     - uses normalized analytics completion events... Exceeded timeout 30000ms
+     - keeps minPhase aligned... Exceeded timeout 30000ms
+  3. src/tests/unit/video-meetings.module.routes.test.ts
+     - Route.post() requires a callback function but got a [object Undefined]
+       (omiChatIpMinuteLimiter / omiChatIpHourLimiter missing from rate-limit mock)
+     - afterAll: Cannot read properties of undefined (reading 'close')
+  4. src/tests/unit/client-hunter-scraper.service.test.ts
+     - aggregates scrape hits on hunt mode Exceeded timeout 30000ms
+
+----- FIXES (test hardening only; production auth/security unchanged) -----
+1. client-hunter.module.routes.test.ts
+   - Mock getScraperClient + getLeadDatabaseService via ../../integrations
+   - Mock HotClientsService.recordFromHunt (avoid hung DB inserts on hunt mode)
+   - Guard afterAll + closeAllConnections before server.close
+
+2. workflow-chain.templates.test.ts
+   - Mock ../../database/connection query so previewTemplate does not hang on Postgres
+
+3. video-meetings.module.routes.test.ts
+   - Extend rate-limit.middleware mock with omiChatIpMinuteLimiter, omiChatIpHourLimiter, omiAuthChatLimiter
+   - Guard afterAll when server never started; closeAllConnections
+   - Update chatGuest expectations for new clientMeta { ip } 4th arg
+
+4. client-hunter-scraper.service.test.ts
+   - Mock HotClientsService so hunt aggregation does not wait on hot_clients DB
+
+----- AFTER (targeted re-run) -----
+command:
+  npx jest --runInBand
+    src/tests/unit/client-hunter.module.routes.test.ts
+    src/tests/unit/workflow-chain.templates.test.ts
+    src/tests/unit/video-meetings.module.routes.test.ts
+    src/tests/unit/client-hunter-scraper.service.test.ts
+
+result: PASS
+Test Suites: 4 passed, 4 total
+Tests:       44 passed, 44 total
+Time:        64.729 s
+exitCode: 0
+
+per_file:
+  - client-hunter.module.routes.test.ts .......... PASS
+  - workflow-chain.templates.test.ts ............. PASS
+  - video-meetings.module.routes.test.ts ......... PASS
+  - client-hunter-scraper.service.test.ts ........ PASS
+
+notes:
+  - Full npm run test:unit not re-run (targeted 4-file verification only, per task).
+  - No production security/auth weakened.
+===== END =====

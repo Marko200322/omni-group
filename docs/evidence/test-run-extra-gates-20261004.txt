@@ -1,0 +1,143 @@
+EXTRA GATES — 2026-10-04
+Repo: C:\dev\omni group
+Overall: FAIL (1 suite failed; 2 skipped by design)
+Notes: Parallel with ongoing 1000-cell fulfillment matrix elsewhere. Did NOT start another e2e-fulfillment-matrix-prod. No secrets invented. No commit.
+
+========================================================================
+PASS/FAIL TABLE
+========================================================================
+| Suite                                         | Result |
+|-----------------------------------------------|--------|
+| verify-marketing-engine-matrix-prod.ps1       | FAIL   |
+| outreach-engine npm run test:guardrails       | PASS   |
+| omnigroup-web npm run test:honesty            | PASS   |
+| omnigroup-web npm run test:legal              | PASS   |
+| omnigroup-web npm run test:auth-surfaces      | PASS   |
+| bff-smoke-headers.ps1                         | SKIP   |
+| machine-closeout-smoke.ps1 (prod)             | PASS   |
+| smoke-web-only.ps1                            | SKIP   |
+
+========================================================================
+1) Marketing engine matrix (prod defaults)
+========================================================================
+Command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File "C:\dev\omni group\scripts\verify-marketing-engine-matrix-prod.ps1"
+Web=https://omnigrouptech.com Api=https://api.omnigrouptech.com
+Exit: 1
+Duration: 3750.99s
+Log: docs/evidence/_extra-gates-marketing-20261004.log
+
+Result excerpt:
+== Marketing engine matrix verify ==
+Web=https://omnigrouptech.com Api=https://api.omnigrouptech.com
+PASS Admin login - admin@atina.io
+PASS CSRF cookie - og_csrf
+PASS Marketing overview - kind=ACTUAL
+  Marketing health transient network - cekam 5s (pokusaj 1/4)...
+PASS Marketing health - kind=ACTUAL
+PASS Marketing channels - kind=ACTUAL
+FAIL Marketing attribution - The request was aborted: The request was canceled.
+PASS Marketing economics - kind=ACTUAL
+PASS Marketing reconciliation - kind=ACTUAL
+PASS Email engagement engine - kind=UNAVAILABLE
+PASS Email engagement kind - UNAVAILABLE
+PASS Email open counter present - opened=
+PASS Package x channel matrix - kind=ACTUAL
+PASS Package matrix kind - ACTUAL
+PASS Package matrix rows array - count=20
+PASS Ads LIVE adapters sync - adapters=2
+PASS Google adapter present - google_ads,meta_ads
+PASS Meta adapter present - google_ads,meta_ads
+PASS Adapter google_ads status - unavailable
+PASS Adapter meta_ads status - unavailable
+PASS Marketing engine run - version=1.0.0
+PASS Admin /admin/marketing - HTTP 200
+PASS Resend webhook gated - HTTP 503 (expected 401/503 without/with secret)
+PASS Autonomy LEVEL <= 1 - level=1
+MARKETING MATRIX FAILED (1)
+
+Failure cause: transient request abort on /api/atina/marketing/attribution under concurrent prod load.
+
+========================================================================
+2) Outreach-engine guardrails
+========================================================================
+Command: cd tools/outreach-engine && npm run test:guardrails
+Exit: 0
+Duration: 227.08s
+Log: docs/evidence/_extra-gates-guardrails-20261004.log
+
+> @omni/outreach-engine@1.0.0 test:guardrails
+> node --import tsx src/guardrail-validator.selftest.ts
+
+{
+  "good": { "ok": true, "status": "APPROVED", "score": 1 },
+  "bad": {
+    "ok": false,
+    "status": "REJECTED",
+    "score": 0,
+    "codes": [
+      "price_mismatch",
+      "guarantee_money_back",
+      "guarantee_results",
+      "unlimited_custom",
+      "fake_processor_link"
+    ]
+  }
+}
+
+========================================================================
+3) Omnigroup-web honesty / legal / auth-surfaces
+========================================================================
+Command: cd apps/omnigroup-web && npm run test:honesty && npm run test:legal && npm run test:auth-surfaces
+Exit: 0 (honesty=0 legal=0 authSurfaces=0)
+Duration: 469.77s
+Log: docs/evidence/_extra-gates-web-20261004.log
+
+test-delivery-honesty: ok
+test-legal-consistency: ok
+test-auth-surfaces: ok
+
+========================================================================
+4) bff-smoke-headers.ps1
+========================================================================
+SKIP — not a standalone smoke suite. File only exports Get-BffSmokePostHeaders
+(Session, WebBase). Headers path exercised by machine-closeout-smoke.ps1.
+
+========================================================================
+5) Optional prod smoke
+========================================================================
+Ran: machine-closeout-smoke.ps1 against https://omnigrouptech.com / https://api.omnigrouptech.com
+Exit: 0
+Duration: 6617.82s
+Log: docs/evidence/_extra-gates-closeout-20261004.log
+
+=== machine-closeout-smoke ===
+  PASS api/health - db=up
+  PASS api/metrics - atina_up
+  PASS page /legal/refund - 200
+  PASS page /legal/impressum - 200
+  PASS page /register - 200
+  PASS page /pricing - 200
+  PASS admin login - admin@atina.io
+  PASS factory-phase/status
+  PASS payments/methods (sandbox / stripeLivemode=false)
+  PASS industry-catalog - ok
+  PASS hunting/readiness (score=100 ready=true)
+  PASS hunting pipeline (outbound OFF)
+  PASS /api/atina/analytics/admin/overview - HTTP 200
+  PASS /api/atina/titanis - HTTP 200
+  PASS /api/atina/autonomy-loop/status - HTTP 200
+machine-closeout-smoke finished.
+
+Skipped: smoke-web-only.ps1 — defaults to localhost and calls ensure-web-dev.ps1;
+machine-closeout-smoke was the safer/faster prod-oriented optional smoke.
+
+========================================================================
+Artifacts
+========================================================================
+- docs/evidence/test-run-extra-gates-20261004.txt (this file)
+- docs/evidence/test-run-extra-gates-20261004.json
+- docs/evidence/_extra-gates-marketing-20261004.log (+ .meta.json)
+- docs/evidence/_extra-gates-guardrails-20261004.log (+ .meta.json)
+- docs/evidence/_extra-gates-web-20261004.log (+ .meta.json)
+- docs/evidence/_extra-gates-closeout-20261004.log (+ .meta.json)

@@ -1,0 +1,141 @@
+﻿omnigroup-web offline/local test suite evidence
+===============================================
+timestamp: 2026-10-04T18:20:41+02:00
+agent: WEB-QA
+cwd: C:\dev\omni group\apps\omnigroup-web
+node_modules: present (npm ci not required)
+
+OVERALL: PASS
+
+COMMANDS
+--------
+1. npm run qa
+   exitCode: 0
+   result: PRODUCTION READINESS CHECKS: 20  PASS: 20  FAILED: 0
+
+2. npm run test
+   exitCode: 0
+   result: test:atina ok; test:workspace-routes ok; test:catalog ok (consistency + surfaces)
+
+PASS/FAIL PER AREA (npm run qa)
+-------------------------------
+P0 Catalog / price consistency          PASS  scripts/test-public-catalog-consistency.mjs
+P0 Catalog surfaces                     PASS  scripts/test-public-catalog-surfaces.mjs
+P0 Checkout / auth surfaces             PASS  scripts/test-auth-surfaces.mjs
+P0 Contact validation                   PASS  scripts/test-contact-validation.mjs
+P0 Delivery honesty                     PASS  scripts/test-delivery-honesty.mjs
+P1 Industry landings (907)              PASS  scripts/audit-industry-landings.mjs
+P1 Industry SKU mapping                 PASS  scripts/test-industry-sku-map.mjs
+P1 Industry intelligence                PASS  scripts/analyze-industry-intelligence.mjs
+P0 Buy Now intent preservation          PASS  scripts/test-buy-now-intent.mjs
+P0 Fulfillment map                      PASS  scripts/test-fulfillment-map.mjs
+P0 Marketing Intelligence engine        PASS  scripts/test-marketing-engine.mjs
+P1 SaaS monthly/yearly cycle            PASS  scripts/test-saas-cycle.mjs
+P1 Legal consistency                    PASS  scripts/test-legal-consistency.mjs
+P0 Isolation source guards              PASS  scripts/test-isolation-guards.mjs
+P0 Problem Hunter admin gates           PASS  scripts/test-problem-hunter-admin.mjs
+P1 SEO public sources                   PASS  scripts/test-seo-public.mjs
+P1 SaaS plan-limit documentation        PASS  scripts/test-plan-limits.mjs
+P2 Workspace routes                     PASS  scripts/test-workspace-routes.mjs
+P2 Atina normalize                      PASS  scripts/test-atina-normalize.mjs
+P1 OMI page context                     PASS  scripts/test-omi-page-context.mjs
+
+PASS/FAIL (npm run test)
+------------------------
+test:atina                  PASS  scripts/test-atina-normalize.mjs
+test:workspace-routes       PASS  scripts/test-workspace-routes.mjs
+test:catalog (consistency)  PASS  scripts/test-public-catalog-consistency.mjs
+test:catalog (surfaces)     PASS  scripts/test-public-catalog-surfaces.mjs (20 products, 3 bundles)
+
+FAILURES
+--------
+None. Last ~80 lines of failures: N/A
+
+COUNTS
+------
+qa jobs: 20 pass / 0 fail (exit 0)
+test jobs: 4 pass / 0 fail (exit 0)
+combined: 24 pass / 0 fail
+
+HUMAN NOTES (from qa.mjs, not automated failures)
+-------------------------------------------------
+NEEDS HUMAN TEST: Stripe TEST/LIVE card through hosted Checkout so the webhook (not admin confirm) is the paid event; yearly paid subscription; password-reset inbox; refund in Stripe Dashboard.
+NEEDS HUMAN DECISION: formal company registration details; Stripe LIVE card through webhook when ready.
+
+FULL STDOUT/STDERR: npm run qa
+-------------------------------
+
+> omnigroup-web@0.1.0 qa
+> node scripts/qa.mjs
+
+PASS Catalog / price consistency
+PASS Catalog surfaces
+PASS Checkout / auth surfaces
+PASS Contact validation
+PASS Delivery honesty
+PASS Industry landings (907)
+PASS Industry SKU mapping
+PASS Industry intelligence
+PASS Buy Now intent preservation
+PASS Fulfillment map
+PASS Marketing Intelligence engine
+PASS SaaS monthly/yearly cycle
+PASS Legal consistency
+PASS Isolation source guards
+PASS Problem Hunter admin gates
+PASS SEO public sources
+PASS SaaS plan-limit documentation
+PASS Workspace routes
+PASS Atina normalize
+PASS OMI page context
+
+PRIORITY	AREA	STATUS	FILE	PROBLEM
+P0	Catalog / price consistency	PASS	scripts/test-public-catalog-consistency.mjs	ΓÇö
+P0	Catalog surfaces	PASS	scripts/test-public-catalog-surfaces.mjs	ΓÇö
+P0	Checkout / auth surfaces	PASS	scripts/test-auth-surfaces.mjs	ΓÇö
+P0	Contact validation	PASS	scripts/test-contact-validation.mjs	ΓÇö
+P0	Delivery honesty	PASS	scripts/test-delivery-honesty.mjs	ΓÇö
+P1	Industry landings (907)	PASS	scripts/audit-industry-landings.mjs	ΓÇö
+P1	Industry SKU mapping	PASS	scripts/test-industry-sku-map.mjs	ΓÇö
+P1	Industry intelligence	PASS	scripts/analyze-industry-intelligence.mjs	ΓÇö
+P0	Buy Now intent preservation	PASS	scripts/test-buy-now-intent.mjs	ΓÇö
+P0	Fulfillment map	PASS	scripts/test-fulfillment-map.mjs	ΓÇö
+P0	Marketing Intelligence engine	PASS	scripts/test-marketing-engine.mjs	ΓÇö
+P1	SaaS monthly/yearly cycle	PASS	scripts/test-saas-cycle.mjs	ΓÇö
+P1	Legal consistency	PASS	scripts/test-legal-consistency.mjs	ΓÇö
+P0	Isolation source guards	PASS	scripts/test-isolation-guards.mjs	ΓÇö
+P0	Problem Hunter admin gates	PASS	scripts/test-problem-hunter-admin.mjs	ΓÇö
+P1	SEO public sources	PASS	scripts/test-seo-public.mjs	ΓÇö
+P1	SaaS plan-limit documentation	PASS	scripts/test-plan-limits.mjs	ΓÇö
+P2	Workspace routes	PASS	scripts/test-workspace-routes.mjs	ΓÇö
+P2	Atina normalize	PASS	scripts/test-atina-normalize.mjs	ΓÇö
+P1	OMI page context	PASS	scripts/test-omi-page-context.mjs	ΓÇö
+
+PRODUCTION READINESS CHECKS: 20  PASS: 20  FAILED: 0
+NEEDS HUMAN TEST: Stripe TEST/LIVE card through hosted Checkout so the webhook (not admin confirm) is the paid event; yearly paid subscription; password-reset inbox; refund in Stripe Dashboard.
+NEEDS HUMAN DECISION: formal company registration details; Stripe LIVE card through webhook when ready.
+
+
+FULL STDOUT/STDERR: npm run test
+--------------------------------
+
+> omnigroup-web@0.1.0 test
+> npm run test:atina && npm run test:workspace-routes && npm run test:catalog
+
+
+> omnigroup-web@0.1.0 test:atina
+> node scripts/test-atina-normalize.mjs
+
+test-atina-normalize: ok
+
+> omnigroup-web@0.1.0 test:workspace-routes
+> node scripts/test-workspace-routes.mjs
+
+test-workspace-routes: ok
+
+> omnigroup-web@0.1.0 test:catalog
+> node scripts/test-public-catalog-consistency.mjs && node scripts/test-public-catalog-surfaces.mjs
+
+test-public-catalog-consistency: ok
+test-public-catalog-surfaces: ok (20 products, 3 bundles)
+

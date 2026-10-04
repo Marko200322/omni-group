@@ -1,0 +1,63 @@
+﻿{
+  "agent": "ATINA-UNIT-FINISH",
+  "date": "2026-10-04",
+  "cwd": "C:\\dev\\omni group\\atina-platform\\atina",
+  "command": "npm run test:unit",
+  "env": {
+    "JEST_CACHE_DIRECTORY": "C:\\dev\\omni group\\.tmp\\jest"
+  },
+  "result": "FAIL",
+  "exitCode": 1,
+  "summary": {
+    "testSuites": {
+      "failed": 4,
+      "passed": 399,
+      "total": 403
+    },
+    "tests": {
+      "failed": 15,
+      "passed": 3804,
+      "total": 3819
+    },
+    "snapshots": 0,
+    "timeSeconds": 10939.921
+  },
+  "failingSuites": [
+    {
+      "file": "src/tests/unit/client-hunter.module.routes.test.ts",
+      "reason": "Exceeded timeout of 30000 ms (POST /:id/run tests + afterAll hook)"
+    },
+    {
+      "file": "src/tests/unit/workflow-chain.templates.test.ts",
+      "reason": "Exceeded timeout of 30000 ms (template list / minPhase tests)"
+    },
+    {
+      "file": "src/tests/unit/video-meetings.module.routes.test.ts",
+      "reason": "Route.post() requires a callback function but got undefined (omiChatIpMinuteLimiter); afterAll server.close on undefined"
+    },
+    {
+      "file": "src/tests/unit/client-hunter-scraper.service.test.ts",
+      "reason": "Exceeded timeout of 30000 ms (aggregates scrape hits on hunt mode)"
+    }
+  ],
+  "evidenceTxt": "docs/evidence/test-run-atina-unit-20261004.txt",
+  "gate": {
+    "ran": false,
+    "reason": "Not feasible: unit FAIL is primary; gate includes full unit re-run (~3h)"
+  },
+  "atinaSystem": {
+    "ran": true,
+    "path": "C:\\dev\\omni group\\atina-system",
+    "command": "npm test",
+    "result": "PASS",
+    "exitCode": 0,
+    "summary": {
+      "testSuites": { "failed": 0, "passed": 32, "total": 32 },
+      "tests": { "failed": 0, "passed": 140, "total": 140 },
+      "timeSeconds": 504.253
+    },
+    "notes": [
+      "Worker process force-exited after suites (open handles warning); exit code still 0"
+    ]
+  }
+}

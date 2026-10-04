@@ -1,0 +1,76 @@
+{
+  "agent": "SMOKE-PROD",
+  "date": "2026-10-04",
+  "overall": "PASS",
+  "webBase": "https://omnigrouptech.com",
+  "apiBase": "https://api.omnigrouptech.com",
+  "livePaymentModeChanged": false,
+  "committed": false,
+  "smokePlatformFull": {
+    "script": "scripts/smoke-platform-full.ps1",
+    "args": ["-WebBase", "https://omnigrouptech.com"],
+    "exitCode": 0,
+    "passed": 36,
+    "failed": 0,
+    "result": "PASS",
+    "elapsedMsApprox": 469203
+  },
+  "huntingSmoke": {
+    "script": "scripts/smoke-hunting-integration.ps1",
+    "args": [
+      "-WebBase",
+      "https://omnigrouptech.com",
+      "-SkipPipeline",
+      "-SkipEnsureWeb",
+      "-SkipEnsureAtina"
+    ],
+    "exitCode": 0,
+    "result": "PASS",
+    "details": {
+      "login": "admin@atina.io role=admin",
+      "readinessScore": 100,
+      "workspaces": 7,
+      "templates": 27,
+      "nurtureSteps": 5,
+      "pipeline": "skipped"
+    },
+    "elapsedMsApprox": 99762
+  },
+  "health": [
+    {
+      "url": "https://omnigrouptech.com/api/health",
+      "status": 200,
+      "ok": true,
+      "bodySummary": {
+        "ok": true,
+        "app": "omnigroup-web",
+        "atina": { "ok": true, "status": 200 }
+      }
+    },
+    {
+      "url": "https://api.omnigrouptech.com/health",
+      "status": 200,
+      "ok": true,
+      "bodySummary": {
+        "status": "ok",
+        "db": "up",
+        "redis": "up",
+        "environment": "production"
+      }
+    },
+    {
+      "url": "https://api.omnigrouptech.com/api/health",
+      "status": 404,
+      "ok": false,
+      "note": "canonical API health path is /health"
+    }
+  ],
+  "blockers": [],
+  "evidencePaths": [
+    "docs/evidence/test-run-smoke-platform-20261004.txt",
+    "docs/evidence/test-run-smoke-platform-20261004.json",
+    "docs/evidence/_smoke-platform-full-raw-20261004.log",
+    "docs/evidence/_smoke-hunting-raw-20261004.log",
+    "docs/evidence/_health-raw-20261004.json"
+  ]
+}

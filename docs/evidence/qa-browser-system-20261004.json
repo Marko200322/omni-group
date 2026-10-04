@@ -1,0 +1,111 @@
+{
+  "agent": "BROWSER-PROD",
+  "date": "2026-10-04",
+  "base": "https://omnigrouptech.com",
+  "apiBase": "https://api.omnigrouptech.com",
+  "overall": "WARN",
+  "pass": 8,
+  "warn": 2,
+  "fail": 0,
+  "credentials": {
+    "source": "scripts/resolve-admin-credentials.ps1 -Prod → deploy-secrets.local/deploy.config.json",
+    "email": "admin@atina.io",
+    "passwordLogged": false
+  },
+  "tooling": {
+    "cursorIdeBrowser": "unavailable (navigate/newTab repeatedly returned 'No browser tab available')",
+    "playwright": "Chrome channel headless via docs/evidence/_tmp-browser-prod-reverify.mjs",
+    "webFetch": "used for public pages + independent health confirmation"
+  },
+  "checks": [
+    {
+      "id": 1,
+      "title": "Home loads",
+      "result": "PASS",
+      "notes": "https://omnigrouptech.com/ status=200; hero/nav/CTAs; Omni Group Tech branding"
+    },
+    {
+      "id": 2,
+      "title": "/pricing packages",
+      "result": "PASS",
+      "notes": "status=200; Launch/Growth/Scale + catalog SKUs with €/$ prices"
+    },
+    {
+      "id": 3,
+      "title": "/login",
+      "result": "PASS",
+      "notes": "status=200; email + password fields present"
+    },
+    {
+      "id": 4,
+      "title": "Admin login → /admin",
+      "result": "PASS",
+      "notes": "Landed /admin; og_csrf + og_session; admin ops shell (Operator overview); Stripe TEST banner; loginVia=ui (React fill + longer wait; API login fallback available)"
+    },
+    {
+      "id": 5,
+      "title": "/admin/monitoring Marketing slot",
+      "result": "PASS",
+      "notes": "Marketing slot present; subsystem grid with DEGRADED/HEALTHY/UNAVAILABLE tokens; securityNoProbe=false (no Security 'No probe data' text observed)"
+    },
+    {
+      "id": 6,
+      "title": "/admin/marketing honesty UNAVAILABLE",
+      "result": "PASS",
+      "notes": "Marketing Intelligence loads; UNAVAILABLE honesty present (ads/Resend channels); Autonomy LEVEL 1"
+    },
+    {
+      "id": 7,
+      "title": "/admin/reinvestment balances",
+      "result": "WARN",
+      "notes": "Euro amounts visible (euroish=true) but emDashCount=35 — UI still shows many — placeholders alongside balances"
+    },
+    {
+      "id": 8,
+      "title": "/dashboard shell",
+      "result": "PASS",
+      "notes": "Client portal shell; Welcome Admin; 5 active projects; Orders/Deliveries/Projects/Billing tiles; No active plan (expected for admin operator)"
+    },
+    {
+      "id": 9,
+      "title": "Notifications bell",
+      "result": "PASS",
+      "notes": "Bell aria-label Notifications, 62 unread; force click opens panel"
+    },
+    {
+      "id": 10,
+      "title": "Health 200 web+api; authenticated BFF non-500",
+      "result": "WARN",
+      "notes": "During Playwright: GET /api/health timed out at 20s; api.omnigrouptech.com/health=200; authenticated BFF /api/atina/admin/overview=200 and /api/atina/monitoring/overview=200. Independent WebFetch at report time: web /api/health=200 (ok:true,atina.status=200) and API health=200 (db/redis up). Intermittent web health latency under browser request context."
+    }
+  ],
+  "healthConfirm": {
+    "webApiHealth": {
+      "url": "https://omnigrouptech.com/api/health",
+      "ok": true,
+      "sample": "{\"ok\":true,\"app\":\"omnigroup-web\",\"siteUrl\":\"https://omnigrouptech.com\",\"atina\":{\"ok\":true,\"status\":200}}"
+    },
+    "apiHealth": {
+      "url": "https://api.omnigrouptech.com/health",
+      "ok": true,
+      "sample": "{\"status\":\"ok\",\"db\":\"up\",\"redis\":\"up\",\"environment\":\"production\"}"
+    },
+    "authenticatedBff": {
+      "overview": 200,
+      "monitoringOverview": 200
+    }
+  },
+  "artifacts": {
+    "reportMd": "docs/evidence/qa-browser-system-20261004.md",
+    "reportJson": "docs/evidence/qa-browser-system-20261004.json",
+    "reverifyScript": "docs/evidence/_tmp-browser-prod-reverify.mjs",
+    "reverifySummary": "docs/evidence/_tmp-browser-prod-reverify-summary.md",
+    "priorSmokeResult": "docs/evidence/_tmp-browser-prod-smoke-result.json"
+  },
+  "constraints": {
+    "committed": false,
+    "billingMutations": false,
+    "secretsPrinted": false
+  },
+  "ts": "2026-10-04T19:08:30.000Z"
+}

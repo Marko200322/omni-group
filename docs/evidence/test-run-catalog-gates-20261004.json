@@ -1,0 +1,77 @@
+{
+  "agent": "CATALOG-GATES",
+  "date": "2026-10-04",
+  "overall": "PASS",
+  "suites": [
+    {
+      "name": "test:catalog:live",
+      "cwd": "apps/omnigroup-web",
+      "command": "npm run test:catalog:live",
+      "exitCode": 0,
+      "result": "PASS",
+      "details": {
+        "products": 20,
+        "base": "https://omnigrouptech.com",
+        "liveAudit": "ok",
+        "ctaAudit": "ok (20 products x 3 surfaces)"
+      }
+    },
+    {
+      "name": "test:guardrails",
+      "cwd": "tools/outreach-engine",
+      "command": "npm run test:guardrails",
+      "exitCode": 0,
+      "result": "PASS",
+      "details": {
+        "good": { "ok": true, "status": "APPROVED", "score": 1 },
+        "bad": {
+          "ok": false,
+          "status": "REJECTED",
+          "score": 0,
+          "codes": [
+            "price_mismatch",
+            "guarantee_money_back",
+            "guarantee_results",
+            "unlimited_custom",
+            "fake_processor_link"
+          ]
+        }
+      }
+    },
+    {
+      "name": "verify-industry-package-matrix-prod",
+      "cwd": ".",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\verify-industry-package-matrix-prod.ps1",
+      "exitCode": 0,
+      "result": "PASS",
+      "details": {
+        "industries": 50,
+        "packages": 20,
+        "matrixCells": "50x20 OK",
+        "marketingEngine": "ALL PASS",
+        "note": "quick gate; NOT full e2e-fulfillment-matrix-prod"
+      }
+    },
+    {
+      "name": "test-fulfillment-map",
+      "cwd": ".",
+      "command": "node apps/omnigroup-web/scripts/test-fulfillment-map.mjs",
+      "exitCode": 0,
+      "result": "PASS",
+      "details": {
+        "message": "test-fulfillment-map: ok"
+      }
+    }
+  ],
+  "failures": [],
+  "skipped": [
+    {
+      "name": "e2e-fulfillment-matrix-prod",
+      "reason": "full 1000-row matrix intentionally not run"
+    }
+  ],
+  "evidence": {
+    "txt": "docs/evidence/test-run-catalog-gates-20261004.txt",
+    "json": "docs/evidence/test-run-catalog-gates-20261004.json"
+  }
+}

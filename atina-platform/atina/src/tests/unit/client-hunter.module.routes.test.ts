@@ -53,6 +53,26 @@ jest.mock('../../integrations/scrape-direct', () => ({
   scrapeWithAxiosDirect: jest.fn().mockResolvedValue({ links: [], title: '', delivery: 'mock' }),
 }));
 
+jest.mock('../../integrations', () => ({
+  getScraperClient: () => ({
+    isConfigured: jest.fn().mockReturnValue(true),
+    scrape: jest.fn().mockResolvedValue({ links: ['a', 'b', 'c', 'd', 'e', 'f'], title: '', delivery: 'mock' }),
+  }),
+  getLeadDatabaseService: () => ({
+    isEnrichmentActive: jest.fn().mockReturnValue(false),
+    enrichFromHuntContext: jest.fn().mockResolvedValue([]),
+    getStatus: jest.fn().mockReturnValue({ phase: 'F0', enabled: false }),
+  }),
+}));
+
+jest.mock('../../modules/client-hunter/service/hot-clients.service', () => ({
+  HotClientsService: jest.fn().mockImplementation(() => ({
+    list: jest.fn().mockResolvedValue([]),
+    stats: jest.fn().mockResolvedValue({}),
+    recordFromHunt: jest.fn().mockResolvedValue(null),
+  })),
+}));
+
 jest.mock('../../modules/client-hunter/service/hunting-stack.service', () => ({
   HuntingStackService: jest.fn().mockImplementation(() => ({
     getReadiness: jest.fn().mockResolvedValue({ score: 80, ready: true, checks: [] }),
@@ -84,7 +104,7 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
 }));
 
 describe('ClientHunterModule HTTP routes', () => {
-  let server: http.Server;
+  let server: http.Server | undefined;
 
   const expectSuccessSchema = (body: Record<string, unknown>) => {
     expect(body).toMatchObject({
@@ -113,8 +133,14 @@ describe('ClientHunterModule HTTP routes', () => {
   });
 
   afterAll(async () => {
+    if (!server) return;
+    const s = server;
+    server = undefined;
+    if (typeof (s as http.Server & { closeAllConnections?: () => void }).closeAllConnections === 'function') {
+      (s as http.Server & { closeAllConnections: () => void }).closeAllConnections();
+    }
     await new Promise<void>((resolve, reject) => {
-      server.close((err) => (err ? reject(err) : resolve()));
+      s.close((err) => (err ? reject(err) : resolve()));
     });
   });
 

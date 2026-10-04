@@ -1,0 +1,108 @@
+# Production platform + hunting smoke — 2026-10-04
+Agent: SMOKE-PROD
+Repo: C:\dev\omni group
+WebBase: https://omnigrouptech.com
+ApiBase: https://api.omnigrouptech.com
+LIVE payment mode: NOT changed
+Commit: not committed (evidence only)
+
+## Overall: PASS
+
+## 1) smoke-platform-full.ps1
+Command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke-platform-full.ps1 -WebBase 'https://omnigrouptech.com'
+Exit code: 0
+Result: 36 passed, 0 failed
+Elapsed: ~469s
+
+Remote WebBase=https://omnigrouptech.com - skip local :3010 ensure
+== Marketing pages ==
+  PASS / (200)
+  PASS /services (200)
+  PASS /pricing (200)
+  PASS /products (200)
+  PASS /contact (200)
+  PASS /login (200)
+  PASS /invoices/preview (200)
+== Auth-gated pages (guest redirect) ==
+  PASS /dashboard guest (307)
+  PASS /admin guest (307)
+  PASS /admin/mobile guest (307)
+  PASS /dev/docs guest (307)
+== BFF login ==
+  PASS login -> /admin
+== Authenticated pages ==
+  PASS /dashboard auth (200)
+  PASS /admin auth (200)
+  PASS /admin/mobile auth (200)
+== Billing pages ==
+  PASS /dashboard/billing/success (200)
+  PASS /dashboard/billing/cancel (200)
+  PASS /dashboard/billing/paypal/success (200)
+== BFF API routes (authenticated) ==
+  PASS /api/atina/billing/summary
+  PASS /api/atina/billing/category-pricing?category=web-development
+  PASS /api/atina/billing/industry-catalog
+  PASS /api/atina/payments/methods
+  PASS /api/atina/admin/overview
+  PASS /api/atina/admin/payments?status=processing&limit=5
+  PASS /api/atina/admin/push/vapid-public-key
+  PASS /api/atina/autonomy-loop/status
+  PASS /api/atina/autonomy-loop/verticals
+  PASS /api/atina/autonomy-loop/categories/status
+  PASS /api/atina/product-factory/stats
+  PASS /api/atina/ai-memory/recall?namespace=global&key=smoke
+  PASS /api/atina/marketing/overview
+  PASS /api/atina/marketing/health
+  PASS /api/atina/marketing/email-engagement
+  PASS /api/atina/marketing/package-matrix
+  PASS /api/atina/billing/quote (POST)
+== Public BFF ==
+  PASS /api/atina/video-meetings/support/agents
+
+smoke-platform-full: 36 passed, 0 failed
+
+## 2) smoke-hunting-integration.ps1 (quick)
+Command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke-hunting-integration.ps1 -WebBase 'https://omnigrouptech.com' -SkipPipeline -SkipEnsureWeb -SkipEnsureAtina
+Exit code: 0
+Result: all checks passed
+Elapsed: ~100s
+
+== BFF login ==
+  OK admin@atina.io role=admin
+== BFF hunting readiness ==
+  OK score=100
+== BFF hunting bootstrap ==
+  OK workspaces=7
+== BFF workflow templates ==
+  OK templates=27 nurtureSteps=5
+
+smoke-hunting-integration: all checks passed.
+
+Notes:
+  - Prod WebBase used so resolve-admin-credentials.ps1 picks -Prod credentials.
+  - SkipEnsureWeb / SkipEnsureAtina avoid local :3010/:3000 bootstraps against live prod.
+  - SkipPipeline = quick path (no pipeline run).
+
+## 3) Health probes (Invoke-WebRequest)
+https://omnigrouptech.com/api/health
+  HTTP 200
+  body: {"ok":true,"app":"omnigroup-web","siteUrl":"https://omnigrouptech.com","atina":{"ok":true,"status":200},"ts":"2026-10-04T16:24:44.149Z"}
+
+https://api.omnigrouptech.com/health
+  HTTP 200
+  body: {"status":"ok","db":"up","redis":"up","version":"1.0.0","environment":"production",...}
+
+https://api.omnigrouptech.com/api/health
+  HTTP 404 (expected — canonical path is /health)
+
+## Blockers
+None (auth OK, no rate-limit failures observed).
+
+## Evidence paths
+- docs/evidence/test-run-smoke-platform-20261004.txt
+- docs/evidence/test-run-smoke-platform-20261004.json
+- docs/evidence/_smoke-platform-full-raw-20261004.log
+- docs/evidence/_smoke-hunting-raw-20261004.log
+- docs/evidence/_health-raw-20261004.json

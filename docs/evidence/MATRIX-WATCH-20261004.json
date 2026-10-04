@@ -1,0 +1,467 @@
+﻿{
+    "stamp":  "20261004_184801",
+    "startedManifest":  "2026-10-04T18:48:32.0832909+02:00",
+    "watchEndedApprox":  "2026-10-04T19:50:00+02:00",
+    "targetCells":  1000,
+    "shards":  4,
+    "manifestPath":  "docs/evidence/fulfillment-matrix-prod-20261004_184801.manifest.txt",
+    "pidsPath":  "docs/evidence/fulfillment-matrix-prod-20261004_184801.pids.json",
+    "pids":  {
+                 "A":  1136,
+                 "B":  16512,
+                 "C":  2828,
+                 "D":  5648
+             },
+    "samples":  [
+                    {
+                        "at":  "2026-10-04T18:50:00+02:00",
+                        "label":  "t0_cold",
+                        "uniqueCellsDone":  0,
+                        "pass":  0,
+                        "fail":  0,
+                        "skip":  0,
+                        "pctOf1000":  0.0,
+                        "pidsAlive":  null,
+                        "aliveByShard":  {
+                                             "A":  null,
+                                             "B":  null,
+                                             "C":  null,
+                                             "D":  null
+                                         },
+                        "csvPresent":  {
+                                           "A":  false,
+                                           "B":  false,
+                                           "C":  false,
+                                           "D":  false
+                                       },
+                        "earlyFailures":  [
+
+                                          ]
+                    },
+                    {
+                        "at":  "2026-10-04T19:12:00+02:00",
+                        "label":  "t1_login_ok",
+                        "uniqueCellsDone":  0,
+                        "pass":  0,
+                        "fail":  0,
+                        "skip":  0,
+                        "pctOf1000":  0.0,
+                        "pidsAlive":  4,
+                        "aliveByShard":  {
+                                             "A":  true,
+                                             "B":  true,
+                                             "C":  true,
+                                             "D":  true
+                                         },
+                        "csvPresent":  {
+                                           "A":  false,
+                                           "B":  false,
+                                           "C":  false,
+                                           "D":  false
+                                       },
+                        "outLogTail":  {
+                                           "A":  "Login OK (admin@atina.io)",
+                                           "B":  "Login OK (admin@atina.io)",
+                                           "C":  "Login OK (admin@atina.io)",
+                                           "D":  "Login OK (admin@atina.io)"
+                                       },
+                        "earlyFailures":  [
+
+                                          ]
+                    },
+                    {
+                        "at":  "2026-10-04T19:32:00+02:00",
+                        "label":  "t2_all_dead_catalog",
+                        "uniqueCellsDone":  0,
+                        "pass":  0,
+                        "fail":  0,
+                        "skip":  0,
+                        "pctOf1000":  0.0,
+                        "pidsAlive":  0,
+                        "aliveByShard":  {
+                                             "A":  false,
+                                             "B":  false,
+                                             "C":  false,
+                                             "D":  false
+                                         },
+                        "csvPresent":  {
+                                           "A":  false,
+                                           "B":  false,
+                                           "C":  false,
+                                           "D":  false
+                                       },
+                        "earlyFailures":  [
+                                              {
+                                                  "shard":  "A",
+                                                  "stage":  "industry-catalog",
+                                                  "error":  "connection forcibly closed by the remote host"
+                                              },
+                                              {
+                                                  "shard":  "B",
+                                                  "stage":  "industry-catalog",
+                                                  "error":  "connection forcibly closed by the remote host"
+                                              },
+                                              {
+                                                  "shard":  "C",
+                                                  "stage":  "industry-catalog",
+                                                  "error":  "connection forcibly closed by the remote host"
+                                              },
+                                              {
+                                                  "shard":  "D",
+                                                  "stage":  "industry-catalog",
+                                                  "error":  "connection forcibly closed by the remote host"
+                                              }
+                                          ]
+                    },
+                    {
+                        "at":  "2026-10-04T19:50:00+02:00",
+                        "label":  "t3_final_confirm",
+                        "uniqueCellsDone":  0,
+                        "pass":  0,
+                        "fail":  0,
+                        "skip":  0,
+                        "pctOf1000":  0.0,
+                        "pidsAlive":  0,
+                        "aliveByShard":  {
+                                             "A":  false,
+                                             "B":  false,
+                                             "C":  false,
+                                             "D":  false
+                                         },
+                        "csvPresent":  {
+                                           "A":  false,
+                                           "B":  false,
+                                           "C":  false,
+                                           "D":  false
+                                       },
+                        "earlyFailures":  [
+                                              {
+                                                  "allShards":  true,
+                                                  "stage":  "industry-catalog",
+                                                  "error":  "Unable to read data from the transport connection: An existing connection was forcibly closed by the remote host."
+                                              }
+                                          ],
+                        "notes":  "Confirmed all launch PIDs gone; no CSVs; no restarts"
+                    }
+                ],
+    "restarts":  [
+
+                 ],
+    "restartPolicy":  {
+                          "allowed":  "only if shard dies within first 2 minutes with clear path/login error",
+                          "applied":  false,
+                          "reason":  "Deaths after successful login on industry-catalog transport close â€” outside restart window"
+                      },
+    "watchHorizonMinutes":  45,
+    "finalSummary":  {
+                         "stamp":  "20261004_184801",
+                         "pidsAlive":  false,
+                         "pidsAliveCount":  0,
+                         "uniqueCellsDone":  0,
+                         "pass":  0,
+                         "fail":  0,
+                         "pctOf1000":  0.0,
+                         "earlyFailures":  "all 4 shards: industry-catalog connection forcibly closed (post Login OK, pre-CSV)",
+                         "evidencePaths":  [
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801.manifest.txt",
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801.pids.json",
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801-shardA.err.log",
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801-shardB.err.log",
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801-shardC.err.log",
+                                               "docs/evidence/fulfillment-matrix-prod-20261004_184801-shardD.err.log",
+                                               "docs/evidence/MATRIX-WATCH-20261004.md",
+                                               "docs/evidence/MATRIX-WATCH-20261004.json"
+                                           ]
+                     },
+    "relaunch":  {
+                     "stamp":  "20261004_200516",
+                     "agent":  "MATRIX-WATCH-2",
+                     "startedManifest":  "2026-10-04T20:05:18.8469572+02:00",
+                     "targetCells":  1000,
+                     "shards":  4,
+                     "launchNote":  "prefetch 50 industries via -IndustryCategories; 45s stagger; rate-limit retry for forcibly-closed connections",
+                     "industriesFile":  "docs/evidence/industry-slugs-20261004.txt",
+                     "industriesCount":  50,
+                     "manifestPath":  "docs/evidence/fulfillment-matrix-prod-20261004_200516.manifest.txt",
+                     "pidsPath":  "docs/evidence/fulfillment-matrix-prod-20261004_200516.pids.json",
+                     "pids":  {
+                                  "A":  17776,
+                                  "B":  18408,
+                                  "C":  8004,
+                                  "D":  3428
+                              },
+                     "deliverableIds":  {
+                                            "A":  [
+                                                      "setup-quick",
+                                                      "setup-full",
+                                                      "setup-custom",
+                                                      "audit",
+                                                      "integration"
+                                                  ],
+                                            "B":  [
+                                                      "workflow-design",
+                                                      "support-priority",
+                                                      "support-dedicated",
+                                                      "landing",
+                                                      "website-business"
+                                                  ],
+                                            "C":  [
+                                                      "website-ecommerce",
+                                                      "white-label-setup",
+                                                      "sales-enablement",
+                                                      "vertical-package",
+                                                      "lead-gen-retainer"
+                                                  ],
+                                            "D":  [
+                                                      "ai-support-retainer",
+                                                      "custom-software",
+                                                      "bundle-portal-presence",
+                                                      "bundle-sales-launch",
+                                                      "bundle-ops-clarity"
+                                                  ]
+                                        },
+                     "restartPolicy":  {
+                                           "allowed":  "only if shard dies within first 5 minutes on obvious crash; restart THAT shard only with same DeliverableIds + IndustryCategories + -Resume",
+                                           "applied":  false,
+                                           "restarts":  [
+
+                                                        ]
+                                       },
+                     "samples":  [
+                                     {
+                                         "at":  "2026-10-04T20:16:14+02:00",
+                                         "label":  "t0_alive",
+                                         "uniqueCellsDone":  0,
+                                         "pass":  0,
+                                         "fail":  0,
+                                         "skip":  0,
+                                         "pctOf1000":  0.0,
+                                         "pidsAlive":  4,
+                                         "aliveByShard":  {
+                                                              "A":  true,
+                                                              "B":  true,
+                                                              "C":  true,
+                                                              "D":  true
+                                                          },
+                                         "csvPresent":  {
+                                                            "A":  false,
+                                                            "B":  false,
+                                                            "C":  false,
+                                                            "D":  true
+                                                        },
+                                         "outLogTail":  {
+                                                            "A":  "(empty / buffered)",
+                                                            "B":  "(empty / buffered)",
+                                                            "C":  "(empty / buffered)",
+                                                            "D":  "Login OK (admin@atina.io); [1/250] ai-support-retainer @ admin_support"
+                                                        },
+                                         "earlyFailures":  [
+
+                                                           ]
+                                     },
+                                     {
+                                         "at":  "2026-10-04T20:39:47+02:00",
+                                         "label":  "t1_login_csv",
+                                         "uniqueCellsDone":  3,
+                                         "pass":  3,
+                                         "fail":  0,
+                                         "skip":  0,
+                                         "pctOf1000":  0.3,
+                                         "pidsAlive":  4,
+                                         "aliveByShard":  {
+                                                              "A":  true,
+                                                              "B":  true,
+                                                              "C":  true,
+                                                              "D":  true
+                                                          },
+                                         "csvPresent":  {
+                                                            "A":  true,
+                                                            "B":  true,
+                                                            "C":  true,
+                                                            "D":  true
+                                                        },
+                                         "csvHasRows":  {
+                                                            "A":  false,
+                                                            "B":  false,
+                                                            "C":  true,
+                                                            "D":  true
+                                                        },
+                                         "outLogTail":  {
+                                                            "A":  "[1/250] setup-quick @ admin_support",
+                                                            "B":  "[1/250] workflow-design @ admin_support",
+                                                            "C":  "PASS; [2/250] white-label-setup @ admin_support",
+                                                            "D":  "PASS; [2/250] custom-software @ admin_support"
+                                                        },
+                                         "firstRows":  {
+                                                           "C":  "website-ecommerce,admin_support,PASS",
+                                                           "D":  "ai-support-retainer,admin_support,PASS"
+                                                       },
+                                         "earlyFailures":  [
+
+                                                           ],
+                                         "notes":  "Login OK + CSV header confirmed all shards within watch window; no first-5-min crashes"
+                                     },
+                                     {
+                                         "at":  "2026-10-04T21:07:41+02:00",
+                                         "label":  "t2_progress",
+                                         "uniqueCellsDone":  10,
+                                         "pass":  10,
+                                         "fail":  0,
+                                         "skip":  0,
+                                         "pctOf1000":  1.0,
+                                         "pidsAlive":  4,
+                                         "aliveByShard":  {
+                                                              "A":  true,
+                                                              "B":  true,
+                                                              "C":  true,
+                                                              "D":  true
+                                                          },
+                                         "csvPresent":  {
+                                                            "A":  true,
+                                                            "B":  true,
+                                                            "C":  true,
+                                                            "D":  true
+                                                        },
+                                         "outLogTail":  {
+                                                            "A":  "[3/250] setup-custom @ admin_support",
+                                                            "B":  "[3/250] support-dedicated @ admin_support",
+                                                            "C":  "[4/250] vertical-package @ admin_support",
+                                                            "D":  "[4/250] bundle-sales-launch @ admin_support"
+                                                        },
+                                         "earlyFailures":  [
+
+                                                           ]
+                                     },
+                                     {
+                                         "at":  "2026-10-04T21:19:23+02:00",
+                                         "label":  "t3_closeout",
+                                         "uniqueCellsDone":  22,
+                                         "pass":  22,
+                                         "fail":  0,
+                                         "skip":  0,
+                                         "pctOf1000":  2.2,
+                                         "pidsAlive":  4,
+                                         "aliveByShard":  {
+                                                              "A":  true,
+                                                              "B":  true,
+                                                              "C":  true,
+                                                              "D":  true
+                                                          },
+                                         "csvPresent":  {
+                                                            "A":  true,
+                                                            "B":  true,
+                                                            "C":  true,
+                                                            "D":  true
+                                                        },
+                                         "csvRowsByShard":  {
+                                                                "A":  5,
+                                                                "B":  5,
+                                                                "C":  6,
+                                                                "D":  6
+                                                            },
+                                         "outLogTail":  {
+                                                            "A":  "[5/250] integration @ admin_support PASS",
+                                                            "B":  "[5/250] website-business @ admin_support PASS",
+                                                            "C":  "[6/250] website-ecommerce @ agriculture PASS",
+                                                            "D":  "[6/250] ai-support-retainer @ agriculture PASS"
+                                                        },
+                                         "earlyFailures":  [
+
+                                                           ],
+                                         "notes":  "Watch closeout; matrix still running; no restarts"
+                                     }
+                                 ],
+                     "watchHorizonMinutes":  40,
+                     "watchEndedApprox":  null,
+                     "finalSummary":  {
+                                          "stamp":  "20261004_200516",
+                                          "agent":  "MATRIX-WATCH-3",
+                                          "status":  "watching",
+                                          "pidsAlive":  true,
+                                          "pidsAliveCount":  4,
+                                          "uniqueCellsDone":  115,
+                                          "pass":  102,
+                                          "fail":  13,
+                                          "skip":  0,
+                                          "pctOf1000":  11.5,
+                                          "restarts":  0,
+                                          "lastSampleAt":  "2026-10-04T21:55:14+02:00"
+                                      },
+                     "watch3":  {
+                                    "agent":  "MATRIX-WATCH-3",
+                                    "startedWatchApprox":  "2026-10-04T21:24:54+02:00",
+                                    "watchHorizonMinutes":  180,
+                                    "watchUntil":  "MATRIX DONE all shards OR ~3h wall from manifest start OR shard death+restart",
+                                    "restartPolicy":  "on any shard death: restart THAT shard only with -Resume + IndustryCategories from industry-slugs-20261004.txt + same DeliverableIds; do not kill healthy shards",
+                                    "samples":  [
+                                                    {
+                                                        "at":  "2026-10-04T21:24:54+02:00",
+                                                        "label":  "t0_handoff",
+                                                        "uniqueCellsDone":  31,
+                                                        "pass":  30,
+                                                        "fail":  1,
+                                                        "skip":  0,
+                                                        "pctOf1000":  3.1,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  true
+                                                                         },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  8,
+                                                                               "D":  9,
+                                                                               "B":  7,
+                                                                               "A":  7
+                                                                           },
+                                                        "outLogTail":  {
+                                                                           "C":  "[9/250] vertical-package @ agriculture",
+                                                                           "D":  "[10/250] bundle-ops-clarity @ agriculture",
+                                                                           "B":  "[8/250] support-dedicated @ agriculture",
+                                                                           "A":  "[8/250] setup-custom @ agriculture"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "FAIL: custom-software@agriculture HTTP 500 on shard D; shards still alive"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-04T21:55:14+02:00",
+                                                        "label":  "t1",
+                                                        "uniqueCellsDone":  115,
+                                                        "pass":  102,
+                                                        "fail":  13,
+                                                        "skip":  0,
+                                                        "pctOf1000":  11.5,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  true
+                                                                         },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  30,
+                                                                               "D":  30,
+                                                                               "B":  27,
+                                                                               "A":  28
+                                                                           },
+                                                        "outLogTail":  {
+                                                                           "C":  "[30/250] lead-gen-retainer @ beauty PASS",
+                                                                           "D":  "[30/250] bundle-ops-clarity @ beauty FAIL 500",
+                                                                           "B":  "[27/250] support-priority @ beauty PASS",
+                                                                           "A":  "[28/250] setup-custom @ beauty PASS"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "rate ~2.7 cells/min over last 30m; 4/4 alive"
+                                                    }
+                                                ],
+                                    "restarts":  [
+
+                                                 ]
+                                }
+                 }
+}

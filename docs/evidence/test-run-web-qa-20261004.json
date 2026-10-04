@@ -1,0 +1,1 @@
+﻿{"passed":24,"agent":"WEB-QA","failed":0,"suite":"omnigroup-web offline/local (npm run qa + npm run test)","exitCode":0,"notes":"qa 20/20 PASS exit 0; test 4/4 PASS exit 0; no production code changes; node_modules present; human Stripe/inbox checks remain out of scope"}

@@ -1,5 +1,9 @@
 import { WorkflowChainService } from '../../modules/workflow-chain/service/workflow-chain.service';
 
+jest.mock('../../database/connection', () => ({
+  query: jest.fn().mockResolvedValue({ rows: [{ config: { current_phase: 'v6' } }], rowCount: 1 }),
+}));
+
 const phaseOrder: Record<string, number> = {
   v1: 1,
   v2: 2,

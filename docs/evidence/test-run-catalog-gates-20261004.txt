@@ -1,0 +1,112 @@
+# Catalog gates evidence — 2026-10-04
+# Agent: CATALOG-GATES
+# Overall: PASS
+
+## 1. test:catalog:live (apps/omnigroup-web)
+Command: npm run test:catalog:live
+Exit: 0
+Result: PASS
+
+PRODUCT | PRICING | PRODUCTS | SERVICES | CHECKOUT | STATUS | RESULT
+Quick setup | €549 | €549 | €549 | €549 | READY_TO_BUY | MATCH
+Full onboarding | €1690 | €1690 | €1690 | €1690 | READY_TO_BUY | MATCH
+Custom deploy | €4900 | €4900 | €4900 | €4900 | READY_TO_BUY | MATCH
+Technical audit | €790 | €790 | €790 | €790 | READY_TO_BUY | MATCH
+Custom integration | €1990 | €1990 | €1990 | €1990 | READY_TO_BUY | MATCH
+Workflow design | €990 | €990 | €990 | €990 | READY_TO_BUY | MATCH
+Priority support | €399 | €399 | €399 | €399 | READY_TO_BUY | MATCH
+Dedicated support | €1190 | €1190 | €1190 | €1190 | READY_TO_BUY | MATCH
+Landing + copy | €1290 | €1290 | €1290 | €1290 | READY_TO_BUY | MATCH
+Business website | €2990 | €2990 | €2990 | €2990 | READY_TO_BUY | MATCH
+E-commerce demo storefront | €4900 | €4900 | €4900 | €4900 | READY_TO_BUY | MATCH
+White-label packaging | €2490 | €2490 | €2490 | €2490 | READY_TO_BUY | MATCH
+Sales enablement | €1190 | €1190 | €1190 | €1190 | READY_TO_BUY | MATCH
+Vertical solution | €790 | €790 | €790 | €790 | READY_TO_BUY | MATCH
+Lead gen retainer | €990 | €990 | €990 | €990 | READY_TO_BUY | MATCH
+AI support retainer | €690 | €690 | €690 | €690 | READY_TO_BUY | MATCH
+Software starter kit | €7900 | €7900 | €7900 | €7900 | READY_TO_BUY | MATCH
+Portal + presence bundle | €1090 | €1090 | €1090 | €1090 | READY_TO_BUY | MATCH
+Sales launch bundle | €1590 | €1590 | €1590 | €1590 | READY_TO_BUY | MATCH
+Ops clarity bundle | €1190 | €1190 | €1190 | €1190 | READY_TO_BUY | MATCH
+
+audit-public-catalog-live: ok (20 products, https://omnigrouptech.com)
+audit-public-catalog-ctas: ok (20 products x 3 surfaces)
+
+## 2. test:guardrails (tools/outreach-engine)
+Command: npm run test:guardrails
+Exit: 0
+Result: PASS
+
+{
+  "good": {
+    "ok": true,
+    "status": "APPROVED",
+    "score": 1
+  },
+  "bad": {
+    "ok": false,
+    "status": "REJECTED",
+    "score": 0,
+    "codes": [
+      "price_mismatch",
+      "guarantee_money_back",
+      "guarantee_results",
+      "unlimited_custom",
+      "fake_processor_link"
+    ]
+  }
+}
+
+## 3. verify-industry-package-matrix-prod.ps1 (quick matrix gate, NOT full 1000-row)
+Command: powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-industry-package-matrix-prod.ps1
+Exit: 0
+Result: PASS
+Duration: ~5.5 min
+
+== Industry x package matrix verify ==
+Web=https://omnigrouptech.com Api=https://api.omnigrouptech.com ExpectedPackages=20
+PASS Industry categories - count=50
+PASS Deliverables catalog - count=20
+PASS Matrix 20xN - 50 industries x 20 packages OK
+PASS Matrix SKU set - sample=admin_support
+
+== Marketing engine matrix verify ==
+Web=https://omnigrouptech.com Api=https://api.omnigrouptech.com
+PASS Admin login - admin@atina.io
+PASS CSRF cookie - og_csrf
+PASS Marketing overview - kind=ACTUAL
+PASS Marketing health - kind=ACTUAL
+PASS Marketing channels - kind=ACTUAL
+PASS Marketing attribution - kind=ACTUAL
+PASS Marketing economics - kind=ACTUAL
+PASS Marketing reconciliation - kind=ACTUAL
+PASS Email engagement engine - kind=UNAVAILABLE
+PASS Email engagement kind - UNAVAILABLE
+PASS Email open counter present - opened=0
+PASS Package x channel matrix - kind=ACTUAL
+PASS Package matrix kind - ACTUAL
+PASS Package matrix rows array - count=20
+PASS Ads LIVE adapters sync - adapters=2
+PASS Google adapter present - google_ads,meta_ads
+PASS Meta adapter present - google_ads,meta_ads
+PASS Adapter google_ads status - unavailable
+PASS Adapter meta_ads status - unavailable
+PASS Marketing engine run - version=1.0.0
+PASS Admin /admin/marketing - HTTP 200
+PASS Resend webhook gated - HTTP 503 (expected 401/503 without/with secret)
+PASS Autonomy LEVEL <= 1 - level=1
+ALL PASS (marketing engine matrix cells)
+ALL PASS (50*20 catalog cells + marketing engine)
+
+## 4. test-fulfillment-map.mjs (optional)
+Command: node apps/omnigroup-web/scripts/test-fulfillment-map.mjs
+Exit: 0
+Result: PASS
+
+test-fulfillment-map: ok
+
+## Failures
+(none)
+
+## Skipped
+- e2e-fulfillment-matrix-prod (full 1000-row) — intentionally NOT run

@@ -23,6 +23,14 @@ jest.mock('../../integrations', () => ({
   getLeadDatabaseService: () => mockLeadDb,
 }));
 
+jest.mock('../../modules/client-hunter/service/hot-clients.service', () => ({
+  HotClientsService: jest.fn().mockImplementation(() => ({
+    list: jest.fn().mockResolvedValue([]),
+    stats: jest.fn().mockResolvedValue({}),
+    recordFromHunt: jest.fn().mockResolvedValue(null),
+  })),
+}));
+
 jest.mock('../../utils/ecosystem-idempotency', () => ({
   normalizeEcosystemIdempotencyKey: (raw?: string | null) => (typeof raw === 'string' ? raw.trim() : ''),
   withEcosystemIdempotencyLock: async (_a: string, _b: string, work: () => Promise<unknown>) => work(),

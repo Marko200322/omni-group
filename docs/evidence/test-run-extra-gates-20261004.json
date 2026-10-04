@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "runId": "extra-gates-20261004",
+  "date": "2026-10-04",
+  "repoRoot": "C:\\dev\\omni group",
+  "notes": [
+    "Ran in parallel with ongoing 1000-cell e2e-fulfillment-matrix-prod elsewhere; did not start another matrix.",
+    "No secrets invented; used existing resolve-admin-credentials / deploy.config.json paths only.",
+    "No git commit.",
+    "Prod HTTP was healthy via curl during the run; PowerShell Invoke-WebRequest was slow/transient under concurrent matrix load."
+  ],
+  "overall": "FAIL",
+  "suites": [
+    {
+      "id": "marketing-engine-matrix-prod",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-marketing-engine-matrix-prod.ps1",
+      "webBase": "https://omnigrouptech.com",
+      "apiBase": "https://api.omnigrouptech.com",
+      "status": "FAIL",
+      "exitCode": 1,
+      "durationSec": 3750.99,
+      "log": "docs/evidence/_extra-gates-marketing-20261004.log",
+      "summary": "MARKETING MATRIX FAILED (1): Marketing attribution aborted (request canceled). Other cells passed including overview/health/channels/economics/reconciliation/package-matrix/adapters/engine-run/admin page/webhook gate/autonomy.",
+      "failedChecks": [
+        "Marketing attribution - The request was aborted: The request was canceled."
+      ]
+    },
+    {
+      "id": "outreach-engine-guardrails",
+      "command": "npm run test:guardrails",
+      "cwd": "tools/outreach-engine",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationSec": 227.08,
+      "log": "docs/evidence/_extra-gates-guardrails-20261004.log",
+      "summary": "good APPROVED score=1; bad REJECTED with expected codes."
+    },
+    {
+      "id": "web-test-honesty",
+      "command": "npm run test:honesty",
+      "cwd": "apps/omnigroup-web",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "docs/evidence/_extra-gates-web-20261004.log",
+      "summary": "test-delivery-honesty: ok"
+    },
+    {
+      "id": "web-test-legal",
+      "command": "npm run test:legal",
+      "cwd": "apps/omnigroup-web",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "docs/evidence/_extra-gates-web-20261004.log",
+      "summary": "test-legal-consistency: ok"
+    },
+    {
+      "id": "web-test-auth-surfaces",
+      "command": "npm run test:auth-surfaces",
+      "cwd": "apps/omnigroup-web",
+      "status": "PASS",
+      "exitCode": 0,
+      "log": "docs/evidence/_extra-gates-web-20261004.log",
+      "summary": "test-auth-surfaces: ok"
+    },
+    {
+      "id": "web-honesty-legal-auth-bundle",
+      "command": "npm run test:honesty && npm run test:legal && npm run test:auth-surfaces",
+      "cwd": "apps/omnigroup-web",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationSec": 469.77,
+      "log": "docs/evidence/_extra-gates-web-20261004.log",
+      "suites": {
+        "honesty": 0,
+        "legal": 0,
+        "authSurfaces": 0
+      }
+    },
+    {
+      "id": "bff-smoke-headers",
+      "command": "scripts/bff-smoke-headers.ps1",
+      "status": "SKIP",
+      "exitCode": null,
+      "summary": "Not a runnable smoke suite — helper defining Get-BffSmokePostHeaders(-Session, -WebBase). Exercised indirectly via machine-closeout-smoke."
+    },
+    {
+      "id": "machine-closeout-smoke",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/machine-closeout-smoke.ps1 -WebBase https://omnigrouptech.com -ApiBase https://api.omnigrouptech.com",
+      "webBase": "https://omnigrouptech.com",
+      "apiBase": "https://api.omnigrouptech.com",
+      "status": "PASS",
+      "exitCode": 0,
+      "durationSec": 6617.82,
+      "log": "docs/evidence/_extra-gates-closeout-20261004.log",
+      "summary": "All closeout checks passed (api health/metrics, legal/register/pricing pages, admin login, factory-phase, payments sandbox, industry-catalog, hunting readiness+pipeline outbound OFF, analytics/titanis/autonomy)."
+    },
+    {
+      "id": "smoke-web-only",
+      "command": "scripts/smoke-web-only.ps1",
+      "status": "SKIP",
+      "exitCode": null,
+      "summary": "Skipped: script defaults to localhost and calls ensure-web-dev.ps1. Used machine-closeout-smoke against https://omnigrouptech.com instead (safe/prod-oriented)."
+    }
+  ],
+  "passFailTable": [
+    { "suite": "verify-marketing-engine-matrix-prod", "result": "FAIL" },
+    { "suite": "outreach-engine test:guardrails", "result": "PASS" },
+    { "suite": "omnigroup-web test:honesty", "result": "PASS" },
+    { "suite": "omnigroup-web test:legal", "result": "PASS" },
+    { "suite": "omnigroup-web test:auth-surfaces", "result": "PASS" },
+    { "suite": "bff-smoke-headers.ps1", "result": "SKIP" },
+    { "suite": "machine-closeout-smoke.ps1 (prod)", "result": "PASS" },
+    { "suite": "smoke-web-only.ps1", "result": "SKIP" }
+  ]
+}
