@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, Clock, Loader2, RefreshCw } from 'lucide-react';
@@ -56,7 +57,7 @@ export function AdminFulfillmentPanel({ disabled }: Props) {
       setError(null);
       setMessage(null);
       try {
-        const res = await fetch(`/api/atina/billing/fulfillment/jobs/${paymentId}/approve`, { method: 'POST' });
+        const res = await csrfFetch(`/api/atina/billing/fulfillment/jobs/${paymentId}/approve`, { method: 'POST' });
         const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
         if (!res.ok || !body.ok) throw new Error(body.detail ?? body.error ?? `http_${res.status}`);
         setMessage('Deliverable approved and released to the client.');

@@ -21,6 +21,7 @@ import { getFactoryPhase } from '@/lib/factory-phase';
 import { isFactoryModuleAllowed } from '@/lib/factory-phase-guard';
 import { isLeanProdMode } from '@/lib/prod-mode';
 import { displayAccountLabel } from '@/lib/workspace-display';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 export type PlatformVariant = 'admin' | 'client';
 
@@ -70,10 +71,15 @@ export function PlatformShell({
   const accent = variant === 'admin' ? 'text-gradient-admin' : 'text-gradient-client';
   const brand = variant === 'admin' ? 'Omni Group Tech Ops' : 'Client Portal';
   const avatar = sessionUser ? initials(sessionUser.name) : 'OG';
+  const accountLabel = displayAccountLabel(sessionUser?.name, sessionUser?.email);
+  const accountEmail = sessionUser?.email?.trim() ?? '';
+  const showAccountEmailSub = Boolean(
+    accountEmail && accountLabel.toLowerCase() !== accountEmail.toLowerCase(),
+  );
 
   async function handleLogout() {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await csrfFetch('/api/auth/logout', { method: 'POST' });
     } finally {
       router.push('/login');
       router.refresh();
@@ -233,10 +239,10 @@ export function PlatformShell({
             <div className="hidden h-8 w-px bg-white/10 sm:block" />
             <div className="hidden min-w-0 max-w-[14rem] text-right sm:block">
               <p className="truncate text-sm font-medium text-white">
-                {displayAccountLabel(sessionUser?.name, sessionUser?.email) || title}
+                {accountLabel || title}
               </p>
-              {sessionUser?.email ? (
-                <p className="truncate text-xs text-slate-500">{sessionUser.email}</p>
+              {showAccountEmailSub ? (
+                <p className="truncate text-xs text-slate-500">{sessionUser?.email}</p>
               ) : null}
             </div>
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-violet-500 to-cyan-400 p-[2px]">

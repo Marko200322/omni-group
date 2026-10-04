@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -189,7 +190,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
       setMessages([]);
       setSessionId(null);
       try {
-        const res = await fetch(`${apiBase(agentType)}/session`, {
+        const res = await csrfFetch(`${apiBase(agentType)}/session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ agentId }),
@@ -246,7 +247,7 @@ export function ConversationalAvatarPanel({ agentType, disabled }: Props) {
     setMessages((prev) => [...prev, { id: `local-${Date.now()}`, role: 'user', text }]);
 
     try {
-      const res = await fetch(`${apiBase(agentType)}/chat`, {
+      const res = await csrfFetch(`${apiBase(agentType)}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, message: text }),

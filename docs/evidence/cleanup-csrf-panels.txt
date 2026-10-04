@@ -1,0 +1,72 @@
+================================================================================
+CSRF PANEL CLEANUP — csrfFetch on mutating browser calls
+Agent: CSRF (of 5) + parent merge
+Date: 2026-10-04
+Repo: C:\dev\omni group
+Commit: NOT committed (per instructions)
+================================================================================
+
+1) GOAL
+--------------------------------------------------------------------------------
+Finish double-submit CSRF coverage on remaining browser panels that POST/PATCH
+to same-origin /api/* without csrfFetch.
+
+Helper: apps/omnigroup-web/src/lib/csrf-fetch.ts
+  - csrfFetch attaches x-csrf-token from og_csrf cookie on mutating methods
+
+2) ALREADY CONVERTED (pre-pass)
+--------------------------------------------------------------------------------
+  MarketingPanel.tsx
+  MonitoringPanel.tsx
+  ReinvestmentPanel.tsx
+  BillingCheckoutPanel.tsx
+  TwoFactorSettings.tsx
+  AdminPendingPaymentsPanel.tsx
+
+3) CONVERTED THIS PASS
+--------------------------------------------------------------------------------
+  HuntingStackPanel.tsx
+  ResourceShopPanel.tsx
+  ProductFactoryPanel.tsx
+  AdminEnterpriseControls.tsx
+  CrmContactsPanel.tsx
+  ClientAiAssistant.tsx
+  AutonomyLoopPanel.tsx
+  NotificationBell.tsx
+  InviteClientPanel.tsx
+  AdminFulfillmentPanel.tsx
+  DeliverableQuotePanel.tsx
+  LiveCallPanel.tsx
+  AiMemoryPanel.tsx
+  SupportMeetingPanel.tsx
+  ConversationalAvatarPanel.tsx
+  PlatformShell.tsx          (logout)
+  FileUploadPanel.tsx        (/api/upload)
+  ClientSiteView.tsx         (public shop-order)
+  AdminMobileClient.tsx      (confirm + operator actions)
+
+4) LEFT INTENTIONALLY (CSRF_EXEMPT_PATHS / server-side outbound)
+--------------------------------------------------------------------------------
+  login/page.tsx             /api/auth/login, login/2fa, demo — exempt
+  register/page.tsx          /api/auth/register — exempt
+  forgot-password/page.tsx   /api/auth/forgot-password — exempt
+  reset-password/page.tsx    /api/auth/reset-password — exempt
+  ContactForm.tsx            /api/contact — exempt (+ rate-limited)
+  contact-crm-ingress.ts     server → Atina (not browser BFF)
+  contact-slack-notify.ts    server → Slack
+  contact-telegram-notify.ts server → Telegram
+
+5) RESIDUAL
+--------------------------------------------------------------------------------
+  Middleware still allows same-origin mutating requests without header
+  (WARN from REPO-SEC). csrfFetch remains defense-in-depth for strict
+  double-submit when Origin/Referer is absent or mismatched.
+
+6) VERDICT
+--------------------------------------------------------------------------------
+PASS — all prioritized platform/admin mutating panels use csrfFetch.
+No blockers.
+
+================================================================================
+END
+================================================================================

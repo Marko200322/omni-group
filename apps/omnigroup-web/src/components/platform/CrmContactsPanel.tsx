@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Loader2, UserPlus, Users } from 'lucide-react';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type ContactRow = {
   id?: string;
@@ -74,7 +75,7 @@ export function CrmContactsPanel({ disabled }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/atina/crm/contacts', {
+      const res = await csrfFetch('/api/atina/crm/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

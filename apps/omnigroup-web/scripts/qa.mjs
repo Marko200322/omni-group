@@ -22,6 +22,7 @@ const jobs = [
   { priority: 'P1', area: 'SaaS monthly/yearly cycle', file: 'scripts/test-saas-cycle.mjs' },
   { priority: 'P1', area: 'Legal consistency', file: 'scripts/test-legal-consistency.mjs' },
   { priority: 'P0', area: 'Isolation source guards', file: 'scripts/test-isolation-guards.mjs' },
+  { priority: 'P0', area: 'Problem Hunter admin gates', file: 'scripts/test-problem-hunter-admin.mjs' },
   { priority: 'P1', area: 'SEO public sources', file: 'scripts/test-seo-public.mjs' },
   { priority: 'P1', area: 'SaaS plan-limit documentation', file: 'scripts/test-plan-limits.mjs' },
   { priority: 'P2', area: 'Workspace routes', file: 'scripts/test-workspace-routes.mjs' },

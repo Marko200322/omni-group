@@ -1,3 +1,5 @@
+import { csrfFetch } from '@/lib/csrf-fetch';
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -38,7 +40,7 @@ export async function subscribeAdminPush(): Promise<boolean> {
   });
 
   const payload = sub.toJSON();
-  const res = await fetch('/api/atina/admin/push/subscribe', {
+  const res = await csrfFetch('/api/atina/admin/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

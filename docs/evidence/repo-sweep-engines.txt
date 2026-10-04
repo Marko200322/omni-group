@@ -1,0 +1,229 @@
+Omni Group Tech — Agent REPO-ENG (engines / catalog / config / tests sweep)
+Date: 2026-10-04
+Repo: C:\dev\omni group
+Scope: Web↔Atina SSOT, marketing/monitoring/reinvestment registration + migrations 043–047,
+       PAYMENTS_MODE honesty, SaaS plan limits, qa.mjs jobs, deferred human/config, leftover junk
+Mode: READ + report; fix only clear critical bugs (no commit)
+
+================================================================================
+VERDICT
+================================================================================
+BLOCKERS (FAIL): none
+
+Overall automated engines/catalog/config gate: PASS (with WARNs)
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+| ID | Check | Status | Notes |
+|----|-------|--------|-------|
+| C1 | Web↔Atina deliverable-catalog SSOT (ids/prices) | PASS | 20/20 IDs; raw field + resource parity; no price drift |
+| C2 | Web↔Atina package-delivery-spec anchors | PASS | 20/20 deliverableId; anchorByPhase NO DRIFT |
+| C3 | Package includes / BUDGET_LAUNCH copy/ops drift | WARN | 7 includes copy drifts; Atina BUDGET list +bundle-portal-presence |
+| C4 | Catalog export API surface asymmetry | WARN | Atina listDeliverables/honestDescriptionFor; web quoteOnly/saleStatus |
+| C5 | Atina DELIVERABLE_CATALOG export is raw (honest via get/list) | WARN | acceptance-contract imports raw const descriptions |
+| M1 | MarketingModule registered in CoreEngine | PASS | register + slug marketing + phase v1 |
+| M2 | MonitoringModule registered in CoreEngine | PASS | register + slug monitoring + phase v1 |
+| M3 | ReinvestmentModule registered in CoreEngine | PASS | register + slug reinvestment + phase v1 |
+| M4 | Migration 043_notifications_updated_at.sql | PASS | present |
+| M5 | Migration 044_reinvestment_engine.sql | PASS | present |
+| M6 | Migration 045_monitoring_engine.sql | PASS | present |
+| M7 | Migration 046_marketing_engine.sql | PASS | present |
+| M8 | Migration 047_marketing_email_and_package_matrix.sql | PASS | present |
+| P1 | resolvePaymentsMode live→sandbox without sk_live_ | PASS | config/index.ts coerces when sk_test_/any non-live key |
+| P2 | deploy-config-env.ps1 sandbox for sk_test_ | PASS | PAYMENTS_MODE=sandbox unless sk_live_ |
+| P3 | Unit test for live→sandbox coercion | WARN | config.test.ts does not assert coercion path |
+| S1 | saas-plans.ts limits keys ↔ seed tasks/team/storage | PASS | 50/1/1 · 500/10/25 · unlimited/-1/500 |
+| S2 | SaaS EUR price book web ↔ Atina saas-price-book | PASS | 79/249/429 monthly; yearly 10× |
+| S3 | team_members / storage_gb runtime enforcement | WARN | checkPlanLimit only special-cases tasks_per_month |
+| Q1 | qa.mjs includes marketing engine job | PASS | test-marketing-engine.mjs (P0) |
+| Q2 | qa.mjs includes plan-limits job | PASS | test-plan-limits.mjs (P1) |
+| Q3 | qa job files exist (conceptual green) | PASS | 19 jobs listed; marketing + plan-limits present |
+| D1 | Firma / legal registration | DEFERRED | human/config — not automated FAIL |
+| D2 | Stripe LIVE card→webhook | DEFERRED | human/config — not automated FAIL |
+| D3 | Ads LIVE sync credentials (Google/Meta) | DEFERRED | adapters UNAVAILABLE by design without keys+flag |
+| D4 | Resend email engagement credentials | DEFERRED | UNAVAILABLE without webhook/secret |
+| J1 | scripts/tmp-api-logs.ps1 tracked in git | WARN | debug VPS log dump — should not ship |
+| J2 | Duplicate csrfFetch imports (3 panels) | PASS* | fixed this sweep (kept single import) |
+
+*PASS after safe fix applied in working tree (not committed).
+
+================================================================================
+1) CATALOG / PACKAGE SSOT (prices unchanged — drift report only)
+================================================================================
+
+Files:
+  apps/omnigroup-web/src/lib/deliverable-catalog.ts
+  atina-platform/atina/src/modules/billing/lib/deliverable-catalog.ts
+  apps/omnigroup-web/src/lib/package-delivery-spec.ts
+  atina-platform/atina/src/modules/billing/lib/package-delivery-spec.ts
+  apps/omnigroup-web/src/lib/saas-plans.ts
+  atina-platform/atina/src/modules/billing/lib/saas-price-book.ts
+
+Deliverable catalog:
+  - Counts: 20 / 20 — ID set identical
+  - Fields checked: id, name, nameSr, description, bestFor, billing, category, anchorEur, resources
+  - PRICE DRIFT: NONE (raw anchors identical; public list = getPackageAnchorEur overlay)
+
+Package delivery spec:
+  - deliverableId set: 20 / 20 identical
+  - anchorByPhase (M0–M6): NO DRIFT
+  - leanCheckout / fullCheckout / minCheckoutPhase: no price-affecting drift observed
+
+COPY / OPS DRIFT (WARN — not charge amounts):
+  includes text differs for:
+    setup-quick, support-priority, website-business, white-label-setup,
+    lead-gen-retainer, ai-support-retainer, custom-software
+  Example setup-quick:
+    web:   "Project created in your workspace"
+    atina: "Product factory project record"
+  BUDGET_LAUNCH_PACKAGE_IDS:
+    web:   setup-quick, audit, landing, website-business, workflow-design, support-priority
+    atina: same + bundle-portal-presence
+  Structural asymmetry (intentional layers):
+    web: quoteOnly?, saleStatusFromFlags / availability helpers
+    atina: honestDescriptionFor, canCheckoutPackage, getMonthlyBudgetEur
+  Atina export const DELIVERABLE_CATALOG is RAW; getDeliverable/listDeliverables use CATALOG_HONEST.
+    deliverable-acceptance-contract.ts imports the RAW export for descriptions → WARN only.
+
+SaaS price book (web saas-plans ↔ Atina saas-price-book): IDENTICAL
+  Launch 79/89 → 790/890 | Growth 249/279 → 2490/2790 | Scale 429/469 → 4290/4690
+
+================================================================================
+2) MODULE REGISTRATION + MIGRATIONS 043–047
+================================================================================
+
+CoreEngine registers (always-on, not feature-flagged):
+  MonitoringModule   — observability only
+  MarketingModule    — observer/optimizer; no ad spend authority
+  ReinvestmentModule — dry_run / kill_switch gate money movement
+
+module-phase-registry.ts:
+  marketing: v1
+  monitoring: v1
+  reinvestment: v1
+  (also marketing-growth: v2 — separate growth module)
+
+Migrations present under atina-platform/atina/src/database/migrations/:
+  043_notifications_updated_at.sql          — notifications.updated_at fix
+  044_reinvestment_engine.sql               — reinvestment_* tables
+  045_monitoring_engine.sql                 — monitoring_* tables
+  046_marketing_engine.sql                  — marketing_* tables + channels seed
+  047_marketing_email_and_package_matrix.sql — email events + package×channel stats
+
+STATUS: PASS
+
+================================================================================
+3) PAYMENTS_MODE HONESTY
+================================================================================
+
+resolvePaymentsMode() — atina-platform/atina/src/config/index.ts:
+  if PAYMENTS_MODE=live AND secret does NOT start with sk_live_:
+    → sandbox when sk_test_ OR any stripe key OR PayPal client id present
+    → else sandbox in production / manual in non-prod
+  Explicit manual|sandbox|live honored when not dishonest live
+  Auto: sk_live_ → live; any stripe/paypal → sandbox; else sandbox(prod)/manual(dev)
+
+deploy-config-env.ps1 (stripeSecretKey block):
+  PAYMENTS_MODE = live IFF stripeSecret.StartsWith('sk_live_') else sandbox
+  Matches prod-factory-phase.ps1 key-shape logic
+
+WARN: no unit test asserts live+sk_test_ → sandbox coercion (implementation present).
+
+STATUS: PASS (code + deploy mapping)
+
+================================================================================
+4) SaaS PLAN LIMITS ↔ SEED KEYS
+================================================================================
+
+saas-plans.ts limits:
+  starter: tasksPerMonth 50, teamMembers 1, storageGb 1
+  pro:     500 / 10 / 25
+  enterprise: unlimited / unlimited / 500
+
+001_seed_data.ts limits:
+  starter: tasks_per_month 50, team_members 1, storage_gb 1
+  pro:     500 / 10 / 25
+  enterprise: -1 / -1 / 500   (−1 = unlimited)
+
+test-plan-limits.mjs asserts seed keys + saas-plans camelCase + forbids workspaces/contacts fiction.
+
+WARN: billing.service checkPlanLimit enforces counting only for tasks_per_month;
+      team_members / storage_gb numeric keys currently return true if present (documented limits, weak enforcement).
+
+STATUS: PASS (SSOT keys/values) + WARN (enforcement depth)
+
+================================================================================
+5) QA SCRIPTS (conceptual)
+================================================================================
+
+apps/omnigroup-web/scripts/qa.mjs jobs (19):
+  … includes:
+  P0 Marketing Intelligence engine → scripts/test-marketing-engine.mjs  (exists; static/shape guards)
+  P1 SaaS plan-limit documentation → scripts/test-plan-limits.mjs       (exists; seed/saas/billing asserts)
+  package.json: "qa:production": "node scripts/qa.mjs"
+
+This sweep did not re-execute full qa:production (source/list integrity only).
+Prior A2 evidence (2026-10-03/04): qa 19/19 PASS.
+
+STATUS: PASS (job list + files present)
+
+================================================================================
+6) DEFERRED (not FAIL)
+================================================================================
+| Item | Why deferred |
+|------|----------------|
+| Firma / formal company registration | Legal/impressum human decision |
+| Stripe LIVE hosted Checkout → webhook as paid event | Needs sk_live_ + live webhook proof |
+| Google/Meta ads LIVE sync | MARKETING_ADS_LIVE_SYNC + credentials; adapters return UNAVAILABLE |
+| Resend email engagement LIVE | Webhook/secret not configured; engine returns UNAVAILABLE |
+
+================================================================================
+7) LEFTOVER JUNK / BROKEN IMPORTS
+================================================================================
+
+Tracked junk:
+  scripts/tmp-api-logs.ps1 — git-tracked ad-hoc VPS docker-log dump (deploy-secrets.local).
+  Should not ship; delete or gitignore. STATUS: WARN (not deleted this sweep).
+
+Broken / duplicate imports:
+  PlatformShell.tsx, InviteClientPanel.tsx, ClientAiAssistant.tsx had duplicate
+  `import { csrfFetch } from '@/lib/csrf-fetch'` (TS2300 risk).
+  SAFE FIX applied: single import retained in each file. Not committed.
+
+No other missing-module imports found for marketing/monitoring/reinvestment BFF paths
+(csrf-fetch, reinvestment-bff, monitoring-bff, marketing-bff, omi-page-context present).
+
+================================================================================
+FIXES APPLIED (working tree only — DO NOT COMMIT unless requested)
+================================================================================
+1. Removed duplicate csrfFetch imports in:
+   - apps/omnigroup-web/src/components/platform/PlatformShell.tsx
+   - apps/omnigroup-web/src/components/platform/InviteClientPanel.tsx
+   - apps/omnigroup-web/src/components/platform/ClientAiAssistant.tsx
+
+No price / catalog / seed changes.
+
+================================================================================
+RETURN ORDER FOR PARENT
+================================================================================
+BLOCKERS: none
+
+WARNs:
+  - package-delivery-spec includes copy drift (7 SKUs) + BUDGET_LAUNCH id set drift
+  - catalog export API asymmetry / Atina raw DELIVERABLE_CATALOG vs honest getters
+  - no unit test for PAYMENTS_MODE live→sandbox coercion
+  - team_members/storage_gb seeded + marketed but not counted in checkPlanLimit
+  - scripts/tmp-api-logs.ps1 tracked (should not ship)
+
+DEFERRED:
+  - firma registration
+  - Stripe LIVE card→webhook
+  - ads LIVE credentials / MARKETING_ADS_LIVE_SYNC
+  - Resend engagement credentials
+
+PASS summary:
+  Catalog price SSOT aligned (20 SKUs); SaaS price book + limit keys match seed;
+  marketing/monitoring/reinvestment registered + migrations 043–047 present;
+  PAYMENTS_MODE honesty in resolvePaymentsMode + deploy-config-env;
+  qa.mjs includes marketing + plan-limits jobs; duplicate csrfFetch fixed locally.

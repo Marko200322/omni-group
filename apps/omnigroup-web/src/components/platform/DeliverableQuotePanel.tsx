@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -147,8 +148,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     setError(null);
     try {
       if (stripePreferred) {
-        const res = await fetch('/api/atina/payments/stripe/deliverable-checkout', {
-          method: 'POST',
+        const res = await csrfFetch('/api/atina/payments/stripe/deliverable-checkout', { method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             deliverableId,
@@ -165,8 +165,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
         return;
       }
 
-      const res = await fetch('/api/atina/payments/manual/deliverable-checkout', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/payments/manual/deliverable-checkout', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             deliverableId,
@@ -208,8 +207,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/manual/mark-sent/${checkout.paymentId}`, {
-        method: 'POST',
+      const res = await csrfFetch(`/api/atina/payments/manual/mark-sent/${checkout.paymentId}`, { method: 'POST',
       });
       const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
       if (!res.ok || !json.ok) {

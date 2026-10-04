@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -49,8 +50,7 @@ export function AiMemoryPanel({ planSlug, disabled, operatorMode }: Props) {
     }
 
     try {
-      const res = await fetch('/api/atina/ai-memory/remember', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/ai-memory/remember', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key, value, namespace }),
       });

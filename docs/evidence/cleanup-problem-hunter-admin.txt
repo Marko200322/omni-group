@@ -1,0 +1,91 @@
+================================================================================
+A3 LEFTOVER CLEANUP — problem-hunter admin gates
+Agent: AUTH (of 5)
+Date: 2026-10-04
+Repo: C:\dev\omni group
+Commit: NOT committed (per instructions)
+================================================================================
+
+1) PROBLEM (from system-audit-A3-auth.txt [LOW])
+--------------------------------------------------------------------------------
+problem-hunter BFF GET /status and GET /signals used authenticated non-demo
+session only (getServerSession). Atina /status and /signals were authenticate-
+only while POST /search/run already required admin.
+
+Hunting operator BFFs already use requireAdminSession. Problem Hunter is the
+same admin ops surface (no customer UI calls these routes).
+
+Severity of what was open: LOW
+  - listSignals was userId-scoped (not cross-tenant dump)
+  - status leaked tavilyConfigured boolean + source catalog to any logged-in user
+  - Direct Atina API access by a non-admin JWT could read status/signals
+
+2) ENDPOINTS CHANGED
+--------------------------------------------------------------------------------
+Web BFF (requireAdminSession — aligned with hunting/*):
+  GET  /api/atina/problem-hunter/status
+  GET  /api/atina/problem-hunter/signals
+  (POST /api/atina/problem-hunter/search/run already admin-gated; unchanged)
+
+Atina module (authenticate + requireAdmin on all three):
+  GET  /api/v1/problem-hunter/status
+  GET  /api/v1/problem-hunter/signals
+  POST /api/v1/problem-hunter/search/run  (already requireAdmin; unchanged)
+
+Adjacent clear mismatch fixed (web BFF was already adminOnly):
+  GET  /api/v1/marketing-growth/status  → added requireAdmin
+
+Consistency (behavior unchanged — already isAdminRole check):
+  GET  /api/atina/admin/omi-usage  → switched to requireAdminSession helper
+
+3) SCAN: marketing / monitoring / reinvestment / omi admin routes
+--------------------------------------------------------------------------------
+OK — no clear user-vs-admin mismatches found on new engines:
+  - apps/.../lib/marketing-bff.ts     → requireAdminSession
+  - apps/.../lib/monitoring-bff.ts    → requireAdminSession
+  - apps/.../lib/reinvestment-bff.ts  → requireAdminSession
+  - All /api/atina/marketing/* routes import marketingBff*
+  - All /api/atina/monitoring/* routes import monitoringBff*
+  - All /api/atina/reinvestment/* routes import reinvestmentBff*
+  - Atina marketing.module / monitoring.module / reinvestment.module use
+    authenticate + requireAdmin (Resend webhook intentionally unauthenticated
+    with signature verification in controller)
+  - Atina admin /omi-usage already behind authenticate + requireAdmin
+
+4) TESTS / ASSERTIONS ADDED
+--------------------------------------------------------------------------------
+  - apps/omnigroup-web/scripts/test-problem-hunter-admin.mjs
+    (wired into scripts/qa.mjs as P0 "Problem Hunter admin gates")
+  - atina-platform/atina/src/tests/unit/problem-hunter.module.routes.test.ts
+    asserts 401/403/200 on status/signals/search/run admin gates
+
+Manual verify (if desired):
+  1. Login as non-admin client → GET /api/atina/problem-hunter/status → 403
+  2. Login as admin → same → 200
+  3. Non-admin Atina JWT → GET /api/v1/problem-hunter/signals → 403
+
+5) RESIDUAL RISKS
+--------------------------------------------------------------------------------
+  - client-hunter Atina GET readiness/job-boards/hot-clients/status remain
+    authenticate-only while web hunting BFFs are requireAdminSession.
+    Defense-in-depth gap if Atina API is reachable with a non-admin JWT;
+    not changed here (out of A3 leftover scope; BFF already admin).
+  - Platform role vocabulary mismatch (web isAdminRole vs Atina requireAdmin)
+    remains MEDIUM/INFO from A3 — unchanged.
+  - No live prod IDOR probe run in this pass.
+
+6) FILES TOUCHED
+--------------------------------------------------------------------------------
+  apps/omnigroup-web/src/app/api/atina/problem-hunter/status/route.ts
+  apps/omnigroup-web/src/app/api/atina/problem-hunter/signals/route.ts
+  apps/omnigroup-web/src/app/api/atina/admin/omi-usage/route.ts
+  apps/omnigroup-web/scripts/test-problem-hunter-admin.mjs
+  apps/omnigroup-web/scripts/qa.mjs
+  atina-platform/atina/src/modules/problem-hunter/problem-hunter.module.ts
+  atina-platform/atina/src/modules/marketing-growth/marketing-growth.module.ts
+  atina-platform/atina/src/tests/unit/problem-hunter.module.routes.test.ts
+  docs/evidence/cleanup-problem-hunter-admin.txt
+
+================================================================================
+END
+================================================================================

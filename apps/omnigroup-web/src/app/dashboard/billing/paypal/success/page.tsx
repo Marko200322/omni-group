@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2 } from 'lucide-react';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 export default function PayPalSuccessPage() {
   const params = useSearchParams();
@@ -19,7 +20,7 @@ export default function PayPalSuccessPage() {
     }
     (async () => {
       try {
-        const res = await fetch(`/api/atina/payments/paypal/capture/${token}`, { method: 'POST' });
+        const res = await csrfFetch(`/api/atina/payments/paypal/capture/${token}`, { method: 'POST' });
         const json = (await res.json()) as { ok?: boolean; detail?: string; error?: string };
         if (!res.ok || !json.ok) throw new Error('capture_failed');
         setStatus('ok');

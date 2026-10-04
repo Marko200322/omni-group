@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Factory, FlaskConical, Hammer, Sparkles } from 'lucide-react';
 import { isDevClient } from '@/lib/is-dev-client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type Project = {
   id: string;
@@ -79,7 +80,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
             marketHypothesis: 'Autonomy explores a niche for a new Omni Group SaaS product.',
           };
     try {
-      const res = await fetch('/api/atina/product-factory/projects', {
+      const res = await csrfFetch('/api/atina/product-factory/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -101,7 +102,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
     setBusy(`${action}:${id}`);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/product-factory/projects/${encodeURIComponent(id)}/${action}`, {
+      const res = await csrfFetch(`/api/atina/product-factory/projects/${encodeURIComponent(id)}/${action}`, {
         method: 'POST',
       });
       const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
@@ -122,7 +123,7 @@ export function ProductFactoryPanel({ isAdmin, disabled }: Props) {
     setBusy('internal-tick');
     setError(null);
     try {
-      const res = await fetch('/api/atina/product-factory/internal/tick', { method: 'POST' });
+      const res = await csrfFetch('/api/atina/product-factory/internal/tick', { method: 'POST' });
       const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
       if (!res.ok || !json.ok) {
         setError(json.error ?? 'internal_tick_failed');

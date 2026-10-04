@@ -24,6 +24,7 @@ export class ProblemHunterModule implements IModule {
     this.router.get(
       '/status',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.status,
@@ -31,6 +32,7 @@ export class ProblemHunterModule implements IModule {
     this.router.get(
       '/signals',
       authenticate,
+      requireAdmin,
       validateQuery(ListProblemSignalsQueryDto),
       this.controller.listSignals,
     );

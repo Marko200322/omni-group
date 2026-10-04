@@ -1,0 +1,234 @@
+REPO-SEC security / auth / BFF consistency sweep
+Date: 2026-10-04
+Repo: C:\dev\omni group
+Scope: READ + report (no commit). Fix only clear critical one-liners (none found).
+Agent: REPO-SEC (of 5)
+
+================================================================================
+VERDICT
+================================================================================
+BLOCKERS (FAIL): none
+
+Overall: PASS with WARNs (defense-in-depth / hygiene; no unauthenticated admin-engine hole found).
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+ID   Area                                      Result  Notes
+---- ----------------------------------------- ------- -----------------------------------------------
+A1   Marketing BFF admin gate                  PASS    All 22 routes via marketingBff* -> requireAdminSession
+A2   Monitoring BFF admin gate                 PASS    All 7 routes via monitoringBff* -> requireAdminSession
+A3   Reinvestment BFF admin gate               PASS    All 15 routes via reinvestmentBff* -> requireAdminSession
+A4   Admin + OMI usage BFF gates               PASS    requireAdminSession or equivalent demo+role check
+A5   CSRF exemptions / mutating public holes   WARN    Exemptions intentional; sameOrigin soft-bypass
+A6   Open redirects                            PASS    safeInternalPath + fixed redirectTo
+A7   Session cookie flags                      PASS    httpOnly + sameSite=lax + secure heuristic
+A8   2FA route wiring                          PASS    BFF + upstream authenticate; login/2fa CSRF-exempt
+A9   Shop reprice isolation                    PASS    priceShopItemsFromCatalog + source guard
+A10  Fulfillment download authz                PASS    owner/admin check + BFF session + upstream auth
+A11  Hardcoded secrets in tracked source       PASS    No live secrets in app/platform src (tests/examples only)
+
+================================================================================
+1) ADMIN ENGINES — requireAdminSession / equivalent
+================================================================================
+
+Shared gates:
+  apps/omnigroup-web/src/lib/bff-admin-gate.ts:4-13
+    requireAdminSession(): rejects missing session, demo, non-admin role
+  apps/omnigroup-web/src/lib/marketing-bff.ts:8-11,20-22
+  apps/omnigroup-web/src/lib/monitoring-bff.ts:8-11,20-22
+  apps/omnigroup-web/src/lib/reinvestment-bff.ts:8-11,20-22,44-46
+  apps/omnigroup-web/src/lib/admin-enterprise-bff.ts:93-98,107-113
+
+A1 PASS — Marketing (22/22)
+  Every route under apps/omnigroup-web/src/app/api/atina/marketing/**/route.ts
+  imports marketingBffGet and/or marketingBffPost only.
+  Includes mutating: engine/run, adapters/sync, spend/ingest, experiments POST,
+  scenarios/what-if, attribution/contact.
+  omi-answer GET: marketing/omi-answer/route.ts:1-6 -> marketingBffGet (admin).
+
+A2 PASS — Monitoring (7/7)
+  attention, costs, engine/run, health, incidents, overview, reinvestment-signals
+  all use monitoringBffGet/Post.
+
+A3 PASS — Reinvestment (15/15)
+  status, opportunities, investments, approvals (+ decide), policies (+ active PATCH),
+  alerts, budgets, forecast, audit, transactions, scenarios, engine/run,
+  engine/dry-run-year — all use reinvestmentBffGet/Post/Patch.
+
+A4 PASS — Admin / OMI
+  Inline equivalent (getServerSession + !demo + isAdminRole):
+    admin/omi-usage/route.ts:7-13
+    admin/overview/route.ts:7-13
+    admin/payments/route.ts:8-13
+    admin/market-kpi/route.ts:11-16
+    admin/market-export/route.ts:12-17
+    admin/market-simulation/route.ts:6-11
+    admin/users/invite/route.ts:8-14
+    admin/push/subscribe/route.ts:7-9
+    admin/push/vapid-public-key/route.ts:7-9
+  Via adminEnterpriseGet/Patch -> requireAdminSession:
+    admin/users/route.ts, users/[id], plans, plans/[id], modules, modules/[id],
+    onboarding-status
+
+WARN-A4 (style, not auth hole): prefer consolidating inline admin checks onto
+requireAdminSession for consistency; current checks are equivalent.
+
+================================================================================
+2) CSRF MIDDLEWARE / EXEMPTIONS
+================================================================================
+
+Definitions:
+  apps/omnigroup-web/src/lib/bff-csrf.ts:4-15  CSRF_EXEMPT_PATHS
+  apps/omnigroup-web/src/middleware.ts:54-85   mutating /api/* CSRF enforcement
+
+Exempt set (intentional):
+  /api/auth/login
+  /api/auth/login/2fa
+  /api/auth/register
+  /api/auth/forgot-password
+  /api/auth/reset-password
+  /api/auth/demo
+  /api/contact                         (rate-limited: middleware.ts:67-77)
+  /api/atina/billing/quote             (public pricing POST; quote/route.ts:5-24)
+  /api/atina/billing/quotes            (GET-only; CSRF N/A for GET — dead exemption)
+
+Not newly exempt (good):
+  marketing/monitoring/reinvestment mutating engine routes
+  /api/public/sites/[slug]/shop-order  (public but CSRF-checked unless sameOrigin)
+  /api/auth/2fa/* management routes    (session + CSRF unless sameOrigin)
+
+WARN-A5a: middleware.ts:82
+  CSRF fails only when (!csrfValid && !sameOrigin). Same-origin requests can
+  skip the double-submit header. Mitigated by Origin/Referer host match in
+  production (middleware.ts:17-36) and session cookie sameSite=lax
+  (auth-session.ts:165). Defense-in-depth is softer than strict header-only CSRF.
+
+WARN-A5b: billing/quotes listed in CSRF_EXEMPT_PATHS but handler is GET-only
+  (billing/quotes/route.ts:5). Harmless; remove for clarity.
+
+PASS-A5c: No new admin-engine mutating path found in CSRF_EXEMPT_PATHS.
+  Public mutating surfaces remain auth/contact/quote (expected).
+
+================================================================================
+3) OPEN REDIRECTS / SESSION COOKIES / 2FA
+================================================================================
+
+A6 PASS — Open redirects
+  Client next= sanitizer:
+    apps/omnigroup-web/src/lib/safe-internal-path.ts:5-17
+    Used: login/page.tsx:41, register/page.tsx:44,57
+  Post-login redirectTo hardcoded to /admin|/dashboard:
+    apps/omnigroup-web/src/lib/complete-web-login.ts:22-25
+  Middleware login redirect uses same-origin pathname as next=
+    (middleware.ts:98-101); login page re-validates via safeInternalPath.
+
+A7 PASS — Session cookie flags
+  auth-session.ts:159-168
+    httpOnly: true
+    sameSite: 'lax'
+    secure: sessionCookieSecure() (COOKIE_SECURE override, else HTTPS site URL,
+            else NODE_ENV===production) — auth-session.ts:147-157
+  Production requires SESSION_SECRET (sealSession throws if empty) — :82-84
+  CSRF cookie intentionally httpOnly:false (double-submit) — middleware.ts:41-45
+
+WARN-A7: COOKIE_SECURE=false/0 can force insecure cookies even in production
+  (auth-session.ts:148-149). Ops misconfig risk, not a code bug.
+
+A8 PASS — 2FA wiring
+  Web BFF (session required, demo blocked on mutate):
+    api/auth/2fa/setup/route.ts:5-9
+    api/auth/2fa/confirm/route.ts:5-9
+    api/auth/2fa/disable/route.ts:5-9
+    api/auth/2fa/status/route.ts:5-12
+  Login challenge completion:
+    api/auth/login/2fa/route.ts:7-52  (CSRF-exempt; rate-limited)
+    login/page.tsx:85  posts challengeToken+code
+  Upstream Atina:
+    atina-platform/atina/src/modules/auth/auth.module.ts:51 (login/2fa)
+    :76-101 (2fa status/setup/confirm/disable all authenticate)
+  UI uses csrfFetch for management routes:
+    components/platform/TwoFactorSettings.tsx
+
+================================================================================
+4) ISOLATION — SHOP REPRICE / FULFILLMENT DOWNLOAD
+================================================================================
+
+A9 PASS — Shop reprice
+  atina-platform/atina/src/modules/public-site/service/public-site.service.ts
+    :33-48 priceShopItemsFromCatalog (catalog price wins; client priceEur ignored)
+    :259-260 placeShopOrder uses pricedItems for total
+  Guard script:
+    apps/omnigroup-web/scripts/test-isolation-guards.mjs:35-38
+  Unit coverage:
+    public-site.test.ts (reprices / ignores client amounts)
+  Public BFF proxy:
+    apps/omnigroup-web/src/app/api/public/sites/[slug]/shop-order/route.ts
+    (forwards body; server reprice remains authoritative)
+
+A10 PASS — Fulfillment download authz
+  Upstream owner check:
+    deliverable-fulfillment-read.service.ts:86-91 (getJob)
+    :95-111 (getArtifactFile: user_id match or admin; pending QA blocks clients)
+  Controller uses session userId/role:
+    billing.controller.ts:154-160
+  Route middleware:
+    billing.module.ts:191-198 authenticate + requirePermission('billing.read')
+  Web BFF:
+    billing/fulfillment/jobs/[paymentId]/artifacts/[filename]/route.ts:8-19
+      requires non-demo session + Bearer accessToken
+    jobs/[paymentId]/route.ts:9-12 session required
+  Isolation source guard still asserts owner + AuthorizationError:
+    test-isolation-guards.mjs:31-32
+
+================================================================================
+5) HARDCODED SECRETS (TRACKED SOURCE)
+================================================================================
+
+A11 PASS — No live API keys / private keys / production passwords found in
+  tracked apps/omnigroup-web/src or atina-platform/atina/src (non-test) via
+  pattern scan (sk-*, AKIA*, ghp_*, BEGIN PRIVATE KEY, long literal apiKey/password).
+
+Observed non-issues (do not treat as leaked prod secrets):
+  - Dev-only session secret fallback string in auth-session.ts:31 (non-production only)
+  - Test fixtures under **/tests/** and **/*.test.ts (placeholder JWT/Stripe strings)
+  - .env.example / docs placeholders (sk_live_… patterns as documentation)
+  - apps/omnigroup-web/.env.vps.production is UNTRACKED and gitignored
+    (.gitignore matches .env.*); do not commit
+
+WARN-A11: Local untracked .env.vps.production exists on disk (git status ??).
+  Confirm it never gets force-added; not a tracked-source FAIL.
+
+================================================================================
+BLOCKERS
+================================================================================
+(none)
+
+================================================================================
+WARN LIST
+================================================================================
+1. CSRF sameOrigin soft-bypass (middleware.ts:82) — header not strictly required
+   for same-origin mutating requests.
+2. Dead CSRF exempt entry for GET /api/atina/billing/quotes (bff-csrf.ts:14).
+3. Admin routes mix requireAdminSession vs inline getServerSession+isAdminRole
+   (equivalent today; consolidate later).
+4. COOKIE_SECURE env can disable Secure flag in production (auth-session.ts:148-149).
+5. Local untracked .env.vps.production present (gitignored) — hygiene only.
+
+================================================================================
+PASS SUMMARY
+================================================================================
+- All new marketing / monitoring / reinvestment / omi-usage / admin enterprise
+  BFF surfaces enforce admin (or equivalent) and reject demo sessions.
+- CSRF exemptions remain limited to auth bootstrap, contact, and public quote;
+  no admin-engine mutating hole added to the exempt set.
+- Open-redirect controls (safeInternalPath + fixed redirectTo) are intact.
+- Session cookies use httpOnly + SameSite=Lax with production Secure default.
+- 2FA BFF routes are session-gated; login/2fa is wired and rate-limited; upstream
+  management endpoints require authenticate.
+- Shop checkout still reprices from catalog; fulfillment artifact download still
+  enforces owner/admin authz end-to-end.
+- No hardcoded production secrets in tracked application source.
+
+Fixes applied this sweep: none (no clear critical one-liner).
+End of report.

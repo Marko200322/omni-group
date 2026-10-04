@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Crosshair, Flame, Globe2, Play, RefreshCw, Rocket, ShieldCheck, Zap } from 'lucide-react';
 import { isDevClient } from '@/lib/is-dev-client';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type ReadinessCheck = {
   id: string;
@@ -139,7 +140,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
     setBusy('bootstrap');
     setError(null);
     try {
-      const res = await fetch('/api/atina/hunting/bootstrap', { method: 'POST' });
+      const res = await csrfFetch('/api/atina/hunting/bootstrap', { method: 'POST' });
       const json = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !json.ok) {
         setError(json.error ?? 'bootstrap_failed');
@@ -158,7 +159,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
     setError(null);
     setLastResult(null);
     try {
-      const res = await fetch('/api/atina/hunting/pipeline/run', {
+      const res = await csrfFetch('/api/atina/hunting/pipeline/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -186,7 +187,7 @@ export function HuntingStackPanel({ isAdmin, disabled }: Props) {
     setBusy('outbound');
     setError(null);
     try {
-      const res = await fetch('/api/atina/autonomy-loop/outbound/process-send', { method: 'POST' });
+      const res = await csrfFetch('/api/atina/autonomy-loop/outbound/process-send', { method: 'POST' });
       const json = (await res.json()) as { ok?: boolean; data?: Record<string, unknown>; error?: string };
       if (!res.ok || !json.ok) {
         setError(json.error ?? 'outbound_failed');

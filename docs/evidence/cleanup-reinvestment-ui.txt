@@ -1,0 +1,51 @@
+Agent REINVEST — cleanup-reinvestment-ui
+Date: 2026-10-04
+Repo: C:\dev\omni group
+Commit: not committed (per instructions)
+
+=== A) Reinvestment admin UI — new BFF surfaces ===
+
+File: apps/omnigroup-web/src/components/platform/ReinvestmentPanel.tsx
+
+Tabs added (match existing GlassCard / cyan accent style):
+  - Overview  — accounts, engine status, opportunities, pending approvals (approve/reject via csrfFetch), alerts
+  - Budgets   — GET /api/atina/reinvestment/budgets (read-only list)
+  - Forecast  — GET /api/atina/reinvestment/forecast (read-only list; ending cash/reserve when present)
+  - Transactions — GET /api/atina/reinvestment/transactions (read-only ledger; no new money-movement UI)
+  - Audit     — GET /api/atina/reinvestment/audit (read-only log)
+
+Engine controls retained:
+  - Run engine        → POST /api/atina/reinvestment/engine/run (csrfFetch)
+  - Dry-run year      → POST /api/atina/reinvestment/engine/dry-run-year (csrfFetch); switches to Forecast tab
+  - Refresh           → reloads all listed BFF GETs in parallel
+  - Approval decide   → POST /api/atina/reinvestment/approvals/:id/decide (csrfFetch)
+
+BFF routes consumed (admin-gated via reinvestment-bff):
+  status, opportunities, approvals, alerts,
+  budgets, forecast, transactions, audit,
+  engine/run, engine/dry-run-year, approvals/[id]/decide
+
+No Stripe LIVE / firma changes. No invent money-movement UI beyond existing propose/decide patterns.
+
+=== B) Atina unit tests — getPaymentMethods mode honesty ===
+
+Command:
+  cd atina-platform/atina
+  npx jest --runInBand --forceExit --testPathIgnorePatterns=integration --testPathPattern=payments.service --testNamePattern=getPaymentMethods
+
+Result: PASS
+  Test Suites: 1 passed, 1 total
+  Tests:       61 skipped, 2 passed, 63 total
+  Time:        ~67.5 s
+  File:        src/tests/unit/payments.service.test.ts
+
+Covered:
+  √ getPaymentMethods prefers Stripe over IBAN when a Stripe key is set
+     — expects mode === 'sandbox' when sk_test (effectiveMode)
+  √ getPaymentMethods includes manual only when Stripe is not configured
+     — expects mode === 'manual' when no Stripe key
+
+No test fixes required (effectiveMode sandbox honesty already aligned).
+
+=== Blockers ===
+None.

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -98,8 +99,7 @@ export function SupportMeetingPanel({ disabled }: Props) {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch('/api/atina/video-meetings/support/book', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/video-meetings/support/book', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: topic.trim(),

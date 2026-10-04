@@ -5,6 +5,7 @@ import { Copy, ExternalLink, Loader2, UserPlus } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import type { AtinaInviteClientResult } from '@/lib/atina-live-types';
 import type { AtinaPublicSnapshot } from '@/lib/atina';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type Props = {
   disabled?: boolean;
@@ -43,8 +44,7 @@ export function InviteClientPanel({ disabled, plans = [] }: Props) {
     if (useCustomPassword && customPassword.trim()) payload.password = customPassword;
 
     try {
-      const res = await fetch('/api/atina/admin/users/invite', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/admin/users/invite', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });

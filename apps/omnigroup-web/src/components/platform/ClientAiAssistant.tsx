@@ -20,6 +20,7 @@ import {
 import { ASSISTANT_NAME } from '@/lib/brand';
 import { hasAnalyticsConsent } from '@/lib/cookie-consent';
 import { buildOmiUiPageContext, omiQuickActions } from '@/lib/omi-page-context';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type ChatMessage = {
   id: string;
@@ -157,8 +158,7 @@ export function ClientAiAssistant({ userName }: Props) {
     try {
       const controller = new AbortController();
       const timer = window.setTimeout(() => controller.abort(), 8000);
-      const res = await fetch('/api/atina/atina-assistant/session', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/atina-assistant/session', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           freshConsultation: opts?.freshConsultation === true,
@@ -233,8 +233,7 @@ export function ClientAiAssistant({ userName }: Props) {
       try {
         const controller = new AbortController();
         const timer = window.setTimeout(() => controller.abort(), 45000);
-        const res = await fetch('/api/atina/atina-assistant/chat', {
-          method: 'POST',
+        const res = await csrfFetch('/api/atina/atina-assistant/chat', { method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
@@ -280,8 +279,7 @@ export function ClientAiAssistant({ userName }: Props) {
       if (!sessionId || feedbackBusy) return;
       setFeedbackBusy(true);
       try {
-        const res = await fetch('/api/atina/atina-assistant/feedback', {
-          method: 'POST',
+        const res = await csrfFetch('/api/atina/atina-assistant/feedback', { method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId,
@@ -310,8 +308,7 @@ export function ClientAiAssistant({ userName }: Props) {
     setHandoffBusy(true);
     setHandoffStatus(null);
     try {
-      const res = await fetch('/api/atina/atina-assistant/handoff', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/atina-assistant/handoff', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,

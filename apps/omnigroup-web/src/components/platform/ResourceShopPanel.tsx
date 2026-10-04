@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2, Power, RefreshCw, ShoppingCart, Wallet } from 'lucide-react';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type CatalogItem = {
   sku: string;
@@ -111,7 +112,7 @@ export function ResourceShopPanel({ disabled }: Props) {
     setBusy('auto');
     setError(null);
     try {
-      const res = await fetch('/api/atina/resource-procurement/settings/auto', {
+      const res = await csrfFetch('/api/atina/resource-procurement/settings/auto', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !autoOn }),
@@ -134,7 +135,7 @@ export function ResourceShopPanel({ disabled }: Props) {
     setMessage(null);
     setPayment(null);
     try {
-      const res = await fetch('/api/atina/resource-procurement/checkout', {
+      const res = await csrfFetch('/api/atina/resource-procurement/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: cartLines }),
@@ -160,7 +161,7 @@ export function ResourceShopPanel({ disabled }: Props) {
     setBusy(orderId);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/resource-procurement/orders/${orderId}/mark-paid`, {
+      const res = await csrfFetch(`/api/atina/resource-procurement/orders/${orderId}/mark-paid`, {
         method: 'POST',
       });
       const body = (await res.json()) as { ok?: boolean; detail?: string };

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
 import { validateBody, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
 import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
@@ -23,6 +23,7 @@ export class MarketingGrowthModule implements IModule {
     this.router.get(
       '/status',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.status,

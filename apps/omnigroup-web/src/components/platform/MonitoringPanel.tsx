@@ -74,6 +74,12 @@ export type MonitoringCostLine = {
 export type MonitoringOverview = {
   overallState?: string;
   overall_state?: string;
+  /** Atina getOverview shape: { overall: { state, reasons } } */
+  overall?: {
+    state?: string;
+    reasons?: string[];
+    healthyClaimAllowed?: boolean;
+  };
   criticalIncidents?: number;
   critical_incidents?: number;
   openCriticalIncidents?: number;
@@ -117,6 +123,7 @@ type BffEnvelope<T> = {
 };
 
 /** UI grid keys — map API codes/layers onto these cards. */
+/** Slots that map to real monitoring probes (no invented "security" probe). */
 const SUBSYSTEM_GRID: { key: string; label: string; aliases: string[] }[] = [
   { key: 'infrastructure', label: 'Infrastructure', aliases: ['infrastructure', 'redis', 'queues', 'web'] },
   { key: 'db', label: 'Database', aliases: ['db', 'database'] },
@@ -124,7 +131,7 @@ const SUBSYSTEM_GRID: { key: string; label: string; aliases: string[] }[] = [
   { key: 'payments', label: 'Payments', aliases: ['payments'] },
   { key: 'email', label: 'Email', aliases: ['email'] },
   { key: 'omi', label: 'OMI', aliases: ['omi'] },
-  { key: 'security', label: 'Security', aliases: ['security'] },
+  { key: 'marketing', label: 'Marketing', aliases: ['marketing'] },
   { key: 'reinvestment', label: 'Reinvestment', aliases: ['reinvestment'] },
   { key: 'monitoring', label: 'Monitoring', aliases: ['monitoring', 'monitoring_self'] },
 ];
@@ -359,8 +366,17 @@ export function MonitoringPanel({ disabled }: Props) {
   }, [monitoringSelf]);
 
   const overallState = String(
-    overview?.overallState ?? overview?.overall_state ?? (error ? '—' : 'UNAVAILABLE'),
+    overview?.overallState ??
+      overview?.overall_state ??
+      overview?.overall?.state ??
+      (error ? '—' : overview ? 'UNKNOWN' : 'UNAVAILABLE'),
   );
+
+  const overallReasons =
+    overview?.reasons ??
+    overview?.overall?.reasons ??
+    overview?.notes ??
+    [];
 
   const criticalCount =
     overview?.criticalIncidents ??
@@ -532,9 +548,9 @@ export function MonitoringPanel({ disabled }: Props) {
                 </p>
               </div>
             </div>
-            {(overview?.reasons ?? overview?.notes ?? []).length > 0 ? (
+            {overallReasons.length > 0 ? (
               <ul className="mt-3 space-y-1 text-xs text-slate-400">
-                {(overview?.reasons ?? overview?.notes ?? []).slice(0, 8).map((note, i) => (
+                {overallReasons.slice(0, 8).map((note, i) => (
                   <li key={`${note}-${i}`}>• {note}</li>
                 ))}
               </ul>

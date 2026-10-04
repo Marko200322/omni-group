@@ -159,6 +159,10 @@ export function MarketingPanel({ disabled = false }: { disabled?: boolean }) {
   const t = overview?.totals ?? {};
   const email = (extra ?? {}) as Record<string, unknown>;
   const matrix = (extra ?? {}) as { rows?: Array<Record<string, unknown>>; note?: string; kind?: string };
+  const channels = overview?.channels ?? [];
+  const channelsAllUnavailable =
+    channels.length > 0 &&
+    channels.every((c) => String(c.kind ?? '').toUpperCase() === 'UNAVAILABLE');
 
   return (
     <div className="space-y-6">
@@ -246,6 +250,14 @@ export function MarketingPanel({ disabled = false }: { disabled?: boolean }) {
             ))}
           </div>
 
+          {channelsAllUnavailable ? (
+            <GlassCard className="border-amber-500/30 p-4 text-sm text-amber-100">
+              KPI totals above are platform CRM / collected-payment aggregates — not channel
+              attribution. Every ads/email channel row is UNAVAILABLE until LIVE credentials /
+              webhook secrets are configured (zeros in the table are expected, not a sync bug).
+            </GlassCard>
+          ) : null}
+
           <GlassCard className="p-4">
             <h3 className="mb-3 text-sm font-medium">Channels</h3>
             <div className="overflow-x-auto">
@@ -262,7 +274,7 @@ export function MarketingPanel({ disabled = false }: { disabled?: boolean }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(overview?.channels ?? []).map((c) => (
+                  {channels.map((c) => (
                     <tr key={String(c.code)} className="border-t border-[var(--border)]">
                       <td className="py-2">{String(c.name)}</td>
                       <td>{na(c.spendEur as number)}</td>

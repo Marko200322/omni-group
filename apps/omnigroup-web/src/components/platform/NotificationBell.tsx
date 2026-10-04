@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -101,7 +102,7 @@ export function NotificationBell({ disabled }: Props) {
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     setUnread((c) => Math.max(0, c - 1));
     try {
-      const res = await fetch(`/api/atina/notifications/${encodeURIComponent(id)}/read`, {
+      const res = await csrfFetch(`/api/atina/notifications/${encodeURIComponent(id)}/read`, {
         method: 'PATCH',
       });
       if (!res.ok) {
@@ -118,7 +119,7 @@ export function NotificationBell({ disabled }: Props) {
     setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnread(0);
     try {
-      const res = await fetch('/api/atina/notifications/read-all', { method: 'PATCH' });
+      const res = await csrfFetch('/api/atina/notifications/read-all', { method: 'PATCH' });
       if (!res.ok) {
         if (open) void loadList();
         return;

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, Loader2, ShoppingBag } from 'lucide-react';
 import type { ClientPublicSite } from '@/lib/public-site-api';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type CatalogItem = {
   id: string;
@@ -40,7 +41,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/public/sites/${encodeURIComponent(site.slug)}/shop-order`, {
+      const res = await csrfFetch(`/api/public/sites/${encodeURIComponent(site.slug)}/shop-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ buyerName, buyerEmail, items }),

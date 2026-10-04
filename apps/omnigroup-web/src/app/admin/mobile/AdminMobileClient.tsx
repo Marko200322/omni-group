@@ -19,6 +19,7 @@ import type { AtinaPublicSnapshot } from '@/lib/atina';
 import type { AtinaAdminOverview, AtinaAdminPayment } from '@/lib/atina-live-types';
 import { buildAdminMetrics } from '@/lib/platform-metrics';
 import { subscribeAdminPush } from '@/lib/web-push-client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type Tab = 'pregled' | 'uplate' | 'fabrika' | 'akcije';
 
@@ -165,7 +166,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(url, { method: 'POST', ...init });
+      const res = await csrfFetch(url, { method: 'POST', ...init });
       const body = (await res.json()) as { ok?: boolean; error?: string; detail?: string; message?: string };
       if (!res.ok || body.ok === false) throw new Error(body.detail ?? body.error ?? 'action_failed');
       setMessage(body.message ?? 'Success.');
@@ -182,7 +183,7 @@ export default function AdminMobileClient({ snapshot, sessionEmail, overview, pe
     setMessage(null);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
+      const res = await csrfFetch(`/api/atina/payments/${encodeURIComponent(provider)}/confirm/${paymentId}`, {
         method: 'POST',
       });
       const body = (await res.json()) as { ok?: boolean; detail?: string; error?: string };

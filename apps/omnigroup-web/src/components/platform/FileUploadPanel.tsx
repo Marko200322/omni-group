@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type UploadResult = {
   ok: boolean;
@@ -67,7 +68,7 @@ export function FileUploadPanel({ disabled }: Props) {
     try {
       const body = new FormData();
       body.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body });
+      const res = await csrfFetch('/api/upload', { method: 'POST', body });
       const json = (await res.json()) as UploadResult;
       if (!res.ok || !json.ok) {
         setResult({ ok: false, error: json.error ?? 'upload_failed' });

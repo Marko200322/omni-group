@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -166,8 +167,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy('tick');
     setError(null);
     try {
-      const res = await fetch('/api/atina/autonomy-loop/tick', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/autonomy-loop/tick', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maxVerticals: 2 }),
       });
@@ -189,8 +189,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy('evolution');
     setError(null);
     try {
-      const res = await fetch('/api/atina/autonomy-loop/evolution/tick', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/autonomy-loop/evolution/tick', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
@@ -212,7 +211,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy(`research:${slug}`);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/autonomy-loop/verticals/${encodeURIComponent(slug)}/research`, {
+      const res = await csrfFetch(`/api/atina/autonomy-loop/verticals/${encodeURIComponent(slug)}/research`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ intensity: 55 }),
@@ -237,7 +236,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy(`batch:${category}`);
     setError(null);
     try {
-      const res = await fetch(
+      const res = await csrfFetch(
         `/api/atina/autonomy-loop/categories/${encodeURIComponent(category)}/batch`,
         {
           method: 'POST',
@@ -263,8 +262,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy('rollout');
     setError(null);
     try {
-      const res = await fetch('/api/atina/autonomy-loop/categories/rollout/async', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/autonomy-loop/categories/rollout/async', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode: 'full',
@@ -337,8 +335,7 @@ export function AutonomyLoopPanel({ isAdmin, disabled }: Props) {
     setBusy(start ? 'scheduler-start' : 'scheduler-stop');
     setError(null);
     try {
-      const res = await fetch(`/api/atina/autonomy-loop/scheduler/${start ? 'start' : 'stop'}`, {
-        method: 'POST',
+      const res = await csrfFetch(`/api/atina/autonomy-loop/scheduler/${start ? 'start' : 'stop'}`, { method: 'POST',
       });
       const json = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok || !json.ok) {

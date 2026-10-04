@@ -1,0 +1,26 @@
+================================================================================
+getPaymentMethods / PAYMENTS_MODE honesty — Jest
+Agent: REINVEST (of 5) + parent re-run
+Date: 2026-10-04
+================================================================================
+
+Command:
+  cd atina-platform/atina
+  npx jest --runInBand --forceExit --testPathIgnorePatterns=integration \
+    --testPathPattern="payments\.(service|module\.routes)" \
+    -t "getPaymentMethods|sandbox|PAYMENTS_MODE|effectiveMode"
+
+Result: PASS
+  Test Suites: 1 passed (payments.service.test.ts); module.routes skipped by -t filter
+  Tests:       2 passed, 113 skipped (name filter)
+  Time:        ~67 s
+
+Covered:
+  √ getPaymentMethods prefers Stripe over IBAN when a Stripe key is set
+     — mode === 'sandbox' when sk_test_ (effectiveMode)
+  √ getPaymentMethods includes manual only when Stripe is not configured
+     — mode === 'manual' when no Stripe key
+
+No code fixes required this pass.
+VERDICT: PASS
+================================================================================

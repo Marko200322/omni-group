@@ -1,0 +1,61 @@
+CSRF remaining coverage — Agent CSRF
+Date: 2026-10-04
+Helper: apps/omnigroup-web/src/lib/csrf-fetch.ts (csrfFetch / withCsrfHeaders)
+
+Already converted (prior work; not re-touched for business logic):
+- apps/omnigroup-web/src/components/platform/MarketingPanel.tsx
+- apps/omnigroup-web/src/components/platform/MonitoringPanel.tsx
+- apps/omnigroup-web/src/components/platform/ReinvestmentPanel.tsx
+- apps/omnigroup-web/src/components/platform/BillingCheckoutPanel.tsx
+- apps/omnigroup-web/src/components/platform/TwoFactorSettings.tsx
+- apps/omnigroup-web/src/components/platform/AdminPendingPaymentsPanel.tsx
+
+Files updated this pass (mutating same-origin /api calls → csrfFetch):
+- apps/omnigroup-web/src/components/platform/ResourceShopPanel.tsx
+- apps/omnigroup-web/src/components/platform/ProductFactoryPanel.tsx
+- apps/omnigroup-web/src/components/platform/AdminEnterpriseControls.tsx
+- apps/omnigroup-web/src/components/platform/HuntingStackPanel.tsx
+- apps/omnigroup-web/src/components/platform/CrmContactsPanel.tsx
+- apps/omnigroup-web/src/components/marketing/ClientSiteView.tsx
+- apps/omnigroup-web/src/components/platform/FileUploadPanel.tsx
+  (POST /api/upload — not in CSRF_EXEMPT_PATHS; FormData body kept; csrf header only)
+- apps/omnigroup-web/src/components/platform/ClientAiAssistant.tsx
+- apps/omnigroup-web/src/components/platform/InviteClientPanel.tsx
+- apps/omnigroup-web/src/components/platform/PlatformShell.tsx
+  (logout POST /api/auth/logout)
+- apps/omnigroup-web/src/components/platform/ConversationalAvatarPanel.tsx
+- apps/omnigroup-web/src/components/platform/SupportMeetingPanel.tsx
+- apps/omnigroup-web/src/components/platform/AiMemoryPanel.tsx
+- apps/omnigroup-web/src/components/platform/LiveCallPanel.tsx
+- apps/omnigroup-web/src/components/platform/DeliverableQuotePanel.tsx
+  (stripe/manual deliverable checkout + mark-sent; no Stripe LIVE/firma config changes)
+- apps/omnigroup-web/src/components/platform/AdminFulfillmentPanel.tsx
+- apps/omnigroup-web/src/components/platform/NotificationBell.tsx
+- apps/omnigroup-web/src/components/platform/AutonomyLoopPanel.tsx
+- apps/omnigroup-web/src/app/admin/mobile/AdminMobileClient.tsx
+- apps/omnigroup-web/src/app/dashboard/billing/paypal/success/page.tsx
+- apps/omnigroup-web/src/lib/web-push-client.ts
+  (POST /api/atina/admin/push/subscribe; GET vapid key left as fetch)
+
+Left intentionally unchanged:
+- apps/omnigroup-web/src/components/platform/AtinaAssistantHost.tsx
+  Reason: no fetch()/mutating /api calls (host wrapper only).
+- apps/omnigroup-web/src/app/login/page.tsx
+  Reason: /api/auth/login, /api/auth/login/2fa, /api/auth/demo are CSRF_EXEMPT_PATHS.
+- apps/omnigroup-web/src/app/register/page.tsx
+  Reason: /api/auth/register is CSRF_EXEMPT_PATHS.
+- apps/omnigroup-web/src/app/forgot-password/page.tsx
+  Reason: /api/auth/forgot-password is CSRF_EXEMPT_PATHS.
+- apps/omnigroup-web/src/app/reset-password/page.tsx
+  Reason: /api/auth/reset-password is CSRF_EXEMPT_PATHS.
+- apps/omnigroup-web/src/app/(marketing)/contact/ContactForm.tsx
+  Reason: /api/contact is CSRF_EXEMPT_PATHS.
+- GET-only client fetches (catalog loads, unread counts, status polls, etc.)
+  Reason: csrfFetch is a no-op for GET/HEAD/OPTIONS; left as fetch for clarity.
+- Server-side BFF/upstream fetch in app/api/* and lib/* (atina-bff, contact-* notify, etc.)
+  Reason: not browser double-submit clients.
+
+Verification scan (client 'use client' + web-push-client): remaining bare mutating fetch()
+only hit CSRF_EXEMPT_PATHS listed above.
+
+No commit created.

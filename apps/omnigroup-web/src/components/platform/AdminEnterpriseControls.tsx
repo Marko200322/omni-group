@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 type AdminUser = {
   id: string;
@@ -119,7 +120,7 @@ export function AdminEnterpriseControls({ disabled, currentUserId }: Props) {
     setError(null);
     setMessage(null);
     try {
-      const response = await fetch(`/api/atina/admin/${kind}/${encodeURIComponent(entity.id)}`, {
+      const response = await csrfFetch(`/api/atina/admin/${kind}/${encodeURIComponent(entity.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(changes),

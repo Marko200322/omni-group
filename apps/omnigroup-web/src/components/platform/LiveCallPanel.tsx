@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/csrf-fetch';
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -74,8 +75,7 @@ export function LiveCallPanel({ disabled, agentType = 'support' }: Props) {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch('/api/atina/live-call-avatar/session', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/live-call-avatar/session', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agentId: 'mila',
@@ -106,8 +106,7 @@ export function LiveCallPanel({ disabled, agentType = 'support' }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/atina/live-call-avatar/session/${session.sessionId}/turn`, {
-        method: 'POST',
+      const res = await csrfFetch(`/api/atina/live-call-avatar/session/${session.sessionId}/turn`, { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText }),
       });
@@ -135,7 +134,7 @@ export function LiveCallPanel({ disabled, agentType = 'support' }: Props) {
     if (!session?.sessionId) return;
     setLoading(true);
     try {
-      await fetch(`/api/atina/live-call-avatar/session/${session.sessionId}/end`, { method: 'POST' });
+      await csrfFetch(`/api/atina/live-call-avatar/session/${session.sessionId}/end`, { method: 'POST' });
       setSession(null);
       setSuccess('Session ended.');
     } catch {
@@ -149,8 +148,7 @@ export function LiveCallPanel({ disabled, agentType = 'support' }: Props) {
     if (!session?.sessionId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/atina/live-call-avatar/session/${session.sessionId}/handoff`, {
-        method: 'POST',
+      const res = await csrfFetch(`/api/atina/live-call-avatar/session/${session.sessionId}/handoff`, { method: 'POST',
       });
       const json = (await res.json()) as { ok?: boolean; data?: { message?: string; meetingUrl?: string } };
       if (json.ok) {
@@ -172,8 +170,7 @@ export function LiveCallPanel({ disabled, agentType = 'support' }: Props) {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch('/api/atina/live-call-avatar/book', {
-        method: 'POST',
+      const res = await csrfFetch('/api/atina/live-call-avatar/book', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: bookTopic.trim(),
