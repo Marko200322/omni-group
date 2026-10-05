@@ -322,9 +322,11 @@ export class ProductFactoryService {
       opts.verticalPack?.displayName ??
       opts.verticalPack?.category?.replace(/_/g, ' ') ??
       'professional services';
+    const rawProp = opts.verticalPack?.valueProp?.trim() ?? '';
     const tagline =
-      opts.verticalPack?.valueProp?.trim().slice(0, 180) ||
-      `${brandTitle} — ${nicheLabel} delivery with clear scope and measurable outcomes.`;
+      rawProp && !/platform resale|CRM, automations/i.test(rawProp)
+        ? rawProp.slice(0, 180)
+        : `${brandTitle} helps with ${nicheLabel.toLowerCase()} — clear offers, transparent pricing, and a real contact path.`;
     const branding = {
       clientName,
       verticalSlug: opts.verticalPack?.verticalSlug ?? null,

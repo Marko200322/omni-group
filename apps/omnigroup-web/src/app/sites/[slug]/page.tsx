@@ -8,9 +8,9 @@ type PageProps = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const site = await fetchClientSite(slug);
-  if (!site) return { title: 'Site' };
+  if (!site) return { title: { absolute: 'Site' } };
   return {
-    title: site.title,
+    title: { absolute: site.title },
     description: site.tagline ?? `${site.title} — professional website`,
   };
 }

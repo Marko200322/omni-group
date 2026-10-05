@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, ShoppingBag } from 'lucide-react';
 import type { ClientPublicSite } from '@/lib/public-site-api';
@@ -19,46 +19,73 @@ type Props = {
   site: ClientPublicSite;
 };
 
+function stripMd(text: string) {
+  return text.replace(/\*\*(.+?)\*\*/g, '$1').trim();
+}
+
 function renderBody(body: string) {
-  const blocks = body.split(/\n{2,}/);
-  return blocks.map((block, i) => {
-    const trimmed = block.trim();
-    if (!trimmed) return null;
-    if (trimmed.startsWith('# ')) {
-      return (
-        <h2 key={i} className="font-display text-3xl font-semibold tracking-tight text-slate-50">
-          {trimmed.slice(2)}
-        </h2>
-      );
+  const lines = body.replace(/\r\n/g, '\n').split('\n');
+  const nodes: ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+
+  while (i < lines.length) {
+    const line = lines[i] ?? '';
+    if (!line.trim()) {
+      i += 1;
+      continue;
     }
-    if (trimmed.startsWith('## ')) {
-      return (
-        <h3 key={i} className="mt-8 font-display text-xl font-semibold text-teal-100">
-          {trimmed.slice(3)}
-        </h3>
+    if (line.startsWith('# ')) {
+      nodes.push(
+        <h2 key={key++} className="font-display text-3xl font-semibold tracking-tight text-slate-50">
+          {stripMd(line.slice(2))}
+        </h2>,
       );
+      i += 1;
+      continue;
     }
-    if (trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
-      const items = trimmed
-        .split('\n')
-        .map((l) => l.replace(/^-\s*/, '').replace(/^\*\*(.+?)\*\*/g, '$1').trim())
-        .filter(Boolean);
-      return (
-        <ul key={i} className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
+    if (line.startsWith('## ')) {
+      nodes.push(
+        <h3 key={key++} className="mt-8 font-display text-xl font-semibold text-teal-100">
+          {stripMd(line.slice(3))}
+        </h3>,
+      );
+      i += 1;
+      continue;
+    }
+    if (line.trim().startsWith('- ')) {
+      const items: string[] = [];
+      while (i < lines.length && (lines[i] ?? '').trim().startsWith('- ')) {
+        items.push(stripMd((lines[i] ?? '').trim().slice(2)));
+        i += 1;
+      }
+      nodes.push(
+        <ul key={key++} className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
           {items.map((item, j) => (
             <li key={j} className="leading-relaxed">
-              {item.replace(/\*\*(.+?)\*\*/g, '$1')}
+              {item}
             </li>
           ))}
-        </ul>
+        </ul>,
       );
+      continue;
     }
-    return (
-      <p key={i} className="mt-4 leading-relaxed text-slate-300">
-        {trimmed.replace(/\*\*(.+?)\*\*/g, '$1')}
-      </p>
+    const para: string[] = [line];
+    i += 1;
+    while (i < lines.length) {
+      const next = lines[i] ?? '';
+      if (!next.trim() || next.startsWith('#') || next.trim().startsWith('- ')) break;
+      para.push(next);
+      i += 1;
+    }
+    nodes.push(
+      <p key={key++} className="mt-4 leading-relaxed text-slate-300">
+        {stripMd(para.join(' '))}
+      </p>,
     );
-  });
+  }
+
+  return nodes;
 }
 
 function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: CatalogItem[] }) {

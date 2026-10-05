@@ -92,9 +92,11 @@ async function main() {
           })
         : [];
 
+    const rawProp = pack.valueProp?.trim() ?? '';
     const tagline =
-      pack.valueProp?.trim().slice(0, 180) ||
-      `${brandTitle} — ${pack.displayName} with clear scope and measurable outcomes.`;
+      rawProp && !/platform resale|CRM, automations/i.test(rawProp)
+        ? rawProp.slice(0, 180)
+        : `${brandTitle} helps with ${pack.displayName.toLowerCase()} — clear offers, transparent pricing, and a real contact path.`;
 
     const branding = {
       ...(site.branding ?? {}),
