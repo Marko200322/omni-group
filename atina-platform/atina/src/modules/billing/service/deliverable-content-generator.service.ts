@@ -282,9 +282,11 @@ function fallbackPages(
 ): GeneratedSitePage[] {
   const copy = nicheCopyPack(niche, category);
   const brand = brandName.trim() || clientName;
+  const rawProp = valueProp?.trim() ?? '';
   const prop =
-    valueProp?.trim() ||
-    `${brand} helps ${copy.audience} achieve ${copy.outcomes.slice(0, 2).join(' and ')}.`;
+    rawProp && !/platform resale|CRM, automations/i.test(rawProp)
+      ? rawProp
+      : `${brand} helps ${copy.audience} achieve ${copy.outcomes.slice(0, 2).join(' and ')}.`;
 
   const bodies: Record<string, string> = {
     home: [
