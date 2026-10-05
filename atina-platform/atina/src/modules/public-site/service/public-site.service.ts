@@ -143,6 +143,27 @@ export class PublicSiteService {
     return this.mapClientSite(site);
   }
 
+  async replaceClientSiteContent(
+    userId: string,
+    slug: string,
+    input: {
+      title: string;
+      tagline?: string | null;
+      branding?: Record<string, unknown>;
+      pages: Array<{ slug: string; title: string; body: string; kind?: string }>;
+    },
+  ) {
+    if (!input.pages?.length) throw new ValidationError('pages required');
+    const site = await this.repo.updateClientSiteContent(slug, userId, {
+      title: input.title,
+      tagline: input.tagline ?? null,
+      branding: input.branding,
+      pages: input.pages,
+    });
+    if (!site) throw new NotFoundError('Client public site');
+    return this.mapClientSite(site);
+  }
+
   /** Scaffold from product factory project + optional deliverable type. */
   async scaffoldFromProject(input: {
     userId: string;
@@ -233,7 +254,9 @@ export class PublicSiteService {
       projectId: input.projectId,
       slug: input.slug,
       title: input.title,
-      tagline: input.clientName ? `Digital presence — ${input.clientName}` : null,
+      tagline: input.clientName
+        ? `${input.clientName} — professional presence with clear offers and a real contact path.`
+        : null,
       siteType,
       branding: {
         clientName: input.clientName ?? null,
@@ -283,7 +306,7 @@ export class PublicSiteService {
         status: 'prospect',
         source: `shop:${slug}`,
         tags: ['shop-order', slug],
-        notes: `Order ${paymentReference} — €${total.toFixed(2)}`,
+        notes: `Order ${paymentReference} — EUR ${total.toFixed(2)}`,
         customFields: { orderId: order.id, paymentReference },
       });
     } catch {

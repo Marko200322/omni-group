@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Loader2, ShoppingBag } from 'lucide-react';
+import { Loader2, ShoppingBag } from 'lucide-react';
 import type { ClientPublicSite } from '@/lib/public-site-api';
 import { csrfFetch } from '@/lib/csrf-fetch';
 
@@ -18,6 +18,48 @@ type CatalogItem = {
 type Props = {
   site: ClientPublicSite;
 };
+
+function renderBody(body: string) {
+  const blocks = body.split(/\n{2,}/);
+  return blocks.map((block, i) => {
+    const trimmed = block.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('# ')) {
+      return (
+        <h2 key={i} className="font-display text-3xl font-semibold tracking-tight text-slate-50">
+          {trimmed.slice(2)}
+        </h2>
+      );
+    }
+    if (trimmed.startsWith('## ')) {
+      return (
+        <h3 key={i} className="mt-8 font-display text-xl font-semibold text-teal-100">
+          {trimmed.slice(3)}
+        </h3>
+      );
+    }
+    if (trimmed.includes('\n- ') || trimmed.startsWith('- ')) {
+      const items = trimmed
+        .split('\n')
+        .map((l) => l.replace(/^-\s*/, '').replace(/^\*\*(.+?)\*\*/g, '$1').trim())
+        .filter(Boolean);
+      return (
+        <ul key={i} className="mt-4 list-disc space-y-2 pl-5 text-slate-300">
+          {items.map((item, j) => (
+            <li key={j} className="leading-relaxed">
+              {item.replace(/\*\*(.+?)\*\*/g, '$1')}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    return (
+      <p key={i} className="mt-4 leading-relaxed text-slate-300">
+        {trimmed.replace(/\*\*(.+?)\*\*/g, '$1')}
+      </p>
+    );
+  });
+}
 
 function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: CatalogItem[] }) {
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -71,11 +113,15 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
 
   if (result) {
     return (
-      <div className="mt-8 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-sm text-emerald-100">
+      <div className="mt-8 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-6 text-sm text-teal-50">
         <p className="font-semibold text-white">Order received</p>
-        <p className="mt-2">Reference: <span className="font-mono">{result.paymentReference}</span></p>
+        <p className="mt-2">
+          Reference: <span className="font-mono">{result.paymentReference}</span>
+        </p>
         <p className="mt-1">Total: EUR {result.totalEur.toFixed(2)}</p>
-        <p className="mt-3 text-slate-300">Complete bank transfer with the reference above. The store owner will confirm your order.</p>
+        <p className="mt-3 text-slate-300">
+          Complete bank transfer with the reference above. The store owner will confirm your order.
+        </p>
       </div>
     );
   }
@@ -84,11 +130,11 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
     <div className="mt-8 space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         {catalog.map((product) => (
-          <div key={product.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <div key={product.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="font-medium text-white">{product.name}</p>
             <p className="mt-1 text-xs text-slate-400">{product.description}</p>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-lg font-bold text-violet-200">EUR {product.priceEur.toFixed(2)}</span>
+              <span className="text-lg font-bold text-teal-200">EUR {product.priceEur.toFixed(2)}</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -100,7 +146,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
                 <span className="w-6 text-center text-sm">{cart[product.id] ?? 0}</span>
                 <button
                   type="button"
-                  className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-sm text-violet-200"
+                  className="rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 py-1 text-sm text-teal-100"
                   onClick={() => setCart((c) => ({ ...c, [product.id]: (c[product.id] ?? 0) + 1 }))}
                 >
                   +
@@ -112,8 +158,10 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
       </div>
 
       {items.length > 0 && (
-        <div className="rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
-          <p className="text-sm text-slate-300">Cart total: <strong className="text-white">EUR {total.toFixed(2)}</strong></p>
+        <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4">
+          <p className="text-sm text-slate-300">
+            Cart total: <strong className="text-white">EUR {total.toFixed(2)}</strong>
+          </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <input
               className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
@@ -132,7 +180,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
           <button
             type="button"
             disabled={loading || !buyerName || !buyerEmail}
-            className="btn-primary mt-3 flex items-center gap-2 text-sm disabled:opacity-50"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
             onClick={() => void submit()}
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
@@ -167,6 +215,8 @@ export function ClientSiteView({ site }: Props) {
 
   const clientName =
     typeof site.branding?.clientName === 'string' ? site.branding.clientName : site.title;
+  const niche =
+    typeof site.branding?.niche === 'string' ? site.branding.niche : null;
 
   const showShop = site.siteType === 'ecommerce' && catalog.length > 0;
   const navPages = useMemo(() => {
@@ -174,31 +224,42 @@ export function ClientSiteView({ site }: Props) {
     if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
     return [
       ...pages.slice(0, 1),
-      { slug: 'shop', title: 'Shop', kind: 'shop' as const, body: 'Browse demo products and place a manual checkout request.' },
+      {
+        slug: 'shop',
+        title: 'Shop',
+        kind: 'shop' as const,
+        body: 'Browse products and place a checkout request.',
+      },
       ...pages.slice(1),
     ];
   }, [pages, showShop]);
 
   return (
-    <div className="min-h-[70vh] bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20">
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-5">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-violet-300/80">Client site</p>
-            <h1 className="font-display text-2xl font-bold text-white">{site.title}</h1>
-            {site.tagline ? <p className="mt-1 text-sm text-slate-400">{site.tagline}</p> : null}
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_rgba(15,118,110,0.18),_transparent_55%),linear-gradient(180deg,#071018_0%,#0b1220_45%,#071018_100%)] text-slate-100">
+      <header className="border-b border-white/8">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-6 px-4 pb-6 pt-10">
+          <div className="max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.22em] text-teal-300/80">
+              {niche ?? (site.siteType === 'ecommerce' ? 'Shop' : 'Business')}
+            </p>
+            <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
+              {site.title}
+            </h1>
+            {site.tagline ? (
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-400">{site.tagline}</p>
+            ) : null}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="text-right text-sm text-slate-500">
+            <p className="text-slate-300">{clientName}</p>
             {site.siteType === 'ecommerce' ? (
-              <ShoppingBag className="h-4 w-4 text-violet-300" />
-            ) : (
-              <Globe className="h-4 w-4 text-violet-300" />
-            )}
-            {clientName}
+              <p className="mt-1 inline-flex items-center gap-1 text-teal-200/80">
+                <ShoppingBag className="h-3.5 w-3.5" /> Online orders
+              </p>
+            ) : null}
           </div>
         </div>
         {navPages.length > 1 ? (
-          <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-3">
+          <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-4">
             {navPages.map((p) => (
               <button
                 key={p.slug}
@@ -206,7 +267,7 @@ export function ClientSiteView({ site }: Props) {
                 onClick={() => setActiveSlug(p.slug)}
                 className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition ${
                   activeSlug === p.slug
-                    ? 'bg-violet-500/20 text-violet-100'
+                    ? 'bg-teal-500/20 text-teal-50'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
@@ -219,30 +280,28 @@ export function ClientSiteView({ site }: Props) {
 
       <motion.main
         key={activePage?.slug ?? activeSlug}
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
         className="mx-auto max-w-3xl px-4 py-12"
       >
         {showShop && (activeSlug === 'shop' || activePage?.kind === 'shop') ? (
           <>
             <h2 className="font-display text-3xl font-semibold text-white">Shop</h2>
             <p className="mt-3 text-sm text-slate-400">
-              Demo catalog — checkout is manual bank transfer, not a live merchant Stripe shop.
+              Catalog for this business — checkout uses bank transfer with a payment reference (card
+              when enabled).
             </p>
             <EcommerceCatalog site={site} catalog={catalog} />
           </>
         ) : activePage ? (
           <>
-            <h2 className="font-display text-3xl font-semibold text-white">{activePage.title}</h2>
-            <div className="prose prose-invert mt-6 max-w-none text-slate-300">
-              {activePage.body.split('\n').map((line, i) => (
-                <p key={`${activePage.slug}-${i}`} className="mb-3 leading-relaxed">
-                  {line}
-                </p>
-              ))}
-            </div>
+            <div className="space-y-1">{renderBody(activePage.body)}</div>
             {activePage.kind === 'contact' ? (
-              <Link href={`/contact?service=${encodeURIComponent(site.slug)}`} className="btn-primary mt-8 inline-flex text-sm">
+              <Link
+                href={`/contact?service=${encodeURIComponent(site.slug)}`}
+                className="mt-10 inline-flex rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-slate-950"
+              >
                 Send inquiry
               </Link>
             ) : null}
@@ -252,8 +311,8 @@ export function ClientSiteView({ site }: Props) {
         )}
       </motion.main>
 
-      <footer className="border-t border-white/5 px-4 py-6 text-center text-xs text-slate-600">
-        Powered by Omni Group Tech · multi-tenant public site
+      <footer className="border-t border-white/5 px-4 py-8 text-center text-xs text-slate-600">
+        {clientName}
       </footer>
     </div>
   );

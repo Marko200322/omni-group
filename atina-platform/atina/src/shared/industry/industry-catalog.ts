@@ -125,7 +125,7 @@ export function resolveVerticalSlug(verticalSlug: string | null | undefined): Re
         verticalSlug: slug,
         category: cat.slug,
         subtype,
-        name: `${titleCaseSubtype(subtype)} (${cat.nameSr})`,
+        name: `${titleCaseSubtype(subtype)} — ${cat.name}`,
         categoryMeta: cat,
         pricingTier: cat.tier,
       };

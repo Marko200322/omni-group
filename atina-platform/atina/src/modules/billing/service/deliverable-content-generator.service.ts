@@ -19,7 +19,7 @@ const BUSINESS_PAGE_BLUEPRINT: Array<{ slug: string; title: string; kind: string
   { slug: 'services', title: 'Services', kind: 'services' },
   { slug: 'about', title: 'About us', kind: 'about' },
   { slug: 'pricing', title: 'Pricing', kind: 'pricing' },
-  { slug: 'portfolio', title: 'Portfolio', kind: 'portfolio' },
+  { slug: 'portfolio', title: 'Work', kind: 'portfolio' },
   { slug: 'faq', title: 'FAQ', kind: 'faq' },
   { slug: 'testimonials', title: 'Testimonials', kind: 'testimonials' },
   { slug: 'blog', title: 'Insights', kind: 'blog' },
@@ -27,29 +27,400 @@ const BUSINESS_PAGE_BLUEPRINT: Array<{ slug: string; title: string; kind: string
   { slug: 'contact', title: 'Contact', kind: 'contact' },
 ];
 
-function fallbackPages(title: string, clientName: string, pageCount: number, niche = 'your industry'): GeneratedSitePage[] {
+/** Strip Serbian parentheticals / slug noise → client-facing English niche. */
+export function englishNicheLabel(input: {
+  verticalPack?: VerticalDeliveryPack | null;
+  industryCategory?: string | null;
+}): string {
+  const pack = input.verticalPack;
+  if (pack?.subtype?.trim()) {
+    return pack.subtype
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+  if (pack?.displayName?.trim()) {
+    const cleaned = pack.displayName.split('(')[0]?.trim() ?? pack.displayName.trim();
+    if (cleaned && !/[ČĆŽŠĐčćžšđ]/.test(cleaned)) return cleaned;
+  }
+  if (pack?.category?.trim()) {
+    return pack.category
+      .replace(/_/g, ' ')
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+  const raw = (input.industryCategory ?? '').trim();
+  if (!raw) return 'professional services';
+  return raw
+    .replace(/_/g, ' ')
+    .replace(/-/g, ' ')
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+type NicheCopy = {
+  services: string[];
+  outcomes: string[];
+  audience: string;
+  proof: string;
+  products: Array<{ name: string; description: string; priceEur: number }>;
+};
+
+function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
+  const key = (category ?? niche).toLowerCase().replace(/[\s-]+/g, '_');
+  const packs: Record<string, NicheCopy> = {
+    fitness: {
+      services: [
+        'Personal training programs with measurable milestones',
+        'Group classes and hybrid online coaching',
+        'Nutrition guidance and habit tracking',
+        'Corporate wellness workshops',
+      ],
+      outcomes: ['higher retention', 'clearer onboarding', 'booked intro sessions'],
+      audience: 'athletes, busy professionals, and studios that need a credible digital front door',
+      proof: 'Members see progress in the first 30 days — or we adjust the plan together.',
+      products: [
+        { name: 'Intro assessment', description: '60-minute movement screen + goal plan.', priceEur: 49 },
+        { name: '4-week starter', description: 'Two sessions/week + habit checklist.', priceEur: 129 },
+        { name: '8-week transform', description: 'Coaching, nutrition, and weekly check-ins.', priceEur: 249 },
+        { name: 'Monthly membership', description: 'Unlimited class access + app tracking.', priceEur: 89 },
+        { name: 'Online coaching', description: 'Remote programming with video form review.', priceEur: 119 },
+        { name: 'Corporate wellness day', description: 'On-site workshop for teams (half day).', priceEur: 490 },
+        { name: 'Nutrition block', description: 'Four-week meal framework with shopping lists.', priceEur: 99 },
+        { name: 'Private PT package', description: '10 one-to-one sessions with progress report.', priceEur: 390 },
+      ],
+    },
+    legal_services: {
+      services: [
+        'Contract drafting and review with plain-language summaries',
+        'GDPR and compliance documentation packs',
+        'Business formation and shareholder agreements',
+        'Dispute triage and negotiation support',
+      ],
+      outcomes: ['fewer contract delays', 'audit-ready files', 'clear next steps'],
+      audience: 'founders, SMEs, and teams that need reliable legal support without jargon',
+      proof: 'Every engagement starts with a scoped brief and written timeline.',
+      products: [
+        { name: 'Contract review', description: 'Standard commercial agreement review (up to 15 pages).', priceEur: 199 },
+        { name: 'Startup pack', description: 'NDA + service agreement + privacy notice.', priceEur: 490 },
+        { name: 'GDPR starter', description: 'Processing register + policy templates.', priceEur: 390 },
+        { name: 'Hourly counsel', description: 'Advisory block for ongoing questions.', priceEur: 149 },
+        { name: 'Shareholder agreement', description: 'Founder agreement with vesting schedule.', priceEur: 790 },
+        { name: 'Employment pack', description: 'Offer letter + contract + handbook basics.', priceEur: 349 },
+        { name: 'Dispute triage', description: 'Written risk memo and recommended options.', priceEur: 299 },
+        { name: 'Retainer (monthly)', description: 'Priority response and document queue.', priceEur: 590 },
+      ],
+    },
+    legal: {
+      services: [
+        'Commercial contracts and negotiation support',
+        'Compliance documentation for regulated work',
+        'Client intake and matter intake workflows',
+        'Plain-language legal summaries for decision makers',
+      ],
+      outcomes: ['faster intake', 'cleaner documentation', 'lower review risk'],
+      audience: 'businesses that need practical legal delivery, not theater',
+      proof: 'Scoped engagements with clear deliverables and response SLAs.',
+      products: [
+        { name: 'Matter intake', description: 'Structured brief and conflict check.', priceEur: 99 },
+        { name: 'Contract review', description: 'Commercial agreement markup + summary.', priceEur: 249 },
+        { name: 'Compliance pack', description: 'Policy set tailored to your operations.', priceEur: 490 },
+        { name: 'Advisory hour', description: 'Focused counsel on a defined question.', priceEur: 179 },
+        { name: 'Template pack', description: 'Reusable NDA, MSA, and SOW templates.', priceEur: 320 },
+        { name: 'Dispute memo', description: 'Options analysis with next-step plan.', priceEur: 390 },
+        { name: 'Retainer light', description: 'Monthly document queue and Q&A.', priceEur: 690 },
+        { name: 'Board briefing', description: 'One-page legal risk briefing for leadership.', priceEur: 220 },
+      ],
+    },
+    ecommerce: {
+      services: [
+        'Product catalog setup with clear pricing',
+        'Checkout and order handoff (bank transfer / card when enabled)',
+        'Listing copy and category structure',
+        'Post-purchase follow-up and support routing',
+      ],
+      outcomes: ['faster checkout', 'fewer abandoned carts', 'cleaner catalog'],
+      audience: 'brands and stores that need a trustworthy shop front',
+      proof: 'Catalog, cart, and order reference flow are live on day one.',
+      products: [
+        { name: 'Starter kit', description: 'Entry product bundle with onboarding guide.', priceEur: 49 },
+        { name: 'Best seller', description: 'Flagship offer with priority fulfillment.', priceEur: 89 },
+        { name: 'Pro bundle', description: 'Expanded kit for growing teams.', priceEur: 129 },
+        { name: 'Premium set', description: 'Full package with setup call.', priceEur: 199 },
+        { name: 'Add-on support', description: '30-day email support for buyers.', priceEur: 39 },
+        { name: 'Wholesale case', description: 'Bulk pack for resellers.', priceEur: 349 },
+        { name: 'Gift package', description: 'Curated set ready to ship.', priceEur: 79 },
+        { name: 'Enterprise kit', description: 'Custom scoped delivery for larger orders.', priceEur: 790 },
+      ],
+    },
+    hospitality: {
+      services: [
+        'Booking-ready landing pages and menus',
+        'Event and private dining packages',
+        'Guest FAQ and house rules',
+        'Seasonal offer campaigns',
+      ],
+      outcomes: ['more direct bookings', 'clearer guest expectations', 'faster inquiries'],
+      audience: 'hotels, restaurants, and venues that want guests to book with confidence',
+      proof: 'Guests can understand offers, pricing, and how to reserve in under a minute.',
+      products: [
+        { name: 'Table for two', description: 'Standard dining reservation deposit.', priceEur: 40 },
+        { name: 'Chef tasting', description: 'Five-course tasting menu for two.', priceEur: 129 },
+        { name: 'Private dining', description: 'Private room package (up to 8 guests).', priceEur: 390 },
+        { name: 'Weekend stay', description: 'Two-night stay with breakfast.', priceEur: 249 },
+        { name: 'Event catering', description: 'Buffet package for 20 guests.', priceEur: 690 },
+        { name: 'Wine pairing', description: 'Sommelier pairing add-on.', priceEur: 59 },
+        { name: 'Brunch package', description: 'Weekend brunch for four.', priceEur: 99 },
+        { name: 'Corporate lunch', description: 'Working lunch for 10 guests.', priceEur: 220 },
+      ],
+    },
+    healthcare: {
+      services: [
+        'Patient-facing service pages with clear intake',
+        'Appointment request flow and response SLA',
+        'Clinic credentials and care philosophy',
+        'Aftercare and FAQ education',
+      ],
+      outcomes: ['fewer no-shows', 'clearer intake', 'trustworthy first visit'],
+      audience: 'clinics and practices that need a professional, calm digital presence',
+      proof: 'Patients know what to expect before they book.',
+      products: [
+        { name: 'Initial consult', description: 'First visit assessment and care plan.', priceEur: 79 },
+        { name: 'Follow-up visit', description: 'Progress review and adjustments.', priceEur: 59 },
+        { name: 'Care package', description: 'Four-visit package with priority booking.', priceEur: 220 },
+        { name: 'Telehealth session', description: 'Remote consult with written summary.', priceEur: 69 },
+        { name: 'Diagnostics panel', description: 'Standard screening panel coordination.', priceEur: 149 },
+        { name: 'Wellness plan', description: '8-week guided plan with check-ins.', priceEur: 290 },
+        { name: 'Family package', description: 'Intake for up to three family members.', priceEur: 199 },
+        { name: 'Corporate screening', description: 'On-site screening day for teams.', priceEur: 990 },
+      ],
+    },
+    development_it: {
+      services: [
+        'Product discovery and technical scoping',
+        'Web and API delivery with staged releases',
+        'Integrations (CRM, payments, messaging)',
+        'Maintenance retainers and incident response',
+      ],
+      outcomes: ['shipped increments', 'fewer integration surprises', 'documented handoff'],
+      audience: 'operators who need working software, not slideware',
+      proof: 'Every engagement ends with runnable delivery and a written runbook.',
+      products: [
+        { name: 'Discovery workshop', description: 'Half-day scope and architecture sketch.', priceEur: 490 },
+        { name: 'Landing sprint', description: 'One-week marketing site delivery.', priceEur: 1290 },
+        { name: 'Integration day', description: 'Single system integration + tests.', priceEur: 790 },
+        { name: 'Bugfix block', description: '8-hour focused remediation block.', priceEur: 390 },
+        { name: 'API starter', description: 'CRUD API with auth and docs.', priceEur: 1490 },
+        { name: 'Retainer (monthly)', description: 'Ongoing fixes and small features.', priceEur: 990 },
+        { name: 'Performance audit', description: 'Load and Core Web Vitals review.', priceEur: 590 },
+        { name: 'Handoff pack', description: 'Runbook, credentials map, and training call.', priceEur: 320 },
+      ],
+    },
+    marketing: {
+      services: [
+        'Positioning and offer messaging',
+        'Landing pages and campaign assets',
+        'Lead capture and CRM handoff',
+        'Monthly performance reviews',
+      ],
+      outcomes: ['clearer messaging', 'qualified inquiries', 'repeatable campaigns'],
+      audience: 'teams that need marketing that converts, not vanity metrics',
+      proof: 'Every campaign has a defined CTA, tracking, and a weekly review loop.',
+      products: [
+        { name: 'Offer rewrite', description: 'Homepage and offer messaging pass.', priceEur: 390 },
+        { name: 'Campaign pack', description: 'Landing + 5 creatives + tracking plan.', priceEur: 790 },
+        { name: 'SEO sprint', description: 'Technical fixes + 10 page briefs.', priceEur: 690 },
+        { name: 'Lead magnet', description: 'Guide + capture form + nurture emails.', priceEur: 490 },
+        { name: 'Ads setup', description: 'Account structure and first campaigns.', priceEur: 590 },
+        { name: 'Monthly retain', description: 'Content + reporting + iteration.', priceEur: 990 },
+        { name: 'Brand kit', description: 'Voice, visuals, and usage rules.', priceEur: 450 },
+        { name: 'Funnel audit', description: 'Conversion review with prioritized fixes.', priceEur: 320 },
+      ],
+    },
+  };
+
+  const direct = packs[key];
+  if (direct) return direct;
+
+  for (const [k, v] of Object.entries(packs)) {
+    if (key.includes(k) || niche.toLowerCase().includes(k.replace(/_/g, ' '))) return v;
+  }
+
+  return {
+    services: [
+      `${niche} consulting and delivery scoped to your goals`,
+      'Clear onboarding with a written plan in the first week',
+      'Process automation and CRM follow-up where it saves time',
+      'Ongoing support with response targets you can count on',
+    ],
+    outcomes: ['faster decisions', 'cleaner handoffs', 'measurable delivery'],
+    audience: `organizations that need credible ${niche.toLowerCase()} delivery`,
+    proof: 'We start with a scoped brief, milestones, and a single accountable owner.',
+    products: [
+      { name: 'Discovery call', description: `Scoped intake for ${niche.toLowerCase()} work.`, priceEur: 49 },
+      { name: 'Starter package', description: 'Core deliverable with onboarding checklist.', priceEur: 129 },
+      { name: 'Growth package', description: 'Expanded scope with weekly check-ins.', priceEur: 249 },
+      { name: 'Premium package', description: 'Priority delivery and dedicated support.', priceEur: 490 },
+      { name: 'Implementation day', description: 'Hands-on build/configure day.', priceEur: 390 },
+      { name: 'Support retainer', description: 'Monthly support block with SLA.', priceEur: 299 },
+      { name: 'Workshop', description: 'Half-day team workshop on site or remote.', priceEur: 590 },
+      { name: 'Enterprise kit', description: 'Custom multi-workstream delivery.', priceEur: 990 },
+    ],
+  };
+}
+
+function fallbackPages(
+  brandName: string,
+  clientName: string,
+  pageCount: number,
+  niche: string,
+  category?: string | null,
+  valueProp?: string | null,
+): GeneratedSitePage[] {
+  const copy = nicheCopyPack(niche, category);
+  const brand = brandName.trim() || clientName;
+  const prop =
+    valueProp?.trim() ||
+    `${brand} helps ${copy.audience} achieve ${copy.outcomes.slice(0, 2).join(' and ')}.`;
+
+  const bodies: Record<string, string> = {
+    home: [
+      `# ${brand}`,
+      '',
+      prop,
+      '',
+      `We specialize in ${niche.toLowerCase()} — practical delivery, transparent pricing, and ${copy.proof}`,
+      '',
+      '## What you get',
+      `- Clear scope before work starts`,
+      `- ${copy.outcomes.map((o) => o.charAt(0).toUpperCase() + o.slice(1)).join(', ')}`,
+      `- A single point of contact from kickoff to handoff`,
+      '',
+      '## Next step',
+      'Book an intro call or send a short brief — we respond within one business day.',
+    ].join('\n'),
+    services: [
+      `# Services for ${niche}`,
+      '',
+      `${brand} delivers finished work — not tool licenses. Typical engagements include:`,
+      '',
+      ...copy.services.map((s) => `- ${s}`),
+      '',
+      'Every service comes with written acceptance criteria and a delivery timeline you can share with your team.',
+    ].join('\n'),
+    about: [
+      `# About ${brand}`,
+      '',
+      `${clientName} built ${brand} to serve ${copy.audience}.`,
+      '',
+      `Our approach is simple: understand the problem, propose a scoped plan, deliver in visible increments, and leave you with documentation you can operate without us.`,
+      '',
+      copy.proof,
+    ].join('\n'),
+    pricing: [
+      `# Pricing`,
+      '',
+      'Transparent packages — customize as needed:',
+      '',
+      `- **Starter** — focused delivery for a single priority (from EUR ${copy.products[0]?.priceEur ?? 99})`,
+      `- **Growth** — multi-week program with check-ins (from EUR ${copy.products[2]?.priceEur ?? 249})`,
+      `- **Partner** — ongoing retainer with priority response (from EUR ${copy.products[5]?.priceEur ?? 299})`,
+      '',
+      'Final quotes are written before work begins. No surprise change orders without your approval.',
+    ].join('\n'),
+    portfolio: [
+      `# Selected work`,
+      '',
+      `${brand} ships practical ${niche.toLowerCase()} outcomes. Recent engagement patterns:`,
+      '',
+      `- Discovery → scoped proposal → delivered milestone in under two weeks`,
+      `- Catalog / service pages rewritten for clarity and conversion`,
+      `- Handoff pack: credentials map, runbook, and training call`,
+      '',
+      'Ask for anonymized case notes relevant to your industry.',
+    ].join('\n'),
+    faq: [
+      `# FAQ`,
+      '',
+      '**How fast can we start?** Usually within 3–5 business days after scope sign-off.',
+      '',
+      '**What do you need from us?** Goals, brand assets (logo/colors if any), and one decision-maker.',
+      '',
+      '**Is this a template?** No — pages, offers, and catalog are written for your niche and brand name.',
+      '',
+      '**How do payments work?** Invoices in EUR with a clear payment reference. Shop orders use bank transfer (card checkout when enabled).',
+    ].join('\n'),
+    testimonials: [
+      `# What clients say`,
+      '',
+      `"${brand} made the process boring in the best way — clear scope, on-time delivery, no chase." — Operations lead`,
+      '',
+      `"We finally have a site that explains what we do without sounding generic." — Founder`,
+      '',
+      `"Shop orders and follow-up actually work. The team knows what happens after checkout." — Studio manager`,
+    ].join('\n'),
+    blog: [
+      `# Insights`,
+      '',
+      `## How ${niche.toLowerCase()} teams waste budget on vague websites`,
+      'If visitors cannot tell what you sell in ten seconds, you are paying for decoration.',
+      '',
+      `## A simple delivery checklist for ${niche.toLowerCase()}`,
+      'Scope, proof, pricing, contact path, and one CTA — everything else is optional.',
+      '',
+      '## Why we publish live URLs before calling a package done',
+      'Documents alone are not a website. Clients deserve a working link and an invoice trail.',
+    ].join('\n'),
+    team: [
+      `# Team`,
+      '',
+      `${brand} is led by ${clientName} with specialist partners for design, delivery, and support.`,
+      '',
+      'You always have one accountable owner. Specialists join when the work needs them — not as a committee.',
+    ].join('\n'),
+    contact: [
+      `# Contact ${brand}`,
+      '',
+      'Tell us what you need and the outcome you want in the next 30–60 days.',
+      '',
+      '- Response within one business day',
+      '- Written proposal before any paid work',
+      '- EUR pricing with a clear invoice reference',
+      '',
+      'Prefer email or a short call — whichever is faster for you.',
+    ].join('\n'),
+    shop: [
+      `# Shop`,
+      '',
+      `Demo catalog for ${brand} (${niche}). Add items to cart and place an order — checkout uses manual bank transfer with a payment reference (card checkout when enabled for the store).`,
+      '',
+      'Not a toy list: prices and SKUs are set for this niche so you can demonstrate a real buying path.',
+    ].join('\n'),
+  };
+
   const blueprint =
-    pageCount <= 3
-      ? BUSINESS_PAGE_BLUEPRINT.filter((p) => ['home', 'services', 'contact'].includes(p.slug))
-      : BUSINESS_PAGE_BLUEPRINT.slice(0, Math.min(pageCount, BUSINESS_PAGE_BLUEPRINT.length));
+    pageCount <= 1
+      ? [{ slug: 'home', title: 'Home', kind: 'home' }]
+      : pageCount <= 3
+        ? BUSINESS_PAGE_BLUEPRINT.filter((p) => ['home', 'services', 'contact'].includes(p.slug))
+        : BUSINESS_PAGE_BLUEPRINT.slice(0, Math.min(pageCount, BUSINESS_PAGE_BLUEPRINT.length));
 
   return blueprint.map((p) => ({
     ...p,
-    body:
-      p.kind === 'home'
-        ? `Welcome to ${title}. ${clientName} delivers premium ${niche} services with transparent pricing and measurable results.\n\nWe combine strategy, automation, and dedicated support so you can focus on growth.`
-        : p.kind === 'contact'
-          ? 'Schedule a consultation today. We respond within 24 hours on business days.\n\nEmail, phone, or book a video call — whichever works best for you.'
-          : `${p.title} tailored for ${clientName} in ${niche}. Our team brings proven workflows, industry benchmarks, and hands-on implementation.`,
+    title: p.kind === 'home' ? brand : p.title,
+    body: bodies[p.kind] ?? `${p.title} for ${brand} in ${niche}. ${prop}`,
   }));
 }
 
-function parsePagesJson(raw: string, expectedMin: number, title: string, clientName: string): GeneratedSitePage[] | null {
+function parsePagesJson(raw: string, expectedMin: number): GeneratedSitePage[] | null {
   try {
     const parsed = JSON.parse(raw) as { pages?: GeneratedSitePage[] };
     if (!Array.isArray(parsed.pages) || parsed.pages.length < expectedMin) return null;
     const valid = parsed.pages.every(
-      (p) => typeof p.slug === 'string' && typeof p.title === 'string' && typeof p.body === 'string'
+      (p) => typeof p.slug === 'string' && typeof p.title === 'string' && typeof p.body === 'string',
     );
     if (!valid) return null;
     return parsed.pages.map((p) => ({
@@ -82,27 +453,48 @@ export class DeliverableContentGeneratorService {
           : 10;
 
     const ai = getAiClient();
-    const niche = input.verticalPack?.displayName ?? input.industryCategory ?? 'general business';
+    const niche = englishNicheLabel({
+      verticalPack: input.verticalPack,
+      industryCategory: input.industryCategory,
+    });
+    const brandName = (input.title || input.clientName).trim();
     const hooks = input.verticalPack?.outreachHooks ?? [];
     const keywords = input.verticalPack?.keywords ?? [];
+    const category = input.verticalPack?.category ?? input.industryCategory ?? null;
 
     const ensureShopPage = (pages: GeneratedSitePage[]): GeneratedSitePage[] => {
       if (input.deliverableId !== 'website-ecommerce') return pages;
       if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
+      const shopBody = fallbackPages(brandName, input.clientName, 1, niche, category, input.verticalPack?.valueProp)[0];
       return [
         ...pages.slice(0, 1),
         {
           slug: 'shop',
           title: 'Shop',
           kind: 'shop',
-          body: `Demo product catalog for ${input.clientName} (${niche}). Checkout uses manual bank transfer — not a live merchant Stripe shop.`,
+          body:
+            shopBody?.kind === 'shop'
+              ? shopBody.body
+              : `Demo product catalog for ${brandName} (${niche}). Checkout uses manual bank transfer — not a live merchant Stripe shop unless card checkout is enabled.`,
         },
         ...pages.slice(1),
       ];
     };
 
+    const fallback = () =>
+      ensureShopPage(
+        fallbackPages(
+          brandName,
+          input.clientName,
+          pageCount,
+          niche,
+          category,
+          input.verticalPack?.valueProp,
+        ),
+      );
+
     if (!ai.isConfigured()) {
-      return ensureShopPage(fallbackPages(input.title, input.clientName, pageCount, niche));
+      return fallback();
     }
 
     const blueprint =
@@ -118,23 +510,27 @@ export class DeliverableContentGeneratorService {
     try {
       const chat = await ai.chatCompletions({
         maxTokens: 6000,
-        temperature: 0.5,
+        temperature: 0.45,
         messages: [
           {
             role: 'system',
-            content: `You are a senior agency copywriter and UX strategist for premium B2B websites.
+            content: `You are a senior agency copywriter for premium client websites.
 Reply with JSON only: {"pages":[{"slug":"...","title":"...","kind":"...","body":"..."}]}
-Each body: 3–5 paragraphs, professional English, markdown headings allowed.
-Include niche-specific services, social proof tone, clear CTAs, SEO-friendly phrasing.
-Use keywords naturally: ${keywords.slice(0, 8).join(', ')}.
-No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.`,
+Rules:
+- Brand name is "${brandName}" (client brand). Never use package SKU names as the site title.
+- Niche: ${niche}. Write natural English — no Serbian labels in parentheses.
+- Each body: 3–5 short paragraphs or markdown sections with headings and bullets.
+- Include niche-specific services, social proof tone, clear CTAs, SEO-friendly phrasing.
+- Keywords (use naturally): ${keywords.slice(0, 8).join(', ') || niche}.
+- No lorem ipsum. No "Digital presence —". No Omni Group marketing speak on client pages.
+- Match EUR ${deliverable?.anchorEur ?? 2000}+ premium positioning.`,
           },
           {
             role: 'user',
             content: JSON.stringify(
               mergeHintsIntoPayload(
                 {
-                  businessName: input.title,
+                  businessName: brandName,
                   clientName: input.clientName,
                   industry: niche,
                   valueProposition: input.verticalPack?.valueProp,
@@ -152,7 +548,7 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
       });
 
       if (chat?.content) {
-        const fromAi = parsePagesJson(chat.content, Math.min(3, pageCount), input.title, input.clientName);
+        const fromAi = parsePagesJson(chat.content, Math.min(3, pageCount));
         if (fromAi) return ensureShopPage(fromAi);
       }
     } catch (err) {
@@ -161,20 +557,25 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
       });
     }
 
-    return ensureShopPage(fallbackPages(input.title, input.clientName, pageCount, niche));
+    return fallback();
   }
 
   async generateProjectBrief(input: {
     deliverableId: string;
     clientName: string;
     industryCategory?: string | null;
+    verticalPack?: VerticalDeliveryPack;
     generationHints?: FulfillmentGenerationHints;
   }): Promise<string> {
     const deliverable = getDeliverable(input.deliverableId);
+    const niche = englishNicheLabel({
+      verticalPack: input.verticalPack,
+      industryCategory: input.industryCategory,
+    });
     const base = deliverable?.description ?? input.deliverableId;
     const ai = getAiClient();
     if (!ai.isConfigured()) {
-      return `${base} — automated delivery for ${input.clientName}.`;
+      return `${base} for ${input.clientName} (${niche}): scoped digital delivery with live site, documentation, and invoice trail.`;
     }
 
     try {
@@ -184,7 +585,8 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
         messages: [
           {
             role: 'system',
-            content: 'Write a concise English delivery brief (3–6 sentences) for an automated fulfillment system.',
+            content:
+              'Write a concise English delivery brief (3–6 sentences) for an automated fulfillment system. Name the client brand and niche. No fluff.',
           },
           {
             role: 'user',
@@ -194,7 +596,7 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
                   deliverable: deliverable?.name ?? input.deliverableId,
                   description: base,
                   clientName: input.clientName,
-                  industry: input.industryCategory ?? 'general',
+                  industry: niche,
                 },
                 input.generationHints,
               ),
@@ -206,7 +608,7 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
     } catch {
       /* fallback below */
     }
-    return `${base} — automated delivery for ${input.clientName}.`;
+    return `${base} for ${input.clientName} (${niche}): scoped digital delivery with live site, documentation, and invoice trail.`;
   }
 
   generateEcommerceCatalog(input: {
@@ -214,24 +616,23 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
     industryCategory?: string | null;
     verticalPack?: VerticalDeliveryPack;
   }): Array<{ id: string; name: string; description: string; priceEur: number; sku: string }> {
-    const niche = input.verticalPack?.displayName ?? input.industryCategory ?? 'Premium';
-    const baseNames = [
-      'Starter package',
-      'Professional plan',
-      'Business bundle',
-      'Premium service',
-      'Enterprise kit',
-      'Consultation block',
-      'Implementation day',
-      'Support retainer',
-    ];
-    const prices = [49, 89, 129, 199, 249, 349, 499, 790];
-    return baseNames.map((name, i) => ({
+    const niche = englishNicheLabel({
+      verticalPack: input.verticalPack,
+      industryCategory: input.industryCategory,
+    });
+    const category = input.verticalPack?.category ?? input.industryCategory ?? null;
+    const copy = nicheCopyPack(niche, category);
+    const prefix = niche
+      .replace(/[^a-zA-Z0-9]+/g, '')
+      .slice(0, 4)
+      .toUpperCase() || 'PROD';
+
+    return copy.products.slice(0, 8).map((p, i) => ({
       id: `sku-${i + 1}`,
-      sku: `${niche.slice(0, 3).toUpperCase()}-${1000 + i}`,
-      name: `${name} — ${niche}`,
-      description: `Industry-tuned ${name.toLowerCase()} for ${input.clientName}. Delivered with onboarding support.`,
-      priceEur: prices[i] ?? 99,
+      sku: `${prefix}-${1000 + i}`,
+      name: p.name,
+      description: `${p.description} — ${input.clientName}.`,
+      priceEur: p.priceEur,
     }));
   }
 }

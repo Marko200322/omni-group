@@ -115,7 +115,7 @@ export function resolveVerticalDeliveryPack(input: {
     verticalSlug: input.slug,
     category,
     subtype,
-    displayName: input.name,
+    displayName: nicheLabel,
     categoryProfile: profile,
     keywords,
     valueProp,

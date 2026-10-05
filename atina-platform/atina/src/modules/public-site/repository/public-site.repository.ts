@@ -137,6 +137,48 @@ export class PublicSiteRepository {
     return rows[0] ?? null;
   }
 
+  async updateClientSiteContent(
+    slug: string,
+    ownerUserId: string,
+    input: {
+      title: string;
+      tagline?: string | null;
+      branding?: Record<string, unknown>;
+      pages?: unknown[];
+    },
+  ) {
+    const { rows } = await query<ClientPublicSiteRow>(
+      `UPDATE client_public_sites
+       SET title = $3,
+           tagline = $4,
+           branding = COALESCE($5::jsonb, branding),
+           pages = COALESCE($6::jsonb, pages),
+           updated_at = NOW()
+       WHERE slug = $1 AND owner_user_id = $2
+       RETURNING *`,
+      [
+        slug,
+        ownerUserId,
+        input.title,
+        input.tagline ?? null,
+        input.branding ? JSON.stringify(input.branding) : null,
+        input.pages ? JSON.stringify(input.pages) : null,
+      ],
+    );
+    return rows[0] ?? null;
+  }
+
+  async listPublishedClientSites(limit = 500): Promise<ClientPublicSiteRow[]> {
+    const { rows } = await query<ClientPublicSiteRow>(
+      `SELECT * FROM client_public_sites
+       WHERE status = 'published'
+       ORDER BY updated_at DESC
+       LIMIT $1`,
+      [limit],
+    );
+    return rows;
+  }
+
   async listByOwner(ownerUserId: string, limit = 20): Promise<ClientPublicSiteRow[]> {
     const { rows } = await query<ClientPublicSiteRow>(
       `SELECT id, owner_user_id, project_id, slug, title, tagline, site_type, status, published_at, created_at, updated_at

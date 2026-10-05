@@ -56,7 +56,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
   async fulfill(ctx: FulfillmentContext): Promise<FulfillmentResult> {
     const deliverable = getDeliverable(ctx.deliverableId)!;
     const pack = verticalContext(ctx.industryCategory);
-    const title = `${deliverable.name} — ${ctx.clientName}`;
+    const brandTitle = ctx.clientName.trim() || deliverable.name;
     const baseSlug =
       ctx.clientName
         .toLowerCase()
@@ -69,6 +69,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       deliverableId: ctx.deliverableId,
       clientName: ctx.clientName,
       industryCategory: ctx.industryCategory,
+      verticalPack: pack,
       generationHints: ctx.generationHints,
     });
 
@@ -77,7 +78,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       paymentId: ctx.paymentId,
       deliverableId: ctx.deliverableId,
       slug,
-      name: title,
+      name: brandTitle,
       description: brief,
       clientName: ctx.clientName,
       clientEmail: ctx.clientEmail ?? null,

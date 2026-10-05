@@ -282,6 +282,8 @@ export class ProductFactoryService {
         publish: input.publishSite ?? true,
         verticalPack: input.verticalPack,
         ecommerceCatalog,
+        brandTitle: input.name,
+        clientName: input.clientName,
       });
       publicUrl = site.publicUrl;
     }
@@ -306,14 +308,57 @@ export class ProductFactoryService {
       publish?: boolean;
       verticalPack?: VerticalDeliveryPack;
       ecommerceCatalog?: Array<{ id: string; name: string; description: string; priceEur: number; sku: string }>;
+      brandTitle?: string;
+      clientName?: string;
     },
   ) {
     const deliverableId = row.deliverable_id?.trim();
     if (!deliverableId || !WEBSITE_DELIVERABLES.has(deliverableId)) {
       throw new ValidationError('Not a website deliverable');
     }
+    const brandTitle = (opts.brandTitle ?? row.client_name ?? row.name).trim();
+    const clientName = (opts.clientName ?? row.client_name ?? brandTitle).trim();
+    const nicheLabel =
+      opts.verticalPack?.displayName ??
+      opts.verticalPack?.category?.replace(/_/g, ' ') ??
+      'professional services';
+    const tagline =
+      opts.verticalPack?.valueProp?.trim().slice(0, 180) ||
+      `${brandTitle} — ${nicheLabel} delivery with clear scope and measurable outcomes.`;
+    const branding = {
+      clientName,
+      verticalSlug: opts.verticalPack?.verticalSlug ?? null,
+      niche: nicheLabel,
+      catalog: opts.ecommerceCatalog ?? [],
+      checkout: { currency: 'EUR', provider: 'manual_bank_transfer' },
+      seo: {
+        title: brandTitle,
+        description: opts.verticalPack?.valueProp ?? row.description ?? brandTitle,
+        keywords: opts.verticalPack?.keywords ?? [],
+      },
+      theme: {
+        primary: '#0f766e',
+        accent: '#0ea5e9',
+        background: '#0b1220',
+      },
+    };
+    const pages = (opts.pages ?? []).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      body: p.body,
+      kind: normalizePageKind(p.kind),
+    }));
+
     const existing = await this.publicSiteRepo.getClientSiteByProject(row.id);
     if (existing) {
+      if (pages.length) {
+        await this.publicSites.replaceClientSiteContent(userId, existing.slug, {
+          title: brandTitle,
+          tagline,
+          branding,
+          pages,
+        });
+      }
       if (opts.publish) {
         await this.publicSites.publishClientSite(userId, existing.slug, true);
       }
@@ -329,32 +374,12 @@ export class ProductFactoryService {
             : 'business';
       const site = await this.publicSites.createClientSite(userId, {
         slug: row.slug,
-        title: row.name,
-        tagline: row.client_name ? `Digital presence — ${row.client_name}` : undefined,
+        title: brandTitle,
+        tagline,
         siteType: siteType as 'landing' | 'business' | 'ecommerce',
         projectId: row.id,
-        branding: {
-          clientName: row.client_name ?? null,
-          verticalSlug: opts.verticalPack?.verticalSlug ?? null,
-          catalog: opts.ecommerceCatalog ?? [],
-          checkout: { currency: 'EUR', provider: 'manual_bank_transfer' },
-          seo: {
-            title: row.name,
-            description: opts.verticalPack?.valueProp ?? row.description ?? row.name,
-            keywords: opts.verticalPack?.keywords ?? [],
-          },
-          theme: {
-            primary: '#8b5cf6',
-            accent: '#22d3ee',
-            background: '#0f172a',
-          },
-        },
-        pages: opts.pages.map((p) => ({
-          slug: p.slug,
-          title: p.title,
-          body: p.body,
-          kind: normalizePageKind(p.kind),
-        })),
+        branding,
+        pages,
         publish: opts.publish ?? false,
       });
       return { slug: site.slug, publicUrl: site.publicUrl, existing: false };
@@ -364,8 +389,8 @@ export class ProductFactoryService {
       userId,
       projectId: row.id,
       slug: row.slug,
-      title: row.name,
-      clientName: row.client_name,
+      title: brandTitle,
+      clientName,
       deliverableId,
       publish: opts.publish ?? false,
     });
