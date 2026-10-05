@@ -294,7 +294,7 @@ function fallbackPages(
       '',
       prop,
       '',
-      `We specialize in ${niche.toLowerCase()} — practical delivery, transparent pricing, and ${copy.proof}`,
+      `We specialize in ${niche.toLowerCase()} — practical delivery and transparent pricing. ${copy.proof}`,
       '',
       '## What you get',
       `- Clear scope before work starts`,
