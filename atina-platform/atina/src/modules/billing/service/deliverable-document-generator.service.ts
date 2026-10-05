@@ -267,7 +267,11 @@ Professional English. No lorem ipsum. Specific to industry and client.`,
           { heading: 'Brand kit', body: 'Logo usage, primary colors (#1e1b4b, #8b5cf6), typography, tone of voice.' },
           { heading: 'Domain & DNS', body: 'A records, HTTPS via Caddy/Let\'s Encrypt, optional api subdomain.' },
           { heading: 'Email identity', body: 'noreply@yourdomain.com via Resend; verify SPF/DKIM.' },
-          { heading: 'Sales materials', body: 'One-pager template, pricing table, onboarding email sequence.' },
+          {
+            heading: 'Partner one-pager',
+            body: 'Resale positioning pitch, pricing table, and onboarding email sequence for partner demos.',
+          },
+          { heading: 'Sales materials', body: 'Collateral checklist: one-pager, FAQ, and launch follow-up.' },
         ],
       },
     );

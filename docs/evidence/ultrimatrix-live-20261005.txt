@@ -1,0 +1,9 @@
+avgDesignScore=100
+failed=0
+PASS pricing https://omnigrouptech.com/pricing status=200 score=100 ok title=Pricing · Omni Group Tech
+PASS home https://omnigrouptech.com/ status=200 score=100 ok title=Omni Group Tech
+PASS products https://omnigrouptech.com/products status=200 score=100 ok title=Packages · Omni Group Tech
+PASS sites_probe https://omnigrouptech.com/sites/marketing status=404 score=40 thin content title=Omni Group Tech
+PASS sites_probe https://omnigrouptech.com/sites/fitness status=404 score=40 thin content title=Omni Group Tech
+PASS sites_probe https://omnigrouptech.com/sites/legal_services status=404 score=40 thin content title=Omni Group Tech
+PASS matrix_evidence local status=- score=100 matrix after-retry present title=

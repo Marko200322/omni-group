@@ -94,6 +94,22 @@ export function OfferCard({ offer, id, compact }: Props) {
         </p>
       ) : null}
 
+      {!compact && offer.solvesProblems?.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Problems this package attacks
+          </p>
+          <ul className="space-y-1.5">
+            {offer.solvesProblems.slice(0, 6).map((line) => (
+              <li key={line} className="flex gap-2 text-sm text-slate-300">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {!compact && (
         <div className="mt-4 space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">You get</p>

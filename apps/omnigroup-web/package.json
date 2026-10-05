@@ -15,6 +15,8 @@
     "test:industry": "node scripts/audit-industry-landings.mjs",
     "test:omi": "node scripts/test-omi-page-context.mjs",
     "test:honesty": "node scripts/test-delivery-honesty.mjs",
+    "test:omnitrix": "node scripts/test-omnitrix.mjs",
+    "test:ultrimatrix": "node scripts/test-ultrimatrix-live.mjs",
     "test:legal": "node scripts/test-legal-consistency.mjs",
     "test:saas": "node scripts/test-saas-cycle.mjs",
     "test:contact-validation": "node scripts/test-contact-validation.mjs",

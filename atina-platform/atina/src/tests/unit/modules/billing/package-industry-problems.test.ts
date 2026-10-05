@@ -20,7 +20,14 @@ describe('package-industry-problems', () => {
     const oneTime = getPackageIndustryContext('landing', 'marketing');
     expect(oneTime).not.toBeNull();
     expect(oneTime!.primaryProblem).toMatch(/marketing/i);
-    expect(oneTime!.secondaryProblems.length).toBeGreaterThanOrEqual(3);
+    expect(oneTime!.secondaryProblems.length).toBeGreaterThanOrEqual(4);
+    // OmniTrix: primary + secondary = 5–10 client problems per package
+    for (const d of DELIVERABLE_CATALOG) {
+      const spec = PACKAGE_PROBLEM_SPECS[d.id]!;
+      const depth = 1 + spec.secondaryProblems.length;
+      expect(depth).toBeGreaterThanOrEqual(5);
+      expect(depth).toBeLessThanOrEqual(10);
+    }
     expect(oneTime!.industrySolutionPitch.length).toBeGreaterThan(20);
     expect(oneTime!.maintenanceIncludedInPrice).toBe(false);
     expect(oneTime!.optionalMaintenanceTiers).toHaveLength(3);

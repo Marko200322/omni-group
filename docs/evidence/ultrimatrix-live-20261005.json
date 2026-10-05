@@ -1,0 +1,93 @@
+{
+  "agent": "ULTRIMATRIX-LIVE",
+  "webBase": "https://omnigrouptech.com",
+  "sitePackagesTracked": [
+    "landing",
+    "website-business",
+    "website-ecommerce",
+    "white-label-setup",
+    "bundle-portal-presence",
+    "bundle-sales-launch"
+  ],
+  "avgDesignScore": 100,
+  "failed": 0,
+  "results": [
+    {
+      "kind": "pricing",
+      "url": "https://omnigrouptech.com/pricing",
+      "status": 200,
+      "title": "Pricing · Omni Group Tech",
+      "textLen": 17065,
+      "hasOg": true,
+      "score": 100,
+      "ok": true,
+      "notes": "ok"
+    },
+    {
+      "kind": "home",
+      "url": "https://omnigrouptech.com/",
+      "status": 200,
+      "title": "Omni Group Tech",
+      "textLen": 3572,
+      "hasOg": true,
+      "score": 100,
+      "ok": true,
+      "notes": "ok"
+    },
+    {
+      "kind": "products",
+      "url": "https://omnigrouptech.com/products",
+      "status": 200,
+      "title": "Packages · Omni Group Tech",
+      "textLen": 14136,
+      "hasOg": true,
+      "score": 100,
+      "ok": true,
+      "notes": "ok"
+    },
+    {
+      "kind": "sites_probe",
+      "url": "https://omnigrouptech.com/sites/marketing",
+      "optional": true,
+      "status": 404,
+      "title": "Omni Group Tech",
+      "textLen": 15,
+      "hasOg": true,
+      "score": 40,
+      "ok": true,
+      "notes": "thin content"
+    },
+    {
+      "kind": "sites_probe",
+      "url": "https://omnigrouptech.com/sites/fitness",
+      "optional": true,
+      "status": 404,
+      "title": "Omni Group Tech",
+      "textLen": 15,
+      "hasOg": true,
+      "score": 40,
+      "ok": true,
+      "notes": "thin content"
+    },
+    {
+      "kind": "sites_probe",
+      "url": "https://omnigrouptech.com/sites/legal_services",
+      "optional": true,
+      "status": 404,
+      "title": "Omni Group Tech",
+      "textLen": 15,
+      "hasOg": true,
+      "score": 40,
+      "ok": true,
+      "notes": "thin content"
+    },
+    {
+      "kind": "matrix_evidence",
+      "url": "local",
+      "note": "matrix after-retry present",
+      "ok": true,
+      "score": 100,
+      "notes": "matrix after-retry present"
+    }
+  ]
+}

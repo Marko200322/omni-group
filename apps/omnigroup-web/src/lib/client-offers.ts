@@ -29,6 +29,7 @@ import {
   type AutomationLevel,
 } from './delivery-honesty';
 import { isCatalogBundle } from './catalog-bundle-ids';
+import { getOfferProblems } from './package-problem-specs';
 
 export { isCatalogBundle } from './catalog-bundle-ids';
 
@@ -273,6 +274,8 @@ export type ClientOffer = {
   industryPrimaryProblem?: string;
   industryRecommended?: boolean;
   industryPitch?: string;
+  /** 5–7 client problems this package attacks (OmniTrix) */
+  solvesProblems: string[];
   automationLevel: AutomationLevel;
   deliveryLabel: string;
   humanIntervention: string;
@@ -406,6 +409,10 @@ export function getClientOffer(
     industryPrimaryProblem: row?.primaryProblem,
     industryRecommended: row?.recommendedForIndustry,
     industryPitch: row?.industrySolutionPitch,
+    solvesProblems:
+      row?.secondaryProblems?.length
+        ? [row.primaryProblem, ...row.secondaryProblems].filter(Boolean).slice(0, 7)
+        : getOfferProblems(d.id),
     automationLevel: getDeliveryHonesty(d.id)?.automationLevel ?? 'SEMI_AUTOMATED',
     deliveryLabel: getDeliveryHonesty(d.id)?.label ?? deliveryLevelShort('SEMI_AUTOMATED'),
     humanIntervention:

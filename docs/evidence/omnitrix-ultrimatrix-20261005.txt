@@ -1,0 +1,31 @@
+---
+pid: 20388
+cwd: "C:\\dev\\omni group\\atina-platform\\atina"
+command: "cd \"C:\\dev\\omni group\\atina-platform\\atina\"; $env:JEST_CACHE_DIRECTORY=\"C:\\dev\\omni group\\.tmp\\jest\"; npx jest src/tests/unit/omnitrix-spec.test.ts src/tests/unit/modules/billing/package-industry-problems.test.ts --runInBand --forceExit 2>&1 | Select-Object -Last 35"
+title: "Re-run OmniTrix unit tests after claim expansion"
+status: succeeded
+started_at: 2026-10-05T02:20:43.927Z
+running_for_ms: 224269   
+---
+node.exe : PASS src/tests/unit/omnitrix-spec.test.ts (78.034 s)
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/tests/...t.ts (78.034 s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+PASS src/tests/unit/modules/billing/package-industry-problems.test.ts (6.548 s)
+Test Suites: 2 passed, 2 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        106.931 s, estimated 133 s
+Ran all test suites matching 
+/src\\tests\\unit\\omnitrix-spec.test.ts|src\\tests\\unit\\modules\\billing\\package-industry-problems.test.ts/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after 
+all tests finished?
+
+---
+exit_code: 0
+elapsed_ms: 224268
+ended_at: 2026-10-05T02:24:28.195Z
+---
