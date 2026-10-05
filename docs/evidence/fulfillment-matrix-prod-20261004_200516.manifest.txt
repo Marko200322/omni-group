@@ -4,7 +4,7 @@ shards=4
 targetCells=1000
 note=relauch: prefetch industries + stagger + catalog retry
 industries=50
-shard=A csv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20261004_200516-shardA.csv ids=setup-quick,setup-full,setup-custom,audit,integration pid=17776
+shard=A csv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20261004_200516-shardA.csv ids=setup-quick,setup-full,setup-custom,audit,integration pid=21388
 shard=B csv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20261004_200516-shardB.csv ids=workflow-design,support-priority,support-dedicated,landing,website-business pid=18408
 shard=C csv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20261004_200516-shardC.csv ids=website-ecommerce,white-label-setup,sales-enablement,vertical-package,lead-gen-retainer pid=8004
 shard=D csv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-20261004_200516-shardD.csv ids=ai-support-retainer,custom-software,bundle-portal-presence,bundle-sales-launch,bundle-ops-clarity pid=3428

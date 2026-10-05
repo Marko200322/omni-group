@@ -1,0 +1,19 @@
+﻿{
+    "stamp":  "20261004_200516",
+    "beforePass":  977,
+    "beforeFail":  23,
+    "afterPass":  1000,
+    "afterFail":  0,
+    "recovered":  23,
+    "retryRows":  23,
+    "retryPass":  23,
+    "retryFail":  0,
+    "stillFail":  [
+
+                  ],
+    "evidence":  {
+                     "failCells":  "docs/evidence/matrix-fail-cells-20261004_200516.txt",
+                     "retryCsv":  "docs/evidence/fulfillment-matrix-prod-20261004_200516-retry.csv",
+                     "afterMerged":  "docs/evidence/fulfillment-matrix-prod-MERGED-20261004_200516-after-retry.csv"
+                 }
+}

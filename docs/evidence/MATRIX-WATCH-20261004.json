@@ -185,7 +185,7 @@
                      "manifestPath":  "docs/evidence/fulfillment-matrix-prod-20261004_200516.manifest.txt",
                      "pidsPath":  "docs/evidence/fulfillment-matrix-prod-20261004_200516.pids.json",
                      "pids":  {
-                                  "A":  17776,
+                                  "A":  21388,
                                   "B":  18408,
                                   "C":  8004,
                                   "D":  3428
@@ -372,20 +372,45 @@
                                      }
                                  ],
                      "watchHorizonMinutes":  40,
-                     "watchEndedApprox":  null,
+                     "watchEndedApprox":  "2026-10-04T23:09:54+02:00",
                      "finalSummary":  {
+                                          "pass":  977,
+                                          "agent":  "MATRIX-WATCH-4",
+                                          "reason":  "all 4 shards MATRIX DONE",
+                                          "topFailErrorsShown":  14,
+                                          "pids":  {
+                                                       "C":  8004,
+                                                       "D":  3428,
+                                                       "B":  18408,
+                                                       "A":  21388
+                                                   },
+                                          "pidsAliveCount":  0,
+                                          "lastSampleAt":  "2026-10-05T00:40:44.1362301+02:00",
+                                          "mergedCsv":  "docs/evidence/fulfillment-matrix-prod-MERGED-20261004_200516.csv",
+                                          "topFailCount":  23,
+                                          "pctOf1000":  100,
+                                          "restarts":  1,
                                           "stamp":  "20261004_200516",
-                                          "agent":  "MATRIX-WATCH-3",
-                                          "status":  "watching",
-                                          "pidsAlive":  true,
-                                          "pidsAliveCount":  4,
-                                          "uniqueCellsDone":  115,
-                                          "pass":  102,
-                                          "fail":  13,
                                           "skip":  0,
-                                          "pctOf1000":  11.5,
-                                          "restarts":  0,
-                                          "lastSampleAt":  "2026-10-04T21:55:14+02:00"
+                                          "matrixDoneCount":  4,
+                                          "fail":  23,
+                                          "pidsAlive":  false,
+                                          "aliveByShard":  {
+                                                               "C":  false,
+                                                               "D":  false,
+                                                               "B":  false,
+                                                               "A":  false
+                                                           },
+                                          "merged":  true,
+                                          "status":  "all_done",
+                                          "uniqueCellsDone":  1000,
+                                          "matrixDoneByShard":  {
+                                                                    "C":  true,
+                                                                    "D":  true,
+                                                                    "B":  true,
+                                                                    "A":  true
+                                                                },
+                                          "restartDetail":  "A 17776-\u003e21388 CSV Add-Content stream error (WATCH-3); none in WATCH-4"
                                       },
                      "watch3":  {
                                     "agent":  "MATRIX-WATCH-3",
@@ -457,11 +482,405 @@
 
                                                                           ],
                                                         "notes":  "rate ~2.7 cells/min over last 30m; 4/4 alive"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-04T22:21:18+02:00",
+                                                        "label":  "t2_A_dead_restart",
+                                                        "uniqueCellsDone":  238,
+                                                        "pass":  224,
+                                                        "fail":  14,
+                                                        "skip":  0,
+                                                        "pctOf1000":  23.8,
+                                                        "pidsAlive":  3,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  false
+                                                                         },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  61,
+                                                                               "D":  62,
+                                                                               "B":  57,
+                                                                               "A":  58
+                                                                           },
+                                                        "outLogTail":  {
+                                                                           "C":  "[61/250] website-ecommerce @ development_it PASS",
+                                                                           "D":  "[62/250] custom-software @ development_it PASS",
+                                                                           "B":  "[58/250] support-dedicated @ design_creative",
+                                                                           "A":  "[59/250] audit @ design_creative PASS then crash"
+                                                                       },
+                                                        "earlyFailures":  [
+                                                                              {
+                                                                                  "stage":  "CSV Add-Content",
+                                                                                  "error":  "Stream was not readable / GetContentWriterArgumentError",
+                                                                                  "shard":  "A"
+                                                                              }
+                                                                          ],
+                                                        "notes":  "Restarted A as PID 21388 with -Resume; Login+SKIP-DONE confirmed"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-04T22:49:22+02:00",
+                                                        "label":  "t3_post_restart",
+                                                        "uniqueCellsDone":  415,
+                                                        "pass":  402,
+                                                        "fail":  13,
+                                                        "skip":  0,
+                                                        "pctOf1000":  41.5,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  true
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  106,
+                                                                               "D":  107,
+                                                                               "B":  103,
+                                                                               "A":  101
+                                                                           },
+                                                        "outLogTail":  {
+                                                                           "C":  "[107/250] white-label-setup @ finance_accounting",
+                                                                           "D":  "[107/250] custom-software @ finance_accounting PASS",
+                                                                           "B":  "[103/250] support-dedicated @ finance PASS",
+                                                                           "A":  "[79/250] audit @ legal_services PASS"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "A restart holding; FAIL count dipped vs t2 as Resume re-attempts prior FAILs"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-04T23:09:54+02:00",
+                                                        "label":  "t4_closeout_3h",
+                                                        "uniqueCellsDone":  546,
+                                                        "pass":  532,
+                                                        "fail":  14,
+                                                        "skip":  0,
+                                                        "pctOf1000":  54.6,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  true
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  139,
+                                                                               "D":  141,
+                                                                               "B":  134,
+                                                                               "A":  134
+                                                                           },
+                                                        "matrixDoneByShard":  {
+                                                                                  "C":  false,
+                                                                                  "D":  false,
+                                                                                  "B":  false,
+                                                                                  "A":  false
+                                                                              },
+                                                        "outLogTail":  {
+                                                                           "C":  "[140/250] lead-gen-retainer @ hr_recruiting",
+                                                                           "D":  "[141/250] ai-support-retainer @ industrial PASS",
+                                                                           "B":  "[134/250] landing @ hospitality PASS",
+                                                                           "A":  "[113/250] setup-custom @ video_animation"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "3h wall closeout; no MATRIX DONE; merge skipped; shards left running"
+                                                    }
+                                                ],
+                                    "restarts":  [
+                                                     {
+                                                         "at":  "2026-10-04T22:22:00+02:00",
+                                                         "shard":  "A",
+                                                         "oldPid":  17776,
+                                                         "newPid":  21388,
+                                                         "reason":  "Add-Content CSV stream not readable",
+                                                         "flags":  "-Resume -DeliverableIds setup-quick,setup-full,setup-custom,audit,integration -IndustryCategories from industry-slugs-20261004.txt -PollSec 180 -SleepBetweenSec 30 -RateLimitMaxAttempts 16",
+                                                         "outLog":  "docs/evidence/fulfillment-matrix-prod-20261004_200516-shardA-restart.out.log",
+                                                         "errLog":  "docs/evidence/fulfillment-matrix-prod-20261004_200516-shardA-restart.err.log",
+                                                         "confirmed":  "SKIP-DONE resume + process alive"
+                                                     }
+                                                 ],
+                                    "watchEndedApprox":  "2026-10-04T23:09:54+02:00",
+                                    "mergedCsv":  null,
+                                    "verdict":  "3h wall ended; 4/4 alive; 546/1000 unique (532 PASS / 14 FAIL); 1 restart (A); merge skipped"
+                                },
+                     "watch4":  {
+                                    "agent":  "MATRIX-WATCH-4",
+                                    "startedWatchApprox":  "2026-10-04T23:17:28.9182819+02:00",
+                                    "watchHorizonMinutes":  240,
+                                    "watchUntil":  "MATRIX DONE all shards OR ~4h wall from WATCH-4 start OR shard death+restart",
+                                    "restartPolicy":  "on any shard death: restart THAT shard only with -Resume + IndustryCategories from industry-slugs-20261004.txt + same DeliverableIds + ReportCsv; PollSec 180 SleepBetweenSec 30 RateLimitMaxAttempts 16",
+                                    "samples":  [
+                                                    {
+                                                        "at":  "2026-10-04T23:17:28.9182819+02:00",
+                                                        "label":  "t0_handoff",
+                                                        "uniqueCellsDone":  557,
+                                                        "pass":  542,
+                                                        "fail":  15,
+                                                        "skip":  0,
+                                                        "pctOf1000":  55.7,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "D":  true,
+                                                                             "B":  true,
+                                                                             "A":  true
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  143,
+                                                                               "D":  143,
+                                                                               "B":  136,
+                                                                               "A":  137
+                                                                           },
+                                                        "matrixDoneByShard":  {
+                                                                                  "C":  false,
+                                                                                  "D":  false,
+                                                                                  "B":  false,
+                                                                                  "A":  false
+                                                                              },
+                                                        "outLogTail":  {
+                                                                           "C":  "[144/250] vertical-package @ industrial (after sales-enablement FAIL 500)",
+                                                                           "D":  "[144/250] bundle-sales-launch @ industrial",
+                                                                           "B":  "[137/250] support-priority @ hr_recruiting",
+                                                                           "A":  "[116/250] setup-quick @ web3"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "WATCH-4 handoff; 4/4 alive; +11 cells vs WATCH-3 closeout"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-04T23:46:38.3580485+02:00",
+                                                        "label":  "t1",
+                                                        "uniqueCellsDone":  747,
+                                                        "pass":  727,
+                                                        "fail":  20,
+                                                        "skip":  0,
+                                                        "pctOf1000":  74.7,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "A":  true,
+                                                                             "D":  true,
+                                                                             "B":  true
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  191,
+                                                                               "A":  184,
+                                                                               "D":  191,
+                                                                               "B":  183
+                                                                           },
+                                                        "matrixDoneByShard":  {
+                                                                                  "C":  false,
+                                                                                  "A":  false,
+                                                                                  "D":  false,
+                                                                                  "B":  false
+                                                                              },
+                                                        "outLogTail":  {
+                                                                           "C":  "PASS artifacts=3 checklist=pct (s) | [191/250] -- website-ecommerce @ photography -- |   PASS artifacts=0 checklist=pct (s)",
+                                                                           "D":  "PASS artifacts=4 checklist=pct (s) | [191/250] -- ai-support-retainer @ photography -- |   PASS artifacts=3 checklist=pct (s)",
+                                                                           "B":  "PASS artifacts=2 checklist=pct (s) | [183/250] -- support-dedicated @ nonprofit -- |   PASS artifacts=2 checklist=pct (s)",
+                                                                           "A":  "[172/250] -- setup-full @ fitness -- |   FAIL The remote server returned an error: (500) Internal Server Error. | [173/250] -- setup-custom @ fitness --"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "holding"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-05T00:13:41.5966434+02:00",
+                                                        "label":  "t2",
+                                                        "uniqueCellsDone":  917,
+                                                        "pass":  895,
+                                                        "fail":  22,
+                                                        "skip":  0,
+                                                        "pctOf1000":  91.7,
+                                                        "pidsAlive":  4,
+                                                        "aliveByShard":  {
+                                                                             "C":  true,
+                                                                             "A":  true,
+                                                                             "D":  true,
+                                                                             "B":  true
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  233,
+                                                                               "A":  227,
+                                                                               "D":  232,
+                                                                               "B":  227
+                                                                           },
+                                                        "matrixDoneByShard":  {
+                                                                                  "C":  false,
+                                                                                  "A":  false,
+                                                                                  "D":  false,
+                                                                                  "B":  false
+                                                                              },
+                                                        "outLogTail":  {
+                                                                           "C":  "[233/250] -- sales-enablement @ travel -- |   PASS artifacts=2 checklist=pct (s) | [234/250] -- vertical-package @ travel --",
+                                                                           "D":  "PASS artifacts=3 checklist=pct (s) | [232/250] -- custom-software @ travel -- |   PASS artifacts=2 checklist=pct (s)",
+                                                                           "B":  "PASS artifacts=2 checklist=pct (s) | [227/250] -- support-priority @ technology -- |   PASS artifacts=2 checklist=pct (s)",
+                                                                           "A":  "[225/250] -- integration @ travel -- |   PASS artifacts=3 checklist=pct (s) | [226/250] -- setup-quick @ professional --"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "holding"
+                                                    },
+                                                    {
+                                                        "at":  "2026-10-05T00:40:44.1362301+02:00",
+                                                        "label":  "t3",
+                                                        "uniqueCellsDone":  1000,
+                                                        "pass":  977,
+                                                        "fail":  23,
+                                                        "skip":  0,
+                                                        "pctOf1000":  100,
+                                                        "pidsAlive":  0,
+                                                        "aliveByShard":  {
+                                                                             "C":  false,
+                                                                             "A":  false,
+                                                                             "D":  false,
+                                                                             "B":  false
+                                                                         },
+                                                        "pids":  {
+                                                                     "C":  8004,
+                                                                     "D":  3428,
+                                                                     "B":  18408,
+                                                                     "A":  21388
+                                                                 },
+                                                        "csvRowsByShard":  {
+                                                                               "C":  250,
+                                                                               "A":  252,
+                                                                               "D":  250,
+                                                                               "B":  250
+                                                                           },
+                                                        "matrixDoneByShard":  {
+                                                                                  "C":  true,
+                                                                                  "A":  true,
+                                                                                  "D":  true,
+                                                                                  "B":  true
+                                                                              },
+                                                        "outLogTail":  {
+                                                                           "C":  "[250/250] -- lead-gen-retainer @ writing_translation -- |   PASS artifacts=3 checklist=pct (s) | MATRIX DONE: 242 passed, 8 failed, 0 skipped",
+                                                                           "D":  "[250/250] -- bundle-ops-clarity @ writing_translation -- |   PASS artifacts=4 checklist=pct (s) | MATRIX DONE: 244 passed, 6 failed, 0 skipped",
+                                                                           "B":  "[250/250] -- website-business @ writing_translation -- |   PASS artifacts=0 checklist=pct (s) | MATRIX DONE: 245 passed, 5 failed, 0 skipped",
+                                                                           "A":  "[250/250] -- integration @ industrial -- |   PASS artifacts=3 checklist=pct (s) | MATRIX DONE: 190 passed, 4 failed, 0 skipped"
+                                                                       },
+                                                        "earlyFailures":  [
+
+                                                                          ],
+                                                        "notes":  "A MATRIX DONE; B MATRIX DONE; C MATRIX DONE; D MATRIX DONE"
                                                     }
                                                 ],
                                     "restarts":  [
 
-                                                 ]
+                                                 ],
+                                    "watchEndedApprox":  "2026-10-05T00:41:18.9793893+02:00",
+                                    "mergedCsv":  "docs/evidence/fulfillment-matrix-prod-MERGED-20261004_200516.csv",
+                                    "verdict":  "all 4 shards MATRIX DONE; unique=1000 (977 PASS / 23 FAIL / 0 SKIP); alive=0/4 exited cleanly; merge written",
+                                    "topFailErrors":  [
+                                                          {
+                                                              "deliverableId":  "custom-software",
+                                                              "industryCategory":  "agriculture",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "landing",
+                                                              "industryCategory":  "agriculture",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "vertical-package",
+                                                              "industryCategory":  "agriculture",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "ai-support-retainer",
+                                                              "industryCategory":  "ai_data",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "bundle-sales-launch",
+                                                              "industryCategory":  "audio_music",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "lead-gen-retainer",
+                                                              "industryCategory":  "audio_music",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "white-label-setup",
+                                                              "industryCategory":  "audio_music",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "vertical-package",
+                                                              "industryCategory":  "automotive",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "website-ecommerce",
+                                                              "industryCategory":  "automotive",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "bundle-ops-clarity",
+                                                              "industryCategory":  "beauty",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "sales-enablement",
+                                                              "industryCategory":  "beauty",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "custom-software",
+                                                              "industryCategory":  "customer_service",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "workflow-design",
+                                                              "industryCategory":  "education_training",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          },
+                                                          {
+                                                              "deliverableId":  "setup-full",
+                                                              "industryCategory":  "fitness",
+                                                              "error":  "The remote server returned an error: (500) Internal Server Error."
+                                                          }
+                                                      ]
                                 }
                  }
 }

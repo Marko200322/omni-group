@@ -19,7 +19,7 @@
 | Run | Status |
 |-----|--------|
 | `20261004_184801` | **ABORT** 0/1000 — all shards died on `industry-catalog` (connection closed) |
-| `20261004_200516` | **IN PROGRESS** — prefetch industries + stagger + retry; at watch ~**22 PASS / 0 FAIL** (2.2%); 4/4 shards alive |
+| `20261004_200516` | **DONE** — first pass 977 PASS / 23 FAIL; [Matrix retry](d42e2df9-c910-492d-a006-2331dba1867c) recovered **23/23** → **1000 PASS / 0 FAIL**; `fulfillment-matrix-prod-MERGED-20261004_200516-after-retry.csv` |
 
 Mitigations applied: `rate-limit-retry.ps1` matches `forcibly closed`; `Get-IndustrySlugs` retries; shards get `-IndustryCategories` from `industry-slugs-20261004.txt`.
 
@@ -44,4 +44,4 @@ Firma registration, Stripe LIVE, ads/Resend LIVE credentials.
 - Prod smoke / catalog / web QA / marketing retry: green
 - Browser: non-blocking WARNs (tooling + cosmetic em-dashes / health flake under load)
 - Atina unit: 4 flaky suites **fixed** (retest PASS; full suite not re-run ~3h; uncommitted test-only changes)
-- Matrix 1000: healthy progress after relaunch; ETA many hours
+- Matrix 1000: **DONE** after retry — **1000/1000 PASS** (23 transient HTTP 500 recovered)
