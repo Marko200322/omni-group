@@ -110,6 +110,16 @@ export function InvoiceHistoryPanel() {
                 <p className="text-[11px] uppercase tracking-wide text-slate-500">
                   {inv.status ?? '—'}
                 </p>
+                {inv.id ? (
+                  <a
+                    href={`/api/atina/billing/invoices/${encodeURIComponent(inv.id)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-[11px] text-cyan-300/90 hover:text-white"
+                  >
+                    View / print invoice
+                  </a>
+                ) : null}
               </div>
             </li>
           ))}

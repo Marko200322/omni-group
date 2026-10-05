@@ -86,14 +86,34 @@ export class DeliverableContentGeneratorService {
     const hooks = input.verticalPack?.outreachHooks ?? [];
     const keywords = input.verticalPack?.keywords ?? [];
 
+    const ensureShopPage = (pages: GeneratedSitePage[]): GeneratedSitePage[] => {
+      if (input.deliverableId !== 'website-ecommerce') return pages;
+      if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
+      return [
+        ...pages.slice(0, 1),
+        {
+          slug: 'shop',
+          title: 'Shop',
+          kind: 'shop',
+          body: `Demo product catalog for ${input.clientName} (${niche}). Checkout uses manual bank transfer — not a live merchant Stripe shop.`,
+        },
+        ...pages.slice(1),
+      ];
+    };
+
     if (!ai.isConfigured()) {
-      return fallbackPages(input.title, input.clientName, pageCount, niche);
+      return ensureShopPage(fallbackPages(input.title, input.clientName, pageCount, niche));
     }
 
     const blueprint =
       pageCount === 1
         ? [{ slug: 'home', title: 'Home', kind: 'home' }]
-        : BUSINESS_PAGE_BLUEPRINT.slice(0, pageCount);
+        : input.deliverableId === 'website-ecommerce'
+          ? [
+              ...BUSINESS_PAGE_BLUEPRINT.slice(0, Math.max(1, pageCount - 1)),
+              { slug: 'shop', title: 'Shop', kind: 'shop' },
+            ]
+          : BUSINESS_PAGE_BLUEPRINT.slice(0, pageCount);
 
     try {
       const chat = await ai.chatCompletions({
@@ -133,7 +153,7 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
 
       if (chat?.content) {
         const fromAi = parsePagesJson(chat.content, Math.min(3, pageCount), input.title, input.clientName);
-        if (fromAi) return fromAi;
+        if (fromAi) return ensureShopPage(fromAi);
       }
     } catch (err) {
       logger.warn('AI website page generation failed — using template fallback', {
@@ -141,7 +161,7 @@ No lorem ipsum. Match €${deliverable?.anchorEur ?? 2000}+ premium positioning.
       });
     }
 
-    return fallbackPages(input.title, input.clientName, pageCount, niche);
+    return ensureShopPage(fallbackPages(input.title, input.clientName, pageCount, niche));
   }
 
   async generateProjectBrief(input: {

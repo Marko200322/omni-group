@@ -60,6 +60,29 @@ for (const job of jobs) {
   if (!ok) process.stdout.write(`${problem}\n`);
 }
 
+// Optional prod site live gate (SSH + 150 HTTP probes). Enable: RUN_SITE_LIVE_GATE=1
+if (process.env.RUN_SITE_LIVE_GATE === '1') {
+  const script = join(root, '..', '..', 'scripts', 'verify-site-fulfillment-live.ps1');
+  const result = spawnSync(
+    'powershell',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script],
+    { cwd: join(root, '..', '..'), encoding: 'utf8' },
+  );
+  const ok = result.status === 0;
+  if (!ok) failed += 1;
+  const problem = ok
+    ? '—'
+    : (result.stderr || result.stdout || 'failed').trim().split('\n').at(-1);
+  rows.push({
+    PRIORITY: 'P0',
+    AREA: 'Site live gate (prod publicUrl HTTP)',
+    PROBLEM: problem,
+    FILE: 'scripts/verify-site-fulfillment-live.ps1',
+    STATUS: ok ? 'PASS' : 'FAILED',
+  });
+  process.stdout.write(`${ok ? 'PASS' : 'FAIL'} Site live gate (prod publicUrl HTTP)\n`);
+}
+
 console.log('\nPRIORITY\tAREA\tSTATUS\tFILE\tPROBLEM');
 for (const row of rows) {
   console.log(`${row.PRIORITY}\t${row.AREA}\t${row.STATUS}\t${row.FILE}\t${row.PROBLEM}`);

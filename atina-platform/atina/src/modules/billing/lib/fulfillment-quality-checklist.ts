@@ -39,6 +39,9 @@ const PDF_CATALOG_IDS = new Set([
   'bundle-portal-presence',
   'bundle-sales-launch',
   'bundle-ops-clarity',
+  'landing',
+  'website-business',
+  'website-ecommerce',
 ]);
 
 function hasPdfArtifact(result: FulfillmentResult): boolean {
@@ -102,13 +105,11 @@ export function runFulfillmentQualityChecklist(
       const count = Array.isArray(catalog) ? catalog.length : 0;
       items.push({
         id: 'ecommerce_catalog',
-        passed: count >= 4 || Boolean(result.publicUrl?.trim()),
+        passed: count >= 4,
         message:
           count >= 4
             ? `E-commerce catalog has ${count} products`
-            : result.publicUrl?.trim()
-              ? 'E-commerce site published (catalog embedded in site)'
-              : 'E-commerce package requires published site or catalog metadata',
+            : 'E-commerce package requires catalog metadata with at least 4 demo products',
       });
     }
     if (deliverableId === 'website-business') {
@@ -122,13 +123,21 @@ export function runFulfillmentQualityChecklist(
       const pageCount = Number(result.metadata?.pageCount ?? 0);
       items.push({
         id: 'page_count',
-        passed: pageCount >= 5 || Boolean(result.publicUrl?.trim()),
+        passed: pageCount >= 5,
         message:
           pageCount >= 5
             ? `Business site has ${pageCount} pages`
-            : result.publicUrl?.trim()
-              ? 'Multi-page business site published'
-              : 'Business website requires at least 5 pages or live site',
+            : 'Business website requires at least 5 pages in metadata',
+      });
+    }
+    const live = result.metadata?.liveProbe as { ok?: boolean; status?: number; bytes?: number } | undefined;
+    if (live) {
+      items.push({
+        id: 'live_http_probe',
+        passed: Boolean(live.ok),
+        message: live.ok
+          ? `Live HTTP probe ok (status=${live.status ?? 200}, bytes=${live.bytes ?? 0})`
+          : 'Live HTTP probe failed after publish',
       });
     }
     if (deliverableId === 'landing') {

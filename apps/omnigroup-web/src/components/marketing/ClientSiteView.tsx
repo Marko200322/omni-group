@@ -74,7 +74,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
       <div className="mt-8 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-sm text-emerald-100">
         <p className="font-semibold text-white">Order received</p>
         <p className="mt-2">Reference: <span className="font-mono">{result.paymentReference}</span></p>
-        <p className="mt-1">Total: €{result.totalEur.toFixed(2)}</p>
+        <p className="mt-1">Total: EUR {result.totalEur.toFixed(2)}</p>
         <p className="mt-3 text-slate-300">Complete bank transfer with the reference above. The store owner will confirm your order.</p>
       </div>
     );
@@ -88,7 +88,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
             <p className="font-medium text-white">{product.name}</p>
             <p className="mt-1 text-xs text-slate-400">{product.description}</p>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-lg font-bold text-violet-200">€{product.priceEur.toFixed(2)}</span>
+              <span className="text-lg font-bold text-violet-200">EUR {product.priceEur.toFixed(2)}</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -113,7 +113,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
 
       {items.length > 0 && (
         <div className="rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
-          <p className="text-sm text-slate-300">Cart total: <strong className="text-white">€{total.toFixed(2)}</strong></p>
+          <p className="text-sm text-slate-300">Cart total: <strong className="text-white">EUR {total.toFixed(2)}</strong></p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <input
               className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
@@ -169,6 +169,15 @@ export function ClientSiteView({ site }: Props) {
     typeof site.branding?.clientName === 'string' ? site.branding.clientName : site.title;
 
   const showShop = site.siteType === 'ecommerce' && catalog.length > 0;
+  const navPages = useMemo(() => {
+    if (!showShop) return pages;
+    if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
+    return [
+      ...pages.slice(0, 1),
+      { slug: 'shop', title: 'Shop', kind: 'shop' as const, body: 'Browse demo products and place a manual checkout request.' },
+      ...pages.slice(1),
+    ];
+  }, [pages, showShop]);
 
   return (
     <div className="min-h-[70vh] bg-gradient-to-b from-slate-950 via-slate-950 to-violet-950/20">
@@ -188,9 +197,9 @@ export function ClientSiteView({ site }: Props) {
             {clientName}
           </div>
         </div>
-        {pages.length > 1 ? (
+        {navPages.length > 1 ? (
           <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-3">
-            {pages.map((p) => (
+            {navPages.map((p) => (
               <button
                 key={p.slug}
                 type="button"
@@ -209,12 +218,20 @@ export function ClientSiteView({ site }: Props) {
       </header>
 
       <motion.main
-        key={activePage?.slug}
+        key={activePage?.slug ?? activeSlug}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="mx-auto max-w-3xl px-4 py-12"
       >
-        {activePage ? (
+        {showShop && (activeSlug === 'shop' || activePage?.kind === 'shop') ? (
+          <>
+            <h2 className="font-display text-3xl font-semibold text-white">Shop</h2>
+            <p className="mt-3 text-sm text-slate-400">
+              Demo catalog — checkout is manual bank transfer, not a live merchant Stripe shop.
+            </p>
+            <EcommerceCatalog site={site} catalog={catalog} />
+          </>
+        ) : activePage ? (
           <>
             <h2 className="font-display text-3xl font-semibold text-white">{activePage.title}</h2>
             <div className="prose prose-invert mt-6 max-w-none text-slate-300">
@@ -224,9 +241,6 @@ export function ClientSiteView({ site }: Props) {
                 </p>
               ))}
             </div>
-            {showShop && (activePage?.kind === 'shop' || activeSlug === 'shop') ? (
-              <EcommerceCatalog site={site} catalog={catalog} />
-            ) : null}
             {activePage.kind === 'contact' ? (
               <Link href={`/contact?service=${encodeURIComponent(site.slug)}`} className="btn-primary mt-8 inline-flex text-sm">
                 Send inquiry

@@ -294,7 +294,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     deliverableId: 'landing',
     description: 'Live landing page with AI sales copy — hosted on omnigrouptech.com.',
     descriptionSr: 'Live landing sa AI copy-jem — host na omnigrouptech.com.',
-    includes: ['Published live URL', 'AI-generated copy for niche', 'Contact section'],
+    includes: [
+      'Published live URL',
+      'AI-generated copy for niche',
+      'Contact section',
+      'Delivery handoff PDF (URL + analytics/pixel guides)',
+    ],
     excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
     anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
     phaseUnlocks: [
@@ -326,7 +331,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     deliverableId: 'website-business',
     description: 'Multi-page business site (5+ pages): services, pricing, contact — live on omnigrouptech.com.',
     descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na omnigrouptech.com.',
-    includes: ['Live URL with 5+ pages', 'Linked to your workspace project', 'Services, pricing, contact pages'],
+    includes: [
+      'Live URL with 5+ pages',
+      'Linked to your workspace project',
+      'Services, pricing, contact pages',
+      'Delivery handoff PDF (URL + GBP/analytics guides)',
+    ],
     excludes: ['Custom domain', 'CMS training', 'Copywriting beyond AI first draft'],
     anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
     phaseUnlocks: [
@@ -363,7 +373,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       '4+ demo products in catalog',
       'Checkout integration notes in delivery',
       'Cart path documented for buyers',
-      'Honest demo-vs-merchant scope note in delivery',
+      'Honest demo-vs-merchant scope note in delivery PDF',
+      'Delivery handoff PDF with live URL',
     ],
     excludes: ['Real inventory sync', 'Client Stripe account wiring', 'Payment processing fees'],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },

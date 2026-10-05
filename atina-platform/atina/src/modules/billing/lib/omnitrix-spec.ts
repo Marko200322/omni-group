@@ -209,6 +209,7 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'handoff_pdf',
   'software_test_gate',
   'catalog_description',
+  'live_http_probe',
 ]);
 
 export function auditOmnitrixPackage(pkg: OmnitrixPackage): OmnitrixAuditRow {

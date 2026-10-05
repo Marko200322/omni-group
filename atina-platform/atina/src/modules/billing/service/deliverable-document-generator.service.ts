@@ -277,6 +277,79 @@ Professional English. No lorem ipsum. Specific to industry and client.`,
     );
   }
 
+  async generateSiteDeliveryPack(input: {
+    deliverableId: string;
+    clientName: string;
+    industryCategory?: string | null;
+    publicUrl: string;
+    absoluteUrl: string;
+    pageCount?: number | null;
+    catalogCount?: number | null;
+  }): Promise<StructuredDeliverableDoc> {
+    const d = getDeliverable(input.deliverableId);
+    const pack = verticalPackForIndustry(input.industryCategory);
+    const kind =
+      input.deliverableId === 'website-ecommerce'
+        ? 'ecommerce demo storefront'
+        : input.deliverableId === 'website-business'
+          ? 'multi-page business website'
+          : 'landing page';
+    const sections: DeliverablePdfSection[] = [
+      {
+        heading: 'What shipped',
+        body: [
+          `${kind} for ${input.clientName} (${pack.displayName}).`,
+          `Live URL (path): ${input.publicUrl}`,
+          `Open in browser: ${input.absoluteUrl}`,
+          input.pageCount ? `Pages generated: ${input.pageCount}` : null,
+          input.catalogCount ? `Demo catalog products: ${input.catalogCount}` : null,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      },
+      {
+        heading: 'How to share with clients',
+        body: `Send ${input.absoluteUrl} as your hosted presence under omnigrouptech.com. Custom domain DNS is not included — keep the URL or add a redirect at your registrar.`,
+      },
+      {
+        heading: 'SEO & social basics',
+        body: 'Title/meta and Open Graph tags are set on the published page. Favicon is served from the site shell. Verify with a link preview tool after you share the URL.',
+      },
+      {
+        heading: 'Analytics snippet guide (you add the ID)',
+        body: [
+          'Plausible: add <script defer data-domain="YOUR_DOMAIN" src="https://plausible.io/js/script.js"></script> via a future content refresh, or track outbound clicks to this URL in your existing analytics.',
+          'GA4: create a property, copy Measurement ID (G-XXXX), and paste into your marketing stack; this package prepares the placement guide, not a live GA property.',
+        ].join('\n\n'),
+      },
+      {
+        heading: 'Retargeting pixel placement guide',
+        body: 'Meta/Google remarketing pixels require your ad account ID. Place the pixel on the live page only after ads credentials are live — do not invent pixel IDs. Until then, use the contact CTA as the conversion event.',
+      },
+    ];
+    if (input.deliverableId === 'website-ecommerce') {
+      sections.push({
+        heading: 'Checkout scope (honest)',
+        body: 'This is a demo storefront with sample products and documented cart path. It is not a live Stripe merchant shop, inventory system, or tax engine. Orders use the manual bank-transfer path until merchant checkout is scoped separately.',
+      });
+    }
+    if (input.deliverableId === 'website-business') {
+      sections.push({
+        heading: 'Google Business Profile checklist',
+        body: '1) Claim GBP for the business name. 2) Match NAP to the contact page. 3) Add services/pricing categories from the live site. 4) Link the live URL in GBP website field. 5) Upload 3+ real photos (client-owned).',
+      });
+    }
+    sections.push({
+      heading: 'Next upgrades',
+      body: `Vertical focus: ${pack.researchFocus.slice(0, 3).join('; ')}. Upsell path: custom domain, content refresh retainer, or CRM sync when inbound is live.`,
+    });
+    return {
+      title: `${d?.name ?? 'Site'} — Delivery pack`,
+      subtitle: `${input.clientName} — ${pack.displayName}`,
+      sections,
+    };
+  }
+
   async generateSoftwareHandoff(input: {
     clientName: string;
     projectName: string;

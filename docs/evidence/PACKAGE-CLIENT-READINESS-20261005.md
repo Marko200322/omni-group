@@ -53,3 +53,24 @@ To je **proizvod u sistemu**, ne samo marketing tekst. Ako checklist kaže PASS,
 - White-label PDF includes explicit **Partner one-pager** section
 - Thin packages expanded to ≥5 honest includes (web + atina SSOT synced)
 
+## Site live gate (2026-10-05 evening)
+
+Script: `scripts/verify-site-fulfillment-live.ps1`  
+Evidence: `docs/evidence/site-live-gate-20261005_082801.*`
+
+| Package | Cells | Live HTTP 200 + content |
+|---------|------:|------------------------:|
+| landing | 50 | **50/50** |
+| website-business | 50 | **50/50** (10 pages each) |
+| website-ecommerce | 50 | **50/50** (8 catalog products) |
+| **Total** | **150** | **150/150 PASS** |
+
+All matrix site cells: `publicUrl` present, `client_public_sites.status=published`, `review_status=approved`.
+
+### Code follow-up (same day)
+
+- Website fulfillment now **HTTP-probes** the published URL before PASS and ships a **delivery handoff PDF** (+ markdown).
+- Checklist no longer soft-passes page_count/catalog on URL alone; site packages require PDF artifact.
+- Client billing: **View / print invoice** link (`/api/atina/billing/invoices/:id`).
+- Re-run site gate: `.\scripts\verify-site-fulfillment-live.ps1` or `RUN_SITE_LIVE_GATE=1` with `qa.mjs`.
+
