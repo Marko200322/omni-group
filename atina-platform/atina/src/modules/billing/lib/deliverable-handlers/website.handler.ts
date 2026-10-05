@@ -1,4 +1,4 @@
-import config from '../../../../config';
+import { config } from '../../../../config';
 import { getDeliverable } from '../deliverable-catalog';
 import { DeliverableContentGeneratorService } from '../../service/deliverable-content-generator.service';
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
