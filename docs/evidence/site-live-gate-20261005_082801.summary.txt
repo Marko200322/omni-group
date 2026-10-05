@@ -1,0 +1,11 @@
+﻿SITE_LIVE_GATE 20261005_082801
+webBase=https://omnigrouptech.com minContentBytes=800
+matrixCsv=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-MERGED-20261004_200516-after-retry.csv
+dbExtract=C:\dev\omni group\docs\evidence\site-live-gate-20261005_082801.db.csv
+outCsv=C:\dev\omni group\docs\evidence\site-live-gate-20261005_082801.csv
+TOTAL=150 LIVE_OK=150 LIVE_FAIL=0 HTTP_200=150 MISSING_URL=0 EXPECTED_MATRIX=150
+---BY_PACKAGE---
+landing total=50 liveOk=50 fail=0 missingUrl=0 pct=100
+website-business total=50 liveOk=50 fail=0 missingUrl=0 pct=100
+website-ecommerce total=50 liveOk=50 fail=0 missingUrl=0 pct=100
+---SAMPLE_FAILS---

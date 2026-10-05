@@ -1,0 +1,15 @@
+﻿# Test run aggregate 2026-10-01T18:08:17.2480340+02:00
+
+## Done
+- qa:production: 19/19 PASS
+- test:catalog:live: PASS (20 products)
+- verify-industry-package-matrix-prod (+ marketing): ALL PASS
+- atina focused unit: 13 suites / 91 tests PASS
+- smoke-platform-full: PASS (see test-run-smoke-e2e.txt)
+- smoke-web-integration: PASS
+- e2e-commerce-prod: PASS
+- e2e-isolation-prod: PASS
+- smoke-hunting: FAIL (401 login — contention with matrix shards; retry after matrix)
+
+## In progress
+- fulfillment matrix stamp 20261001_174500 (4 shards)

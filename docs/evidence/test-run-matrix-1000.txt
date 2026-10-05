@@ -1,0 +1,5 @@
+﻿MATRIX FINAL stamp=20261001_174500
+rows=1000 PASS=1000 FAIL=0
+retryOk=18 remainingFails=0
+merged=C:\dev\omni group\docs\evidence\fulfillment-matrix-prod-MERGED-20261001_174500.csv
+finished=2026-10-01T22:22:33.7407000+02:00
