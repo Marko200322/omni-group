@@ -241,25 +241,80 @@ foreach ($cell in $cells) {
     if ($job.status -ne 'completed') { throw "Timeout status=$($job.status)" }
 
     if ($job.artifacts) { $arts = @($job.artifacts).Count }
-    $checklist = $null
-    if ($job.fulfillmentMeta) { $checklist = $job.fulfillmentMeta.checklist }
-    if (-not $checklist -and $job.result -and $job.result.fulfillmentMeta) {
-      $checklist = $job.result.fulfillmentMeta.checklist
+    # Anti fake-pass: never treat "job completed" alone as quality PASS.
+    # Prefer checklistScore/checklistPassed from job API; fall back to nested meta / substance / live URL.
+    # Incomplete checklist (passed without numeric score) is a hard FAIL — matches matrix-quality-gate.ts.
+    function Test-FiniteScore([object]$Raw) {
+      if ($null -eq $Raw -or "$Raw" -eq '') { return $false }
+      $n = 0.0
+      return [double]::TryParse([string]$Raw, [ref]$n)
     }
-    $checkPassed = $true
+    $checklist = $null
+    if ($null -ne $job.checklistPassed -and "$($job.checklistPassed)" -ne '') {
+      if (-not (Test-FiniteScore $job.checklistScore)) {
+        throw 'checklistPassed set but checklistScore missing — refusing fake PASS'
+      }
+      $checklist = @{
+        score = $job.checklistScore
+        passed = [bool]$job.checklistPassed
+        items = @()
+      }
+    }
+    if (-not $checklist -and $job.fulfillmentMeta -and $job.fulfillmentMeta.checklist) {
+      $c = $job.fulfillmentMeta.checklist
+      if ((Test-FiniteScore $c.score) -and ($null -ne $c.passed -and "$($c.passed)" -ne '')) {
+        $checklist = $c
+      }
+    }
+    if (-not $checklist -and $job.result -and $job.result.fulfillmentMeta -and $job.result.fulfillmentMeta.checklist) {
+      $c = $job.result.fulfillmentMeta.checklist
+      if ((Test-FiniteScore $c.score) -and ($null -ne $c.passed -and "$($c.passed)" -ne '')) {
+        $checklist = $c
+      }
+    }
+    $checkPassed = $false
+    $qualityGate = 'none'
     if ($checklist) {
+      if (-not (Test-FiniteScore $checklist.score)) {
+        throw 'Checklist present but score missing — refusing fake PASS'
+      }
       $score = [string]$checklist.score
       $checkPassed = [bool]$checklist.passed
+      $qualityGate = 'checklist'
+      if (-not $checkPassed) {
+        $fails = @($checklist.items | Where-Object { -not $_.passed -and $_.id -ne 'catalog_description' } | ForEach-Object { $_.id }) -join ', '
+        throw "Checklist failed (${score}pct): $fails"
+      }
+    } elseif ($job.documentSubstanceOk -eq $true) {
+      $checkPassed = $true
+      $qualityGate = 'documentSubstanceOk'
+      if ($job.documentQuality -and $job.documentQuality.totalBodyChars) {
+        $score = "sub:$($job.documentQuality.totalBodyChars)"
+      } else {
+        $score = 'substance'
+      }
+    } elseif ($job.publicUrl) {
+      $livePath = [string]$job.publicUrl
+      if ($livePath -notmatch '^https?://') { $livePath = "$web$livePath" }
+      $live = Invoke-WebRequest -Uri $livePath -UseBasicParsing -TimeoutSec 60
+      if ([int]$live.StatusCode -ne 200) { throw "Live publicUrl HTTP $($live.StatusCode)" }
+      $title = if ($live.Content -match '<title>([^<]+)</title>') { $Matches[1].Trim() } else { '' }
+      if ($title -match 'System Admin') { throw "Live publicUrl title is System Admin: $title" }
+      if (-not $live.Content -or $live.RawContentLength -lt 500) {
+        throw "Live publicUrl body too thin ($($live.RawContentLength) B)"
+      }
+      $checkPassed = $true
+      $qualityGate = 'livePublicUrl'
+      $score = 'live200'
+    } else {
+      throw 'No quality evidence (checklist/substance/publicUrl) — refusing fake PASS'
     }
-    if (-not $checkPassed) {
-      $fails = @($checklist.items | Where-Object { -not $_.passed -and $_.id -ne 'catalog_description' } | ForEach-Object { $_.id }) -join ', '
-      throw "Checklist failed (${score}pct): $fails"
-    }
+    if (-not $checkPassed) { throw "Quality gate failed ($qualityGate)" }
 
     $status = 'PASS'
     $passed++
     $cellDone = $true
-    Write-Host "  PASS artifacts=$arts checklist=${score}pct (${([int]$sw.Elapsed.TotalSeconds)}s)" -ForegroundColor Green
+    Write-Host "  PASS artifacts=$arts gate=$qualityGate score=$score (${([int]$sw.Elapsed.TotalSeconds)}s)" -ForegroundColor Green
   } catch {
     $err = $_.Exception.Message -replace '[\r\n,]+', ' '
     $isGate = $err -match '402|Payment Required|not available for self-serve|phase|budget'

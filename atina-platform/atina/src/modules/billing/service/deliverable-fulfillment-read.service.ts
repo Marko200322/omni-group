@@ -38,6 +38,12 @@ export type FulfillmentJobView = {
   /** Machine-checkable document substance metrics (when computed at fulfillment). */
   documentQuality: DocumentQualitySummary | null;
   documentSubstanceOk: boolean | null;
+  /**
+   * Checklist score/passed from result.fulfillmentMeta — exposed so remote matrix
+   * probes cannot treat "job completed" as quality PASS when the gate was never read.
+   */
+  checklistScore: number | null;
+  checklistPassed: boolean | null;
   artifacts: FulfillmentArtifactView[];
   clientVisible: boolean;
   createdAt: string;
@@ -80,6 +86,30 @@ function readDocumentSubstanceOk(result: Record<string, unknown>): boolean | nul
   return null;
 }
 
+function readChecklistSummary(result: Record<string, unknown>): {
+  checklistScore: number | null;
+  checklistPassed: boolean | null;
+} {
+  const meta = result.fulfillmentMeta;
+  if (!meta || typeof meta !== 'object') {
+    return { checklistScore: null, checklistPassed: null };
+  }
+  const checklist = (meta as Record<string, unknown>).checklist;
+  if (!checklist || typeof checklist !== 'object') {
+    return { checklistScore: null, checklistPassed: null };
+  }
+  const c = checklist as Record<string, unknown>;
+  const scoreRaw = c.score;
+  const checklistScore =
+    typeof scoreRaw === 'number' && Number.isFinite(scoreRaw)
+      ? scoreRaw
+      : typeof scoreRaw === 'string' && scoreRaw.trim() !== '' && Number.isFinite(Number(scoreRaw))
+        ? Number(scoreRaw)
+        : null;
+  const checklistPassed = typeof c.passed === 'boolean' ? c.passed : null;
+  return { checklistScore, checklistPassed };
+}
+
 /** Pure mapper — exported for unit tests of admin API metadata shape. */
 export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView {
   const result = (row.result ?? {}) as Record<string, unknown>;
@@ -97,6 +127,8 @@ export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView
     });
   }
 
+  const { checklistScore, checklistPassed } = readChecklistSummary(result);
+
   return {
     id: row.id,
     paymentId: row.payment_id,
@@ -113,6 +145,8 @@ export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView
     industryCategory: readIndustryCategory(result),
     documentQuality: readDocumentQuality(result),
     documentSubstanceOk: readDocumentSubstanceOk(result),
+    checklistScore,
+    checklistPassed,
     artifacts,
     clientVisible: row.review_status === 'approved' || row.review_status == null,
     createdAt: row.created_at.toISOString(),

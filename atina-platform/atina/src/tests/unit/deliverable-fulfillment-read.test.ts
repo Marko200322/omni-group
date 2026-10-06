@@ -104,6 +104,57 @@ describe('fulfillment admin API metadata shape', () => {
     expect(view.industryCategory).toBe('marketing');
     expect(view.documentQuality?.sectionCount).toBe(5);
   });
+
+  it('exposes checklistScore/checklistPassed from result.fulfillmentMeta (anti fake-pass)', () => {
+    const view = toFulfillmentJobView(
+      baseRow({
+        result: {
+          publicUrl: '/sites/fitness-studio-abc',
+          fulfillmentMeta: {
+            attemptNumber: 1,
+            checklist: { score: 92, passed: true, items: [] },
+          },
+        },
+      }),
+    );
+    expect(view.checklistScore).toBe(92);
+    expect(view.checklistPassed).toBe(true);
+    expect(view.publicUrl).toBe('/sites/fitness-studio-abc');
+  });
+
+  it('returns null checklist fields when fulfillmentMeta is absent', () => {
+    const view = toFulfillmentJobView(baseRow({ result: { artifacts: [] } }));
+    expect(view.checklistScore).toBeNull();
+    expect(view.checklistPassed).toBeNull();
+  });
+
+  it('parses string checklist score and failed passed flag', () => {
+    const view = toFulfillmentJobView(
+      baseRow({
+        result: {
+          fulfillmentMeta: {
+            checklist: { score: '77', passed: false, items: [{ id: 'x', passed: false }] },
+          },
+        },
+      }),
+    );
+    expect(view.checklistScore).toBe(77);
+    expect(view.checklistPassed).toBe(false);
+  });
+
+  it('returns null checklistScore when score is non-numeric', () => {
+    const view = toFulfillmentJobView(
+      baseRow({
+        result: {
+          fulfillmentMeta: {
+            checklist: { score: '', passed: true, items: [] },
+          },
+        },
+      }),
+    );
+    expect(view.checklistScore).toBeNull();
+    expect(view.checklistPassed).toBe(true);
+  });
 });
 
 describe('normalizeFulfillmentIndustry', () => {

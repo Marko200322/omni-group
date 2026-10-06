@@ -104,19 +104,47 @@ foreach ($deliverableId in $ids) {
     if ($job.status -eq 'failed') { throw "Fulfillment failed: $($job.error)" }
     if ($job.status -ne 'completed') { throw "Timeout - status=$($job.status)" }
 
-    $checklist = $job.fulfillmentMeta.checklist
-    if (-not $checklist) {
+    # Anti fake-pass: never default checkPassed=$true when checklist is missing.
+    $checklist = $null
+    if ($null -ne $job.checklistPassed -and "$($job.checklistPassed)" -ne '') {
+      if ($null -eq $job.checklistScore -or "$($job.checklistScore)" -eq '') {
+        throw 'checklistPassed set but checklistScore missing — refusing fake PASS'
+      }
+      $checklist = @{ score = $job.checklistScore; passed = [bool]$job.checklistPassed; items = @() }
+    }
+    if (-not $checklist -and $job.fulfillmentMeta) { $checklist = $job.fulfillmentMeta.checklist }
+    if (-not $checklist -and $job.result -and $job.result.fulfillmentMeta) {
       $checklist = $job.result.fulfillmentMeta.checklist
     }
-    $score = if ($checklist) { $checklist.score } else { $null }
-    $checkPassed = if ($checklist) { $checklist.passed } else { $true }
-
-    if (-not $checkPassed) {
-      $fails = ($checklist.items | Where-Object { -not $_.passed -and $_.id -ne 'catalog_description' } | ForEach-Object { $_.id }) -join ', '
-      throw "Checklist failed (${score}pct): $fails"
+    $score = $null
+    $checkPassed = $false
+    $qualityGate = 'none'
+    if ($checklist -and $null -ne $checklist.passed -and "$($checklist.passed)" -ne '' -and $null -ne $checklist.score -and "$($checklist.score)" -ne '') {
+      $score = $checklist.score
+      $checkPassed = [bool]$checklist.passed
+      $qualityGate = 'checklist'
+      if (-not $checkPassed) {
+        $fails = ($checklist.items | Where-Object { -not $_.passed -and $_.id -ne 'catalog_description' } | ForEach-Object { $_.id }) -join ', '
+        throw "Checklist failed (${score}pct): $fails"
+      }
+    } elseif ($job.documentSubstanceOk -eq $true) {
+      $checkPassed = $true
+      $qualityGate = 'documentSubstanceOk'
+      $score = if ($job.documentQuality -and $job.documentQuality.totalBodyChars) { "sub:$($job.documentQuality.totalBodyChars)" } else { 'substance' }
+    } elseif ($job.publicUrl) {
+      $livePath = [string]$job.publicUrl
+      if ($livePath -notmatch '^https?://') { $livePath = "$web$livePath" }
+      $live = Invoke-WebRequest -Uri $livePath -UseBasicParsing -TimeoutSec 60
+      if ([int]$live.StatusCode -ne 200) { throw "Live publicUrl HTTP $($live.StatusCode)" }
+      $checkPassed = $true
+      $qualityGate = 'livePublicUrl'
+      $score = 'live200'
+    } else {
+      throw 'No quality evidence (checklist/substance/publicUrl) — refusing fake PASS'
     }
+    if (-not $checkPassed) { throw "Quality gate failed ($qualityGate)" }
 
-    Write-Host "  PASS status=$($job.status) artifacts=$($job.artifacts.Count) checklist=${score}pct" -ForegroundColor Green
+    Write-Host "  PASS status=$($job.status) artifacts=$($job.artifacts.Count) gate=$qualityGate score=$score" -ForegroundColor Green
     $passed++
     $results += [pscustomobject]@{ deliverableId = $deliverableId; status = 'PASS'; score = $score }
     Start-Sleep -Seconds 20
