@@ -127,6 +127,23 @@ if ($DeliverableId -eq 'setup-quick' -and $stripeAmount -ne 549) {
 }
 Write-Host "  stripe deliverable session OK paymentId=$($delCo.data.paymentId) amount=$stripeAmount" -ForegroundColor Green
 
+$stripeSessionId = [string]$delCo.data.sessionId
+if (-not $stripeSessionId -and [string]$delCo.data.url -match 'cs_(test|live)_[A-Za-z0-9]+') {
+  $stripeSessionId = $Matches[0]
+}
+if ($stripeSessionId) {
+  $sessStatus = Invoke-BffJson -Method GET -Path "/api/atina/payments/stripe/checkout-session/$stripeSessionId" -Session $userSession
+  if (-not $sessStatus.ok -or -not $sessStatus.data.state) {
+    throw "Checkout session status verify failed: $($sessStatus | ConvertTo-Json -Compress -Depth 4)"
+  }
+  if ($sessStatus.data.state -notin @('PROCESSING', 'PAID', 'UNKNOWN')) {
+    throw "Unexpected checkout session state before pay: $($sessStatus.data.state)"
+  }
+  Write-Host "  stripe session status OK state=$($sessStatus.data.state) livemode=$($sessStatus.data.livemode)" -ForegroundColor Green
+} else {
+  Write-Host '  stripe session status SKIP (no sessionId in response)' -ForegroundColor Yellow
+}
+
 $dco = Invoke-BffJson -Method POST -Path '/api/atina/payments/manual/deliverable-checkout' -Session $userSession -Body (@{
   deliverableId = $DeliverableId
   industryCategory = $IndustryCategory

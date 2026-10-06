@@ -1,0 +1,28 @@
+E2E commerce PROD — 2026-10-06 (post SafeDeploy remediation)
+============================================================
+Command: .\scripts\e2e-commerce-prod.ps1
+Result: PASS (exit 0)
+
+Proven on https://omnigrouptech.com :
+- admin login + invite client
+- payment methods: stripe (TEST) + manual bank transfer both available
+- Stripe plan checkout session created (checkout.stripe.com)
+- Stripe deliverable checkout session created (setup-quick, amount=549)
+- manual deliverable checkout → mark-sent → admin confirm
+- fulfillment completed, artifacts=2
+- client deliveries list OK
+- client projects list OK (projects=1)
+
+Post-deploy probes:
+- GET /api/atina/payments/methods → mode=sandbox stripeLivemode=false manual available
+- GET checkout-session/{cs_test_…} → state=PROCESSING (open session)
+- /packages → 308 Location=/products
+- GET /api/v1/public-site/client-sites?limit=5 → success, count=5
+- API /health → ok
+
+NOT done (owner):
+- Stripe LIVE keys (sk_live_ / pk_live_ / live webhook secret)
+- Company/legal invoice details (firma)
+- Browser card completion of Stripe TEST Checkout (session create proven; webhook path = same confirmPendingPayment as admin confirm)
+
+Deploy: SafeDeploy EXIT 0, commits f503984 + 947e8b1
