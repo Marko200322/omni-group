@@ -1,0 +1,21 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+setup-quick,marketing,PASS,,3,46e5424e-f9ad-4088-9f2f-2dab388db49d,"",5,2026-10-06T08:10:46.4990871+02:00
+setup-full,marketing,PASS,,5,6b08c066-7839-4ec5-86a4-e5a9a76c9dc7,"",5,2026-10-06T08:11:03.5491862+02:00
+setup-custom,marketing,PASS,,3,9b36abe4-b104-4dad-b8a2-7570ce5b941f,"",5,2026-10-06T08:11:20.4028738+02:00
+audit,marketing,PASS,,2,854db336-ef3c-4e1d-8b58-6c4bb208f2aa,"",5,2026-10-06T08:11:37.1860929+02:00
+integration,marketing,PASS,,3,ac33616d-4fbc-4006-97d6-d62517a1aa25,"",5,2026-10-06T08:11:54.3933269+02:00
+workflow-design,marketing,PASS,,2,8703f4b6-fa4c-4416-a177-785f15a6ad62,"",5,2026-10-06T08:12:11.1596111+02:00
+support-priority,marketing,PASS,,4,d500db3b-967d-4325-937b-f910f3f34060,"",5,2026-10-06T08:12:28.0171239+02:00
+support-dedicated,marketing,PASS,,4,1098369d-234a-4680-8ab4-d5f38700bcf0,"",5,2026-10-06T08:12:45.1144508+02:00
+landing,marketing,PASS,,2,71573221-3159-4dab-a67b-1f60d7d5f068,"",5,2026-10-06T08:13:01.9289315+02:00
+website-business,marketing,PASS,,2,5145ce2f-8d55-4334-9b23-8aa8927c0f6b,"",5,2026-10-06T08:13:19.0804560+02:00
+website-ecommerce,marketing,PASS,,2,c3884bc9-305e-4ed8-890a-033f1281a351,"",5,2026-10-06T08:13:35.7798643+02:00
+white-label-setup,marketing,FAIL,,0,24664088-2fb2-4be9-978e-c129b9635360,"Fulfillment failed: Automated quality gate failed: doc_substance: Consulting/doc pack requires substantial PDF+markdown body (min 1400 chars) â stub rejected",19,2026-10-06T08:14:06.8093608+02:00
+sales-enablement,marketing,PASS,,2,76da06f6-da88-4e84-83d0-4bad1764da45,"",5,2026-10-06T08:14:23.9115497+02:00
+vertical-package,marketing,PASS,,3,f8f6e1f2-4f35-4bd9-a9c1-f168a580f374,"",5,2026-10-06T08:14:40.5708081+02:00
+lead-gen-retainer,marketing,PASS,,4,37ba87d9-71b5-40b3-8fa5-275ac89c9fe1,"",9,2026-10-06T08:15:01.5111333+02:00
+ai-support-retainer,marketing,PASS,,4,e23c6957-d7ba-4ca6-885e-8e8c8ef7239a,"",5,2026-10-06T08:15:18.2379248+02:00
+custom-software,marketing,PASS,,2,c27aa01c-3c24-4d3c-a9a3-65d0028da6bc,"",5,2026-10-06T08:15:34.9691944+02:00
+bundle-portal-presence,marketing,PASS,,5,429826f5-0a4d-40ba-b0b8-73ee40bd6bcc,"",5,2026-10-06T08:15:51.6545758+02:00
+bundle-sales-launch,marketing,PASS,,4,575b6d80-4b1f-4504-927c-44008306e3c9,"",5,2026-10-06T08:16:08.3962560+02:00
+bundle-ops-clarity,marketing,PASS,,4,f7bcadc4-f83f-44be-8603-07c8eca20586,"",5,2026-10-06T08:16:25.1996356+02:00
