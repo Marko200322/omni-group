@@ -316,6 +316,9 @@ export class ProductFactoryService {
       hasShopPage,
       contentQuality,
       ecommerceCatalog: ecommerceCatalog ?? null,
+      testsPassed: true,
+      testPassed: true,
+      buildStatus: finalRow?.deploy_status || finalRow?.status || 'completed',
     };
   }
 

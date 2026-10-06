@@ -17,7 +17,7 @@ async function createRetainerProject(ctx: FulfillmentContext, title: string, des
     userId: ctx.userId,
     paymentId: ctx.paymentId,
     deliverableId: ctx.deliverableId,
-    slug: `retainer-${ctx.paymentId.slice(0, 8)}`,
+    slug: `retainer-${ctx.paymentId.replace(/-/g, '').slice(0, 16)}`,
     name: title,
     description,
     clientName: ctx.clientName,

@@ -80,7 +80,7 @@ export const setupFulfillmentHandler: DeliverableFulfillmentHandler = {
       userId: ctx.userId,
       paymentId: ctx.paymentId,
       deliverableId: ctx.deliverableId,
-      slug: `setup-${ctx.paymentId.slice(0, 8)}`,
+      slug: `setup-${ctx.paymentId.replace(/-/g, '').slice(0, 16)}`,
       name: doc.title,
       description: brief,
       clientName: ctx.clientName,

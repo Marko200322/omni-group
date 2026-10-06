@@ -36,7 +36,7 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       userId: ctx.userId,
       paymentId: ctx.paymentId,
       deliverableId: ctx.deliverableId,
-      slug: `vertical-${ctx.paymentId.slice(0, 8)}`,
+      slug: `vertical-${ctx.paymentId.replace(/-/g, '').slice(0, 16)}`,
       name: doc.title,
       description: doc.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
       clientName: ctx.clientName,
