@@ -2,7 +2,7 @@
 
 ## Verdict
 
-**SHIPPED** — commit `dcfdec872ebde333a7b80043bc5a81a6ddce65fd` on `feat/phase10-outreach-send-enabled` pushed, SafeDeploy EXIT 0, migration **048 applied**.
+**SHIPPED** — commits `dcfdec8` (package stack) + `853ab30` (this evidence) on `feat/phase10-outreach-send-enabled` pushed, SafeDeploy EXIT 0, migration **048 applied**.
 
 ## What shipped
 
