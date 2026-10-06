@@ -10,6 +10,8 @@ function passingDocQuality(deliverableId: string) {
     minTotalChars: 2000,
     minSectionChars: 140,
     minChecklistHits: 1,
+    minPdfBytes: 10000,
+    minPdfPages: 2,
   };
   return {
     documentSubstanceOk: true,
@@ -21,6 +23,9 @@ function passingDocQuality(deliverableId: string) {
       clientNamePresent: true,
       industryPresent: true,
     },
+    pdfBytes: threshold.minPdfBytes ?? 12000,
+    pdfPageCount: threshold.minPdfPages ?? 2,
+    pdfSubstanceOk: true,
   };
 }
 
@@ -395,6 +400,49 @@ describe('fulfillment quality checklist — failures block release', () => {
       status: 'completed',
       artifacts: [{ type: 'pdf', filename: 'thin.pdf', storagePath: '/t' }],
       metadata: {},
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'doc_substance' && !i.passed)).toBe(true);
+  });
+
+  it('fails audit when PDF byte/page floors are thin despite body metrics', () => {
+    const threshold = DOC_SUBSTANCE_THRESHOLDS.audit;
+    const r = runFulfillmentQualityChecklist('audit', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'technical-audit.pdf', storagePath: '/t' },
+        { type: 'md', filename: 'audit_report_md.md', storagePath: '/m' },
+      ],
+      metadata: {
+        documentQuality: {
+          sectionCount: threshold.minSections,
+          totalBodyChars: threshold.minTotalChars,
+          minSectionBodyChars: threshold.minSectionChars,
+          checklistOrMilestoneHits: threshold.minChecklistHits,
+          clientNamePresent: true,
+          industryPresent: true,
+        },
+        documentSubstanceOk: true,
+        pdfBytes: 4096,
+        pdfPageCount: 1,
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'doc_substance' && !i.passed)).toBe(true);
+  });
+
+  it('fails landing handoff without document substance metrics', () => {
+    const r = runFulfillmentQualityChecklist('landing', {
+      status: 'completed',
+      publicUrl: '/sites/demo',
+      artifacts: [
+        { type: 'pdf', filename: 'landing-delivery.pdf', storagePath: '/x' },
+        { type: 'md', filename: 'site_delivery_pack_md.md', storagePath: '/m' },
+      ],
+      metadata: {
+        siteTitle: 'Acme Co',
+        liveProbe: { ok: true, status: 200, bytes: 4000, omniChrome: false },
+      },
     });
     expect(r.passed).toBe(false);
     expect(r.items.some((i) => i.id === 'doc_substance' && !i.passed)).toBe(true);

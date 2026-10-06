@@ -30,6 +30,11 @@ jest.mock('../../modules/billing/service/client-deliverable-bootstrap.service', 
 }));
 
 jest.mock('../../modules/billing/service/deliverable-document-pdf.service', () => ({
+  generateDeliverablePdf: jest.fn(async () => ({
+    buffer: Buffer.from('%PDF-1.4 setup-test'),
+    pageCount: 3,
+    byteLength: 16000,
+  })),
   generateDeliverablePdfBuffer: jest.fn(async () => Buffer.from('%PDF-1.4 setup-test')),
 }));
 

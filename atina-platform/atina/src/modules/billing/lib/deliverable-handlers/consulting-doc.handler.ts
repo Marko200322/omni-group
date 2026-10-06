@@ -18,10 +18,13 @@ async function deliverDocPack(
 ): Promise<FulfillmentResult> {
   const pdf = await persistDeliverablePdf({ ctx, doc, artifactType: type, filename });
   const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${type}_md` });
-  const meta = buildDocumentQualityMetadata(doc, ctx);
+  const meta = buildDocumentQualityMetadata(doc, ctx, {
+    pdfBytes: pdf.pdfBytes,
+    pdfPageCount: pdf.pdfPageCount,
+  });
   const substanceFailed = meta.documentSubstanceOk === false;
   return {
-    artifacts: [pdf, md],
+    artifacts: [pdf.artifact, md],
     status: substanceFailed ? 'partial' : 'completed',
     metadata: {
       ...meta,

@@ -2,7 +2,7 @@ import { config } from '../../../../config';
 import { getDeliverable } from '../deliverable-catalog';
 import { getIndustryCategory } from '../category-pricing';
 import { DeliverableArtifactStoreService } from '../../service/deliverable-artifact-store.service';
-import { generateDeliverablePdfBuffer } from '../../service/deliverable-document-pdf.service';
+import { generateDeliverablePdf } from '../../service/deliverable-document-pdf.service';
 import type { StructuredDeliverableDoc } from '../../service/deliverable-document-generator.service';
 import type { FulfillmentArtifact, FulfillmentContext } from './types';
 
@@ -23,21 +23,131 @@ export type DocumentSubstanceThreshold = {
   minTotalChars: number;
   minSectionChars: number;
   minChecklistHits: number;
+  /** Minimum rendered PDF bytes — thin stub PDFs must fail even if MD is ok. */
+  minPdfBytes?: number;
+  /** Minimum PDF page count (A4). */
+  minPdfPages?: number;
 };
 
-/** Per-package floors — empty one-liners must fail. */
+export type PdfQualityMetrics = {
+  pdfBytes: number;
+  pdfPageCount: number;
+};
+
+/** Per-package floors — empty one-liners and stub PDFs must fail. */
 export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold> = {
-  audit: { minSections: 6, minTotalChars: 2200, minSectionChars: 160, minChecklistHits: 1 },
-  'workflow-design': { minSections: 5, minTotalChars: 2000, minSectionChars: 140, minChecklistHits: 1 },
-  integration: { minSections: 7, minTotalChars: 2400, minSectionChars: 140, minChecklistHits: 1 },
-  'setup-quick': { minSections: 4, minTotalChars: 1200, minSectionChars: 100, minChecklistHits: 1 },
-  'setup-full': { minSections: 5, minTotalChars: 1600, minSectionChars: 120, minChecklistHits: 1 },
-  'setup-custom': { minSections: 5, minTotalChars: 1600, minSectionChars: 120, minChecklistHits: 1 },
-  'sales-enablement': { minSections: 5, minTotalChars: 1800, minSectionChars: 140, minChecklistHits: 1 },
-  'custom-software': { minSections: 7, minTotalChars: 2200, minSectionChars: 120, minChecklistHits: 1 },
-  'bundle-ops-clarity': { minSections: 5, minTotalChars: 2000, minSectionChars: 140, minChecklistHits: 1 },
-  'white-label-setup': { minSections: 5, minTotalChars: 1800, minSectionChars: 120, minChecklistHits: 1 },
-  'vertical-package': { minSections: 5, minTotalChars: 1200, minSectionChars: 100, minChecklistHits: 1 },
+  audit: {
+    minSections: 8,
+    minTotalChars: 4500,
+    minSectionChars: 180,
+    minChecklistHits: 2,
+    minPdfBytes: 12000,
+    minPdfPages: 3,
+  },
+  'workflow-design': {
+    minSections: 5,
+    minTotalChars: 2000,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 8000,
+    minPdfPages: 2,
+  },
+  integration: {
+    minSections: 7,
+    minTotalChars: 2400,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 8000,
+    minPdfPages: 2,
+  },
+  'setup-quick': {
+    minSections: 7,
+    minTotalChars: 3200,
+    minSectionChars: 120,
+    minChecklistHits: 2,
+    minPdfBytes: 9000,
+    minPdfPages: 2,
+  },
+  'setup-full': {
+    minSections: 5,
+    minTotalChars: 2000,
+    minSectionChars: 120,
+    minChecklistHits: 1,
+    minPdfBytes: 8000,
+    minPdfPages: 2,
+  },
+  'setup-custom': {
+    minSections: 5,
+    minTotalChars: 2000,
+    minSectionChars: 120,
+    minChecklistHits: 1,
+    minPdfBytes: 8000,
+    minPdfPages: 2,
+  },
+  'sales-enablement': {
+    minSections: 5,
+    minTotalChars: 1800,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 7000,
+    minPdfPages: 2,
+  },
+  'custom-software': {
+    minSections: 7,
+    minTotalChars: 2200,
+    minSectionChars: 120,
+    minChecklistHits: 1,
+    minPdfBytes: 6000,
+    minPdfPages: 2,
+  },
+  'bundle-ops-clarity': {
+    minSections: 5,
+    minTotalChars: 2000,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 8000,
+    minPdfPages: 2,
+  },
+  'white-label-setup': {
+    minSections: 5,
+    minTotalChars: 1800,
+    minSectionChars: 120,
+    minChecklistHits: 1,
+    minPdfBytes: 7000,
+    minPdfPages: 2,
+  },
+  'vertical-package': {
+    minSections: 5,
+    minTotalChars: 1200,
+    minSectionChars: 100,
+    minChecklistHits: 1,
+    minPdfBytes: 5000,
+    minPdfPages: 2,
+  },
+  landing: {
+    minSections: 8,
+    minTotalChars: 3200,
+    minSectionChars: 140,
+    minChecklistHits: 2,
+    minPdfBytes: 10000,
+    minPdfPages: 2,
+  },
+  'website-business': {
+    minSections: 8,
+    minTotalChars: 3400,
+    minSectionChars: 140,
+    minChecklistHits: 2,
+    minPdfBytes: 10000,
+    minPdfPages: 2,
+  },
+  'website-ecommerce': {
+    minSections: 9,
+    minTotalChars: 3600,
+    minSectionChars: 140,
+    minChecklistHits: 2,
+    minPdfBytes: 10000,
+    minPdfPages: 2,
+  },
 };
 
 const CHECKLIST_MILESTONE_RE =
@@ -99,6 +209,15 @@ export function documentSubstancePasses(
   return true;
 }
 
+export function pdfSubstancePasses(
+  pdf: PdfQualityMetrics,
+  threshold: DocumentSubstanceThreshold,
+): boolean {
+  if (threshold.minPdfBytes != null && pdf.pdfBytes < threshold.minPdfBytes) return false;
+  if (threshold.minPdfPages != null && pdf.pdfPageCount < threshold.minPdfPages) return false;
+  return true;
+}
+
 export function substanceThresholdFor(deliverableId: string): DocumentSubstanceThreshold | null {
   return DOC_SUBSTANCE_THRESHOLDS[deliverableId.trim()] ?? null;
 }
@@ -114,6 +233,7 @@ export const AI_DOC_ACCEPTANCE_FLOOR: DocumentSubstanceThreshold = {
 export function buildDocumentQualityMetadata(
   doc: StructuredDeliverableDoc,
   ctx: Pick<FulfillmentContext, 'clientName' | 'industryCategory' | 'deliverableId'>,
+  pdf?: PdfQualityMetrics | null,
 ): Record<string, unknown> {
   const industryCategory = ctx.industryCategory?.trim() || null;
   const quality = assessDocumentQuality(doc, {
@@ -121,22 +241,42 @@ export function buildDocumentQualityMetadata(
     industryCategory,
   });
   const threshold = substanceThresholdFor(ctx.deliverableId);
+  const docOk = threshold ? documentSubstancePasses(quality, threshold) : null;
+  const pdfOk =
+    threshold && pdf ? pdfSubstancePasses(pdf, threshold) : pdf ? true : null;
+  const substanceOk =
+    docOk === null && pdfOk === null
+      ? null
+      : (docOk !== false) && (pdfOk !== false);
   return {
     documentTitle: doc.title,
     industryCategory,
     documentQuality: quality,
-    documentSubstanceOk: threshold ? documentSubstancePasses(quality, threshold) : null,
+    ...(pdf
+      ? {
+          pdfBytes: pdf.pdfBytes,
+          pdfPageCount: pdf.pdfPageCount,
+          pdfSubstanceOk: pdfOk,
+        }
+      : {}),
+    documentSubstanceOk: substanceOk,
   };
 }
+
+export type PersistedDeliverablePdf = {
+  artifact: FulfillmentArtifact;
+  pdfBytes: number;
+  pdfPageCount: number;
+};
 
 export async function persistDeliverablePdf(input: {
   ctx: FulfillmentContext;
   doc: StructuredDeliverableDoc;
   artifactType: string;
   filename: string;
-}): Promise<FulfillmentArtifact> {
+}): Promise<PersistedDeliverablePdf> {
   const deliverable = getDeliverable(input.ctx.deliverableId);
-  const pdf = await generateDeliverablePdfBuffer({
+  const rendered = await generateDeliverablePdf({
     brandName: 'Omni Group',
     title: input.doc.title,
     subtitle: input.doc.subtitle,
@@ -144,14 +284,19 @@ export async function persistDeliverablePdf(input: {
     deliverableName: deliverable?.name ?? input.ctx.deliverableId,
     sections: input.doc.sections,
   });
-  return store.saveBuffer({
+  const artifact = store.saveBuffer({
     userId: input.ctx.userId,
     paymentId: input.ctx.paymentId,
     filename: input.filename,
-    buffer: pdf,
+    buffer: rendered.buffer,
     type: input.artifactType,
     downloadLabel: input.doc.title,
   });
+  return {
+    artifact,
+    pdfBytes: rendered.byteLength,
+    pdfPageCount: rendered.pageCount,
+  };
 }
 
 export async function persistMarkdownBundle(input: {
@@ -425,12 +570,13 @@ export async function persistTrainingOutlinePdf(input: {
     clientName: input.ctx.clientName,
     industryCategory: input.ctx.industryCategory,
   });
-  return persistDeliverablePdf({
+  const pdf = await persistDeliverablePdf({
     ctx: input.ctx,
     doc,
     artifactType: 'training_outline',
     filename: 'training-outline.pdf',
   });
+  return pdf.artifact;
 }
 
 export type DeployChecklistItem = {

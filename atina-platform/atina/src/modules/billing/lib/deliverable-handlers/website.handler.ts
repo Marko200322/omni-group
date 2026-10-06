@@ -14,7 +14,11 @@ import {
 } from '../../../../shared/industry/industry-catalog';
 import { getIndustryCategory } from '../category-pricing';
 import logger from '../../../../utils/logger';
-import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
+import {
+  buildDocumentQualityMetadata,
+  persistDeliverablePdf,
+  persistMarkdownBundle,
+} from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
 const content = new DeliverableContentGeneratorService();
@@ -219,13 +223,20 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: `${ctx.deliverableId}-delivery.pdf`,
     });
     const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'site_delivery_pack_md' });
+    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+      pdfBytes: pdf.pdfBytes,
+      pdfPageCount: pdf.pdfPageCount,
+    });
+    const substanceFailed = docMeta.documentSubstanceOk === false;
 
     return {
       projectId: pipeline.projectId as string,
       publicUrl,
-      artifacts: [pdf, md],
-      status: 'completed',
+      artifacts: [pdf.artifact, md],
+      status: substanceFailed ? 'partial' : 'completed',
       metadata: {
+        ...docMeta,
+        ...(substanceFailed ? { reason: 'document_substance_below_threshold' } : {}),
         verticalSlug: pack.verticalSlug,
         keywords: pack.keywords,
         qualityGates: pack.qualityGates,

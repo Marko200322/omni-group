@@ -31,6 +31,10 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: 'vertical-solution-pack.pdf',
     });
     const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'vertical_pack_md' });
+    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+      pdfBytes: pdf.pdfBytes,
+      pdfPageCount: pdf.pdfPageCount,
+    });
 
     const pipeline = await factory.runAutomatedClientOrder({
       userId: ctx.userId,
@@ -106,10 +110,10 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
 
     return {
       projectId: pipeline.projectId as string,
-      artifacts: [pdf, md, slaPack, faqPack],
-      status: 'completed',
+      artifacts: [pdf.artifact, md, slaPack, faqPack],
+      status: docMeta.documentSubstanceOk === false ? 'partial' : 'completed',
       metadata: {
-        ...buildDocumentQualityMetadata(doc, ctx),
+        ...docMeta,
         crmBootstrap: crm,
         modulesActivated: modules,
         kickoffTicketId: kickoffTicketId ?? null,
@@ -141,7 +145,10 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: `${ctx.deliverableId}.pdf`,
     });
     const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${ctx.deliverableId}_md` });
-    const docMeta = buildDocumentQualityMetadata(doc, ctx);
+    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+      pdfBytes: pdf.pdfBytes,
+      pdfPageCount: pdf.pdfPageCount,
+    });
 
     let siteResult: FulfillmentResult | null = null;
     if (ctx.deliverableId === 'white-label-setup') {
@@ -168,19 +175,22 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
     const landingOk =
       ctx.deliverableId !== 'white-label-setup' ||
       (siteResult?.status === 'completed' && Boolean(siteResult.publicUrl?.trim()));
+    const substanceOk = docMeta.documentSubstanceOk !== false;
 
     return {
       publicUrl: siteResult?.publicUrl ?? null,
       projectId: siteResult?.projectId,
-      artifacts: [pdf, md, ...(siteResult?.artifacts ?? [])],
-      status: landingOk ? 'completed' : 'partial',
+      artifacts: [pdf.artifact, md, ...(siteResult?.artifacts ?? [])],
+      status: landingOk && substanceOk ? 'completed' : 'partial',
       metadata: {
         ...(siteResult?.metadata ?? {}),
         ...docMeta,
         includesLanding: ctx.deliverableId === 'white-label-setup',
         salesPackReady: ctx.deliverableId === 'sales-enablement',
         ...(landingOk
-          ? {}
+          ? substanceOk
+            ? {}
+            : { reason: 'document_substance_below_threshold' }
           : {
               reason: 'white_label_landing_required',
               landingStatus: siteResult?.status ?? 'missing',

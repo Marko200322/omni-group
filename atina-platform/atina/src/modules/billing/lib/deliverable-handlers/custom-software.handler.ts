@@ -58,6 +58,10 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: 'software-handoff.pdf',
     });
     const md = await persistMarkdownBundle({ ctx, doc: handoff, artifactType: 'software_handoff_md' });
+    const docMeta = buildDocumentQualityMetadata(handoff, ctx, {
+      pdfBytes: pdf.pdfBytes,
+      pdfPageCount: pdf.pdfPageCount,
+    });
     const testsPassed =
       pipeline.testsPassed === true || pipeline.testPassed === true
         ? true
@@ -73,10 +77,10 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
 
     return {
       projectId: pipeline.projectId as string,
-      artifacts: [pdf, md],
-      status: 'completed',
+      artifacts: [pdf.artifact, md],
+      status: docMeta.documentSubstanceOk === false ? 'partial' : 'completed',
       metadata: {
-        ...buildDocumentQualityMetadata(handoff, ctx),
+        ...docMeta,
         outputDir,
         stack: 'node-api-spa',
         testsPassed,

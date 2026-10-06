@@ -3,9 +3,11 @@ jest.mock('../../integrations', () => ({
 }));
 
 import { DeliverableDocumentGeneratorService } from '../../modules/billing/service/deliverable-document-generator.service';
+import { generateDeliverablePdf } from '../../modules/billing/service/deliverable-document-pdf.service';
 import {
   assessDocumentQuality,
   documentSubstancePasses,
+  pdfSubstancePasses,
   substanceThresholdFor,
 } from '../../modules/billing/lib/deliverable-handlers/artifact-helpers';
 import {
@@ -258,5 +260,77 @@ describe('industry-specific doc quality across verticals', () => {
     expect(healthcare.baseKeywords.some((k) => /hipaa|phi|patient/i.test(k))).toBe(true);
     expect(legal.baseKeywords.some((k) => /matter|conflict|retainer/i.test(k))).toBe(true);
     expect(finance.baseKeywords.some((k) => /kyc|aml|reconcil/i.test(k))).toBe(true);
+  });
+});
+
+describe('handoff PDF size / page floors (audit, setup, landing)', () => {
+  const docs = new DeliverableDocumentGeneratorService();
+  const clientName = 'Northline Partners';
+
+  async function expectPdfFloor(
+    deliverableId: string,
+    industry: string,
+    doc: Awaited<ReturnType<DeliverableDocumentGeneratorService['generateAuditReport']>>,
+  ) {
+    const threshold = substanceThresholdFor(deliverableId)!;
+    expect(threshold.minPdfBytes).toBeGreaterThan(0);
+    expect(threshold.minPdfPages).toBeGreaterThan(0);
+
+    const quality = assessDocumentQuality(doc, {
+      clientName,
+      industryCategory: industry,
+    });
+    expect(documentSubstancePasses(quality, threshold, { requireIndustryPresent: true })).toBe(true);
+
+    const pdf = await generateDeliverablePdf({
+      brandName: 'Omni Group',
+      title: doc.title,
+      subtitle: doc.subtitle,
+      clientName,
+      deliverableName: deliverableId,
+      sections: doc.sections,
+    });
+    if (!pdfSubstancePasses({ pdfBytes: pdf.byteLength, pdfPageCount: pdf.pageCount }, threshold)) {
+      throw new Error(
+        `${deliverableId} PDF too thin: ${pdf.byteLength}B / ${pdf.pageCount}p vs min ${threshold.minPdfBytes}B / ${threshold.minPdfPages}p (sections=${doc.sections.length}, chars=${quality.totalBodyChars})`,
+      );
+    }
+    expect(pdf.byteLength).toBeGreaterThanOrEqual(threshold.minPdfBytes!);
+    expect(pdf.pageCount).toBeGreaterThanOrEqual(threshold.minPdfPages!);
+    expect(doc.sections.length).toBeGreaterThanOrEqual(threshold.minSections);
+  }
+
+  it('audit PDF meets min bytes/pages', async () => {
+    const doc = await docs.generateAuditReport({
+      clientName,
+      industryCategory: 'healthcare',
+    });
+    await expectPdfFloor('audit', 'healthcare', doc);
+  });
+
+  it('setup-quick PDF meets min bytes/pages', async () => {
+    const doc = await docs.generateSetupPack({
+      tier: 'quick',
+      clientName,
+      industryCategory: 'marketing',
+    });
+    await expectPdfFloor('setup-quick', 'marketing', doc);
+  });
+
+  it('landing handoff PDF meets min bytes/pages + industry tokens', async () => {
+    const industry = 'construction';
+    const doc = await docs.generateSiteDeliveryPack({
+      deliverableId: 'landing',
+      clientName,
+      industryCategory: industry,
+      publicUrl: '/sites/northline-demo',
+      absoluteUrl: 'https://omnigrouptech.com/sites/northline-demo',
+      pageCount: 1,
+    });
+    await expectPdfFloor('landing', industry, doc);
+    const blob = docBlob(doc).toLowerCase();
+    const tokens = industrySubstanceTokenList(industry);
+    const hits = tokens.filter((t) => blob.includes(t.toLowerCase()));
+    expect(hits.length).toBeGreaterThanOrEqual(3);
   });
 });

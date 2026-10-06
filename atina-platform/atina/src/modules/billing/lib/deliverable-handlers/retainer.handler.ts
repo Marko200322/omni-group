@@ -55,7 +55,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
     );
 
     const modules = deliverable.modules ?? [];
-    const artifacts = [pdf, md];
+    const artifacts = [pdf.artifact, md];
     let leadGenStats = null as Awaited<ReturnType<typeof bootstrap.runLeadGenKickoff>> | null;
     let crmBootstrap = null as Awaited<ReturnType<typeof bootstrap.seedCrmPipeline>> | null;
     let modulesActivated: string[] = [];

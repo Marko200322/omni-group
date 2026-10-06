@@ -222,6 +222,46 @@ function fallbackAudit(
           ]),
         ].join('\n'),
       },
+      {
+        heading: 'Discovery agenda & evidence requests',
+        body: [
+          `Kickoff discovery for ${clientName} (${industryLabel}) — capture answers with owner + evidence links:`,
+          numbered(sub.discoveryQuestions),
+          '',
+          'Evidence pack to attach before Phase 2:',
+          bullets([
+            'Current CRM export or stage screenshot',
+            'Auth / admin role matrix (who can confirm payments)',
+            'Public site URL + analytics property IDs (if any)',
+            `Domain risk notes for: ${sub.operationalRisks.slice(0, 2).join('; ')}`,
+            `Sales pains to validate: ${sub.salesPains.slice(0, 3).join('; ')}`,
+          ]),
+          '',
+          'Milestone: discovery notes filed in kickoff ticket within 5 business days.',
+        ].join('\n'),
+      },
+      {
+        heading: 'Competitive & positioning notes',
+        body: [
+          `${industryLabel} positioning for ${clientName} against peer SMB benchmarks:`,
+          bullets([
+            `Value thesis: ${pack.valueProp}`,
+            `Keywords to own: ${pack.keywords.slice(0, 10).join(', ')}`,
+            `Outreach hooks: ${pack.outreachHooks.join('; ')}`,
+            `Distinctive tokens to keep in client copy: ${sub.distinctiveTokens.join(', ')}`,
+          ]),
+          '',
+          'Competitive checklist:',
+          bullets([
+            '☐ List 3 local/regional peers and their primary CTA',
+            '☐ Note pricing transparency (menu / package / quote-only)',
+            '☐ Capture review volume + response SLA on Google/Facebook if present',
+            `☐ Map peer gaps to ${industryLabel} lenses: ${sub.auditLenses.slice(0, 3).join('; ')}`,
+          ]),
+          '',
+          'Acceptance: positioning one-pager reviewed with owner before paid ads or outbound.',
+        ].join('\n'),
+      },
     ],
   };
 }
@@ -506,6 +546,22 @@ function fallbackSetup(
           ].join('\n'),
         },
         {
+          heading: 'CRM seed & industry templates',
+          body: [
+            `Quick setup seeds labeled DEMO / industry-template CRM rows for ${industry} so the team can practice stages without inventing live leads.`,
+            '',
+            bullets([
+              `Domain focus: ${sub.distinctiveTokens.join(', ')}`,
+              'DEMO_SAMPLE tags must remain visible until replaced with a real export',
+              'Primary account row kept for the buying contact',
+              `Workflow nuances: ${sub.workflowNuances.slice(0, 2).join('; ')}`,
+            ]),
+            '',
+            'Checklist: ☐ open CRM ☐ identify DEMO rows ☐ advance one sample lead ☐ decide import vs stay-on-samples',
+            `Milestone: first ${industry} stage practice complete before Day 5 hypercare ends.`,
+          ].join('\n'),
+        },
+        {
           heading: 'Launch & SLA',
           body: [
             numbered([
@@ -522,6 +578,55 @@ function fallbackSetup(
             `Industry hooks to mention on handoff: ${pack.outreachHooks.join('; ')}`,
             '',
             'Go-live acceptance: ☐ smoke green ☐ client login ☐ payment path ☐ hypercare calendar invite',
+          ].join('\n'),
+        },
+        {
+          heading: 'Day-5 hypercare & acceptance',
+          body: [
+            `Hypercare window for ${clientName} (${industry}) — close these items before marking setup done:`,
+            numbered([
+              'Owner can download this PDF from Deliveries without Omni help',
+              'Billing invoice / payment history visible to entitled users',
+              'Notifications bell shows the welcome / fulfillment notice',
+              `KPI snapshot started: ${sub.kpiSet.slice(0, 3).join('; ')}`,
+              `Risk watchlist logged: ${sub.operationalRisks.slice(0, 2).join('; ')}`,
+            ]),
+            '',
+            'Day-5 checklist:',
+            bullets([
+              '☐ Open issues listed with owners',
+              '☐ DEMO CRM cleanup decision recorded',
+              `☐ Setup milestones: ${sub.setupMilestones.join('; ')}`,
+              '☐ Upsell path noted (full onboarding / audit) only if requested',
+            ]),
+            '',
+            'Acceptance: hypercare calendar invite sent; no invented live metrics.',
+          ].join('\n'),
+        },
+        {
+          heading: 'Owner runbook & escalation',
+          body: [
+            `Day-to-day runbook for ${clientName} operators in ${industry}:`,
+            numbered([
+              'Login → Notifications → Billing → Deliveries (download this PDF + markdown pack)',
+              'Confirm any bank-transfer payment from Admin only when reference matches',
+              'Open a support ticket with payment/order ID if fulfillment artifacts are missing',
+              `Escalate ${industry} compliance questions using: ${sub.complianceChecklist.slice(0, 2).join('; ')}`,
+              `Revisit discovery prompts when scope changes: ${sub.discoveryQuestions.slice(0, 2).join('; ')}`,
+            ]),
+            '',
+            'Honesty boundaries (do not oversell):',
+            bullets([
+              'Portal entitlements + setup PDF are COMPLETE for this package',
+              'External ads / Apollo / LinkedIn APIs remain NOT CONNECTED unless separately wired',
+              'Custom domain DNS stays with the client registrar',
+              `Integration notes for later packages: ${sub.integrationNotes.slice(0, 2).join('; ')}`,
+            ]),
+            '',
+            `Modules referenced: ${pack.coreModules.join(', ')}`,
+            `Keywords / positioning: ${pack.keywords.slice(0, 8).join(', ')}`,
+            '',
+            'Checklist: ☐ operators named ☐ escalation email known ☐ Deliveries download verified ☐ no invented lead counts',
           ].join('\n'),
         },
       ],
@@ -1217,6 +1322,8 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
   }): Promise<StructuredDeliverableDoc> {
     const d = getDeliverable(input.deliverableId);
     const pack = verticalPackForIndustry(input.industryCategory);
+    const sub = substanceForPack(pack);
+    const industry = sub.labelEn || pack.displayName;
     const kind =
       input.deliverableId === 'website-ecommerce'
         ? 'ecommerce storefront (complete)'
@@ -1227,33 +1334,114 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
       {
         heading: 'What shipped',
         body: [
-          `${kind} for ${input.clientName} (${pack.displayName}).`,
+          `${kind} for ${input.clientName} in ${industry} (${sub.categorySlug}).`,
           `Live URL (path): ${input.publicUrl}`,
           `Open in browser: ${input.absoluteUrl}`,
-          input.pageCount ? `Pages generated: ${input.pageCount}` : null,
+          input.pageCount ? `Pages generated: ${input.pageCount}` : 'Pages generated: see live site navigation',
           input.catalogCount ? `Catalog products: ${input.catalogCount}` : null,
+          '',
+          `Value thesis: ${pack.valueProp}`,
+          `Domain tokens in copy scope: ${sub.distinctiveTokens.join(', ')}`,
+          `Research lenses: ${pack.researchFocus.slice(0, 4).join('; ')}`,
         ]
-          .filter(Boolean)
+          .filter((line) => line !== null)
           .join('\n'),
       },
       {
+        heading: 'Brand & messaging checklist',
+        body: [
+          `Confirm the live page reads as ${input.clientName} — not a platform placeholder.`,
+          '',
+          bullets([
+            `☐ Brand/title shows ${input.clientName}`,
+            `☐ Primary offer language fits ${industry}`,
+            `☐ CTA matches sales path (contact / book / buy)`,
+            `☐ Industry phrases present: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
+            `☐ Pain points reflected: ${sub.salesPains.slice(0, 3).join('; ')}`,
+          ]),
+          '',
+          'Milestone M1: owner screenshots the hero + CTA for kickoff ticket evidence.',
+        ].join('\n'),
+      },
+      {
         heading: 'How to share with clients',
-        body: `Send ${input.absoluteUrl} as your hosted presence under omnigrouptech.com. Custom domain DNS is not included — keep the URL or add a redirect at your registrar.`,
+        body: [
+          `Send ${input.absoluteUrl} as your hosted presence under omnigrouptech.com.`,
+          'Custom domain DNS is not included — keep this URL or add a redirect / CNAME at your registrar when ready.',
+          '',
+          'Share checklist:',
+          numbered([
+            'Paste the absolute URL into email signature and social bios',
+            'Add to proposals as “live preview” before custom domain',
+            'Share with sales so demos use the same CTA as the site',
+            `Mention ${industry} positioning: ${pack.outreachHooks.slice(0, 2).join(' | ')}`,
+          ]),
+          '',
+          'Acceptance: one outbound message with the live URL sent by the client team.',
+        ].join('\n'),
       },
       {
         heading: 'SEO & social basics',
-        body: 'Title/meta and Open Graph tags are set on the published page. Favicon is served from the site shell. Verify with a link preview tool after you share the URL.',
+        body: [
+          'Title/meta and Open Graph tags are set on the published page. Favicon is served from the site shell.',
+          '',
+          bullets([
+            `Primary keywords to monitor: ${pack.keywords.slice(0, 8).join(', ')}`,
+            'Verify link previews (Slack/WhatsApp/LinkedIn) after first share',
+            'Keep NAP consistent if you also claim Google Business Profile',
+            `Avoid inventing review counts or ${industry} certifications not yet earned`,
+          ]),
+          '',
+          'Day-7 checklist: ☐ preview card OK ☐ title unique ☐ no Omni chrome in visible copy',
+        ].join('\n'),
       },
       {
         heading: 'Analytics snippet guide (you add the ID)',
         body: [
-          'Plausible: add <script defer data-domain="YOUR_DOMAIN" src="https://plausible.io/js/script.js"></script> via a future content refresh, or track outbound clicks to this URL in your existing analytics.',
-          'GA4: create a property, copy Measurement ID (G-XXXX), and paste into your marketing stack; this package prepares the placement guide, not a live GA property.',
-        ].join('\n\n'),
+          'This package prepares placement guidance — it does not create a live analytics property for you.',
+          '',
+          'Plausible:',
+          'Add <script defer data-domain="YOUR_DOMAIN" src="https://plausible.io/js/script.js"></script> via a future content refresh, or track outbound clicks to this URL in your existing analytics.',
+          '',
+          'GA4:',
+          'Create a property, copy Measurement ID (G-XXXX), and paste into your marketing stack when ready. Until then, treat contact CTA clicks as the conversion event.',
+          '',
+          `${industry} KPIs to wire once analytics is live:`,
+          bullets(sub.kpiSet),
+          '',
+          'Checklist: ☐ property created ☐ ID stored in password manager ☐ goal/event named for primary CTA',
+        ].join('\n'),
       },
       {
         heading: 'Retargeting pixel placement guide',
-        body: 'Meta/Google remarketing pixels require your ad account ID. Place the pixel on the live page only after ads credentials are live — do not invent pixel IDs. Until then, use the contact CTA as the conversion event.',
+        body: [
+          'Meta/Google remarketing pixels require your ad account ID. Do not invent pixel IDs.',
+          '',
+          numbered([
+            'Create the pixel / tag in your ads account',
+            'Place it on the live page only after credentials are live',
+            'Map the primary CTA as the conversion event',
+            `Align creative with ${industry} pains: ${sub.salesPains.slice(0, 2).join('; ')}`,
+          ]),
+          '',
+          'Honesty rule: ads channels remain NOT CONNECTED until you wire keys — the site CTA still works without pixels.',
+          'Milestone: pixel plan documented even if install is deferred.',
+        ].join('\n'),
+      },
+      {
+        heading: 'Launch QA & acceptance',
+        body: [
+          `QA gate for ${input.clientName} (${industry}) before paid traffic:`,
+          bullets([
+            '☐ Mobile viewport: hero + CTA readable without horizontal scroll',
+            '☐ Contact / checkout path returns success feedback',
+            '☐ No System Admin / Omni Group chrome in visible title or body',
+            ...pack.qualityGates.slice(0, 4).map((g) => `☐ ${g}`),
+            ...sub.complianceChecklist.slice(0, 2).map((c) => `☐ ${c}`),
+          ]),
+          '',
+          'Acceptance: owner signs kickoff ticket that the live URL is shareable.',
+        ].join('\n'),
       },
     ];
     if (input.deliverableId === 'website-ecommerce') {
@@ -1261,25 +1449,74 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
         heading: 'Checkout & shop operations',
         body: [
           'Buyers get a live shop page, industry catalog with per-SKU stock, cart, configurable tax/shipping, and a working order path.',
-          'Bank transfer always works (payment reference on each order). Card checkout uses Stripe TEST when platform keys are configured.',
-          'Orders create a CRM contact and an in-app notification for the site owner; stock decrements on each successful order.',
+          '',
+          bullets([
+            'Bank transfer always works (payment reference on each order)',
+            'Card checkout uses Stripe TEST when platform keys are configured',
+            'Orders create a CRM contact + in-app notification; stock decrements on success',
+            `Catalog count shipped: ${input.catalogCount ?? 'see shop page'}`,
+            `Industry merchandising tokens: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
+          ]),
+          '',
           'EXTERNAL CONFIGURATION REQUIRED: Stripe LIVE keys and client Stripe Connect / own merchant account are not wired by this package.',
-        ].join('\n\n'),
+          '',
+          'Ops checklist: ☐ place test bank-transfer order ☐ confirm CRM contact ☐ verify stock decrement ☐ record tax/shipping defaults',
+        ].join('\n'),
       });
     }
     if (input.deliverableId === 'website-business') {
       sections.push({
         heading: 'Google Business Profile checklist',
-        body: '1) Claim GBP for the business name. 2) Match NAP to the contact page. 3) Add services/pricing categories from the live site. 4) Link the live URL in GBP website field. 5) Upload 3+ real photos (client-owned).',
+        body: [
+          `Align GBP with the ${industry} multi-page site for ${input.clientName}:`,
+          numbered([
+            'Claim GBP for the exact business name',
+            'Match NAP to the contact page',
+            'Add services/pricing categories from the live site',
+            'Link the live URL in the GBP website field',
+            'Upload 3+ real photos (client-owned — not stock placeholders)',
+            `Reflect differentiators: ${sub.distinctiveTokens.slice(0, 3).join(', ')}`,
+          ]),
+          '',
+          'Milestone: GBP website field points at the hosted URL before local ads.',
+        ].join('\n'),
       });
     }
     sections.push({
+      heading: '30-day content & CRM follow-through',
+      body: [
+        `After launch, keep ${industry} momentum without inventing metrics:`,
+        bullets([
+          ...sub.setupMilestones.map((m) => `☐ ${m}`),
+          `☐ Review KPIs weekly: ${sub.kpiSet.slice(0, 3).join('; ')}`,
+          `☐ Watch risks: ${sub.operationalRisks.slice(0, 2).join('; ')}`,
+          '☐ Log inbound leads in CRM with source = site CTA',
+        ]),
+        '',
+        'Discovery prompts for the first optimization call:',
+        numbered(sub.discoveryQuestions.slice(0, 3)),
+        '',
+        `Vertical focus: ${pack.researchFocus.slice(0, 3).join('; ')}.`,
+        'Upsell path (only if requested): custom domain, content refresh retainer, audit, or CRM sync when inbound is live.',
+      ].join('\n'),
+    });
+    sections.push({
       heading: 'Next upgrades',
-      body: `Vertical focus: ${pack.researchFocus.slice(0, 3).join('; ')}. Upsell path: custom domain, content refresh retainer, or CRM sync when inbound is live.`,
+      body: [
+        bullets([
+          'Custom domain DNS (client-owned registrar)',
+          'Content refresh retainer for seasonal offers',
+          `Deeper ${industry} audit if stack/security questions remain`,
+          'Integration package when third-party APIs must be wired',
+        ]),
+        '',
+        `Prepared for ${input.clientName} · ${industry} · ${input.deliverableId}`,
+        'Honesty: this PDF mirrors the live handoff — downloadable proof in Deliveries, not a one-page stub.',
+      ].join('\n'),
     });
     return {
       title: `${d?.name ?? 'Site'} — Delivery pack`,
-      subtitle: `${input.clientName} — ${pack.displayName}`,
+      subtitle: `${input.clientName} — ${industry}`,
       sections,
     };
   }

@@ -2,8 +2,10 @@ import { getDeliverable } from './deliverable-catalog';
 import { getAcceptanceContract } from './deliverable-acceptance-contract';
 import {
   documentSubstancePasses,
+  pdfSubstancePasses,
   substanceThresholdFor,
   type DocumentQualityMetrics,
+  type PdfQualityMetrics,
 } from './deliverable-handlers/artifact-helpers';
 import { expectedBundleStepIds } from './deliverable-handlers/bundle-steps';
 import { isPlaceholderBrand } from '../service/deliverable-content-generator.service';
@@ -55,7 +57,7 @@ const PDF_CATALOG_IDS = new Set([
   'website-ecommerce',
 ]);
 
-/** Consulting / doc packs with minimum PDF+markdown body floors. */
+/** Consulting / doc / site-handoff packs with minimum PDF+markdown body floors. */
 const DOC_SUBSTANCE_IDS = new Set([
   'audit',
   'workflow-design',
@@ -68,6 +70,9 @@ const DOC_SUBSTANCE_IDS = new Set([
   'bundle-ops-clarity',
   'white-label-setup',
   'vertical-package',
+  'landing',
+  'website-business',
+  'website-ecommerce',
 ]);
 
 const OMNI_CHROME_HTML_RE =
@@ -186,7 +191,15 @@ function docSubstanceOk(deliverableId: string, result: FulfillmentResult): boole
   const quality = result.metadata?.documentQuality as DocumentQualityMetrics | undefined;
   // Require measurable metrics — a lone boolean flag is not enough (anti-stub).
   if (!quality) return false;
-  return documentSubstancePasses(quality, threshold);
+  if (!documentSubstancePasses(quality, threshold)) return false;
+  // Thin downloadable PDFs must fail even when markdown body metrics look fine.
+  if (threshold.minPdfBytes != null || threshold.minPdfPages != null) {
+    const pdfBytes = Number(result.metadata?.pdfBytes ?? 0);
+    const pdfPageCount = Number(result.metadata?.pdfPageCount ?? 0);
+    const pdf: PdfQualityMetrics = { pdfBytes, pdfPageCount };
+    if (!pdfSubstancePasses(pdf, threshold)) return false;
+  }
+  return true;
 }
 
 function liveProbeMeta(result: FulfillmentResult): {
@@ -629,13 +642,20 @@ export function runFulfillmentQualityChecklist(
     const mdOk = hasMarkdownArtifact(result);
     const quality = result.metadata?.documentQuality as DocumentQualityMetrics | undefined;
     const chars = quality?.totalBodyChars ?? 0;
+    const pdfBytes = Number(result.metadata?.pdfBytes ?? 0);
+    const pdfPages = Number(result.metadata?.pdfPageCount ?? 0);
+    const pdfFloor = threshold?.minPdfBytes;
+    const pageFloor = threshold?.minPdfPages;
     items.push({
       id: 'doc_substance',
       passed: substance && mdOk,
       message:
         substance && mdOk
-          ? `Document substance ok (${chars} body chars, markdown present)`
-          : `Consulting/doc pack requires substantial PDF+markdown body (min ${threshold?.minTotalChars ?? '?'} chars) — stub rejected`,
+          ? `Document substance ok (${chars} body chars, PDF ${pdfBytes}B / ${pdfPages}p, markdown present)`
+          : `Doc/PDF pack requires substantial body (min ${threshold?.minTotalChars ?? '?'} chars` +
+            (pdfFloor != null ? `, PDF ≥${pdfFloor}B` : '') +
+            (pageFloor != null ? `, ≥${pageFloor} pages` : '') +
+            ') — stub rejected',
     });
   }
 
