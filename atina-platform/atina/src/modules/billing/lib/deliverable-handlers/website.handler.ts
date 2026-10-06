@@ -60,9 +60,12 @@ async function assertSiteLive(absoluteUrl: string): Promise<{
     const text = await res.text();
     const bytes = Buffer.byteLength(text, 'utf8');
     const detectedTitle = extractHtmlTitle(text);
-    // Judge visible page content, not inherited platform <head> OG defaults.
+    // Judge visible page content, not inherited platform <head>/RSC payload defaults.
     const bodyMatch = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    const visible = bodyMatch?.[1] ?? text;
+    const rawBody = bodyMatch?.[1] ?? text;
+    const visible = rawBody
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ');
     const snippet = visible.slice(0, 4000);
     const omniChrome =
       OMNI_CHROME_HTML_RE.test(snippet) ||
