@@ -10,7 +10,19 @@ describe('fulfillment quality checklist', () => {
       status: 'completed',
       publicUrl: '/sites/acme',
       projectId: 'proj-1',
-      artifacts: [],
+      artifacts: [{ type: 'site_pack', filename: 'site.pdf', storagePath: '/tmp/site.pdf' }],
+      metadata: {
+        pageCount: 6,
+        brandTitle: 'Acme Studio',
+        siteTitle: 'Acme Studio',
+        liveProbe: {
+          ok: true,
+          status: 200,
+          bytes: 2400,
+          detectedTitle: 'Acme Studio',
+          omniChrome: false,
+        },
+      },
     };
     const checklist = runFulfillmentQualityChecklist('website-business', result);
     expect(checklist.passed).toBe(true);
@@ -30,7 +42,21 @@ describe('fulfillment quality checklist', () => {
   it('passes audit with PDF artifact', () => {
     const result: FulfillmentResult = {
       status: 'completed',
-      artifacts: [{ type: 'audit_report', filename: 'audit.pdf', storagePath: '/tmp/audit.pdf' }],
+      artifacts: [
+        { type: 'audit_report', filename: 'audit.pdf', storagePath: '/tmp/audit.pdf' },
+        { type: 'audit_report_md', filename: 'audit.md', storagePath: '/tmp/audit.md' },
+      ],
+      metadata: {
+        documentSubstanceOk: true,
+        documentQuality: {
+          sectionCount: 6,
+          totalBodyChars: 2200,
+          minSectionBodyChars: 160,
+          checklistOrMilestoneHits: 2,
+          clientNamePresent: true,
+          industryPresent: true,
+        },
+      },
     };
     const checklist = runFulfillmentQualityChecklist('audit', result);
     expect(checklist.passed).toBe(true);
@@ -42,10 +68,23 @@ describe('fulfillment quality checklist', () => {
       projectId: 'proj-1',
       artifacts: [
         { type: 'setup_pack', filename: 'setup.pdf', storagePath: '/tmp/setup.pdf' },
+        { type: 'setup_pack_md', filename: 'setup_pack_md.md', storagePath: '/tmp/setup.md' },
         { type: 'migration_template', filename: 'crm-migration-template.csv', storagePath: '/tmp/m.csv' },
         { type: 'training_outline', filename: 'training-outline.md', storagePath: '/tmp/t.md' },
       ],
-      metadata: { crmBootstrap: { importedLeads: 8 }, modulesActivated: ['crm'] },
+      metadata: {
+        crmBootstrap: { importedLeads: 8 },
+        modulesActivated: ['crm'],
+        documentSubstanceOk: true,
+        documentQuality: {
+          sectionCount: 5,
+          totalBodyChars: 1600,
+          minSectionBodyChars: 120,
+          checklistOrMilestoneHits: 2,
+          clientNamePresent: true,
+          industryPresent: true,
+        },
+      },
     };
     const checklist = runFulfillmentQualityChecklist('setup-full', result);
     expect(checklist.passed).toBe(true);
