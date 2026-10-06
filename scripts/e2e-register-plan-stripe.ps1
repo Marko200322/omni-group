@@ -63,8 +63,8 @@ if (-not $methods.ok) { throw "Methods failed: $($methods | ConvertTo-Json -Comp
 $ids = @($methods.data.methods | ForEach-Object { $_.id })
 $stripeOn = $methods.data.methods | Where-Object { $_.id -eq 'stripe' -and $_.available }
 if (-not $stripeOn) { throw "Stripe not available. methods=$($ids -join ',')" }
-if ($ids -contains 'manual') { throw 'IBAN/manual still listed while Stripe is configured' }
-Write-Host "  methods OK stripe=yes iban=no mode=$($methods.data.mode)" -ForegroundColor Green
+# Bank transfer may remain listed when MANUAL_PAYMENT_* is configured (independent of Stripe).
+Write-Host "  methods OK stripe=yes mode=$($methods.data.mode) ids=$($ids -join ',')" -ForegroundColor Green
 
 $coBody = (@{ planSlug = $PlanSlug; billingCycle = $BillingCycle; currency = 'EUR' } | ConvertTo-Json -Compress)
 $cj = Invoke-WithRateLimitRetry -Label 'stripe checkout' -Action {
