@@ -92,6 +92,14 @@ export class PaymentsController {
     sendSuccess(res, { url });
   };
 
+  getStripeCheckoutSessionStatus = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.service.getStripeCheckoutSessionStatus(
+      req.user!.userId,
+      req.params.sessionId,
+    );
+    sendSuccess(res, result, 'Checkout session status');
+  };
+
   // PayPal
   createPayPalOrder = async (req: Request, res: Response): Promise<void> => {
     const body = CheckoutDto.parse(req.body);

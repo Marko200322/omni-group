@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { PoolClient } from 'pg';
 import { config } from '../../../config';
 import { PaymentsRepository } from '../repository/payments.repository';
-import { PaymentError, NotFoundError } from '../../../utils/errors';
+import { AuthorizationError, PaymentError, NotFoundError, ValidationError } from '../../../utils/errors';
 import { getFinanceClient, getKriptomanClient } from '../../../integrations';
 import { BillingService } from '../../billing/service/billing.service';
 import { getIndustryCategory, type PlanSlug } from '../../billing/lib/category-pricing';
@@ -416,6 +416,92 @@ export class PaymentsService {
     });
 
     return { sessionId: session.id, url: session.url };
+  }
+
+  /**
+   * Server-side Stripe Checkout Session verification for the success page.
+   * Never trust a bare visit to /success — state comes from Stripe (+ local payment row when present).
+   */
+  async getStripeCheckoutSessionStatus(userId: string, sessionId: string) {
+    const id = sessionId?.trim() ?? '';
+    if (!/^cs_[a-zA-Z0-9_]+$/.test(id)) {
+      throw new ValidationError('Invalid Stripe checkout session id');
+    }
+    if (!config.stripe.secretKey?.trim()) {
+      throw new PaymentError('Stripe is not configured');
+    }
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await requireStripe().checkout.sessions.retrieve(id);
+    } catch {
+      throw new NotFoundError('Checkout session');
+    }
+
+    const metaUserId = (session.metadata?.userId ?? '').trim();
+    const { rows: bySession } = await this.db.findStripePaymentBySessionId(id);
+    const localBySession = bySession[0] ?? null;
+
+    if (metaUserId && metaUserId !== userId) {
+      throw new AuthorizationError('Checkout session does not belong to this account');
+    }
+    if (localBySession && localBySession.user_id !== userId) {
+      throw new AuthorizationError('Checkout session does not belong to this account');
+    }
+    if (!metaUserId && !localBySession) {
+      throw new AuthorizationError('Checkout session ownership could not be verified');
+    }
+
+    let localStatus: string | null = localBySession?.status ?? null;
+    const paymentMetaId = (session.metadata?.paymentId ?? '').trim();
+    if (!localStatus && paymentMetaId) {
+      const { rows } = await this.db.getPaymentByIdForUser(paymentMetaId, userId, 'stripe');
+      localStatus = rows[0]?.status ?? null;
+    }
+
+    const stripePaid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
+    const localConfirmed = Boolean(
+      localStatus && ['completed', 'paid', 'succeeded', 'active'].includes(localStatus),
+    );
+
+    type CheckoutState = 'PAID' | 'PROCESSING' | 'FAILED' | 'CANCELLED' | 'UNKNOWN';
+    let state: CheckoutState = 'UNKNOWN';
+    let message: string;
+
+    if (session.status === 'expired') {
+      state = 'CANCELLED';
+      message = 'This checkout session expired before payment was completed.';
+    } else if (stripePaid && localConfirmed) {
+      state = 'PAID';
+      message = 'Payment confirmed. Your order is active.';
+    } else if (stripePaid && !localConfirmed) {
+      state = 'PROCESSING';
+      message = "Payment received. We're confirming your order.";
+    } else if (session.status === 'open') {
+      state = 'PROCESSING';
+      message = 'Checkout is still open. Complete payment in Stripe to continue.';
+    } else if (session.status === 'complete' && !stripePaid) {
+      state = 'FAILED';
+      message = 'Checkout finished but payment was not completed.';
+    } else {
+      state = 'UNKNOWN';
+      message = 'We could not determine payment status yet. Check Billing in a moment.';
+    }
+
+    return {
+      state,
+      message,
+      paymentStatus: session.payment_status,
+      sessionStatus: session.status,
+      livemode: Boolean(session.livemode),
+      localPaymentStatus: localStatus,
+      purchaseType:
+        session.metadata?.purchaseType ?? (session.metadata?.planSlug ? 'platform_plan' : null),
+      planSlug: session.metadata?.planSlug ?? null,
+      deliverableId: session.metadata?.deliverableId ?? null,
+      paymentId: paymentMetaId || localBySession?.id || null,
+      sessionId: session.id,
+    };
   }
 
   async createShopCheckoutSession(input: {
@@ -1282,8 +1368,9 @@ export class PaymentsService {
       });
     }
 
-    // IBAN is a fallback only when Stripe is not configured.
-    if (!stripeReady && (mode === 'manual' || (manual.configured && process.env.PAYMENTS_MANUAL_ENABLED !== 'false'))) {
+    // Bank transfer is independently configurable (not hidden merely because Stripe exists).
+    const manualEnabled = process.env.PAYMENTS_MANUAL_ENABLED !== 'false';
+    if (manualEnabled && (mode === 'manual' || manual.configured)) {
       methods.push({
         id: 'manual',
         label: 'Bank transfer',
@@ -1579,7 +1666,9 @@ export class PaymentsService {
       line_items: checkoutParams.lineItems,
       mode: checkoutParams.mode,
       ...(checkoutParams.subscriptionData ? { subscription_data: checkoutParams.subscriptionData } : {}),
-      success_url: webAppUrl(`/dashboard?payment=success&deliverable=${encodeURIComponent(deliverable.id)}`),
+      success_url: webAppUrl(
+        `/dashboard/billing/success?session_id={CHECKOUT_SESSION_ID}&deliverable=${encodeURIComponent(deliverable.id)}`,
+      ),
       cancel_url: webAppUrl('/pricing?payment=cancel'),
       metadata: {
         purchaseType: 'deliverable',

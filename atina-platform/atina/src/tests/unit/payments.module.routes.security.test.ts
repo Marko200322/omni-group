@@ -41,6 +41,8 @@ jest.mock('../../modules/payments/controller/payments.controller', () => ({
     stripeWebhook: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     cancelSubscription: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     billingPortal: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
+    getStripeCheckoutSessionStatus: (_req: express.Request, res: express.Response) =>
+      res.status(200).json({ success: true, data: { state: 'PAID' } }),
     createPayPalOrder: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
     capturePayPalOrder: (_req: express.Request, res: express.Response) => res.status(200).json({ success: true }),
     createWiseTransfer: (_req: express.Request, res: express.Response) => res.status(201).json({ success: true }),
@@ -95,6 +97,7 @@ describe('Payments module route security', () => {
     ['POST', '/payments/stripe/checkout'],
     ['POST', '/payments/stripe/cancel'],
     ['GET', '/payments/stripe/portal'],
+    ['GET', '/payments/stripe/checkout-session/cs_test_abc'],
     ['POST', '/payments/paypal/order'],
     ['POST', '/payments/paypal/capture/order-abc'],
     ['POST', '/payments/wise/transfer'],

@@ -6,9 +6,11 @@ import { LiveCallAvatarModule } from '../../modules/live-call-avatar/live-call-a
 import { sendError } from '../../utils/response';
 import { AppError, AuthenticationError } from '../../utils/errors';
 import { LiveSessionOrchestratorService } from '../../modules/live-call-avatar/service/live-session-orchestrator.service';
+import { config } from '../../config';
 
 jest.mock('../../modules/live-call-avatar/service/live-session-orchestrator.service');
 jest.mock('../../modules/live-call-avatar/service/live-meeting-bridge.service');
+jest.mock('../../modules/live-call-avatar/service/recall-webhook.service');
 
 let authOn = true;
 
@@ -111,5 +113,14 @@ describe('LiveCallAvatarModule HTTP routes', () => {
     expect(res.status).toBe(201);
     expect(startSpy).toHaveBeenCalledWith('u1', expect.objectContaining({ agentType: 'support' }));
     expect(res.body.data.sessionId).toBe(SESSION_UUID);
+  });
+
+  it('POST /recall/webhook fails closed when secret is unset', async () => {
+    const prev = config.liveCallAvatar.recallWebhookSecret;
+    (config.liveCallAvatar as { recallWebhookSecret: string }).recallWebhookSecret = '';
+    const res = await request(server).post('/live-call-avatar/recall/webhook').send({ event: 'bot.done' });
+    (config.liveCallAvatar as { recallWebhookSecret: string }).recallWebhookSecret = prev;
+    expect(res.status).toBe(503);
+    expect(res.body.error?.code ?? res.body.code).toBe('WEBHOOK_MISCONFIGURED');
   });
 });

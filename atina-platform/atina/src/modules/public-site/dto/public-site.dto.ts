@@ -15,6 +15,10 @@ export const ListSolutionsQueryDto = z.object({
   q: z.string().max(120).optional(),
 });
 
+export const ListPublishedClientSitesQueryDto = z.object({
+  limit: z.coerce.number().int().min(1).max(200).optional().default(100),
+});
+
 export const CreateClientSiteDto = z.object({
   slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/),
   title: z.string().min(2).max(255),

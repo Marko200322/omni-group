@@ -61,6 +61,15 @@ const PaymentIdParamsDto = z
   })
   .strict();
 
+const StripeSessionIdParamsDto = z
+  .object({
+    sessionId: z
+      .string()
+      .trim()
+      .regex(/^cs_[a-zA-Z0-9_]+$/, 'Invalid Stripe checkout session id'),
+  })
+  .strict();
+
 export class PaymentsModule implements IModule {
   name = 'Payments';
   slug = 'payments';
@@ -110,6 +119,17 @@ export class PaymentsModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.billingPortal
+    );
+    this.router.get(
+      '/stripe/checkout-session/:sessionId',
+      paymentsLimiter,
+      authenticate,
+      requirePermission('billing.read'),
+      authSessionLimiter,
+      validateParams(StripeSessionIdParamsDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getStripeCheckoutSessionStatus,
     );
 
     // PayPal

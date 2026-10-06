@@ -21,7 +21,7 @@ jest.mock('../../utils/logger', () => ({
 var testStripeApi: {
   customers: { create: jest.Mock };
   coupons: { retrieve: jest.Mock };
-  checkout: { sessions: { create: jest.Mock } };
+  checkout: { sessions: { create: jest.Mock; retrieve: jest.Mock } };
   webhooks: { constructEvent: jest.Mock };
   subscriptions: { retrieve: jest.Mock; update: jest.Mock };
   billingPortal: { sessions: { create: jest.Mock } };
@@ -41,6 +41,13 @@ jest.mock('stripe', () => {
     checkout: {
       sessions: {
         create: jest.fn().mockResolvedValue({ id: 'cs_1', url: 'https://checkout.test' }),
+        retrieve: jest.fn().mockResolvedValue({
+          id: 'cs_test_1',
+          status: 'complete',
+          payment_status: 'paid',
+          livemode: false,
+          metadata: { userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', planSlug: 'pro' },
+        }),
       },
     },
     webhooks: { constructEvent: jest.fn() },
@@ -150,6 +157,13 @@ describe('PaymentsService', () => {
       valid: true,
     });
     testStripeApi.checkout.sessions.create.mockResolvedValue({ id: 'cs_1', url: 'https://checkout.test' });
+    testStripeApi.checkout.sessions.retrieve.mockResolvedValue({
+      id: 'cs_test_1',
+      status: 'complete',
+      payment_status: 'paid',
+      livemode: false,
+      metadata: { userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', planSlug: 'pro' },
+    });
     testStripeApi.subscriptions.retrieve.mockResolvedValue({
       id: 'sub_ret',
       current_period_start: 1700000000,
@@ -1225,20 +1239,57 @@ describe('PaymentsService', () => {
       (config as { payments: { manual: { accountName: string; iban: string } } }).payments.manual.iban = 'RS35100000000000000000';
     });
 
-    it('getPaymentMethods prefers Stripe over IBAN when a Stripe key is set', () => {
+    it('getPaymentMethods keeps bank transfer available when Stripe is also configured', () => {
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('sandbox');
       expect(out.stripeLivemode).toBe(false);
       expect(out.note).toMatch(/TEST/);
       expect(out.methods.some((m: { id: string; available: boolean }) => m.id === 'stripe' && m.available)).toBe(true);
-      expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(false);
+      expect(out.methods.some((m: { id: string; available: boolean }) => m.id === 'manual' && m.available)).toBe(true);
     });
 
-    it('getPaymentMethods includes manual only when Stripe is not configured', () => {
+    it('getPaymentMethods includes manual when Stripe is not configured', () => {
       (config as { stripe: { secretKey: string } }).stripe.secretKey = '';
       const out = service.getPaymentMethods();
       expect(out.mode).toBe('manual');
       expect(out.methods.some((m: { id: string }) => m.id === 'manual')).toBe(true);
+    });
+
+    it('getStripeCheckoutSessionStatus returns PROCESSING when Stripe paid but local unpaid', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+      const out = await service.getStripeCheckoutSessionStatus(
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        'cs_test_1',
+      );
+      expect(out.state).toBe('PROCESSING');
+      expect(out.message).toMatch(/confirming/i);
+      expect(out.livemode).toBe(false);
+    });
+
+    it('getStripeCheckoutSessionStatus returns PAID when local payment confirmed', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{ id: 'pay-1', user_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', status: 'completed' }],
+        rowCount: 1,
+      } as never);
+      const out = await service.getStripeCheckoutSessionStatus(
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        'cs_test_1',
+      );
+      expect(out.state).toBe('PAID');
+    });
+
+    it('getStripeCheckoutSessionStatus rejects foreign sessions', async () => {
+      testStripeApi.checkout.sessions.retrieve.mockResolvedValueOnce({
+        id: 'cs_other',
+        status: 'complete',
+        payment_status: 'paid',
+        livemode: false,
+        metadata: { userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' },
+      });
+      mockQuery.mockResolvedValueOnce({ rows: [], rowCount: 0 } as never);
+      await expect(
+        service.getStripeCheckoutSessionStatus('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cs_other'),
+      ).rejects.toMatchObject({ code: 'AUTHORIZATION_ERROR' });
     });
 
     it('marks manual as unavailable when bank details are missing', () => {

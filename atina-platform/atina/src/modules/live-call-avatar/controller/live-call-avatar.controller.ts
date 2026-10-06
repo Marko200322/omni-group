@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { timingSafeEqual } from 'crypto';
 import { sendCreated, sendSuccess, sendError } from '../../../utils/response';
 import { config } from '../../../config';
+import logger from '../../../utils/logger';
 import { LiveSessionOrchestratorService } from '../service/live-session-orchestrator.service';
 import { LiveMeetingBridgeService } from '../service/live-meeting-bridge.service';
 import { RecallWebhookService } from '../service/recall-webhook.service';
@@ -63,7 +64,16 @@ export class LiveCallAvatarController {
 
   recallWebhook = async (req: Request, res: Response): Promise<void> => {
     const secret = config.liveCallAvatar.recallWebhookSecret.trim();
-    if (secret && !recallWebhookAuthorized(req, secret)) {
+    // Fail closed: never accept Recall webhooks without a configured secret.
+    if (!secret) {
+      logger.error('security_event', {
+        event: 'recall_webhook_misconfigured',
+        reason: 'RECALL_WEBHOOK_SECRET missing — rejecting request',
+      });
+      sendError(res, 'Webhook secret not configured', 503, 'WEBHOOK_MISCONFIGURED');
+      return;
+    }
+    if (!recallWebhookAuthorized(req, secret)) {
       sendError(res, 'Invalid webhook signature', 401, 'WEBHOOK_UNAUTHORIZED');
       return;
     }

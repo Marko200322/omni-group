@@ -52,6 +52,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/status',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.status
@@ -60,6 +61,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/budget',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.budget
@@ -68,6 +70,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/verticals',
       authenticate,
+      requireAdmin,
       validateQuery(ListVerticalsQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listVerticals
@@ -76,6 +79,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/verticals/:slug',
       authenticate,
+      requireAdmin,
       validateParams(VerticalSlugParamDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -85,6 +89,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/verticals/:slug/delivery-pack',
       authenticate,
+      requireAdmin,
       validateParams(VerticalSlugParamDto),
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -133,6 +138,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/categories/status',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getCategoriesRolloutStatus
@@ -159,6 +165,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/categories/rollout/job',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getCategoriesRolloutJob
@@ -213,6 +220,7 @@ export class AutonomyLoopModule implements IModule {
     this.router.get(
       '/evolution/tasks',
       authenticate,
+      requireAdmin,
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listEvolutionTasks

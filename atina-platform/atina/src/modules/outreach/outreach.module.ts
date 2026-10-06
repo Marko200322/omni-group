@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { IModule } from '../../core/ModuleRegistry';
-import { authenticate } from '../../api/middleware/auth.middleware';
+import { authenticate, requireAdmin } from '../../api/middleware/auth.middleware';
 import { authSessionLimiter } from '../../api/middleware/rate-limit.middleware';
 import { validateBody, validateParams, validateQuery } from '../../api/middleware/validate.middleware';
 import { StrictEmptyBodyDto } from '../../api/dto/strict-empty-body.dto';
@@ -28,6 +28,7 @@ export class OutreachModule implements IModule {
     this.router.post(
       '/:id/run',
       authenticate,
+      requireAdmin,
       authSessionLimiter,
       validateParams(OutreachRunParamsDto),
       validateQuery(StrictEmptyQueryDto),

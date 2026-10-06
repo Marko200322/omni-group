@@ -17,6 +17,15 @@ export class PublicSiteController {
     sendSuccess(res, await this.service.getClientSite(req.params.slug), 'Client public site');
   };
 
+  listPublishedClientSites = async (req: Request, res: Response): Promise<void> => {
+    const limit = Number((req.query as { limit?: number }).limit ?? 100);
+    sendSuccess(
+      res,
+      await this.service.listPublishedClientSitesIndex(limit),
+      'Published client sites',
+    );
+  };
+
   createClientSite = async (req: Request, res: Response): Promise<void> => {
     sendCreated(res, await this.service.createClientSite(req.user!.userId, req.body), 'Client site created');
   };

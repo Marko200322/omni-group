@@ -118,6 +118,21 @@ export class PublicSiteService {
     return this.mapClientSite(site);
   }
 
+  /** Public sitemap/index — slug + title only (no private owner/pages). */
+  async listPublishedClientSitesIndex(limit = 100) {
+    const rows = await this.repo.listPublishedClientSites(Math.min(200, Math.max(1, limit)));
+    return {
+      sites: rows.map((row) => ({
+        slug: row.slug,
+        title: row.title,
+        siteType: row.site_type,
+        publicUrl: `/sites/${row.slug}`,
+        publishedAt: row.published_at,
+        updatedAt: row.updated_at,
+      })),
+    };
+  }
+
   async createClientSite(userId: string, dto: CreateClientSiteDtoType) {
     const pages =
       dto.pages && dto.pages.length > 0

@@ -60,6 +60,8 @@ const nextConfig = {
     return [
       { source: '/industries', destination: '/solutions', permanent: true },
       { source: '/industries/:slug', destination: '/solutions/:slug', permanent: true },
+      { source: '/packages', destination: '/products', permanent: true },
+      { source: '/packages/:path*', destination: '/products', permanent: true },
     ];
   },
   webpack(config, { dev }) {

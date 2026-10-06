@@ -158,6 +158,30 @@ describe('PaymentsModule HTTP routes', () => {
     expect(createBillingPortalSessionSpy).not.toHaveBeenCalled();
   });
 
+  it('rejects unauthenticated GET /payments/stripe/checkout-session/:sessionId', async () => {
+    paymentsAuthOn = false;
+    const spy = jest
+      .spyOn(PaymentsService.prototype, 'getStripeCheckoutSessionStatus')
+      .mockResolvedValue({ state: 'PAID' } as never);
+    const res = await request(server).get('/payments/stripe/checkout-session/cs_test_abc');
+    expect(res.status).toBe(401);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('returns checkout session status when authenticated', async () => {
+    const spy = jest
+      .spyOn(PaymentsService.prototype, 'getStripeCheckoutSessionStatus')
+      .mockResolvedValue({
+        state: 'PROCESSING',
+        message: "Payment received. We're confirming your order.",
+        sessionId: 'cs_test_abc',
+      } as never);
+    const res = await request(server).get('/payments/stripe/checkout-session/cs_test_abc');
+    expect(res.status).toBe(200);
+    expect(res.body.data.state).toBe('PROCESSING');
+    expect(spy).toHaveBeenCalledWith('u1', 'cs_test_abc');
+  });
+
   it('rejects unauthenticated POST /payments/paypal/order', async () => {
     paymentsAuthOn = false;
     const res = await request(server)

@@ -109,12 +109,34 @@ async function authenticateApiKey(
     // Update last used
     await query('UPDATE api_keys SET last_used_at = NOW() WHERE key_hash = $1', [keyHash]);
 
+    // Least privilege: use real org membership role — never invent owner.
+    let orgRole = 'member';
+    const organizationId = key.active_organization_id ?? undefined;
+    if (organizationId) {
+      const membership = await query<{ role: string }>(
+        `SELECT role FROM organization_memberships
+         WHERE organization_id = $1 AND user_id = $2 AND status = 'active'
+         LIMIT 1`,
+        [organizationId, key.user_id],
+      );
+      if (membership.rows[0]?.role) {
+        orgRole = membership.rows[0].role;
+      }
+    }
+    // Key-level "admin" may elevate orgRole only when membership is already admin/owner.
+    if (permissions.includes('admin') && (orgRole === 'owner' || orgRole === 'admin')) {
+      /* keep membership role */
+    } else if (permissions.includes('admin') && !isPlatformAdminRole(key.role)) {
+      // Service keys with admin scope but no membership → operator, not owner.
+      orgRole = orgRole === 'member' ? 'operator' : orgRole;
+    }
+
     req.user = {
       userId: key.user_id,
       email: key.email,
       role: key.role,
-      organizationId: key.active_organization_id ?? undefined,
-      orgRole: 'owner',
+      organizationId,
+      orgRole,
       authType: 'api_key',
       apiKeyPermissions: permissions,
     };

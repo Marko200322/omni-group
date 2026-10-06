@@ -65,11 +65,21 @@ export class PaymentsRepository {
       user_id: string;
       amount: number;
       currency: string;
+      status: string;
       metadata: Record<string, unknown> | string;
     }>(
-      `SELECT id, user_id, amount, currency, metadata
+      `SELECT id, user_id, amount, currency, status, metadata
        FROM payments WHERE id = $1 AND user_id = $2 AND provider = $3`,
       [paymentId, userId, provider]
+    );
+  }
+
+  findStripePaymentBySessionId(sessionId: string) {
+    return query<{ id: string; user_id: string; status: string }>(
+      `SELECT id, user_id, status FROM payments
+       WHERE provider = 'stripe' AND provider_payment_id = $1
+       LIMIT 1`,
+      [sessionId],
     );
   }
 

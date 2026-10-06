@@ -7,6 +7,7 @@ import { StrictEmptyQueryDto } from '../../api/dto/strict-empty-query.dto';
 import {
   ClientSiteSlugParamDto,
   CreateClientSiteDto,
+  ListPublishedClientSitesQueryDto,
   ListSolutionsQueryDto,
   PublishClientSiteDto,
   ClientSiteShopOrderDto,
@@ -52,6 +53,12 @@ export class PublicSiteModule implements IModule {
       validateQuery(StrictEmptyQueryDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.listMyClientSites,
+    );
+    this.router.get(
+      '/client-sites',
+      validateQuery(ListPublishedClientSitesQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listPublishedClientSites,
     );
     this.router.get(
       '/client-sites/:slug',
