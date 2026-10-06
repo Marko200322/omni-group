@@ -107,7 +107,10 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 40) || 'site';
-    const slug = `${baseSlug}-${ctx.paymentId.replace(/-/g, '').slice(0, 16)}`.slice(0, 128);
+    const slug = `${baseSlug}-${ctx.paymentId.replace(/-/g, '').slice(0, 12)}-${Date.now().toString(36)}`.slice(
+      0,
+      128,
+    );
 
     const brief = await content.generateProjectBrief({
       deliverableId: ctx.deliverableId,

@@ -34,26 +34,36 @@ export class ProductFactoryRepository {
     isolationKey: string;
     metadata?: Record<string, unknown>;
   }) {
-    const { rows } = await query<ProductFactoryProjectRow>(
-      `INSERT INTO product_factory_projects
-         (owner_user_id, lane, slug, name, description, client_name, client_email,
-          deliverable_id, isolation_key, metadata, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,'draft')
-       RETURNING *`,
-      [
-        input.ownerUserId,
-        input.lane,
-        input.slug,
-        input.name,
-        input.description ?? null,
-        input.clientName ?? null,
-        input.clientEmail ?? null,
-        input.deliverableId ?? null,
-        input.isolationKey,
-        JSON.stringify(input.metadata ?? {}),
-      ]
-    );
-    return rows[0];
+    let slug = input.slug;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        const { rows } = await query<ProductFactoryProjectRow>(
+          `INSERT INTO product_factory_projects
+             (owner_user_id, lane, slug, name, description, client_name, client_email,
+              deliverable_id, isolation_key, metadata, status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,'draft')
+           RETURNING *`,
+          [
+            input.ownerUserId,
+            input.lane,
+            slug,
+            input.name,
+            input.description ?? null,
+            input.clientName ?? null,
+            input.clientEmail ?? null,
+            input.deliverableId ?? null,
+            input.isolationKey,
+            JSON.stringify(input.metadata ?? {}),
+          ],
+        );
+        return rows[0];
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!/unique constraint|duplicate key/i.test(msg) || attempt === 3) throw err;
+        slug = `${input.slug}-${Date.now().toString(36)}${attempt}`.slice(0, 128);
+      }
+    }
+    throw new Error('createProject failed after unique-slug retries');
   }
 
   async listProjects(
