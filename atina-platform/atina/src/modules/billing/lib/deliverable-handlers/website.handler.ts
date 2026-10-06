@@ -18,7 +18,7 @@ const docs = new DeliverableDocumentGeneratorService();
 const factory = new ProductFactoryService();
 
 const OMNI_CHROME_HTML_RE =
-  /ask\s*omi|omni\s*group\s*tech|client\s*site|digital\s*presence\s*—|powered by omni/i;
+  /ask\s*omi\b|powered by omni|omni group tech(?!\s+intake)|omnigrouptech\.com\/(login|pricing|products|register)\b/i;
 
 function verticalContext(industryCategory?: string | null) {
   const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
@@ -90,7 +90,8 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
     const pack = verticalContext(ctx.industryCategory);
     const brandTitle = resolveClientBrandName({
       clientName: ctx.clientName,
-      title: deliverable.name,
+      // Never use SKU/catalog names as the client brand.
+      title: null,
       industryCategory: ctx.industryCategory,
       verticalPack: pack,
     });

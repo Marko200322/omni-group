@@ -220,7 +220,7 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
 }
 
 const PLACEHOLDER_BRAND =
-  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce demo( storefront)?|digital presence|client)$/i;
+  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce(\s+demo)?(\s+storefront)?|business\s+website|landing(\s*\+\s*copy)?|digital\s+presence|client|quick\s+setup|full\s+onboarding|custom\s+deploy)$/i;
 
 function pickBrandName(...candidates: Array<string | null | undefined>) {
   for (const raw of candidates) {
@@ -356,7 +356,8 @@ export function ClientSiteView({ site }: Props) {
             <div className="space-y-1">{renderBody(activePage.body)}</div>
             {activePage.kind === 'contact' ? (
               <p className="mt-10 rounded-xl border border-teal-500/25 bg-teal-500/10 px-5 py-3 text-sm text-teal-50">
-                Use the contact details above to reach {displayTitle} directly — this page is not an Omni Group intake form.
+                Use the contact details above to reach {displayTitle} directly — this is the
+                business contact page, not a platform intake form.
               </p>
             ) : null}
           </>

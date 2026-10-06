@@ -274,23 +274,28 @@ export function runFulfillmentQualityChecklist(
     }
   }
 
-  if (LIVE_URL_IDS.has(deliverableId) && result.publicUrl?.trim()) {
+  if (LIVE_URL_IDS.has(deliverableId)) {
     const live = liveProbeMeta(result);
+    const hasUrl = Boolean(result.publicUrl?.trim());
     items.push({
       id: 'live_http_probe',
-      passed: Boolean(live?.ok),
-      message: live?.ok
-        ? `Live HTTP probe ok (status=${live.status ?? 200}, bytes=${live.bytes ?? 0})`
-        : 'Live HTTP probe required for published publicUrl (missing or failed)',
+      passed: hasUrl && Boolean(live?.ok),
+      message: !hasUrl
+        ? 'Live HTTP probe required — missing publicUrl'
+        : live?.ok
+          ? `Live HTTP probe ok (status=${live.status ?? 200}, bytes=${live.bytes ?? 0})`
+          : 'Live HTTP probe required for published publicUrl (missing or failed)',
     });
 
-    const chrome = omniChromeDetected(result);
+    const chrome = hasUrl ? omniChromeDetected(result) : true;
     items.push({
       id: 'no_omni_chrome',
-      passed: !chrome,
-      message: chrome
-        ? 'Site title/HTML looks like Omni chrome or System Admin — client brand required'
-        : 'Client brand title — no Omni chrome / System Admin detected',
+      passed: hasUrl && !chrome,
+      message: !hasUrl
+        ? 'Client brand check requires a published publicUrl'
+        : chrome
+          ? 'Site title/HTML looks like Omni chrome or System Admin — client brand required'
+          : 'Client brand title — no Omni chrome / System Admin detected',
     });
   }
 

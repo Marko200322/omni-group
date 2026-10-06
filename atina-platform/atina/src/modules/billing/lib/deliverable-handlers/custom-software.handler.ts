@@ -18,7 +18,7 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
 
   async fulfill(ctx: FulfillmentContext): Promise<FulfillmentResult> {
     const deliverable = getDeliverable(ctx.deliverableId)!;
-    const slug = `app-${ctx.paymentId.slice(0, 8)}`;
+    const slug = `app-${ctx.paymentId.replace(/-/g, '').slice(0, 24)}`;
     const brief = await content.generateProjectBrief({
       deliverableId: ctx.deliverableId,
       clientName: ctx.clientName,

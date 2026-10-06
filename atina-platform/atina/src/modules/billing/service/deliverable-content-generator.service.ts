@@ -28,7 +28,7 @@ const BUSINESS_PAGE_BLUEPRINT: Array<{ slug: string; title: string; kind: string
 ];
 
 const PLACEHOLDER_BRAND =
-  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce demo( storefront)?|digital presence|client)$/i;
+  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce(\s+demo)?(\s+storefront)?|business\s+website|landing(\s*\+\s*copy)?|digital\s+presence|client|quick\s+setup|full\s+onboarding|custom\s+deploy)$/i;
 
 /** True when a name is an internal/admin placeholder, not a client brand. */
 export function isPlaceholderBrand(name?: string | null): boolean {

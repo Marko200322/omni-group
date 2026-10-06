@@ -1,0 +1,21 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+setup-quick,marketing,PASS,,3,0022515f-9ec3-48f6-a9c8-4c655dd8f029,"",6,2026-10-06T07:31:03.8089833+02:00
+setup-full,marketing,PASS,,5,7e18cd16-b47c-4ff0-ae88-16ea455ef030,"",5,2026-10-06T07:31:20.6461475+02:00
+setup-custom,marketing,PASS,,3,43fe917f-903e-4722-b4eb-2ac4daeabd69,"",5,2026-10-06T07:31:37.4103678+02:00
+audit,marketing,PASS,,2,d69363b5-48a5-44ad-89a0-cf74086b01ad,"",5,2026-10-06T07:31:54.1070440+02:00
+integration,marketing,PASS,,3,79e18afc-b477-4d41-856b-bb082f00950b,"",5,2026-10-06T07:32:11.0534816+02:00
+workflow-design,marketing,PASS,,2,49e4eede-ef6e-4f57-9424-daf112350da7,"",5,2026-10-06T07:32:28.1393045+02:00
+support-priority,marketing,PASS,,4,55e5807b-5db5-45d9-a482-189f99bbf844,"",5,2026-10-06T07:32:45.1016894+02:00
+support-dedicated,marketing,PASS,,4,254e0ad7-013a-4a4b-af28-a9c7f9b00c70,"",5,2026-10-06T07:33:02.0271209+02:00
+landing,marketing,FAIL,,0,5045d805-db03-42db-95e4-3fddf13b35b1,"Fulfillment failed: Published site rejected: Omni chrome / System Admin brand detected (title=marketing Studio)",5,2026-10-06T07:33:18.8723155+02:00
+website-business,marketing,FAIL,,0,7e9e317a-ae5b-4856-b545-67bc7be06733,"Fulfillment failed: Published site rejected: Omni chrome / System Admin brand detected (title=Business website)",5,2026-10-06T07:33:36.0446514+02:00
+website-ecommerce,marketing,FAIL,,0,978aa0e6-0b47-4b5c-a276-9f0688a4ea6e,"Fulfillment failed: Published site rejected: Omni chrome / System Admin brand detected (title=E-commerce storefront)",5,2026-10-06T07:33:52.9833503+02:00
+white-label-setup,marketing,FAIL,,0,e03405e8-7771-4fdd-a02c-e523b9987396,"Fulfillment failed: Published site rejected: Omni chrome / System Admin brand detected (title=marketing Studio)",5,2026-10-06T07:34:09.8286896+02:00
+sales-enablement,marketing,PASS,,2,9ac4e8ce-373c-41d2-ab7d-d16f80bf31b0,"",5,2026-10-06T07:34:26.5762663+02:00
+vertical-package,marketing,PASS,,3,198bda45-451c-4c7f-8a8d-4ca7535ee9c4,"",5,2026-10-06T07:34:43.2237209+02:00
+lead-gen-retainer,marketing,PASS,,4,3e186286-ffa8-4560-947b-d087e547a12b,"",9,2026-10-06T07:35:03.9940089+02:00
+ai-support-retainer,marketing,PASS,,4,ba39c4ff-e8af-45e1-816f-4e27d59e22be,"",5,2026-10-06T07:35:20.7788719+02:00
+custom-software,marketing,FAIL,,0,6b8ef731-c3a1-44a2-9d18-61c40a3e719f,"Fulfillment failed: duplicate key value violates unique constraint 'product_factory_projects_owner_user_id_lane_slug_key'",5,2026-10-06T07:35:37.4063632+02:00
+bundle-portal-presence,marketing,FAIL,,0,79fdde50-eed7-4fa7-82dd-53ffa9ec77ea,"Fulfillment failed: Automated quality gate failed: status_completed: Expected completed status  got partial public_url: Website deliverable requires a published public URL setup_project: Setup requires verified project scaffold portal_modules: Portal modules activated (notifications  billing) â portalReady flag alone is insufficient pdf_artifact: Package requires a downloadable PDF deliverable bundle_steps_complete: Bundle requires completed child steps [setup-quick  landing] â got setup-quick:failed  landing:failed live_http_probe: Missing checklist evaluator for contract criterion: live_http_probe no_omni_chrome: Missing checklist evaluator for contract criterion: no_omni_chrome",9,2026-10-06T07:35:58.6463176+02:00
+bundle-sales-launch,marketing,FAIL,,0,a8aa9572-3ae8-4f50-88b4-d2e333592cfc,"Fulfillment failed: Automated quality gate failed: status_completed: Expected completed status  got partial public_url: Website deliverable requires a published public URL bundle_steps_complete: Bundle requires completed child steps [landing  sales-enablement] â got landing:failed  sales-enablement:completed live_http_probe: Missing checklist evaluator for contract criterion: live_http_probe no_omni_chrome: Missing checklist evaluator for contract criterion: no_omni_chrome",5,2026-10-06T07:36:15.6401155+02:00
+bundle-ops-clarity,marketing,PASS,,4,704ecd3c-8910-4435-a289-e460a5659e82,"",6,2026-10-06T07:36:33.7729766+02:00
