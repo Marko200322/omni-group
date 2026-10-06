@@ -351,9 +351,16 @@ export function renderPaidInvoiceEmail(input: PaidInvoiceEmailInput): {
       ? input.lineItems
       : [{ description: `${input.planName} (${input.planSlug}) — ${cycleLabel}`, amount: input.amount, quantity: 1 }];
 
+  const vatReady = Boolean(input.issuer?.companyLegalName?.trim() && input.issuer?.companyTaxId?.trim());
+  const documentTitle = vatReady ? 'Invoice' : 'Payment receipt';
+  const documentSubtitle = vatReady ? 'Purchase confirmation' : 'Payment confirmation (not a VAT tax invoice)';
+  const footerNote = vatReady
+    ? 'Keep this message as proof of payment. For plan and support questions, use the link above.'
+    : 'Keep this message as proof of payment. Company VAT identity is not configured — this is a receipt, not a tax invoice.';
+
   const bodyHtml = `
     <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#334155">
-      Payment verified and confirmed. Your <strong>${escapeHtml(input.planName)}</strong> plan is now active.
+      Payment verified and confirmed for <strong>${escapeHtml(input.planName)}</strong>.
     </p>
     ${lineItemsTable(items, input.currency, input.total)}
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px">
@@ -375,8 +382,8 @@ export function renderPaidInvoiceEmail(input: PaidInvoiceEmailInput): {
 
   const html = invoiceShell({
     brand: input.brand,
-    documentTitle: 'Invoice',
-    documentSubtitle: 'Purchase confirmation',
+    documentTitle,
+    documentSubtitle,
     invoiceNumber: input.invoiceNumber,
     issueDate: formatDateSr(input.purchasedAt),
     statusLabel: 'Paid',
@@ -384,18 +391,19 @@ export function renderPaidInvoiceEmail(input: PaidInvoiceEmailInput): {
     clientName: input.toName || input.toEmail,
     clientEmail: input.toEmail,
     bodyHtml,
-    footerNote: 'Keep this message as proof of payment. For plan and support questions, use the link above.',
+    footerNote,
     issuer: input.issuer,
   });
 
-  const subject = `Invoice ${input.invoiceNumber} — ${input.planName} · ${formatMoney(input.total, input.currency)}`;
+  const subject = `${documentTitle} ${input.invoiceNumber} — ${input.planName} · ${formatMoney(input.total, input.currency)}`;
   const text = [
-    `Invoice: ${input.invoiceNumber}`,
-    `Plan: ${input.planName}`,
+    `${documentTitle}: ${input.invoiceNumber}`,
+    `Item: ${input.planName}`,
     `Total: ${formatMoney(input.total, input.currency)}`,
     `Status: Paid`,
     `Period: ${formatDateSr(input.periodStart)} - ${formatDateSr(input.periodEnd)}`,
     ...items.map((item) => `- ${item.description}: ${formatMoney(item.amount, input.currency)}`),
+    ...(vatReady ? [] : ['Note: Not a VAT tax invoice — company tax identity is not configured.']),
     input.billingUrl,
   ].join('\n');
 

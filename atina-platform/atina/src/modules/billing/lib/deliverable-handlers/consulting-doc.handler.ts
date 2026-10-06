@@ -1,6 +1,10 @@
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ClientDeliverableBootstrapService } from '../../service/client-deliverable-bootstrap.service';
-import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
+import {
+  buildDocumentQualityMetadata,
+  persistDeliverablePdf,
+  persistMarkdownBundle,
+} from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
 const docs = new DeliverableDocumentGeneratorService();
@@ -14,7 +18,16 @@ async function deliverDocPack(
 ): Promise<FulfillmentResult> {
   const pdf = await persistDeliverablePdf({ ctx, doc, artifactType: type, filename });
   const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${type}_md` });
-  return { artifacts: [pdf, md], status: 'completed', metadata: { documentTitle: doc.title } };
+  const meta = buildDocumentQualityMetadata(doc, ctx);
+  const substanceFailed = meta.documentSubstanceOk === false;
+  return {
+    artifacts: [pdf, md],
+    status: substanceFailed ? 'partial' : 'completed',
+    metadata: {
+      ...meta,
+      ...(substanceFailed ? { reason: 'document_substance_below_threshold' } : {}),
+    },
+  };
 }
 
 export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {
@@ -58,7 +71,10 @@ export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {
     return {
       ...base,
       artifacts: [...base.artifacts, configArtifact],
-      metadata: { integrationConfig: { webhookSecret: '***redacted***' } },
+      metadata: {
+        ...base.metadata,
+        integrationConfig: { webhookSecret: '***redacted***' },
+      },
     };
   },
 };

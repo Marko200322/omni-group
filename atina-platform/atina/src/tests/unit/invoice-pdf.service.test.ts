@@ -1,6 +1,8 @@
 import {
   generateInvoicePdfBuffer,
   generateProformaPdfBuffer,
+  invoiceHasVatIdentity,
+  paidDocumentLabel,
 } from '../../modules/payments/service/invoice-pdf.service';
 
 describe('invoice-pdf.service', () => {
@@ -61,6 +63,53 @@ describe('invoice-pdf.service', () => {
       purchasedAt: '2026-06-01T12:00:00.000Z',
     });
 
+    expect(buf.subarray(0, 4).toString('ascii')).toBe('%PDF');
+  });
+
+  it('paidDocumentLabel uses Payment receipt when VAT identity is missing', async () => {
+    const issuer = { accountName: 'Omni Ops' };
+    expect(invoiceHasVatIdentity(issuer)).toBe(false);
+    expect(paidDocumentLabel(issuer)).toBe('Payment receipt');
+    const buf = await generateInvoicePdfBuffer({
+      invoiceNumber: 'INV-202610-0001',
+      brandName: 'Omni Group',
+      toName: 'Client',
+      toEmail: 'client@test.com',
+      planName: 'Quick setup',
+      billingCycle: 'one_time',
+      amount: 549,
+      total: 549,
+      currency: 'EUR',
+      lineItems: [{ description: 'Quick setup (one_time)', amount: 549, quantity: 1 }],
+      purchasedAt: '2026-10-06T12:00:00.000Z',
+      issuer,
+    });
+    expect(buf.subarray(0, 4).toString('ascii')).toBe('%PDF');
+    expect(buf.length).toBeGreaterThan(200);
+  });
+
+  it('paidDocumentLabel keeps Invoice when company VAT identity is present', async () => {
+    const issuer = {
+      companyLegalName: 'Omni Group DOO',
+      companyTaxId: '123456789',
+      companyAddress: 'Belgrade',
+    };
+    expect(invoiceHasVatIdentity(issuer)).toBe(true);
+    expect(paidDocumentLabel(issuer)).toBe('Invoice');
+    const buf = await generateInvoicePdfBuffer({
+      invoiceNumber: 'INV-202610-0002',
+      brandName: 'Omni Group',
+      toName: 'Client',
+      toEmail: 'client@test.com',
+      planName: 'Quick setup',
+      billingCycle: 'one_time',
+      amount: 549,
+      total: 549,
+      currency: 'EUR',
+      lineItems: [{ description: 'Quick setup (one_time)', amount: 549, quantity: 1 }],
+      purchasedAt: '2026-10-06T12:00:00.000Z',
+      issuer,
+    });
     expect(buf.subarray(0, 4).toString('ascii')).toBe('%PDF');
   });
 

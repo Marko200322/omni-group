@@ -73,7 +73,7 @@ export function InvoiceHistoryPanel() {
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-medium text-white">Invoice history</h3>
         {!loading && !error && (
-          <span className="text-xs text-slate-500">{total} subscription invoices</span>
+          <span className="text-xs text-slate-500">{total} invoice{total === 1 ? '' : 's'}</span>
         )}
       </div>
 
@@ -81,7 +81,7 @@ export function InvoiceHistoryPanel() {
       {error && <p className="mt-3 text-xs text-amber-300/90">{error}</p>}
       {!loading && !error && rows.length === 0 && (
         <p className="mt-3 text-xs text-slate-500">
-          No subscription invoices yet. They appear after a confirmed SaaS payment.
+          No invoices yet. They appear after a confirmed plan or package payment.
         </p>
       )}
 

@@ -384,7 +384,7 @@ export class DeliverableFulfillmentService {
       userId: job.user_id,
       deliverableId: job.deliverable_id ?? 'unknown',
       jobId: job.id,
-      clientName: user?.name ?? 'Client',
+      clientName: this.resolveBrandFromUser(user),
       clientEmail: user?.email ?? null,
       industryCategory: null,
       planSlug: job.plan_slug,
@@ -464,7 +464,7 @@ export class DeliverableFulfillmentService {
         purchaseType: job.purchase_type,
         deliverableId: job.deliverable_id,
         planSlug: job.plan_slug,
-        clientName: user?.name ?? null,
+        clientName: this.resolveBrandFromUser(user),
         clientEmail: user?.email ?? null,
       },
       { retryNotes: notes ?? null, attemptNumber: nextAttempt },
@@ -478,17 +478,27 @@ export class DeliverableFulfillmentService {
     return true;
   }
 
-  private async lookupUser(userId: string): Promise<{ email: string; name: string } | null> {
+  private async lookupUser(
+    userId: string,
+  ): Promise<{ email: string; name: string; company: string | null } | null> {
     try {
       const { query } = await import('../../../database/connection');
-      const { rows } = await query<{ email: string; name: string }>(
-        `SELECT email, name FROM users WHERE id = $1 LIMIT 1`,
+      const { rows } = await query<{ email: string; name: string; company: string | null }>(
+        `SELECT email, name, company FROM users WHERE id = $1 LIMIT 1`,
         [userId],
       );
       return rows[0] ?? null;
     } catch {
       return null;
     }
+  }
+
+  private resolveBrandFromUser(user: { name?: string | null; company?: string | null } | null): string {
+    const company = user?.company?.trim() ?? '';
+    if (company.length >= 2) return company;
+    const name = user?.name?.trim() ?? '';
+    if (name.length >= 2 && !/^(system\s*admin|admin|administrator)$/i.test(name)) return name;
+    return 'Client';
   }
 
   private async notifyClient(ctx: FulfillmentContext, result: FulfillmentResult): Promise<void> {

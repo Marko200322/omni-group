@@ -12,7 +12,13 @@ import { ProductFactoryInternalService } from './product-factory-internal.servic
 import { PublicSiteRepository } from '../../public-site/repository/public-site.repository';
 import { PublicSiteService } from '../../public-site/service/public-site.service';
 
-import { DeliverableContentGeneratorService, type GeneratedSitePage } from '../../billing/service/deliverable-content-generator.service';
+import {
+  DeliverableContentGeneratorService,
+  assessGeneratedSiteQuality,
+  englishNicheLabel,
+  resolveClientBrandName,
+  type GeneratedSitePage,
+} from '../../billing/service/deliverable-content-generator.service';
 import type { VerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
 import type { FulfillmentGenerationHints } from '../../billing/lib/fulfillment-generation-hints';
 
@@ -289,6 +295,16 @@ export class ProductFactoryService {
     }
 
     const finalRow = await this.repo.getById(row.id, input.userId);
+    const pageSlugs = (customPages ?? []).map((p) => p.slug);
+    const hasShopPage = (customPages ?? []).some((p) => p.slug === 'shop' || p.kind === 'shop');
+    const contentQuality =
+      customPages && customPages.length
+        ? assessGeneratedSiteQuality({
+            pages: customPages,
+            brandName: input.name,
+            deliverableId: input.deliverableId,
+          })
+        : null;
     return {
       projectId: row.id,
       status: finalRow?.status ?? 'tested',
@@ -296,6 +312,9 @@ export class ProductFactoryService {
       outputDir,
       deliverableId: input.deliverableId,
       pageCount: customPages?.length ?? 0,
+      pageSlugs,
+      hasShopPage,
+      contentQuality,
       ecommerceCatalog: ecommerceCatalog ?? null,
     };
   }
@@ -316,22 +335,37 @@ export class ProductFactoryService {
     if (!deliverableId || !WEBSITE_DELIVERABLES.has(deliverableId)) {
       throw new ValidationError('Not a website deliverable');
     }
-    const brandTitle = (opts.brandTitle ?? row.client_name ?? row.name).trim();
-    const clientName = (opts.clientName ?? row.client_name ?? brandTitle).trim();
-    const nicheLabel =
-      opts.verticalPack?.displayName ??
-      opts.verticalPack?.category?.replace(/_/g, ' ') ??
-      'professional services';
+    const industryCategory =
+      typeof row.metadata?.industryCategory === 'string' ? row.metadata.industryCategory : null;
+    const brandTitle = resolveClientBrandName({
+      clientName: opts.clientName ?? row.client_name,
+      title: opts.brandTitle ?? row.name,
+      industryCategory,
+      verticalPack: opts.verticalPack,
+    });
+    const clientName = brandTitle;
+    const nicheLabel = englishNicheLabel({
+      verticalPack: opts.verticalPack,
+      industryCategory,
+    });
     const rawProp = opts.verticalPack?.valueProp?.trim() ?? '';
     const tagline =
       rawProp && !/platform resale|CRM, automations/i.test(rawProp)
         ? rawProp.slice(0, 180)
-        : `${brandTitle} helps with ${nicheLabel.toLowerCase()} — clear offers, transparent pricing, and a real contact path.`;
+        : `${brandTitle} — ${nicheLabel.toLowerCase()} with clear offers and a real contact path.`;
+    let catalog = opts.ecommerceCatalog ?? [];
+    if (deliverableId === 'website-ecommerce' && catalog.length < 4) {
+      catalog = this.contentGenerator.generateEcommerceCatalog({
+        clientName,
+        industryCategory,
+        verticalPack: opts.verticalPack,
+      });
+    }
     const branding = {
       clientName,
       verticalSlug: opts.verticalPack?.verticalSlug ?? null,
       niche: nicheLabel,
-      catalog: opts.ecommerceCatalog ?? [],
+      catalog,
       checkout: { currency: 'EUR', provider: 'manual_bank_transfer' },
       seo: {
         title: brandTitle,
@@ -344,12 +378,28 @@ export class ProductFactoryService {
         background: '#0b1220',
       },
     };
-    const pages = (opts.pages ?? []).map((p) => ({
+    let pages = (opts.pages ?? []).map((p) => ({
       slug: p.slug,
       title: p.title,
       body: p.body,
       kind: normalizePageKind(p.kind),
     }));
+    if (
+      deliverableId === 'website-ecommerce' &&
+      pages.length > 0 &&
+      !pages.some((p) => p.slug === 'shop' || p.kind === 'shop')
+    ) {
+      pages = [
+        pages[0]!,
+        {
+          slug: 'shop',
+          title: 'Shop',
+          body: `Browse products from ${brandTitle}. Add items to cart and place an order.`,
+          kind: 'shop' as const,
+        },
+        ...pages.slice(1),
+      ];
+    }
 
     const existing = await this.publicSiteRepo.getClientSiteByProject(row.id);
     if (existing) {
@@ -394,6 +444,7 @@ export class ProductFactoryService {
       title: brandTitle,
       clientName,
       deliverableId,
+      industryCategory,
       publish: opts.publish ?? false,
     });
     return { slug: site.slug, publicUrl: site.publicUrl, existing: false };
@@ -410,6 +461,8 @@ export class ProductFactoryService {
     if (existing) {
       return { slug: existing.slug, publicUrl: `/sites/${existing.slug}`, existing: true };
     }
+    const industryCategory =
+      typeof row.metadata?.industryCategory === 'string' ? row.metadata.industryCategory : null;
     const site = await this.publicSites.scaffoldFromProject({
       userId,
       projectId: row.id,
@@ -417,6 +470,7 @@ export class ProductFactoryService {
       title: row.name,
       clientName: row.client_name,
       deliverableId,
+      industryCategory,
       publish: false,
     });
     return { slug: site.slug, publicUrl: site.publicUrl, existing: false };

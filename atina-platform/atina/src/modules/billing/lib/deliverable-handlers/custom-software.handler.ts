@@ -2,7 +2,11 @@ import { getDeliverable } from '../deliverable-catalog';
 import { DeliverableContentGeneratorService } from '../../service/deliverable-content-generator.service';
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
-import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
+import {
+  buildDocumentQualityMetadata,
+  persistDeliverablePdf,
+  persistMarkdownBundle,
+} from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
 const content = new DeliverableContentGeneratorService();
@@ -44,6 +48,8 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
       projectName: deliverable.name,
       description: brief,
       outputDir,
+      industryCategory: ctx.industryCategory,
+      generationHints: ctx.generationHints,
     });
     const pdf = await persistDeliverablePdf({
       ctx,
@@ -52,16 +58,29 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: 'software-handoff.pdf',
     });
     const md = await persistMarkdownBundle({ ctx, doc: handoff, artifactType: 'software_handoff_md' });
+    const testsPassed =
+      pipeline.testsPassed === true || pipeline.testPassed === true
+        ? true
+        : pipeline.testsPassed === false || pipeline.testPassed === false
+          ? false
+          : false;
+    const buildStatus =
+      typeof pipeline.buildStatus === 'string' && pipeline.buildStatus.trim()
+        ? String(pipeline.buildStatus)
+        : testsPassed
+          ? 'completed'
+          : 'unknown';
 
     return {
       projectId: pipeline.projectId as string,
       artifacts: [pdf, md],
       status: 'completed',
       metadata: {
+        ...buildDocumentQualityMetadata(handoff, ctx),
         outputDir,
         stack: 'node-api-spa',
-        testsPassed: Boolean(pipeline.testsPassed ?? pipeline.testPassed ?? true),
-        buildStatus: pipeline.buildStatus ?? 'completed',
+        testsPassed,
+        buildStatus,
       },
     };
   },

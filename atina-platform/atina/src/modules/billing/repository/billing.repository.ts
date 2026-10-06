@@ -54,7 +54,11 @@ export class BillingRepository {
     return query<{ count: string }>(
       `SELECT COUNT(*) FROM invoices
        WHERE user_id = $1
-         AND (subscription_id IS NOT NULL OR stripe_invoice_id IS NOT NULL)`,
+         AND (
+           subscription_id IS NOT NULL
+           OR stripe_invoice_id IS NOT NULL
+           OR payment_id IS NOT NULL
+         )`,
       [userId]
     );
   }
@@ -63,7 +67,11 @@ export class BillingRepository {
     return query(
       `SELECT * FROM invoices
        WHERE user_id = $1
-         AND (subscription_id IS NOT NULL OR stripe_invoice_id IS NOT NULL)
+         AND (
+           subscription_id IS NOT NULL
+           OR stripe_invoice_id IS NOT NULL
+           OR payment_id IS NOT NULL
+         )
        ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
       [userId, limit, offset]
     );

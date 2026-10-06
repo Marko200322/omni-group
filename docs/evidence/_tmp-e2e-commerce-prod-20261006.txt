@@ -25,4 +25,6 @@ NOT done (owner):
 - Company/legal invoice details (firma)
 - Browser card completion of Stripe TEST Checkout (session create proven; webhook path = same confirmPendingPayment as admin confirm)
 
-Deploy: SafeDeploy EXIT 0, commits f503984 + 947e8b1
+Also: e2e-isolation-prod PASS (5/5 IDOR denials + A fulfillment)
+
+Deploy: SafeDeploy EXIT 0, commits f503984 + 947e8b1 (+7718e5f evidence/script push, no redeploy needed)

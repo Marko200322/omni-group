@@ -106,6 +106,20 @@ describe('BillingService', () => {
       );
     });
 
+    it('lists payment-linked package invoices (not only subscription/stripe)', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ count: '1' }], rowCount: 1 } as any)
+        .mockResolvedValueOnce({
+          rows: [{ id: 'inv-pkg', payment_id: 'pay-1', subscription_id: null }],
+          rowCount: 1,
+        } as any);
+      await service.getUserInvoices('u1', 1, 20);
+      const countSql = String(mockQuery.mock.calls[0][0]);
+      const listSql = String(mockQuery.mock.calls[1][0]);
+      expect(countSql).toContain('payment_id IS NOT NULL');
+      expect(listSql).toContain('payment_id IS NOT NULL');
+    });
+
     it('clamps page below 1 and caps limit at 100', async () => {
       mockQuery
         .mockResolvedValueOnce({ rows: [{ count: '0' }], rowCount: 1 } as any)

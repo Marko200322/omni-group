@@ -1,6 +1,11 @@
 import { NotFoundError, ValidationError } from '../../../utils/errors';
 import { config } from '../../../config';
 import { resolveVerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
+import {
+  DeliverableContentGeneratorService,
+  englishNicheLabel,
+  resolveClientBrandName,
+} from '../../billing/service/deliverable-content-generator.service';
 import { CrmService } from '../../crm/service/crm.service';
 import type {
   CreateClientSiteDtoType,
@@ -8,6 +13,8 @@ import type {
   ClientSiteShopOrderDtoType,
 } from '../dto/public-site.dto';
 import { PublicSiteRepository } from '../repository/public-site.repository';
+
+const contentGenerator = new DeliverableContentGeneratorService();
 
 type ShopCatalogItem = { id: string; name: string; priceEur: number; quantity: number };
 
@@ -48,24 +55,55 @@ export function priceShopItemsFromCatalog(
   });
 }
 
+/** Fallback only — prefer content-generator pages. No Omni marketing chrome. */
 const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
   {
     slug: 'home',
     title,
     kind: 'home',
-    body: tagline ?? `Welcome to ${title}. Professional digital presence powered by Omni Group delivery.`,
+    body: [
+      `# ${title}`,
+      '',
+      tagline ?? `${title} delivers clear offers, transparent pricing, and a real contact path.`,
+      '',
+      '## What you get',
+      '- Scoped work with written acceptance criteria',
+      '- Practical delivery — not tool licenses or slideware',
+      '- A single accountable owner from kickoff to handoff',
+      '',
+      '## Next step',
+      'Send a short brief. We reply within one business day with next steps and EUR pricing.',
+    ].join('\n'),
   },
   {
     slug: 'services',
     title: 'Services',
     kind: 'services',
-    body: 'Overview of services, packages, and how we work together. Contact us for a personalized quote.',
+    body: [
+      '# Services',
+      '',
+      `${title} focuses on finished outcomes:`,
+      '',
+      '- Discovery and scoped proposal',
+      '- Delivery in visible milestones',
+      '- Documentation and handoff you can operate',
+      '',
+      'Contact us for a personalized quote — every engagement starts with a written plan.',
+    ].join('\n'),
   },
   {
     slug: 'contact',
     title: 'Contact',
     kind: 'contact',
-    body: 'Send an inquiry via the form or schedule a consultation. We respond within 24–48 hours.',
+    body: [
+      `# Contact ${title}`,
+      '',
+      'Tell us what you need and the outcome you want in the next 30–60 days.',
+      '',
+      '- Response within one business day',
+      '- Written proposal before any paid work',
+      '- EUR pricing with a clear invoice reference',
+    ].join('\n'),
   },
 ];
 
@@ -187,97 +225,75 @@ export class PublicSiteService {
     title: string;
     clientName?: string | null;
     deliverableId?: string | null;
+    industryCategory?: string | null;
     publish?: boolean;
   }) {
+    const deliverableId = input.deliverableId ?? 'website-business';
     const siteType =
-      input.deliverableId === 'website-ecommerce'
+      deliverableId === 'website-ecommerce'
         ? 'ecommerce'
-        : input.deliverableId === 'landing'
+        : deliverableId === 'landing'
           ? 'landing'
           : 'business';
 
-    const pages =
-      siteType === 'landing'
-        ? [
-            {
-              slug: 'home',
-              title: input.title,
-              kind: 'home' as const,
-              body: `${input.clientName ?? input.title} — professional landing page ready for your campaign.`,
-            },
-          ]
-        : siteType === 'ecommerce'
-          ? [
-              ...DEFAULT_BUSINESS_PAGES(input.title),
-              {
-                slug: 'shop',
-                title: 'Shop',
-                kind: 'shop' as const,
-                body: 'Product catalog and checkout flow — integrated with manual/Stripe payment.',
-              },
-            ]
-          : [
-              ...DEFAULT_BUSINESS_PAGES(input.title),
-              { slug: 'about', title: 'About us', kind: 'about' as const, body: `The team behind ${input.title}.` },
-              { slug: 'pricing', title: 'Pricing', kind: 'pricing' as const, body: 'Transparent pricing and service packages.' },
-            ];
+    const brandTitle = resolveClientBrandName({
+      clientName: input.clientName,
+      title: input.title,
+      industryCategory: input.industryCategory,
+    });
+    const niche = englishNicheLabel({ industryCategory: input.industryCategory });
+    const pageDeliverable =
+      siteType === 'ecommerce'
+        ? 'website-ecommerce'
+        : siteType === 'landing'
+          ? 'landing'
+          : 'website-business';
 
-    if (pages.length < 3 && siteType === 'business') {
-      throw new ValidationError('Business site requires at least 3 pages');
+    let pages = await contentGenerator.generateWebsitePages({
+      deliverableId: pageDeliverable,
+      title: brandTitle,
+      clientName: brandTitle,
+      industryCategory: input.industryCategory,
+    });
+
+    if (siteType === 'business' && pages.length < 3) {
+      pages = DEFAULT_BUSINESS_PAGES(brandTitle).map((p) => ({
+        slug: p.slug,
+        title: p.title,
+        kind: p.kind,
+        body: p.body,
+      }));
     }
 
-    const clientLabel = input.clientName ?? input.title;
-    const defaultCatalog =
+    const catalog =
       siteType === 'ecommerce'
-        ? [
-            {
-              id: 'starter-pack',
-              name: `${clientLabel} Starter`,
-              description: 'Core offering — delivered as part of your Omni Group package.',
-              priceEur: 49,
-              currency: 'EUR',
-            },
-            {
-              id: 'growth-pack',
-              name: `${clientLabel} Growth`,
-              description: 'Expanded service bundle with priority support.',
-              priceEur: 99,
-              currency: 'EUR',
-            },
-            {
-              id: 'partner-pack',
-              name: `${clientLabel} Partner`,
-              description: 'Full partner tier — custom scope on request.',
-              priceEur: 249,
-              currency: 'EUR',
-            },
-          ]
+        ? contentGenerator.generateEcommerceCatalog({
+            clientName: brandTitle,
+            industryCategory: input.industryCategory ?? null,
+          })
         : [];
-
-    const enrichedPages = pages.map((page) => {
-      if (page.kind === 'home' && page.body.length < 120) {
-        return {
-          ...page,
-          body: `${clientLabel} — ${page.body}\n\nWe deliver professional digital services with transparent pricing and fast onboarding.`,
-        };
-      }
-      return page;
-    });
 
     const site = await this.repo.createClientSite({
       ownerUserId: input.userId,
       projectId: input.projectId,
       slug: input.slug,
-      title: input.title,
-      tagline: input.clientName
-        ? `${input.clientName} — professional presence with clear offers and a real contact path.`
-        : null,
+      title: brandTitle,
+      tagline: `${brandTitle} — ${niche.toLowerCase()} with clear offers and a real contact path.`,
       siteType,
       branding: {
-        clientName: input.clientName ?? null,
-        ...(defaultCatalog.length ? { catalog: defaultCatalog } : {}),
+        clientName: brandTitle,
+        niche,
+        ...(catalog.length ? { catalog } : {}),
+        ...(siteType === 'ecommerce'
+          ? { checkout: { currency: 'EUR', provider: 'manual_bank_transfer' } }
+          : {}),
       },
-      pages: enrichedPages,
+      pages: pages.map((p) => ({
+        slug: p.slug,
+        title: p.title,
+        body: p.body,
+        kind: p.kind,
+      })),
       publish: input.publish ?? false,
     });
     return this.mapClientSite(site);

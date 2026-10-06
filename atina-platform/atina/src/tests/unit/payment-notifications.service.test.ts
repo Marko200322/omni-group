@@ -102,7 +102,7 @@ describe('PaymentNotificationsService', () => {
 
     expect(sendEmail).toHaveBeenCalledWith(
       'client@test.com',
-      expect.stringContaining('Invoice INV-202605-0001'),
+      expect.stringMatching(/^(Invoice|Payment receipt) INV-202605-0001/),
       expect.stringContaining('Paid'),
       expect.any(String),
       expect.arrayContaining([

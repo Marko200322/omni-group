@@ -18,6 +18,8 @@ type InvoiceDetail = {
     planName?: string;
     planSlug?: string;
     billingCycle?: string;
+    documentKind?: string;
+    receiptType?: string;
   } | null;
 };
 
@@ -50,12 +52,17 @@ function renderPrintableInvoice(inv: InvoiceDetail, viewerEmail: string): string
   const clientEmail = inv.billing_details?.clientEmail ?? viewerEmail;
   const number = inv.invoice_number ?? inv.id?.slice(0, 8) ?? 'invoice';
   const issued = inv.created_at ? formatDateSr(inv.created_at) : '—';
+  const isReceipt = inv.billing_details?.documentKind === 'payment_receipt';
+  const docLabel = isReceipt ? 'Payment receipt' : 'Invoice';
+  const footer = isReceipt
+    ? 'Payment confirmation receipt. Not a VAT tax invoice — company tax identity was not configured when this was issued. Questions: hello@omnigrouptech.com'
+    : 'Thank you for your business. Questions: hello@omnigrouptech.com';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Invoice ${escapeHtml(number)} · Omni Group Tech</title>
+  <title>${escapeHtml(docLabel)} ${escapeHtml(number)} · Omni Group Tech</title>
   <style>
     body { font-family: Georgia, 'Times New Roman', serif; margin: 0; background: #f8fafc; color: #0f172a; }
     .wrap { max-width: 720px; margin: 32px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; }
@@ -71,7 +78,7 @@ function renderPrintableInvoice(inv: InvoiceDetail, viewerEmail: string): string
 <body>
   <div class="wrap">
     <h1>Omni Group Tech</h1>
-    <p class="muted">Invoice · ${escapeHtml(number)} · ${escapeHtml(issued)}</p>
+    <p class="muted">${escapeHtml(docLabel)} · ${escapeHtml(number)} · ${escapeHtml(issued)}</p>
     <p class="muted" style="margin-top:16px">Bill to: <strong>${escapeHtml(clientName)}</strong> · ${escapeHtml(clientEmail)}</p>
     <p class="muted">Status: <strong>${escapeHtml(String(inv.status ?? 'issued').toUpperCase())}</strong></p>
     <table>
@@ -85,7 +92,7 @@ function renderPrintableInvoice(inv: InvoiceDetail, viewerEmail: string): string
       <tbody>${rows}</tbody>
     </table>
     <p class="total">Total ${escapeHtml(formatMoney(Number.isFinite(total) ? total : 0, currency))}</p>
-    <p class="muted">Thank you for your business. Questions: hello@omnigrouptech.com</p>
+    <p class="muted">${escapeHtml(footer)}</p>
     <div class="actions">
       <button type="button" onclick="window.print()">Print / Save PDF</button>
       <a href="/dashboard/billing">Back to billing</a>

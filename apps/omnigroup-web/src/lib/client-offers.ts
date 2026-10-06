@@ -152,13 +152,14 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Private Slack on your workspace'],
   },
   'website-ecommerce': {
-    promise: 'Demo storefront with catalog and checkout notes.',
-    summary: 'Live demo shop with sample products, cart path, and documented checkout — not a live merchant shop.',
+    promise: 'Live storefront with catalog, cart, and working orders.',
+    summary:
+      'HYBRID: client-branded shop at /sites/{slug} with industry products, cart, and bank-transfer orders (card when Stripe is enabled) — not a full merchant inventory/tax stack.',
     readMore:
-      'You get a hosted demo storefront, sample catalog, and checkout notes. Your own Stripe account, inventory sync, tax, and shipping carriers are not wired. Success: the demo URL and notes are in your portal.',
+      'You get a hosted storefront URL, industry catalog (4+ products), shop page, and a working cart/order path. Your own Stripe Connect account, inventory sync, tax engine, and shipping carriers are not wired. Success: buyers can browse and place orders; handoff PDF is in your portal.',
     when: 'Usually 5–8 days after payment',
-    youGet: ['Live demo storefront URL', 'Sample catalog', 'Checkout notes'],
-    notIncluded: ['Real payments wiring', 'Inventory sync', 'Your Stripe account'],
+    youGet: ['Live storefront URL', 'Industry catalog (4+)', 'Working cart + order path'],
+    notIncluded: ['Inventory sync', 'Tax/shipping carriers', 'Your Stripe Connect account'],
   },
   'white-label-setup': {
     promise: 'Partner packaging + live landing for resale.',

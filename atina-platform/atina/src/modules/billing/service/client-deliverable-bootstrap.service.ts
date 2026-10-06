@@ -22,12 +22,96 @@ export type CrmBootstrapResult = {
   pipelineStages: string[];
 };
 
+/** Honest ads/outreach channel state — never claim live API without credentials. */
+export type ChannelConnectionStatus = 'CONNECTED' | 'NOT CONNECTED';
+
+export type OutreachChannelStatus = {
+  channel: 'linkedin' | 'google_ads' | 'apollo' | 'email' | 'meta_ads';
+  status: ChannelConnectionStatus;
+  detail: string;
+};
+
 export type LeadGenBootstrapResult = {
   workspaceId?: string;
   runId?: string;
+  /** Live/API-backed leads only — 0 when channels are NOT CONNECTED. */
   leadsGenerated: number;
+  /** Demo CRM samples seeded for kickoff visibility (not live harvest). */
+  sampleLeadsSeeded: number;
   estimatedRevenue: number;
+  channelStatuses: OutreachChannelStatus[];
+  mode: 'live_kickoff' | 'kickoff_pack_only';
 };
+
+function envPresent(key: string): boolean {
+  const v = process.env[key]?.trim();
+  return Boolean(v && v !== 'placeholder' && !v.startsWith('your_'));
+}
+
+/** Resolve LinkedIn / Google Ads / Apollo / email honesty for lead-gen retainers. */
+export function resolveLeadGenChannelStatuses(): OutreachChannelStatus[] {
+  const googleAdsCreds =
+    envPresent('GOOGLE_ADS_DEVELOPER_TOKEN') &&
+    envPresent('GOOGLE_ADS_CLIENT_ID') &&
+    envPresent('GOOGLE_ADS_CLIENT_SECRET') &&
+    envPresent('GOOGLE_ADS_REFRESH_TOKEN') &&
+    envPresent('GOOGLE_ADS_CUSTOMER_ID');
+  const googleLive =
+    googleAdsCreds &&
+    ['true', '1', 'yes'].includes((process.env.MARKETING_ADS_LIVE_SYNC ?? '').trim().toLowerCase());
+
+  const metaCreds = envPresent('META_ADS_ACCESS_TOKEN') && envPresent('META_ADS_AD_ACCOUNT_ID');
+  const metaLive =
+    metaCreds &&
+    ['true', '1', 'yes'].includes((process.env.MARKETING_ADS_LIVE_SYNC ?? '').trim().toLowerCase());
+
+  const apollo = envPresent('APOLLO_API_KEY');
+  const email =
+    envPresent('RESEND_API_KEY') ||
+    (envPresent('SMTP_USER') && envPresent('SMTP_PASSWORD')) ||
+    Boolean(config.aggregators?.comms?.url?.trim());
+
+  // No LinkedIn Ads / LinkedIn Marketing API adapter in this codebase yet.
+  const linkedinDetail = envPresent('LINKEDIN_ACCESS_TOKEN')
+    ? 'LINKEDIN_ACCESS_TOKEN set but LinkedIn Ads/Marketing API adapter is not wired — treat as NOT CONNECTED'
+    : 'No LinkedIn Ads/Marketing API credentials or adapter';
+
+  return [
+    {
+      channel: 'linkedin',
+      status: 'NOT CONNECTED',
+      detail: linkedinDetail,
+    },
+    {
+      channel: 'google_ads',
+      status: googleLive ? 'CONNECTED' : 'NOT CONNECTED',
+      detail: googleLive
+        ? 'GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC enabled'
+        : googleAdsCreds
+          ? 'Credentials present — set MARKETING_ADS_LIVE_SYNC=true for live pull'
+          : 'GOOGLE_ADS_* incomplete or missing',
+    },
+    {
+      channel: 'meta_ads',
+      status: metaLive ? 'CONNECTED' : 'NOT CONNECTED',
+      detail: metaLive
+        ? 'META_ADS_* + MARKETING_ADS_LIVE_SYNC enabled'
+        : metaCreds
+          ? 'Credentials present — set MARKETING_ADS_LIVE_SYNC=true for live pull'
+          : 'META_ADS_* incomplete or missing',
+    },
+    {
+      channel: 'apollo',
+      status: apollo ? 'CONNECTED' : 'NOT CONNECTED',
+      detail: apollo ? 'APOLLO_API_KEY configured' : 'APOLLO_API_KEY missing',
+    },
+    {
+      channel: 'email',
+      status: email ? 'CONNECTED' : 'NOT CONNECTED',
+      detail: email ? 'Outbound email transport configured' : 'No email transport configured',
+    },
+  ];
+}
 
 function resolvePack(industryCategory?: string | null): VerticalDeliveryPack {
   const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
@@ -162,6 +246,15 @@ export class ClientDeliverableBootstrapService {
     pack?: VerticalDeliveryPack;
   }): Promise<LeadGenBootstrapResult> {
     const pack = input.pack ?? resolvePack(input.industryCategory);
+    const channelStatuses = resolveLeadGenChannelStatuses();
+    const liveChannels = channelStatuses.filter(
+      (c) =>
+        c.status === 'CONNECTED' &&
+        (c.channel === 'apollo' || c.channel === 'google_ads' || c.channel === 'linkedin'),
+    );
+    const mode: LeadGenBootstrapResult['mode'] =
+      liveChannels.length > 0 ? 'live_kickoff' : 'kickoff_pack_only';
+
     const workspaces = await this.titanis.list(input.userId);
     let workspaceId = (workspaces[0] as { id?: string } | undefined)?.id;
 
@@ -175,7 +268,26 @@ export class ClientDeliverableBootstrapService {
     }
 
     if (!workspaceId) {
-      return { leadsGenerated: 0, estimatedRevenue: 0 };
+      return {
+        leadsGenerated: 0,
+        sampleLeadsSeeded: 0,
+        estimatedRevenue: 0,
+        channelStatuses,
+        mode,
+      };
+    }
+
+    // Only claim live leads when a real enrichment/ads channel is CONNECTED.
+    // Otherwise deliver workspace + kickoff pack without inventing LinkedIn/Ads harvest.
+    if (mode === 'kickoff_pack_only') {
+      return {
+        workspaceId,
+        leadsGenerated: 0,
+        sampleLeadsSeeded: 0,
+        estimatedRevenue: 0,
+        channelStatuses,
+        mode,
+      };
     }
 
     const run = (await this.titanis.run(workspaceId, input.userId, {
@@ -187,8 +299,11 @@ export class ClientDeliverableBootstrapService {
     return {
       workspaceId,
       runId: run?.id,
-      leadsGenerated: Number(output.leads_generated ?? 25),
+      leadsGenerated: Number(output.leads_generated ?? 0),
+      sampleLeadsSeeded: 0,
       estimatedRevenue: Number(output.estimated_revenue ?? 0),
+      channelStatuses,
+      mode,
     };
   }
 
@@ -245,23 +360,45 @@ export class ClientDeliverableBootstrapService {
     pack: VerticalDeliveryPack;
     stats: LeadGenBootstrapResult;
     clientName: string;
+    sampleLeadsSeeded?: number;
   }): FulfillmentArtifact {
     const { pack, stats, clientName } = input;
-    const content = `# Lead Gen — Initial Pipeline Report
+    const samples = input.sampleLeadsSeeded ?? stats.sampleLeadsSeeded ?? 0;
+    const channelLines = (stats.channelStatuses ?? resolveLeadGenChannelStatuses())
+      .map((c) => `- ${c.channel}: **${c.status}** — ${c.detail}`)
+      .join('\n');
+    const content = `# Lead Gen — Kickoff Pack
 
 Client: ${clientName}
 Vertical: ${pack.displayName}
+Mode: ${stats.mode === 'live_kickoff' ? 'Live enrichment available' : 'Kickoff pack only (no live LinkedIn/Google Ads harvest)'}
+
+## Channel connection status (honest)
+${channelLines}
 
 ## Kickoff results
-- Leads generated: ${stats.leadsGenerated}
-- Estimated pipeline value: €${stats.estimatedRevenue}
+- Live leads generated: ${stats.leadsGenerated}
+- Sample CRM leads seeded (demo, not live harvest): ${samples}
+- Estimated pipeline value (live only): €${stats.estimatedRevenue}
 - Workspace: ${stats.workspaceId ?? 'created'}
+- Titanis run: ${stats.runId ?? 'skipped — no connected enrichment/ads channel'}
+
+## What you received now
+- Outreach workspace in portal
+- CRM pipeline seed for ${pack.displayName}
+- This kickoff report with channel honesty
+- Onboarding ticket for first outreach week
 
 ## Next 30 days
 ${pack.workflowSteps.map((s, i) => `${i + 1}. ${s.step} (${s.moduleSlug})`).join('\n')}
 
-## Outreach hooks
+## Outreach hooks (planning — not auto-sent to LinkedIn/Ads)
 ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
+
+## Connecting live channels
+1. Google Ads: set GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC=true
+2. LinkedIn Ads/Marketing: not wired yet — remains NOT CONNECTED until an adapter ships
+3. Apollo enrichment: set APOLLO_API_KEY
 `;
     return this.artifacts.saveText({
       userId: input.userId,
@@ -402,12 +539,22 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     clientName: string;
     deliverableId: 'support-priority' | 'support-dedicated';
     industryCategory?: string | null;
-  }): Promise<{ modulesActivated: string[]; slaHours: number }> {
+    paymentId?: string;
+  }): Promise<{
+    modulesActivated: string[];
+    slaHours: number;
+    kickoffTicketId?: string;
+    ticketCategories: string[];
+  }> {
     const slaHours = input.deliverableId === 'support-dedicated' ? 8 : 24;
     const slugs =
       input.deliverableId === 'support-dedicated'
         ? ['notifications', 'support-avatar', 'video-meetings', 'ai-rag']
         : ['notifications', 'support-avatar', 'ai-rag'];
+    const ticketCategories =
+      input.deliverableId === 'support-dedicated'
+        ? ['incident', 'change-request', 'health-check', 'billing', 'escalation']
+        : ['general', 'bug', 'change-request', 'billing', 'how-to'];
 
     const modulesActivated = await this.activateModules({
       userId: input.userId,
@@ -429,6 +576,7 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
             deliverableId: input.deliverableId,
             slaHours,
             automated: true,
+            ticketCategories,
             channel: input.deliverableId === 'support-dedicated' ? 'portal+email+slack' : 'email',
           },
         });
@@ -436,6 +584,14 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
         /* plan limits */
       }
     }
+
+    const kickoffTicketId = await this.openKickoffSupportTicket({
+      userId: input.userId,
+      clientName: input.clientName,
+      deliverableId: input.deliverableId,
+      slaHours,
+      industryCategory: input.industryCategory,
+    });
 
     if (input.deliverableId === 'support-dedicated') {
       void getSlackNotifier().notifySupportDedicated({
@@ -447,12 +603,144 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
       void this.provisionClientAvatar({
         userId: input.userId,
         clientName: input.clientName,
-        paymentId: `support-${input.userId.slice(0, 8)}`,
+        paymentId: input.paymentId ?? `support-${input.userId.slice(0, 8)}`,
         agentType: 'support',
       });
     }
 
-    return { modulesActivated, slaHours };
+    return { modulesActivated, slaHours, kickoffTicketId, ticketCategories };
+  }
+
+  /** Client-visible onboarding/support ticket in the tasks queue. */
+  async openKickoffSupportTicket(input: {
+    userId: string;
+    clientName: string;
+    deliverableId: string;
+    slaHours: number;
+    industryCategory?: string | null;
+  }): Promise<string | undefined> {
+    try {
+      const task = await this.tasks.createTask(input.userId, {
+        type: 'support_ticket',
+        name: `Kickoff — ${input.deliverableId}`,
+        description: [
+          `Welcome ${input.clientName}.`,
+          `Retainer ${input.deliverableId} is active.`,
+          `Response target: ${input.slaHours} business hours.`,
+          `Industry: ${input.industryCategory ?? 'general'}.`,
+          'Reply in the portal support inbox or attach context to this ticket.',
+        ].join(' '),
+        payload: {
+          deliverableId: input.deliverableId,
+          slaHours: input.slaHours,
+          category: 'onboarding',
+          status: 'open',
+          automated: true,
+          clientVisible: true,
+        },
+      });
+      return (task as { id?: string })?.id;
+    } catch {
+      return undefined;
+    }
+  }
+
+  saveSlaOnboardingPack(input: {
+    userId: string;
+    paymentId: string;
+    clientName: string;
+    deliverableId: string;
+    slaHours: number;
+    modulesActivated: string[];
+    ticketCategories?: string[];
+    kickoffTicketId?: string;
+    industryCategory?: string | null;
+    channelStatuses?: OutreachChannelStatus[];
+    extras?: Record<string, unknown>;
+  }): FulfillmentArtifact {
+    const categories = input.ticketCategories?.length
+      ? input.ticketCategories
+      : ['general', 'bug', 'change-request', 'billing'];
+    const channels = input.channelStatuses?.length
+      ? input.channelStatuses
+      : resolveLeadGenChannelStatuses();
+    const content = `# SLA & Onboarding Pack — ${input.clientName}
+
+Package: ${input.deliverableId}
+Industry: ${input.industryCategory ?? 'general'}
+Generated: ${new Date().toISOString()}
+
+## Service level
+- Response target: **${input.slaHours} business hours**
+- Channels: client portal support inbox + email
+- Kickoff ticket id: ${input.kickoffTicketId ?? 'queued in portal tasks'}
+
+## Ticket categories (portal)
+${categories.map((c) => `- ${c}`).join('\n')}
+
+## Modules activated
+${input.modulesActivated.map((m) => `- ${m}`).join('\n') || '- (pending activation)'}
+
+## Onboarding checklist
+1. Open Deliveries in the client portal and download welcome + this SLA pack
+2. Confirm the kickoff support ticket is visible under Tasks
+3. Add preferred contact email / Slack webhook if dedicated tier
+4. Review FAQ seed (if included) and mark gaps for week-1 call
+5. Do **not** assume LinkedIn or Google Ads are live unless marked CONNECTED below
+
+## Channel honesty (ads / enrichment)
+${channels.map((c) => `- ${c.channel}: **${c.status}** — ${c.detail}`).join('\n')}
+
+## What is NOT included
+- Unlimited engineering hours
+- Live LinkedIn/Google Ads campaign spend without connected APIs
+- Emergency weekend SLA (unless separately contracted)
+${input.extras ? `\n## Notes\n${JSON.stringify(input.extras, null, 2)}\n` : ''}
+`;
+    return this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: `${input.deliverableId}-sla-onboarding.md`,
+      content,
+      type: 'sla_onboarding_pack',
+      downloadLabel: 'SLA & onboarding pack',
+    });
+  }
+
+  saveSupportFaqSeed(input: {
+    userId: string;
+    paymentId: string;
+    clientName: string;
+    industryCategory?: string | null;
+    pack?: VerticalDeliveryPack;
+  }): FulfillmentArtifact {
+    const pack = input.pack ?? resolvePack(input.industryCategory);
+    const faqs = [
+      ['How do I open a support ticket?', 'Use the portal Support / Tasks inbox. Priority retainers target 24h; dedicated targets 8h.'],
+      ['What is included monthly?', 'Welcome pack, SLA queue, portal modules, and maintenance listed on your package card — not unlimited build hours.'],
+      ['Can you change copy on my site?', 'Minor copy/config changes are in scope for support retainers; net-new features need a scoped package.'],
+      ['Is LinkedIn outreach live?', 'Only if LinkedIn is marked CONNECTED in your kickoff pack. Otherwise we deliver planning hooks and CRM seed only.'],
+      ['Are Google Ads connected?', 'Only when GOOGLE_ADS_* credentials and live sync are enabled. Otherwise status is NOT CONNECTED.'],
+      [`What is our ${pack.displayName} focus?`, pack.valueProp],
+      ['Where are my deliverables?', 'Dashboard → Deliveries. Download PDFs and markdown packs from the payment fulfillment card.'],
+      ['How do I escalate?', 'Reply on the kickoff ticket or email support; dedicated tier also notifies Slack when a webhook is configured.'],
+      ['Does AI avatar mean video?', 'Text/RAG assistant is seeded immediately. HeyGen/D-ID video requires those keys — otherwise avatarConfigured stays false.'],
+      ['How do I cancel or pause?', 'Billing panel → subscription controls. Access to delivered artifacts remains for prior months.'],
+    ];
+    const content = `# Support FAQ seed — ${input.clientName}
+
+Industry: ${pack.displayName}
+
+${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
+`;
+    return this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: 'support-faq-seed.md',
+      content,
+      type: 'support_faq_seed',
+      downloadLabel: 'Support FAQ seed',
+    });
   }
 
   async provisionClientAvatar(input: {
@@ -565,6 +853,7 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     }
 
     const webBase = config.app.webUrl.replace(/\/$/, '');
+    const avatarReady = avatarProvision.configured;
     const setup = {
       clientName: input.clientName,
       industryCategory: input.industryCategory ?? 'general',
@@ -572,11 +861,18 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
       videoMeetingsUrl: `${webBase}/dashboard/support`,
       modules: effectiveModules,
       ragNamespace: 'support-kb',
+      ragSeeded,
       voiceProvider: 'elevenlabs',
       avatarProvider: avatarProvision.provider,
-      avatarConfigured: avatarProvision.configured,
+      avatarConfigured: avatarReady,
       avatarMemoryKey: avatarProvision.memoryKey,
-      note: 'AI avatar chat and video meetings active in client dashboard.',
+      note: avatarReady
+        ? 'HeyGen/D-ID configured — video avatar path available in support dashboard.'
+        : 'RAG knowledge seed + support modules active. Video avatar NOT CONNECTED until HeyGen or D-ID keys are configured (live_portrait fallback only).',
+      channelHonesty: {
+        heygen: isHeygenConfigured() ? 'CONNECTED' : 'NOT CONNECTED',
+        did: isDidConfigured() ? 'CONNECTED' : 'NOT CONNECTED',
+      },
     };
 
     const setupArtifact = this.artifacts.saveText({
@@ -591,13 +887,28 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     try {
       await this.tasks.createTask(input.userId, {
         type: 'ai_support_provisioning',
-        name: 'AI support retainer — live',
-        description: `Avatar + RAG + meetings provisioned for ${input.clientName}.`,
-        payload: { automated: true, modules: effectiveModules, ragSeeded },
+        name: 'AI support retainer — provisioned',
+        description: avatarReady
+          ? `Avatar + RAG + meetings provisioned for ${input.clientName}.`
+          : `RAG + modules provisioned for ${input.clientName}; video avatar keys NOT CONNECTED.`,
+        payload: {
+          automated: true,
+          modules: effectiveModules,
+          ragSeeded,
+          avatarConfigured: avatarReady,
+        },
       });
     } catch {
       /* plan limits */
     }
+
+    await this.openKickoffSupportTicket({
+      userId: input.userId,
+      clientName: input.clientName,
+      deliverableId: 'ai-support-retainer',
+      slaHours: 24,
+      industryCategory: input.industryCategory,
+    });
 
     return { modulesActivated: effectiveModules, ragSeeded, setupArtifact, avatarProvision };
   }

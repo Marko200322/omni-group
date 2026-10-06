@@ -1,4 +1,7 @@
-import { DeliverableContentGeneratorService } from '../modules/billing/service/deliverable-content-generator.service';
+import {
+  DeliverableContentGeneratorService,
+  resolveClientBrandName,
+} from '../modules/billing/service/deliverable-content-generator.service';
 import { resolveVerticalDeliveryPack } from '../modules/autonomy-loop/lib/vertical-delivery-resolver';
 import { resolveVerticalSlug } from '../shared/industry/industry-catalog';
 import { PublicSiteRepository } from '../modules/public-site/repository/public-site.repository';
@@ -75,18 +78,23 @@ async function main() {
     }
 
     const pack = verticalPackFromIndustry(industry);
-    const brandTitle = clientName;
+    const brandTitle = resolveClientBrandName({
+      clientName,
+      title: site.title,
+      industryCategory: industry,
+      verticalPack: pack,
+    });
     const pages = await content.generateWebsitePages({
       deliverableId,
       title: brandTitle,
-      clientName,
+      clientName: brandTitle,
       industryCategory: industry,
       verticalPack: pack,
     });
     const catalog =
       deliverableId === 'website-ecommerce'
         ? content.generateEcommerceCatalog({
-            clientName,
+            clientName: brandTitle,
             industryCategory: industry,
             verticalPack: pack,
           })
@@ -96,11 +104,13 @@ async function main() {
     const tagline =
       rawProp && !/platform resale|CRM, automations/i.test(rawProp)
         ? rawProp.slice(0, 180)
-        : `${brandTitle} helps with ${pack.displayName.toLowerCase()} — clear offers, transparent pricing, and a real contact path.`;
+        : deliverableId === 'website-ecommerce'
+          ? `${brandTitle} — ${pack.displayName.toLowerCase()} storefront with catalog and online orders.`
+          : `${brandTitle} helps with ${pack.displayName.toLowerCase()} — clear offers, transparent pricing, and a real contact path.`;
 
     const branding = {
       ...(site.branding ?? {}),
-      clientName,
+      clientName: brandTitle,
       verticalSlug: pack.verticalSlug,
       niche: pack.displayName,
       catalog,

@@ -230,16 +230,23 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-priority',
     description:
-      'Monthly retainer: welcome PDF, support queue with a 24h response target, portal modules — human replies by our team.',
+      'Monthly retainer: welcome PDF, SLA/onboarding pack, support queue with a 24h response target, kickoff ticket, portal modules — human replies by our team.',
     descriptionSr:
-      'Mesečni retainer: welcome PDF, support queue SLA 24h, moduli na portalu — odgovori našeg tima.',
+      'Mesečni retainer: welcome PDF, SLA/onboarding paket, support queue SLA 24h, kickoff tiket, moduli na portalu — odgovori našeg tima.',
     includes: [
       'Welcome PDF',
-      'Support queue with 24h response target',
+      'SLA & onboarding pack (downloadable)',
+      'Support queue with 24h response target + kickoff ticket',
+      'Workspace project visible in portal',
       'Notifications, AI support assistant, and ticket inbox',
       'Maintenance & support included in monthly subscription price',
     ],
-    excludes: ['Unlimited dev hours', 'Emergency weekend SLA', 'Separate maintenance invoice (already included)'],
+    excludes: [
+      'Unlimited dev hours',
+      'Emergency weekend SLA',
+      'Separate maintenance invoice (already included)',
+      'Live LinkedIn/Google Ads campaign management',
+    ],
     anchorByPhase: { M0: 199, M2: 249, M4: 289, M6: 399 },
     phaseUnlocks: [
       {
@@ -274,17 +281,22 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-dedicated',
     description:
-      'Dedicated retainer: 8h response target, video-meetings module, monthly health-check task, Slack notify when configured.',
+      'Dedicated retainer: 8h response target, SLA pack, kickoff ticket, video-meetings module, monthly health-check task, Slack notify when configured.',
     descriptionSr:
-      'Dedicated retainer: SLA 8h, video-meetings modul, mesečni health-check, Slack obaveštenje.',
+      'Dedicated retainer: SLA 8h, SLA paket, kickoff tiket, video-meetings modul, mesečni health-check, Slack obaveštenje.',
     includes: [
       'Welcome PDF',
-      'Support queue with 8h response target',
+      'SLA & onboarding pack (downloadable)',
+      'Support queue with 8h response target + kickoff ticket',
+      'Workspace project visible in portal',
       'Video meetings module',
       'Monthly health-check task',
       'Maintenance, monitoring & support included in monthly price',
     ],
-    excludes: ['Private Slack channel setup on client workspace (we notify via webhook)'],
+    excludes: [
+      'Private Slack channel setup on client workspace (we notify via webhook)',
+      'Live LinkedIn/Google Ads campaign management',
+    ],
     anchorByPhase: { M2: 449, M4: 690, M6: 1190 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
@@ -292,15 +304,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'landing',
-    description: 'Live landing page with AI sales copy — hosted on omnigrouptech.com.',
-    descriptionSr: 'Live landing sa AI copy-jem — host na omnigrouptech.com.',
+    description:
+      'Live client-branded landing at /sites/{slug} with niche sales copy (AI + vertical pack). HYBRID/HUMAN: stock photography, brand voice polish, and unlimited revision rounds are not included.',
+    descriptionSr:
+      'Live klijentski landing na /sites/{slug} sa niche copy-jem (AI + vertical pack). HYBRID/HUMAN: stock foto, brand voice polish i neograničene revizije nisu uključeni.',
     includes: [
-      'Published live URL',
-      'AI-generated copy for niche',
-      'Contact section',
+      'Published live URL under client brand title',
+      'Niche-specific sales copy (not Omni template chrome)',
+      'Contact section on the landing',
       'Delivery handoff PDF (URL + analytics/pixel guides)',
     ],
-    excludes: ['Custom domain DNS', 'Stock photography licensing', 'Unlimited revision rounds'],
+    excludes: [
+      'Custom domain DNS',
+      'Stock photography licensing (HUMAN)',
+      'Unlimited revision rounds / brand-voice rewrite (HUMAN)',
+    ],
     anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
     phaseUnlocks: [
       {
@@ -329,15 +347,22 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'website-business',
-    description: 'Multi-page business site (5+ pages): services, pricing, contact — live on omnigrouptech.com.',
-    descriptionSr: 'Višestrani poslovni sajt (5+ strana) — live na omnigrouptech.com.',
+    description:
+      'Multi-page client-branded business site (5+ pages with real section copy): services, pricing, contact — live at /sites/{slug}. HYBRID/HUMAN: custom photography and brand-voice rewrites beyond first draft are not automated.',
+    descriptionSr:
+      'Višestrani klijentski sajt (5+ strana sa realnim copy-jem) — live na /sites/{slug}. HYBRID/HUMAN: custom foto i brand-voice rewrite van first draft-a nisu automatizovani.',
     includes: [
-      'Live URL with 5+ pages',
+      'Live URL with 5+ niche pages under client brand',
       'Linked to your workspace project',
-      'Services, pricing, contact pages',
+      'Services, pricing, contact (and supporting) pages with multi-section copy',
       'Delivery handoff PDF (URL + GBP/analytics guides)',
     ],
-    excludes: ['Custom domain', 'CMS training', 'Copywriting beyond AI first draft'],
+    excludes: [
+      'Custom domain',
+      'CMS training',
+      'Copywriting beyond AI/vertical first draft (HUMAN)',
+      'Custom photography / illustration (HUMAN)',
+    ],
     anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
     phaseUnlocks: [
       {
@@ -366,17 +391,25 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'website-ecommerce',
-    description: 'Hosted demo e-commerce storefront (4+ products) + checkout documentation — not a full merchant Stripe shop or inventory system.',
-    descriptionSr: 'Demo e-commerce (4+ proizvoda) + dokumentacija checkout-a — nije pun merchantski Stripe shop ni magacin.',
+    description:
+      'HYBRID storefront: live client-branded shop at /sites/{slug} with industry catalog (4+ products), cart, and working order path (bank transfer; card when Stripe is enabled). Not a full merchant stack — HUMAN follow-up for real SKUs/photos, inventory sync, tax, Stripe Connect, shipping carriers.',
+    descriptionSr:
+      'HYBRID prodavnica: live shop na /sites/{slug} sa industrijskim katalogom (4+ proizvoda), korpom i radnim order path-om. Nije pun merchantski stack — HUMAN follow-up za prave SKU/foto, magacin, poreze, Stripe Connect, kurire.',
     includes: [
-      'Live storefront URL',
-      '4+ demo products in catalog',
-      'Checkout integration notes in delivery',
-      'Cart path documented for buyers',
-      'Honest demo-vs-merchant scope note in delivery PDF',
-      'Delivery handoff PDF with live URL',
+      'Live storefront URL (/sites/{slug})',
+      'Shop page always present for ecommerce',
+      '4+ industry-real catalog products visible in UI',
+      'Working cart + shop order API (bank transfer / Stripe when enabled)',
+      'Client-branded title and tagline (not System Admin / Omni chrome)',
+      'Delivery handoff PDF with live URL and HYBRID checkout scope note',
     ],
-    excludes: ['Real inventory sync', 'Client Stripe account wiring', 'Payment processing fees'],
+    excludes: [
+      'Real inventory sync (HUMAN)',
+      'Client Stripe Connect / own merchant account wiring (HUMAN)',
+      'Tax engine and shipping carrier integrations (HUMAN)',
+      'Product photography and final SKU pricing sign-off (HUMAN)',
+      'Payment processing fees',
+    ],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
@@ -384,16 +417,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'white-label-setup',
-    description: 'White-label brand PDF plus live landing page for partner resale positioning.',
-    descriptionSr: 'White-label brand PDF plus live landing za partnersku prodaju.',
+    description:
+      'White-label brand PDF plus live partner landing (client-branded, not Omni chrome). HYBRID/HUMAN: partner legal agreements and custom domain remain out of automated scope.',
+    descriptionSr:
+      'White-label brand PDF plus live partner landing (klijentski brand, bez Omni chrome-a). HYBRID/HUMAN: partnerski ugovori i custom domen nisu u automatizovanom scope-u.',
     includes: [
       'Brand & packaging PDF',
-      'Live landing page on omnigrouptech.com',
+      'Live partner landing under client brand',
       'Partner resale positioning copy on landing',
       'Favicon + Open Graph meta on partner page',
       'One-pager section for partner pitch in PDF',
     ],
-    excludes: ['Partner legal agreements', 'Custom domain for partner'],
+    excludes: ['Partner legal agreements (HUMAN)', 'Custom domain for partner'],
     anchorByPhase: { M2: 1290, M4: 1790, M6: 2490 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
@@ -418,15 +453,23 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'vertical-package',
-    description: 'Monthly: vertical brief PDF, CRM seed, CRM + automation + billing modules for your industry.',
-    descriptionSr: 'Mesečno: vertical brief PDF, CRM seed, moduli CRM + automation + billing.',
+    description:
+      'Monthly: vertical brief PDF, CRM seed, SLA/onboarding pack, workspace project, CRM + automation + billing modules for your industry.',
+    descriptionSr:
+      'Mesečno: vertical brief PDF, CRM seed, SLA/onboarding paket, workspace projekat, moduli CRM + automation + billing.',
     includes: [
       'Vertical solution PDF',
       'CRM pipeline seeded',
+      'SLA & onboarding pack + kickoff ticket',
+      'Workspace project visible in portal',
       'Modules: CRM, automation, billing',
       'Ongoing maintenance & vertical updates included monthly',
     ],
-    excludes: ['Video avatar (needs AI-support retainer + HeyGen)', 'Outbound lead hunting in lean mode'],
+    excludes: [
+      'Video avatar (needs AI-support retainer + HeyGen)',
+      'Outbound lead hunting in lean mode',
+      'Live LinkedIn/Google Ads API (marked NOT CONNECTED until credentials)',
+    ],
     anchorByPhase: { M2: 349, M4: 549, M6: 790 },
     minCheckoutPhase: 'M2',
     phaseUnlocks: [
@@ -442,16 +485,24 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly: lead-gen PDF, CRM pipeline, outreach workspace, lead report — requires outbound stack.',
-    descriptionSr: 'Mesečno: lead-gen PDF, CRM, outreach workspace, lead izveštaj — zahteva outbound stack.',
+      'Monthly kickoff pack: lead-gen PDF, CRM pipeline, outreach workspace, channel status sheet (LinkedIn/Google Ads marked NOT CONNECTED until APIs are live) — requires outbound stack.',
+    descriptionSr:
+      'Mesečni kickoff: lead-gen PDF, CRM, outreach workspace, status kanala (LinkedIn/Google Ads = NOT CONNECTED dok API nije živ) — zahteva outbound stack.',
     includes: [
       'Welcome PDF',
-      'CRM and outreach workspace',
-      'Monthly lead report',
-      'Scheduled pipeline refresh',
+      'Honest channel status (CONNECTED / NOT CONNECTED)',
+      'CRM and outreach workspace + kickoff ticket',
+      'Kickoff report (live harvest only when channels CONNECTED)',
+      'SLA & onboarding pack',
+      'Workspace project visible in portal',
+      'Scheduled pipeline refresh when stack is live',
       'Pipeline maintenance & outreach ops included in subscription',
     ],
-    excludes: ['Guaranteed qualified meetings', 'Works fully in lean prod (scraper/outbound off)'],
+    excludes: [
+      'Guaranteed qualified meetings',
+      'Pretending LinkedIn/Google Ads are live without API credentials',
+      'Works fully in lean prod (scraper/outbound off)',
+    ],
     anchorByPhase: { M4: 690, M6: 990 },
     minCheckoutPhase: 'M4',
     phaseUnlocks: [
@@ -472,13 +523,16 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'ai-support-retainer',
     description:
-      'Monthly: AI support setup PDF, RAG knowledge seed, avatar provision — video avatar needs HeyGen/D-ID keys.',
-    descriptionSr: 'Mesečno: AI support PDF, RAG seed, avatar — video zahteva HeyGen/D-ID.',
+      'Monthly: AI support setup pack, RAG knowledge seed, SLA/onboarding pack, workspace project — video avatar needs HeyGen/D-ID keys (otherwise NOT CONNECTED).',
+    descriptionSr:
+      'Mesečno: AI support setup, RAG seed, SLA/onboarding paket, workspace projekat — video avatar zahteva HeyGen/D-ID (inače NOT CONNECTED).',
     includes: [
       'Welcome PDF',
       'AI knowledge base starter',
-      'AI assistant, video meetings, and support inbox',
-      'Support assistant setup pack',
+      'SLA & onboarding pack + kickoff ticket',
+      'Workspace project visible in portal',
+      'AI assistant, video meetings, and support inbox modules',
+      'Support assistant setup pack (honest avatarConfigured flag)',
       'AI support maintenance & knowledge updates included monthly',
     ],
     excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],

@@ -26,7 +26,7 @@ export const CLUSTER_SKUS: Record<CapabilityCluster, ClusterSku[]> = {
     { id: 'bundle-portal-presence', why: 'Portal plus landing in one checkout when both are needed.' },
   ],
   commerce: [
-    { id: 'website-ecommerce', why: 'Demo storefront and checkout notes — not a live merchant shop.' },
+    { id: 'website-ecommerce', why: 'Live HYBRID storefront with catalog, cart, and orders — not full merchant inventory/tax.' },
     { id: 'landing', why: 'A campaign page while the catalog is still being defined.' },
     { id: 'setup-quick', why: 'Portal for orders, files, and billing status.' },
     { id: 'sales-enablement', why: 'Offer language and FAQ for the catalog you already sell.' },

@@ -27,6 +27,18 @@ const BUSINESS_PAGE_BLUEPRINT: Array<{ slug: string; title: string; kind: string
   { slug: 'contact', title: 'Contact', kind: 'contact' },
 ];
 
+const PLACEHOLDER_BRAND =
+  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce demo( storefront)?|digital presence|client)$/i;
+
+/** True when a name is an internal/admin placeholder, not a client brand. */
+export function isPlaceholderBrand(name?: string | null): boolean {
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) return true;
+  if (PLACEHOLDER_BRAND.test(trimmed)) return true;
+  if (/^(website-|landing|bundle-|setup-|support-)/i.test(trimmed)) return true;
+  return false;
+}
+
 /** Strip Serbian parentheticals / slug noise → client-facing English niche. */
 export function englishNicheLabel(input: {
   verticalPack?: VerticalDeliveryPack | null;
@@ -42,7 +54,9 @@ export function englishNicheLabel(input: {
   }
   if (pack?.displayName?.trim()) {
     const cleaned = pack.displayName.split('(')[0]?.trim() ?? pack.displayName.trim();
-    if (cleaned && !/[ČĆŽŠĐčćžšđ]/.test(cleaned)) return cleaned;
+    if (cleaned && !/[ČĆŽŠĐčćžšđ]/.test(cleaned) && !/\b(pravo|usluge|usluga)\b/i.test(cleaned)) {
+      return cleaned;
+    }
   }
   if (pack?.category?.trim()) {
     return pack.category
@@ -59,6 +73,107 @@ export function englishNicheLabel(input: {
     .split(/\s+/)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+/** Prefer company / real client brand; never System Admin, Omni, or package SKU titles. */
+export function resolveClientBrandName(input: {
+  clientName?: string | null;
+  companyName?: string | null;
+  title?: string | null;
+  industryCategory?: string | null;
+  verticalPack?: VerticalDeliveryPack | null;
+}): string {
+  const candidates = [input.companyName, input.clientName, input.title];
+  for (const raw of candidates) {
+    const trimmed = (raw ?? '').trim();
+    if (trimmed && !isPlaceholderBrand(trimmed)) return trimmed;
+  }
+  const niche = englishNicheLabel({
+    verticalPack: input.verticalPack,
+    industryCategory: input.industryCategory,
+  });
+  if (niche && niche.toLowerCase() !== 'professional services') {
+    const shopLike =
+      /e-?commerce|retail|shop|store|marketplace/i.test(
+        `${niche} ${input.industryCategory ?? ''} ${input.verticalPack?.category ?? ''}`,
+      );
+    return `${niche} ${shopLike ? 'Store' : 'Studio'}`;
+  }
+  return 'Client Store';
+}
+
+/** @deprecated Use resolveClientBrandName */
+export function resolveClientBrandTitle(input: {
+  clientName?: string | null;
+  companyName?: string | null;
+  fallbackNiche?: string | null;
+}): string {
+  return resolveClientBrandName({
+    clientName: input.clientName,
+    companyName: input.companyName,
+    industryCategory: input.fallbackNiche,
+  });
+}
+
+export type SiteContentQuality = {
+  ok: boolean;
+  pageCount: number;
+  minBodyChars: number;
+  brandInHome: boolean;
+  hasShopPage: boolean;
+  omniChrome: boolean;
+  thinPages: string[];
+  awkwardEnglish: boolean;
+};
+
+const OMNI_CHROME_RE =
+  /powered by Omni|Omni Group delivery|Omni Group package|Ask Omi|omnigrouptech\.com\/contact/i;
+const AWKWARD_EN_RE = /Services\s*\([^)]+\)\s*services|Digital presence\s*[—-]/i;
+
+/** Deterministic content gates for website packages (honest PASS, not template smoke). */
+export function assessGeneratedSiteQuality(input: {
+  pages: GeneratedSitePage[];
+  brandName: string;
+  deliverableId: string;
+}): SiteContentQuality {
+  const brand = input.brandName.trim();
+  const pages = input.pages ?? [];
+  const homeMin = input.deliverableId === 'landing' ? 420 : 280;
+  const secondaryMin = 160;
+  const thinPages = pages
+    .filter((p) => {
+      const isHome = p.kind === 'home' || p.slug === 'home';
+      return (p.body?.trim().length ?? 0) < (isHome ? homeMin : secondaryMin);
+    })
+    .map((p) => p.slug);
+  const home = pages.find((p) => p.kind === 'home' || p.slug === 'home');
+  const joined = pages.map((p) => p.body).join('\n');
+  const omniChrome = OMNI_CHROME_RE.test(joined);
+  const awkwardEnglish = AWKWARD_EN_RE.test(joined);
+  const brandInHome = Boolean(brand && home?.body && home.body.toLowerCase().includes(brand.toLowerCase()));
+  const hasShopPage = pages.some((p) => p.slug === 'shop' || p.kind === 'shop');
+  const needShop = input.deliverableId === 'website-ecommerce';
+  const minPages =
+    input.deliverableId === 'landing' ? 1 : input.deliverableId === 'website-ecommerce' ? 5 : 5;
+
+  const ok =
+    pages.length >= minPages &&
+    thinPages.length === 0 &&
+    brandInHome &&
+    !omniChrome &&
+    !awkwardEnglish &&
+    (!needShop || hasShopPage);
+
+  return {
+    ok,
+    pageCount: pages.length,
+    minBodyChars: homeMin,
+    brandInHome,
+    hasShopPage,
+    omniChrome,
+    thinPages,
+    awkwardEnglish,
+  };
 }
 
 type NicheCopy = {
@@ -146,14 +261,14 @@ function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
       audience: 'brands and stores that need a trustworthy shop front',
       proof: 'Catalog, cart, and order reference flow are live on day one.',
       products: [
-        { name: 'Starter kit', description: 'Entry product bundle with onboarding guide.', priceEur: 49 },
-        { name: 'Best seller', description: 'Flagship offer with priority fulfillment.', priceEur: 89 },
-        { name: 'Pro bundle', description: 'Expanded kit for growing teams.', priceEur: 129 },
-        { name: 'Premium set', description: 'Full package with setup call.', priceEur: 199 },
-        { name: 'Add-on support', description: '30-day email support for buyers.', priceEur: 39 },
-        { name: 'Wholesale case', description: 'Bulk pack for resellers.', priceEur: 349 },
-        { name: 'Gift package', description: 'Curated set ready to ship.', priceEur: 79 },
-        { name: 'Enterprise kit', description: 'Custom scoped delivery for larger orders.', priceEur: 790 },
+        { name: 'Everyday essentials set', description: 'Curated daily-use goods ready to ship.', priceEur: 42 },
+        { name: 'Signature product', description: 'Flagship SKU with care card included.', priceEur: 68 },
+        { name: 'Home refill pack', description: 'Three-month supply of best movers.', priceEur: 96 },
+        { name: 'Gift box', description: 'Presentation-ready selection for gifting.', priceEur: 79 },
+        { name: 'Seasonal drop', description: 'Limited run with updated packaging.', priceEur: 54 },
+        { name: 'Wholesale carton', description: 'Reseller case pack (12 units).', priceEur: 320 },
+        { name: 'Care kit', description: 'Accessories and maintenance supplies.', priceEur: 36 },
+        { name: 'Studio bundle', description: 'Multi-item set for professional buyers.', priceEur: 189 },
       ],
     },
     hospitality: {
@@ -249,6 +364,7 @@ function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
     if (key.includes(k) || niche.toLowerCase().includes(k.replace(/_/g, ' '))) return v;
   }
 
+  const nicheLower = niche.toLowerCase();
   return {
     services: [
       `${niche} consulting and delivery scoped to your goals`,
@@ -257,19 +373,65 @@ function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
       'Ongoing support with response targets you can count on',
     ],
     outcomes: ['faster decisions', 'cleaner handoffs', 'measurable delivery'],
-    audience: `organizations that need credible ${niche.toLowerCase()} delivery`,
+    audience: `organizations that need credible ${nicheLower} delivery`,
     proof: 'We start with a scoped brief, milestones, and a single accountable owner.',
     products: [
-      { name: 'Discovery call', description: `Scoped intake for ${niche.toLowerCase()} work.`, priceEur: 49 },
-      { name: 'Starter package', description: 'Core deliverable with onboarding checklist.', priceEur: 129 },
-      { name: 'Growth package', description: 'Expanded scope with weekly check-ins.', priceEur: 249 },
-      { name: 'Premium package', description: 'Priority delivery and dedicated support.', priceEur: 490 },
-      { name: 'Implementation day', description: 'Hands-on build/configure day.', priceEur: 390 },
-      { name: 'Support retainer', description: 'Monthly support block with SLA.', priceEur: 299 },
-      { name: 'Workshop', description: 'Half-day team workshop on site or remote.', priceEur: 590 },
-      { name: 'Enterprise kit', description: 'Custom multi-workstream delivery.', priceEur: 990 },
+      { name: `${niche} consult`, description: `60-minute intake focused on ${nicheLower} priorities.`, priceEur: 79 },
+      { name: `${niche} audit`, description: `Written review of current process and quick wins.`, priceEur: 190 },
+      { name: 'Implementation sprint', description: 'One focused delivery week with acceptance criteria.', priceEur: 690 },
+      { name: 'Playbook pack', description: 'SOPs and checklists your team can run without us.', priceEur: 249 },
+      { name: 'Training session', description: 'Live team walkthrough with Q&A recording.', priceEur: 320 },
+      { name: 'Monthly ops block', description: 'Retainer hours for iteration and support.', priceEur: 390 },
+      { name: 'On-site day', description: 'Hands-on configuration and staff enablement.', priceEur: 590 },
+      { name: 'Handoff kit', description: 'Credentials map, runbook, and go-live checklist.', priceEur: 180 },
     ],
   };
+}
+
+function shopPageBody(brand: string, niche: string, copy: NicheCopy): string {
+  return [
+    `# Shop — ${brand}`,
+    '',
+    `Browse ${niche.toLowerCase()} offers from ${brand}. Prices are in EUR. Add items to cart and place an order — checkout uses bank transfer with a payment reference (card checkout when enabled for this store).`,
+    '',
+    '## Featured offers',
+    ...copy.products.slice(0, 4).map((p) => `- **${p.name}** (EUR ${p.priceEur}) — ${p.description}`),
+    '',
+    '## How ordering works',
+    '1. Choose quantities on this page',
+    '2. Enter your name and email',
+    '3. Place the order and complete payment with the reference you receive',
+    '',
+    'Working storefront path: catalog, cart, and orders. Inventory sync, tax engine, and client Stripe Connect are separate upgrades.',
+  ].join('\n');
+}
+
+function landingHomeBody(
+  brand: string,
+  niche: string,
+  copy: NicheCopy,
+  prop: string,
+): string {
+  return [
+    `# ${brand}`,
+    '',
+    prop,
+    '',
+    `## Why ${brand}`,
+    `We specialize in ${niche.toLowerCase()} for ${copy.audience}. ${copy.proof}`,
+    '',
+    '## Services',
+    ...copy.services.map((s) => `- ${s}`),
+    '',
+    '## Outcomes clients care about',
+    ...copy.outcomes.map((o) => `- ${o.charAt(0).toUpperCase() + o.slice(1)}`),
+    '',
+    '## Proof, not slogans',
+    `"${brand} made the process boring in the best way — clear scope, on-time delivery." — Operations lead`,
+    '',
+    '## Next step',
+    'Send a short brief or book an intro call. We reply within one business day with a written scope and EUR pricing.',
+  ].join('\n');
 }
 
 function fallbackPages(
@@ -279,6 +441,7 @@ function fallbackPages(
   niche: string,
   category?: string | null,
   valueProp?: string | null,
+  opts?: { includeShop?: boolean },
 ): GeneratedSitePage[] {
   const copy = nicheCopyPack(niche, category);
   const brand = brandName.trim() || clientName;
@@ -289,21 +452,24 @@ function fallbackPages(
       : `${brand} helps ${copy.audience} achieve ${copy.outcomes.slice(0, 2).join(' and ')}.`;
 
   const bodies: Record<string, string> = {
-    home: [
-      `# ${brand}`,
-      '',
-      prop,
-      '',
-      `We specialize in ${niche.toLowerCase()} — practical delivery and transparent pricing. ${copy.proof}`,
-      '',
-      '## What you get',
-      `- Clear scope before work starts`,
-      `- ${copy.outcomes.map((o) => o.charAt(0).toUpperCase() + o.slice(1)).join(', ')}`,
-      `- A single point of contact from kickoff to handoff`,
-      '',
-      '## Next step',
-      'Book an intro call or send a short brief — we respond within one business day.',
-    ].join('\n'),
+    home:
+      pageCount <= 1
+        ? landingHomeBody(brand, niche, copy, prop)
+        : [
+            `# ${brand}`,
+            '',
+            prop,
+            '',
+            `We specialize in ${niche.toLowerCase()} — practical delivery and transparent pricing. ${copy.proof}`,
+            '',
+            '## What you get',
+            `- Clear scope before work starts`,
+            `- ${copy.outcomes.map((o) => o.charAt(0).toUpperCase() + o.slice(1)).join(', ')}`,
+            `- A single point of contact from kickoff to handoff`,
+            '',
+            '## Next step',
+            'Book an intro call or send a short brief — we respond within one business day.',
+          ].join('\n'),
     services: [
       `# Services for ${niche}`,
       '',
@@ -379,9 +545,11 @@ function fallbackPages(
     team: [
       `# Team`,
       '',
-      `${brand} is led by ${clientName} with specialist partners for design, delivery, and support.`,
+      `${brand} is led by ${clientName} with specialist partners for design, delivery, and support in ${niche.toLowerCase()}.`,
       '',
       'You always have one accountable owner. Specialists join when the work needs them — not as a committee.',
+      '',
+      'Ask for the named delivery owner on your kickoff call so you know who is accountable day to day.',
     ].join('\n'),
     contact: [
       `# Contact ${brand}`,
@@ -394,21 +562,26 @@ function fallbackPages(
       '',
       'Prefer email or a short call — whichever is faster for you.',
     ].join('\n'),
-    shop: [
-      `# Shop`,
-      '',
-      `Demo catalog for ${brand} (${niche}). Add items to cart and place an order — checkout uses manual bank transfer with a payment reference (card checkout when enabled for the store).`,
-      '',
-      'Not a toy list: prices and SKUs are set for this niche so you can demonstrate a real buying path.',
-    ].join('\n'),
+    shop: shopPageBody(brand, niche, copy),
   };
 
-  const blueprint =
+  let blueprint =
     pageCount <= 1
       ? [{ slug: 'home', title: 'Home', kind: 'home' }]
       : pageCount <= 3
         ? BUSINESS_PAGE_BLUEPRINT.filter((p) => ['home', 'services', 'contact'].includes(p.slug))
         : BUSINESS_PAGE_BLUEPRINT.slice(0, Math.min(pageCount, BUSINESS_PAGE_BLUEPRINT.length));
+
+  if (opts?.includeShop && !blueprint.some((p) => p.slug === 'shop')) {
+    // Keep Shop early in the nav (right after Home) for storefront UX.
+    const home = blueprint[0];
+    const rest = blueprint.slice(1);
+    blueprint = [
+      ...(home ? [home] : []),
+      { slug: 'shop', title: 'Shop', kind: 'shop' },
+      ...rest.slice(0, Math.max(0, (home ? 6 : 7) - 1)),
+    ];
+  }
 
   return blueprint.map((p) => ({
     ...p,
@@ -459,25 +632,27 @@ export class DeliverableContentGeneratorService {
       verticalPack: input.verticalPack,
       industryCategory: input.industryCategory,
     });
-    const brandName = (input.title || input.clientName).trim();
+    const brandName = resolveClientBrandName({
+      clientName: input.clientName,
+      title: input.title,
+      industryCategory: input.industryCategory,
+      verticalPack: input.verticalPack,
+    });
     const hooks = input.verticalPack?.outreachHooks ?? [];
     const keywords = input.verticalPack?.keywords ?? [];
     const category = input.verticalPack?.category ?? input.industryCategory ?? null;
 
+    const copy = nicheCopyPack(niche, category);
     const ensureShopPage = (pages: GeneratedSitePage[]): GeneratedSitePage[] => {
       if (input.deliverableId !== 'website-ecommerce') return pages;
       if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
-      const shopBody = fallbackPages(brandName, input.clientName, 1, niche, category, input.verticalPack?.valueProp)[0];
       return [
         ...pages.slice(0, 1),
         {
           slug: 'shop',
           title: 'Shop',
           kind: 'shop',
-          body:
-            shopBody?.kind === 'shop'
-              ? shopBody.body
-              : `Demo product catalog for ${brandName} (${niche}). Checkout uses manual bank transfer — not a live merchant Stripe shop unless card checkout is enabled.`,
+          body: shopPageBody(brandName, niche, copy),
         },
         ...pages.slice(1),
       ];
@@ -487,11 +662,12 @@ export class DeliverableContentGeneratorService {
       ensureShopPage(
         fallbackPages(
           brandName,
-          input.clientName,
+          brandName,
           pageCount,
           niche,
           category,
           input.verticalPack?.valueProp,
+          { includeShop: input.deliverableId === 'website-ecommerce' },
         ),
       );
 
@@ -622,6 +798,11 @@ Rules:
       verticalPack: input.verticalPack,
       industryCategory: input.industryCategory,
     });
+    const brand = resolveClientBrandName({
+      clientName: input.clientName,
+      industryCategory: input.industryCategory,
+      verticalPack: input.verticalPack,
+    });
     const category = input.verticalPack?.category ?? input.industryCategory ?? null;
     const copy = nicheCopyPack(niche, category);
     const prefix = niche
@@ -633,7 +814,7 @@ Rules:
       id: `sku-${i + 1}`,
       sku: `${prefix}-${1000 + i}`,
       name: p.name,
-      description: `${p.description} — ${input.clientName}.`,
+      description: `${p.description} Sold by ${brand}.`,
       priceEur: p.priceEur,
     }));
   }

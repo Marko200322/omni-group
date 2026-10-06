@@ -116,13 +116,13 @@ export const PACKAGE_PROBLEM_SPECS_WEB: Record<string, WebPackageProblemSpec> = 
     ],
   },
   'website-ecommerce': {
-    primary: 'Cannot demo or sell products online credibly',
+    primary: 'Cannot sell products online with a credible shop',
     secondary: [
       'No storefront URL',
       'Catalog not digital',
-      'Fewer than 4 demo products',
-      'Checkout path undocumented',
-      'Cart flow unclear for buyers',
+      'Fewer than 4 industry products',
+      'No working cart / order path',
+      'Shop branded as admin/demo placeholder',
     ],
   },
   'white-label-setup': {

@@ -24,8 +24,10 @@ for (const id of ids) {
 }
 
 assert(honesty.includes("AUTOMATED' | 'SEMI_AUTOMATED' | 'HUMAN_DELIVERY"), 'Automation enum must be complete');
-assert(catalog.includes("name: 'E-commerce demo storefront'"), 'Public ecommerce name must say demo storefront');
+assert(catalog.includes("name: 'E-commerce storefront'"), 'Public ecommerce name must say storefront');
+assert(catalog.includes('HYBRID'), 'Public ecommerce description must disclose HYBRID scope');
 assert(!catalog.includes("name: 'E-commerce website'"), 'Public catalog must not sell a full e-commerce website name');
+assert(!catalog.includes("name: 'E-commerce demo storefront'"), 'Public catalog must not use demo-only storefront name');
 assert(offers.includes('automationLevel'), 'ClientOffer must carry automationLevel');
 assert(offerCard.includes('Partly automated'), 'OfferCard must show the honesty badge');
 assert(

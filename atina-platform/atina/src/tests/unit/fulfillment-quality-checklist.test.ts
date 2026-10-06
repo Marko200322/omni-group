@@ -1,53 +1,142 @@
 import { listAcceptanceContracts, allDeliverableIdsInContract } from '../../modules/billing/lib/deliverable-acceptance-contract';
 import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfillment-quality-checklist';
+import { DOC_SUBSTANCE_THRESHOLDS } from '../../modules/billing/lib/deliverable-handlers/artifact-helpers';
+import { expectedBundleStepIds } from '../../modules/billing/lib/deliverable-handlers/bundle-steps';
 import type { FulfillmentResult } from '../../modules/billing/lib/deliverable-handlers/types';
+
+function passingDocQuality(deliverableId: string) {
+  const threshold = DOC_SUBSTANCE_THRESHOLDS[deliverableId] ?? {
+    minSections: 5,
+    minTotalChars: 2000,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+  };
+  return {
+    documentSubstanceOk: true,
+    documentQuality: {
+      sectionCount: threshold.minSections,
+      totalBodyChars: threshold.minTotalChars,
+      minSectionBodyChars: threshold.minSectionChars,
+      checklistOrMilestoneHits: threshold.minChecklistHits,
+      clientNamePresent: true,
+      industryPresent: true,
+    },
+  };
+}
+
+function siteMeta(extra: Record<string, unknown> = {}) {
+  return {
+    liveProbe: {
+      ok: true,
+      status: 200,
+      bytes: 2400,
+      detectedTitle: 'North Peak Studio',
+      omniChrome: false,
+      snippet: '<title>North Peak Studio</title><main>Welcome</main>',
+    },
+    siteTitle: 'North Peak Studio',
+    brandTitle: 'North Peak Studio',
+    ...extra,
+  };
+}
+
+function slaArtifact(name = 'sla-onboarding-pack.pdf') {
+  return {
+    type: 'sla_onboarding_pack',
+    filename: name,
+    downloadLabel: 'SLA pack',
+    storagePath: '/sla',
+  };
+}
 
 function mockPassingResult(deliverableId: string): FulfillmentResult {
   const base: FulfillmentResult = {
     status: 'completed',
-    artifacts: [{ type: 'pdf', filename: 'deliverable.pdf', downloadLabel: 'PDF', storagePath: '/x' }],
-    metadata: {},
+    artifacts: [
+      { type: 'pdf', filename: 'deliverable.pdf', downloadLabel: 'PDF', storagePath: '/x' },
+      { type: 'md', filename: 'deliverable.md', downloadLabel: 'Markdown', storagePath: '/m' },
+    ],
+    metadata: { ...passingDocQuality(deliverableId) },
   };
 
-  if (deliverableId === 'bundle-portal-presence') {
-    return {
-      status: 'completed',
-      publicUrl: '/sites/demo',
-      projectId: 'proj-setup',
-      artifacts: [{ type: 'pdf', filename: 'deliverable.pdf', downloadLabel: 'PDF', storagePath: '/x' }],
-      metadata: {
-        modulesActivated: ['notifications', 'billing'],
-        portalReady: true,
-        bundleParts: 2,
-      },
+  const bundleSteps = expectedBundleStepIds(deliverableId);
+  if (bundleSteps.length > 0) {
+    const stepsMeta = {
+      bundleSteps: bundleSteps.map((id) => ({ deliverableId: id, status: 'completed' as const })),
+      bundleParts: bundleSteps.length,
     };
-  }
-
-  if (deliverableId === 'bundle-ops-clarity') {
-    return {
-      ...base,
-      artifacts: [
-        ...base.artifacts,
-        { type: 'pdf', filename: 'workflow-design.pdf', downloadLabel: 'Workflow', storagePath: '/w' },
-      ],
-      metadata: { bundleParts: 2 },
-    };
+    if (deliverableId === 'bundle-portal-presence') {
+      return {
+        status: 'completed',
+        publicUrl: '/sites/north-peak-demo',
+        projectId: 'proj-setup',
+        artifacts: [
+          { type: 'pdf', filename: 'deliverable.pdf', downloadLabel: 'PDF', storagePath: '/x' },
+          { type: 'md', filename: 'deliverable.md', downloadLabel: 'Markdown', storagePath: '/m' },
+        ],
+        metadata: {
+          modulesActivated: ['notifications', 'billing'],
+          portalReady: true,
+          ...stepsMeta,
+          ...siteMeta(),
+        },
+      };
+    }
+    if (deliverableId === 'bundle-ops-clarity') {
+      return {
+        ...base,
+        artifacts: [
+          { type: 'audit_report', filename: 'technical-audit.pdf', downloadLabel: 'Audit', storagePath: '/a' },
+          { type: 'audit_report_md', filename: 'audit_report_md.md', downloadLabel: 'Audit MD', storagePath: '/am' },
+          { type: 'workflow_design', filename: 'workflow-sop-pack.pdf', downloadLabel: 'Workflow', storagePath: '/w' },
+          { type: 'workflow_design_md', filename: 'workflow_design_md.md', downloadLabel: 'Workflow MD', storagePath: '/wm' },
+        ],
+        metadata: {
+          ...passingDocQuality('bundle-ops-clarity'),
+          ...stepsMeta,
+        },
+      };
+    }
+    if (deliverableId === 'bundle-sales-launch') {
+      return {
+        ...base,
+        publicUrl: '/sites/north-peak-demo',
+        projectId: 'proj-1',
+        metadata: {
+          ...passingDocQuality(deliverableId),
+          ...stepsMeta,
+          ...siteMeta(),
+        },
+      };
+    }
   }
 
   if (
     deliverableId.includes('website') ||
     deliverableId === 'landing' ||
-    deliverableId === 'white-label-setup' ||
-    deliverableId === 'bundle-sales-launch'
+    deliverableId === 'white-label-setup'
   ) {
+    const ecommerce =
+      deliverableId === 'website-ecommerce'
+        ? {
+            ecommerceCatalog: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
+            hasShopPage: true,
+            catalogVisible: true,
+            ecommerceScope: 'hybrid',
+            ecommerceHonesty: true,
+            ecommerceHonestyNote: 'HYBRID storefront — not a full merchant Stripe shop',
+            claimsFullMerchantStore: false,
+          }
+        : {};
     return {
       ...base,
-      publicUrl: '/sites/demo',
+      publicUrl: '/sites/north-peak-demo',
       projectId: 'proj-1',
       metadata: {
+        ...passingDocQuality(deliverableId),
         pageCount: 6,
-        ecommerceCatalog: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
         includesLanding: deliverableId === 'white-label-setup',
+        ...siteMeta(ecommerce),
       },
     };
   }
@@ -68,6 +157,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         },
       ],
       metadata: {
+        ...passingDocQuality(deliverableId),
         modulesActivated: ['notifications', 'billing', 'crm'],
         portalReady: true,
         crmBootstrap: { importedLeads: 8 },
@@ -82,14 +172,30 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         ...base.artifacts,
         { type: 'integration_config', filename: 'integration-config.json', downloadLabel: 'JSON', storagePath: '/i' },
       ],
+      metadata: { ...passingDocQuality(deliverableId) },
     };
   }
 
   if (deliverableId === 'lead-gen-retainer') {
     return {
       ...base,
+      projectId: 'proj-leadgen',
+      artifacts: [
+        ...base.artifacts,
+        { type: 'lead_gen_report', filename: 'lead-gen-kickoff.pdf', downloadLabel: 'Kickoff', storagePath: '/lg' },
+        slaArtifact('lead-gen-sla-onboarding.pdf'),
+      ],
       metadata: {
-        leadGenStats: { leadsGenerated: 25 },
+        leadGenStats: {
+          leadsGenerated: 0,
+          sampleLeadsSeeded: 12,
+          workspaceId: 'ws-1',
+          mode: 'kickoff_pack_only',
+          channelStatuses: [
+            { channel: 'linkedin', status: 'NOT CONNECTED' },
+            { channel: 'google_ads', status: 'NOT CONNECTED' },
+          ],
+        },
         crmBootstrap: { importedLeads: 8 },
         modulesActivated: ['client-hunter', 'outreach'],
       },
@@ -99,9 +205,11 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (deliverableId === 'ai-support-retainer') {
     return {
       ...base,
+      projectId: 'proj-ai-support',
       artifacts: [
         ...base.artifacts,
         { type: 'ai_support_setup', filename: 'ai-support-setup.json', downloadLabel: 'Setup', storagePath: '/a' },
+        slaArtifact('ai-support-sla-onboarding.pdf'),
       ],
       metadata: {
         modulesActivated: ['support-avatar', 'video-meetings', 'ai-rag'],
@@ -113,6 +221,8 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (deliverableId.startsWith('support-')) {
     return {
       ...base,
+      projectId: 'proj-support',
+      artifacts: [...base.artifacts, slaArtifact(`${deliverableId}-sla-onboarding.pdf`)],
       metadata: {
         supportAutomation: { slaHours: deliverableId === 'support-dedicated' ? 8 : 24 },
         modulesActivated: ['notifications', 'support-avatar'],
@@ -123,7 +233,10 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (deliverableId === 'vertical-package') {
     return {
       ...base,
+      projectId: 'proj-vertical',
+      artifacts: [...base.artifacts, slaArtifact('vertical-sla-onboarding.pdf')],
       metadata: {
+        ...passingDocQuality(deliverableId),
         crmBootstrap: { importedLeads: 8 },
         modulesActivated: ['crm', 'automation'],
       },
@@ -134,7 +247,18 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     return {
       ...base,
       projectId: 'proj-sw',
-      metadata: { testsPassed: true, buildStatus: 'completed' },
+      metadata: {
+        ...passingDocQuality(deliverableId),
+        testsPassed: true,
+        buildStatus: 'completed',
+      },
+    };
+  }
+
+  if (DOC_SUBSTANCE_THRESHOLDS[deliverableId]) {
+    return {
+      ...base,
+      metadata: { ...passingDocQuality(deliverableId) },
     };
   }
 
@@ -153,7 +277,9 @@ describe('fulfillment quality checklist — catalog contract', () => {
       const checklist = runFulfillmentQualityChecklist(contract.deliverableId, result);
       if (!checklist.passed) {
         const fails = checklist.items.filter((i) => !i.passed && i.id !== 'catalog_description');
-        throw new Error(`${contract.deliverableId} failed: ${fails.map((f) => f.id).join(', ')}`);
+        throw new Error(
+          `${contract.deliverableId} failed: ${fails.map((f) => `${f.id}: ${f.message}`).join(' | ')}`,
+        );
       }
       expect(checklist.passed).toBe(true);
       expect(checklist.score).toBeGreaterThanOrEqual(80);
@@ -175,5 +301,77 @@ describe('fulfillment quality checklist — failures block release', () => {
   it('fails landing without public URL', () => {
     const r = runFulfillmentQualityChecklist('landing', { status: 'completed', artifacts: [], metadata: {} });
     expect(r.passed).toBe(false);
+  });
+
+  it('fails thin consulting docs without substance metrics', () => {
+    const r = runFulfillmentQualityChecklist('audit', {
+      status: 'completed',
+      artifacts: [{ type: 'pdf', filename: 'thin.pdf', storagePath: '/t' }],
+      metadata: {},
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'doc_substance' && !i.passed)).toBe(true);
+  });
+
+  it('fails published site without live HTTP probe', () => {
+    const r = runFulfillmentQualityChecklist('landing', {
+      status: 'completed',
+      publicUrl: '/sites/demo',
+      artifacts: [{ type: 'pdf', filename: 'd.pdf', storagePath: '/x' }],
+      metadata: { siteTitle: 'Acme Co' },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'live_http_probe' && !i.passed)).toBe(true);
+  });
+
+  it('fails System Admin / Omni chrome site titles', () => {
+    const r = runFulfillmentQualityChecklist('landing', {
+      status: 'completed',
+      publicUrl: '/sites/system-admin-abc',
+      artifacts: [{ type: 'pdf', filename: 'd.pdf', storagePath: '/x' }],
+      metadata: {
+        siteTitle: 'System Admin',
+        liveProbe: { ok: true, status: 200, bytes: 2000, omniChrome: false },
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'no_omni_chrome' && !i.passed)).toBe(true);
+  });
+
+  it('fails ecommerce that claims full merchant store with demo catalog', () => {
+    const r = runFulfillmentQualityChecklist('website-ecommerce', {
+      status: 'completed',
+      publicUrl: '/sites/shop-demo',
+      artifacts: [{ type: 'pdf', filename: 'd.pdf', storagePath: '/x' }],
+      metadata: {
+        siteTitle: 'Harbor Goods',
+        liveProbe: { ok: true, status: 200, bytes: 3000 },
+        ecommerceCatalog: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
+        hasShopPage: true,
+        catalogVisible: true,
+        claimsFullMerchantStore: true,
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'ecommerce_honesty' && !i.passed)).toBe(true);
+  });
+
+  it('fails ecommerce without shop page', () => {
+    const r = runFulfillmentQualityChecklist('website-ecommerce', {
+      status: 'completed',
+      publicUrl: '/sites/shop-demo',
+      artifacts: [{ type: 'pdf', filename: 'd.pdf', storagePath: '/x' }],
+      metadata: {
+        siteTitle: 'Harbor Goods',
+        liveProbe: { ok: true, status: 200, bytes: 3000 },
+        ecommerceCatalog: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
+        hasShopPage: false,
+        catalogVisible: true,
+        ecommerceScope: 'demo',
+        claimsFullMerchantStore: false,
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'ecommerce_shop_page' && !i.passed)).toBe(true);
   });
 });

@@ -145,16 +145,16 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
     businessOutcome: '5+ page business site with services, pricing, contact — live and linked to factory',
   },
   'website-ecommerce': {
-    primaryProblemTemplate: '{industry} cannot demo or sell products online credibly',
+    primaryProblemTemplate: '{industry} cannot sell products online with a credible shop',
     secondaryProblems: [
       'No storefront URL',
       'Catalog not digital',
-      'Fewer than 4 demo products',
-      'Checkout path undocumented',
-      'Cart flow unclear for buyers',
-      'Not positioned as demo vs live merchant shop',
+      'Fewer than 4 industry products',
+      'No working cart / order path',
+      'Shop branded as admin/demo placeholder',
+      'Not positioned as HYBRID storefront vs full merchant stack',
     ],
-    businessOutcome: 'Demo storefront with 4+ products and checkout documentation',
+    businessOutcome: 'Live HYBRID storefront with 4+ industry products, cart, and working order path',
   },
   'white-label-setup': {
     primaryProblemTemplate: '{industry} partners need resale-ready branding and packaging',

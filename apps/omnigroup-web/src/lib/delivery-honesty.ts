@@ -104,11 +104,12 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'website-ecommerce',
     automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Factory publishes a demo storefront and checkout notes. A person is needed for a real merchant shop.',
+    humanIntervention:
+      'Factory publishes a live HYBRID storefront (catalog, cart, order path). A person is needed for inventory sync, tax, shipping carriers, and client Stripe Connect.',
     nameMatchesScope: true,
     publicNameNote:
-      'Public name is E-commerce demo storefront — not a full merchant e-commerce website.',
-    label: 'Demo storefront automated · not a live merchant shop',
+      'Public name is E-commerce storefront — usable shop UI + orders; not a full merchant stack.',
+    label: 'HYBRID storefront automated · not full merchant stack',
   },
   {
     deliverableId: 'white-label-setup',

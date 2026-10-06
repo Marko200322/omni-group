@@ -190,10 +190,14 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'status_completed',
   'public_url',
   'ecommerce_catalog',
+  'ecommerce_shop_page',
+  'ecommerce_catalog_visible',
+  'ecommerce_honesty',
   'business_site_project',
   'page_count',
   'white_label_live',
   'pdf_artifact',
+  'doc_substance',
   'setup_project',
   'portal_modules',
   'migration_template',
@@ -202,6 +206,9 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'production_manifest',
   'integration_config',
   'support_automation',
+  'retainer_project',
+  'sla_pack',
+  'channel_status_honesty',
   'modules_metadata',
   'lead_gen_kickoff',
   'ai_support_setup',
@@ -210,6 +217,9 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'software_test_gate',
   'catalog_description',
   'live_http_probe',
+  'no_omni_chrome',
+  'bundle_steps_complete',
+  'dual_pdf_artifacts',
 ]);
 
 export function auditOmnitrixPackage(pkg: OmnitrixPackage): OmnitrixAuditRow {
@@ -256,8 +266,22 @@ export function auditOmnitrixPackage(pkg: OmnitrixPackage): OmnitrixAuditRow {
 export function scoreUltrMatrix(pkg: OmnitrixPackage, audit: OmnitrixAuditRow): UltrMatrixScores {
   const problemDepth = Math.min(100, Math.round((Math.min(pkg.problems.length, 10) / 10) * 70 + (Math.min(pkg.claims.length, 8) / 8) * 30));
   const contractCoverage = audit.contractCoverageOk ? 100 : Math.max(0, 100 - audit.missingContractCriteria.length * 25);
-  const honestyBase = pkg.excludes.length >= 2 ? 70 : pkg.excludes.length === 1 ? 50 : 20;
-  const honesty = Math.min(100, honestyBase + (audit.conditionalClaims > 0 ? 15 : 0) + (pkg.excludes.length >= 3 ? 15 : 0));
+  let honestyBase = pkg.excludes.length >= 2 ? 70 : pkg.excludes.length === 1 ? 50 : 20;
+  honestyBase += audit.conditionalClaims > 0 ? 15 : 0;
+  honestyBase += pkg.excludes.length >= 3 ? 15 : 0;
+  // Ecommerce must disclose HYBRID/limited merchant scope — never score as full store.
+  if (pkg.deliverableId === 'website-ecommerce') {
+    const excludesMerchant = pkg.excludes.some((e) => /stripe|inventory|tax|shipping|payment processing/i.test(e));
+    const claimsHybridScope = pkg.claims.some((c) =>
+      /hybrid|shop page|catalog products visible|handoff pdf|bank transfer/i.test(c.claim),
+    );
+    const overclaimsFullStore = pkg.claims.some((c) =>
+      /full\s+merchant\s+stack|live\s+stripe\s+connect|real\s+inventory\s+sync/i.test(c.claim),
+    );
+    if (excludesMerchant && claimsHybridScope && !overclaimsFullStore) honestyBase += 10;
+    else honestyBase = Math.max(0, honestyBase - 25);
+  }
+  const honesty = Math.min(100, honestyBase);
   const isSite = ['landing', 'website-business', 'website-ecommerce', 'white-label-setup', 'bundle-portal-presence', 'bundle-sales-launch'].includes(
     pkg.deliverableId,
   );

@@ -71,21 +71,72 @@ describe('PublicSiteService', () => {
 describe('priceShopItemsFromCatalog', () => {
   const branding = {
     catalog: [
-      { id: 'starter-pack', name: 'Starter', priceEur: 49 },
-      { id: 'growth-pack', name: 'Growth', priceEur: 99 },
+      { id: 'sku-1', name: 'Everyday essentials set', priceEur: 42 },
+      { id: 'sku-2', name: 'Signature product', priceEur: 68 },
     ],
   };
 
   it('reprices from the site catalog and ignores client amounts', () => {
     const priced = priceShopItemsFromCatalog(branding, [
-      { id: 'starter-pack', name: 'Hacked', priceEur: 1, quantity: 2 },
+      { id: 'sku-1', name: 'Hacked', priceEur: 1, quantity: 2 },
     ]);
-    expect(priced).toEqual([{ id: 'starter-pack', name: 'Starter', priceEur: 49, quantity: 2 }]);
+    expect(priced).toEqual([{ id: 'sku-1', name: 'Everyday essentials set', priceEur: 42, quantity: 2 }]);
   });
 
   it('rejects unknown catalog ids', () => {
     expect(() =>
       priceShopItemsFromCatalog(branding, [{ id: 'not-real', name: 'X', priceEur: 1, quantity: 1 }]),
     ).toThrow(ValidationError);
+  });
+});
+
+describe('scaffoldFromProject ecommerce', () => {
+  it('seeds industry catalog and shop page (not Omni Starter packs)', async () => {
+    const createClientSite = jest.fn().mockResolvedValue({
+      id: 'site-1',
+      slug: 'harbor',
+      title: 'Harbor Goods',
+      tagline: 'x',
+      site_type: 'ecommerce',
+      branding: { catalog: [] },
+      pages: [],
+      status: 'published',
+      published_at: new Date(),
+      custom_domain: null,
+    });
+    const { PublicSiteRepository } = jest.requireMock(
+      '../../../../modules/public-site/repository/public-site.repository',
+    ) as { PublicSiteRepository: jest.Mock };
+    PublicSiteRepository.mockImplementation(() => ({
+      createClientSite,
+      listPublishedSolutions: jest.fn(),
+      getVerticalBySlug: jest.fn(),
+      getPublishedClientSite: jest.fn(),
+    }));
+
+    const svc = new PublicSiteService();
+    await svc.scaffoldFromProject({
+      userId: 'u1',
+      projectId: 'p1',
+      slug: 'harbor',
+      title: 'Harbor Goods',
+      clientName: 'Harbor Goods',
+      deliverableId: 'website-ecommerce',
+      industryCategory: 'ecommerce',
+      publish: true,
+    });
+
+    expect(createClientSite).toHaveBeenCalled();
+    const arg = createClientSite.mock.calls[0][0] as {
+      siteType: string;
+      title: string;
+      pages: Array<{ slug: string }>;
+      branding: { catalog: Array<{ name: string }> };
+    };
+    expect(arg.siteType).toBe('ecommerce');
+    expect(arg.title).toBe('Harbor Goods');
+    expect(arg.pages.some((p) => p.slug === 'shop')).toBe(true);
+    expect(arg.branding.catalog.length).toBeGreaterThanOrEqual(4);
+    expect(arg.branding.catalog.some((p) => /Omni|Starter$/i.test(p.name))).toBe(false);
   });
 });

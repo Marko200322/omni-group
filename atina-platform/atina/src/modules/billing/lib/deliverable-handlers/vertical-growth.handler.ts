@@ -1,7 +1,12 @@
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ClientDeliverableBootstrapService } from '../../service/client-deliverable-bootstrap.service';
 import { AutonomyOrchestratorService } from '../../../autonomy-loop/service/autonomy-orchestrator.service';
-import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
+import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
+import {
+  buildDocumentQualityMetadata,
+  persistDeliverablePdf,
+  persistMarkdownBundle,
+} from './artifact-helpers';
 import { websiteFulfillmentHandler } from './website.handler';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 import logger from '../../../../utils/logger';
@@ -9,6 +14,7 @@ import logger from '../../../../utils/logger';
 const docs = new DeliverableDocumentGeneratorService();
 const autonomy = new AutonomyOrchestratorService();
 const bootstrap = new ClientDeliverableBootstrapService();
+const factory = new ProductFactoryService();
 
 export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
   ids: ['vertical-package'] as const,
@@ -26,6 +32,21 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
     });
     const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'vertical_pack_md' });
 
+    const pipeline = await factory.runAutomatedClientOrder({
+      userId: ctx.userId,
+      paymentId: ctx.paymentId,
+      deliverableId: ctx.deliverableId,
+      slug: `vertical-${ctx.paymentId.slice(0, 8)}`,
+      name: doc.title,
+      description: doc.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
+      clientName: ctx.clientName,
+      clientEmail: ctx.clientEmail ?? null,
+      industryCategory: ctx.industryCategory ?? null,
+      publishSite: false,
+      skipWebsite: true,
+      generationHints: ctx.generationHints,
+    });
+
     const pack = bootstrap.resolvePack(ctx.industryCategory);
     const crm = await bootstrap.seedCrmPipeline({
       userId: ctx.userId,
@@ -41,6 +62,30 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       industryCategory: ctx.industryCategory,
     });
 
+    const kickoffTicketId = await bootstrap.openKickoffSupportTicket({
+      userId: ctx.userId,
+      clientName: ctx.clientName,
+      deliverableId: 'vertical-package',
+      slaHours: 48,
+      industryCategory: ctx.industryCategory,
+    });
+
+    const slaPack = bootstrap.saveSlaOnboardingPack({
+      userId: ctx.userId,
+      paymentId: ctx.paymentId,
+      clientName: ctx.clientName,
+      deliverableId: 'vertical-package',
+      slaHours: 48,
+      modulesActivated: modules,
+      kickoffTicketId,
+      industryCategory: ctx.industryCategory,
+      extras: {
+        crmImportedLeads: crm.importedLeads,
+        verticalSlug: pack.verticalSlug,
+        note: 'Vertical CRM/automation kickoff — LinkedIn/Google Ads remain NOT CONNECTED until APIs are wired.',
+      },
+    });
+
     try {
       const verticalSlug =
         ctx.industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
@@ -52,12 +97,15 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
     }
 
     return {
-      artifacts: [pdf, md],
+      projectId: pipeline.projectId as string,
+      artifacts: [pdf, md, slaPack],
       status: 'completed',
       metadata: {
-        documentTitle: doc.title,
+        ...buildDocumentQualityMetadata(doc, ctx),
         crmBootstrap: crm,
         modulesActivated: modules,
+        kickoffTicketId: kickoffTicketId ?? null,
+        retainerWorkspace: true,
       },
     };
   },
@@ -85,6 +133,7 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
       filename: `${ctx.deliverableId}.pdf`,
     });
     const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${ctx.deliverableId}_md` });
+    const docMeta = buildDocumentQualityMetadata(doc, ctx);
 
     let siteResult: FulfillmentResult | null = null;
     if (ctx.deliverableId === 'white-label-setup') {
@@ -100,6 +149,8 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifacts: [pdf, md, ...(siteResult?.artifacts ?? [])],
       status: 'completed',
       metadata: {
+        ...(siteResult?.metadata ?? {}),
+        ...docMeta,
         includesLanding: ctx.deliverableId === 'white-label-setup',
         salesPackReady: ctx.deliverableId === 'sales-enablement',
       },

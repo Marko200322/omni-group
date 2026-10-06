@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, ShoppingBag } from 'lucide-react';
@@ -220,9 +219,22 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
   );
 }
 
+const PLACEHOLDER_BRAND =
+  /^(system\s*admin(istrator)?|administrator|admin|omni(\s*group)?(\s*tech)?|root|test(\s*user)?|e-?commerce demo( storefront)?|digital presence|client)$/i;
+
+function pickBrandName(...candidates: Array<string | null | undefined>) {
+  for (const raw of candidates) {
+    const trimmed = (raw ?? '').trim();
+    if (trimmed && !PLACEHOLDER_BRAND.test(trimmed)) return trimmed;
+  }
+  return candidates.find((c) => (c ?? '').trim())?.trim() || 'Store';
+}
+
 export function ClientSiteView({ site }: Props) {
   const pages = useMemo(() => site.pages ?? [], [site.pages]);
-  const [activeSlug, setActiveSlug] = useState(pages[0]?.slug ?? 'home');
+  const [activeSlug, setActiveSlug] = useState(() =>
+    site.siteType === 'ecommerce' ? 'shop' : (site.pages?.[0]?.slug ?? 'home'),
+  );
   const activePage = useMemo(
     () => pages.find((p) => p.slug === activeSlug) ?? pages[0],
     [pages, activeSlug],
@@ -240,12 +252,23 @@ export function ClientSiteView({ site }: Props) {
     );
   }, [site.branding]);
 
-  const clientName =
-    typeof site.branding?.clientName === 'string' ? site.branding.clientName : site.title;
   const niche =
     typeof site.branding?.niche === 'string' ? site.branding.niche : null;
+  const clientName = pickBrandName(
+    typeof site.branding?.clientName === 'string' ? site.branding.clientName : null,
+    site.title,
+    niche ? `${niche} Store` : null,
+  );
+  const displayTitle = pickBrandName(site.title, clientName, niche ? `${niche} Store` : null);
+  const displayTagline =
+    site.tagline && !PLACEHOLDER_BRAND.test(site.tagline.split('—')[0]?.trim() ?? '')
+      ? site.tagline
+      : site.siteType === 'ecommerce'
+        ? `${displayTitle} — shop catalog with cart and online orders.`
+        : site.tagline;
 
-  const showShop = site.siteType === 'ecommerce' && catalog.length > 0;
+  // Shop nav/page is always available for ecommerce storefronts.
+  const showShop = site.siteType === 'ecommerce';
   const navPages = useMemo(() => {
     if (!showShop) return pages;
     if (pages.some((p) => p.slug === 'shop' || p.kind === 'shop')) return pages;
@@ -270,10 +293,10 @@ export function ClientSiteView({ site }: Props) {
               {niche ?? (site.siteType === 'ecommerce' ? 'Shop' : 'Business')}
             </p>
             <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              {site.title}
+              {displayTitle}
             </h1>
-            {site.tagline ? (
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-400">{site.tagline}</p>
+            {displayTagline ? (
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-400">{displayTagline}</p>
             ) : null}
           </div>
           <div className="text-right text-sm text-slate-500">
@@ -316,21 +339,25 @@ export function ClientSiteView({ site }: Props) {
           <>
             <h2 className="font-display text-3xl font-semibold text-white">Shop</h2>
             <p className="mt-3 text-sm text-slate-400">
-              Catalog for this business — checkout uses bank transfer with a payment reference (card
-              when enabled).
+              Catalog for {displayTitle} — add to cart and place an order. Checkout uses bank
+              transfer with a payment reference (card when enabled).
             </p>
-            <EcommerceCatalog site={site} catalog={catalog} />
+            {catalog.length > 0 ? (
+              <EcommerceCatalog site={site} catalog={catalog} />
+            ) : (
+              <p className="mt-8 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-50">
+                Catalog is being prepared for this storefront. Check back shortly or contact the
+                store owner.
+              </p>
+            )}
           </>
         ) : activePage ? (
           <>
             <div className="space-y-1">{renderBody(activePage.body)}</div>
             {activePage.kind === 'contact' ? (
-              <Link
-                href={`/contact?service=${encodeURIComponent(site.slug)}`}
-                className="mt-10 inline-flex rounded-xl bg-teal-500 px-5 py-2.5 text-sm font-semibold text-slate-950"
-              >
-                Send inquiry
-              </Link>
+              <p className="mt-10 rounded-xl border border-teal-500/25 bg-teal-500/10 px-5 py-3 text-sm text-teal-50">
+                Use the contact details above to reach {displayTitle} directly — this page is not an Omni Group intake form.
+              </p>
             ) : null}
           </>
         ) : (

@@ -1,5 +1,12 @@
 import { getDeliverable } from './deliverable-catalog';
 import { getAcceptanceContract } from './deliverable-acceptance-contract';
+import {
+  documentSubstancePasses,
+  substanceThresholdFor,
+  type DocumentQualityMetrics,
+} from './deliverable-handlers/artifact-helpers';
+import { expectedBundleStepIds } from './deliverable-handlers/bundle-steps';
+import { isPlaceholderBrand } from '../service/deliverable-content-generator.service';
 import type { FulfillmentResult } from './deliverable-handlers/types';
 
 export type ChecklistItemResult = {
@@ -21,6 +28,10 @@ const WEBSITE_IDS = new Set([
   'bundle-portal-presence',
   'bundle-sales-launch',
 ]);
+
+/** Packages that must ship a live URL (incl. white-label landing). */
+const LIVE_URL_IDS = new Set([...WEBSITE_IDS, 'white-label-setup']);
+
 const PDF_CATALOG_IDS = new Set([
   'audit',
   'workflow-design',
@@ -44,8 +55,30 @@ const PDF_CATALOG_IDS = new Set([
   'website-ecommerce',
 ]);
 
+/** Consulting / doc packs with minimum PDF+markdown body floors. */
+const DOC_SUBSTANCE_IDS = new Set([
+  'audit',
+  'workflow-design',
+  'integration',
+  'setup-quick',
+  'setup-full',
+  'setup-custom',
+  'sales-enablement',
+  'custom-software',
+  'bundle-ops-clarity',
+  'white-label-setup',
+  'vertical-package',
+]);
+
+const OMNI_CHROME_HTML_RE =
+  /ask\s*omi|omni\s*group\s*tech|client\s*site|digital\s*presence\s*—|powered by omni/i;
+
 function hasPdfArtifact(result: FulfillmentResult): boolean {
   return result.artifacts.some((a) => a.filename.toLowerCase().endsWith('.pdf'));
+}
+
+function hasMarkdownArtifact(result: FulfillmentResult): boolean {
+  return result.artifacts.some((a) => a.filename.toLowerCase().endsWith('.md'));
 }
 
 const MODULE_BOOTSTRAP_IDS = new Set([
@@ -71,6 +104,66 @@ function modulesOk(result: FulfillmentResult): boolean {
   if (result.metadata?.crmBootstrap) return true;
   if (result.metadata?.portalReady) return true;
   if (result.metadata?.aiSupportSetup) return true;
+  return false;
+}
+
+function docSubstanceOk(deliverableId: string, result: FulfillmentResult): boolean {
+  const threshold = substanceThresholdFor(deliverableId);
+  if (!threshold) return true;
+  const quality = result.metadata?.documentQuality as DocumentQualityMetrics | undefined;
+  // Require measurable metrics — a lone boolean flag is not enough (anti-stub).
+  if (!quality) return false;
+  return documentSubstancePasses(quality, threshold);
+}
+
+function liveProbeMeta(result: FulfillmentResult): {
+  ok?: boolean;
+  status?: number;
+  bytes?: number;
+  detectedTitle?: string;
+  omniChrome?: boolean;
+  snippet?: string;
+} | undefined {
+  return result.metadata?.liveProbe as
+    | {
+        ok?: boolean;
+        status?: number;
+        bytes?: number;
+        detectedTitle?: string;
+        omniChrome?: boolean;
+        snippet?: string;
+      }
+    | undefined;
+}
+
+function omniChromeDetected(result: FulfillmentResult): boolean {
+  const live = liveProbeMeta(result);
+  if (live?.omniChrome === true) return true;
+  if (live?.snippet && OMNI_CHROME_HTML_RE.test(live.snippet)) return true;
+
+  const titles = [
+    result.metadata?.siteTitle,
+    result.metadata?.brandTitle,
+    live?.detectedTitle,
+  ]
+    .map((t) => (typeof t === 'string' ? t.trim() : ''))
+    .filter(Boolean);
+
+  if (titles.some((t) => isPlaceholderBrand(t))) return true;
+
+  const publicUrl = result.publicUrl?.toLowerCase() ?? '';
+  if (/\/sites\/system-admin/.test(publicUrl)) return true;
+
+  return false;
+}
+
+function ecommerceHonestyOk(result: FulfillmentResult): boolean {
+  if (result.metadata?.claimsFullMerchantStore === true) return false;
+  const scope = String(result.metadata?.ecommerceScope ?? '').toLowerCase();
+  if (scope === 'hybrid' || scope === 'demo' || scope === 'demo_catalog') return true;
+  if (result.metadata?.ecommerceHonestyNote) return true;
+  // Delivery PDF honesty section is recorded as flag by handler.
+  if (result.metadata?.ecommerceHonesty === true) return true;
   return false;
 }
 
@@ -109,7 +202,35 @@ export function runFulfillmentQualityChecklist(
         message:
           count >= 4
             ? `E-commerce catalog has ${count} products`
-            : 'E-commerce package requires catalog metadata with at least 4 demo products',
+            : 'E-commerce package requires catalog metadata with at least 4 products',
+      });
+      const hasShop =
+        result.metadata?.hasShopPage === true ||
+        (Array.isArray(result.metadata?.pageSlugs) &&
+          (result.metadata.pageSlugs as string[]).some((s) => /shop/i.test(String(s))));
+      items.push({
+        id: 'ecommerce_shop_page',
+        passed: Boolean(hasShop),
+        message: hasShop
+          ? 'Shop page present on storefront'
+          : 'E-commerce package requires a visible shop page',
+      });
+      const catalogVisible =
+        count >= 4 && result.metadata?.catalogVisible !== false && result.metadata?.catalogVisible !== 0;
+      items.push({
+        id: 'ecommerce_catalog_visible',
+        passed: Boolean(catalogVisible),
+        message: catalogVisible
+          ? 'Catalog marked visible on storefront'
+          : 'E-commerce catalog must be visible on the shop page',
+      });
+      const honesty = ecommerceHonestyOk(result);
+      items.push({
+        id: 'ecommerce_honesty',
+        passed: honesty,
+        message: honesty
+          ? 'E-commerce honesty: HYBRID scope recorded (usable shop, not full merchant stack)'
+          : 'website-ecommerce must disclose HYBRID scope (not claim a full merchant store)',
       });
     }
     if (deliverableId === 'website-business') {
@@ -130,16 +251,6 @@ export function runFulfillmentQualityChecklist(
             : 'Business website requires at least 5 pages in metadata',
       });
     }
-    const live = result.metadata?.liveProbe as { ok?: boolean; status?: number; bytes?: number } | undefined;
-    if (live) {
-      items.push({
-        id: 'live_http_probe',
-        passed: Boolean(live.ok),
-        message: live.ok
-          ? `Live HTTP probe ok (status=${live.status ?? 200}, bytes=${live.bytes ?? 0})`
-          : 'Live HTTP probe failed after publish',
-      });
-    }
     if (deliverableId === 'landing') {
       items.push({
         id: 'landing_live',
@@ -147,6 +258,40 @@ export function runFulfillmentQualityChecklist(
         message: result.publicUrl?.trim() ? 'Landing page published' : 'Landing requires live URL',
       });
     }
+
+    const contentOk =
+      result.metadata?.siteContentOk === true ||
+      (result.metadata?.contentQuality as { ok?: boolean } | undefined)?.ok === true;
+    // When contentQuality is present, require a pass; older fixtures without it still rely on live probe / chrome checks.
+    if (result.metadata?.contentQuality != null || result.metadata?.siteContentOk != null) {
+      items.push({
+        id: 'site_content_quality',
+        passed: Boolean(contentOk),
+        message: contentOk
+          ? 'Generated site pages meet brand/length/chrome quality gates'
+          : 'Site content quality failed (thin pages, missing brand, or Omni chrome)',
+      });
+    }
+  }
+
+  if (LIVE_URL_IDS.has(deliverableId) && result.publicUrl?.trim()) {
+    const live = liveProbeMeta(result);
+    items.push({
+      id: 'live_http_probe',
+      passed: Boolean(live?.ok),
+      message: live?.ok
+        ? `Live HTTP probe ok (status=${live.status ?? 200}, bytes=${live.bytes ?? 0})`
+        : 'Live HTTP probe required for published publicUrl (missing or failed)',
+    });
+
+    const chrome = omniChromeDetected(result);
+    items.push({
+      id: 'no_omni_chrome',
+      passed: !chrome,
+      message: chrome
+        ? 'Site title/HTML looks like Omni chrome or System Admin — client brand required'
+        : 'Client brand title — no Omni chrome / System Admin detected',
+    });
   }
 
   if (deliverableId === 'white-label-setup') {
@@ -168,14 +313,16 @@ export function runFulfillmentQualityChecklist(
       message: result.projectId ? 'Setup project scaffold verified' : 'Setup requires verified project scaffold',
     });
     if (deliverableId === 'setup-quick' || deliverableId === 'bundle-portal-presence') {
+      const mods = Array.isArray(result.metadata?.modulesActivated)
+        ? (result.metadata.modulesActivated as string[])
+        : [];
       items.push({
         id: 'portal_modules',
-        passed: Boolean(
-          (Array.isArray(result.metadata?.modulesActivated) &&
-            (result.metadata.modulesActivated as string[]).length > 0) ||
-            result.metadata?.portalReady,
-        ),
-        message: 'Portal modules activated (notifications, billing)',
+        passed: mods.length > 0,
+        message:
+          mods.length > 0
+            ? `Portal modules activated: ${mods.join(', ')}`
+            : 'Portal modules activated (notifications, billing) — portalReady flag alone is insufficient',
       });
     }
     if (deliverableId === 'setup-full') {
@@ -214,14 +361,72 @@ export function runFulfillmentQualityChecklist(
   }
 
   if (deliverableId === 'lead-gen-retainer') {
-    const stats = result.metadata?.leadGenStats as { leadsGenerated?: number } | undefined;
+    const stats = result.metadata?.leadGenStats as {
+      leadsGenerated?: number;
+      sampleLeadsSeeded?: number;
+      workspaceId?: string;
+      mode?: string;
+      channelStatuses?: Array<{ channel: string; status: string }>;
+    } | undefined;
+    const hasReport = result.artifacts.some(
+      (a) => a.type === 'lead_gen_report' || a.filename.includes('lead-gen-kickoff'),
+    );
+    const kickoffOk =
+      hasReport &&
+      (Boolean(stats?.workspaceId) ||
+        Number(stats?.sampleLeadsSeeded ?? 0) > 0 ||
+        Number(stats?.leadsGenerated ?? 0) > 0 ||
+        stats?.mode === 'kickoff_pack_only' ||
+        stats?.mode === 'live_kickoff');
     items.push({
       id: 'lead_gen_kickoff',
-      passed: Number(stats?.leadsGenerated ?? 0) > 0,
-      message:
-        Number(stats?.leadsGenerated ?? 0) > 0
-          ? `Lead gen pipeline started (${stats?.leadsGenerated} leads)`
-          : 'Lead gen retainer requires active pipeline kickoff',
+      passed: kickoffOk,
+      message: kickoffOk
+        ? `Lead gen kickoff pack delivered (mode=${stats?.mode ?? 'unknown'}, live=${stats?.leadsGenerated ?? 0}, samples=${stats?.sampleLeadsSeeded ?? 0})`
+        : 'Lead gen retainer requires kickoff pack (workspace/report) — not fake live harvest',
+    });
+    const channels = stats?.channelStatuses;
+    const honestyOk =
+      Array.isArray(channels) &&
+      channels.length > 0 &&
+      channels.every(
+        (c) => c.status === 'CONNECTED' || c.status === 'NOT CONNECTED',
+      );
+    items.push({
+      id: 'channel_status_honesty',
+      passed: honestyOk,
+      message: honestyOk
+        ? `Channel statuses recorded: ${channels!.map((c) => `${c.channel}=${c.status}`).join(', ')}`
+        : 'Lead gen must mark LinkedIn/Google Ads/etc CONNECTED or NOT CONNECTED',
+    });
+  }
+
+  if (
+    deliverableId === 'support-priority' ||
+    deliverableId === 'support-dedicated' ||
+    deliverableId === 'lead-gen-retainer' ||
+    deliverableId === 'ai-support-retainer' ||
+    deliverableId === 'vertical-package'
+  ) {
+    items.push({
+      id: 'retainer_project',
+      passed: Boolean(result.projectId?.trim()),
+      message: result.projectId
+        ? 'Retainer project scaffold in client workspace'
+        : 'Retainer/support package requires a client-visible project',
+    });
+    const hasSla = result.artifacts.some(
+      (a) =>
+        a.type === 'sla_onboarding_pack' ||
+        a.filename.includes('sla-onboarding') ||
+        a.filename.includes('-sla-'),
+    );
+    items.push({
+      id: 'sla_pack',
+      passed: hasSla,
+      message: hasSla
+        ? 'SLA / onboarding pack artifact delivered'
+        : 'Retainer requires downloadable SLA/onboarding pack',
     });
   }
 
@@ -269,6 +474,62 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
+  if (DOC_SUBSTANCE_IDS.has(deliverableId)) {
+    const threshold = substanceThresholdFor(deliverableId);
+    const substance = docSubstanceOk(deliverableId, result);
+    const mdOk = hasMarkdownArtifact(result);
+    const quality = result.metadata?.documentQuality as DocumentQualityMetrics | undefined;
+    const chars = quality?.totalBodyChars ?? 0;
+    items.push({
+      id: 'doc_substance',
+      passed: substance && mdOk,
+      message:
+        substance && mdOk
+          ? `Document substance ok (${chars} body chars, markdown present)`
+          : `Consulting/doc pack requires substantial PDF+markdown body (min ${threshold?.minTotalChars ?? '?'} chars) — stub rejected`,
+    });
+  }
+
+  const expectedBundleSteps = expectedBundleStepIds(deliverableId);
+  if (expectedBundleSteps.length > 0) {
+    const steps = result.metadata?.bundleSteps as
+      | Array<{ deliverableId?: string; status?: string }>
+      | undefined;
+    const stepsOk =
+      Array.isArray(steps) &&
+      steps.length === expectedBundleSteps.length &&
+      expectedBundleSteps.every(
+        (id, i) => steps[i]?.deliverableId === id && steps[i]?.status === 'completed',
+      );
+    items.push({
+      id: 'bundle_steps_complete',
+      passed: stepsOk,
+      message: stepsOk
+        ? `All bundle steps completed: ${expectedBundleSteps.join(' + ')}`
+        : `Bundle requires completed child steps [${expectedBundleSteps.join(', ')}] — got ${
+            Array.isArray(steps)
+              ? steps.map((s) => `${s.deliverableId}:${s.status}`).join(', ') || 'empty'
+              : 'missing bundleSteps metadata'
+          }`,
+    });
+  }
+
+  if (deliverableId === 'bundle-ops-clarity') {
+    const pdfs = result.artifacts.filter((a) => a.filename.toLowerCase().endsWith('.pdf'));
+    const hasAudit = pdfs.some((a) => /audit/i.test(a.filename) || a.type.includes('audit'));
+    const hasWorkflow = pdfs.some(
+      (a) => /workflow|sop/i.test(a.filename) || a.type.includes('workflow'),
+    );
+    const dualOk = pdfs.length >= 2 && hasAudit && hasWorkflow;
+    items.push({
+      id: 'dual_pdf_artifacts',
+      passed: dualOk,
+      message: dualOk
+        ? `Audit + workflow PDFs delivered (${pdfs.length} PDFs)`
+        : 'Ops clarity bundle requires both technical-audit.pdf and workflow-sop-pack.pdf',
+    });
+  }
+
   if (deliverableId === 'custom-software') {
     items.push({
       id: 'software_project',
@@ -286,11 +547,11 @@ export function runFulfillmentQualityChecklist(
     });
     items.push({
       id: 'software_test_gate',
-      passed: result.metadata?.testsPassed === true || result.metadata?.buildStatus === 'completed',
+      passed: result.metadata?.testsPassed === true,
       message:
-        result.metadata?.testsPassed === true || result.metadata?.buildStatus === 'completed'
-          ? 'Build/test gate recorded'
-          : 'Custom software requires test gate before delivery',
+        result.metadata?.testsPassed === true
+          ? 'Tests passed recorded'
+          : 'Custom software requires testsPassed=true (buildStatus alone is insufficient)',
     });
   }
 

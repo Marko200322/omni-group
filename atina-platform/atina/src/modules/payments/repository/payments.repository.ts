@@ -42,8 +42,8 @@ export class PaymentsRepository {
   }
 
   getUserById(userId: string) {
-    return query<{ email: string; name: string }>(
-      'SELECT email, name FROM users WHERE id = $1',
+    return query<{ email: string; name: string; company: string | null }>(
+      'SELECT email, name, company FROM users WHERE id = $1',
       [userId]
     );
   }

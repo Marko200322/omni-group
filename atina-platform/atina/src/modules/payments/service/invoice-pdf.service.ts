@@ -57,6 +57,16 @@ export type InvoicePdfInput = {
 const dateFmt = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
+/** True when configured company legal name + tax id are both present (no invented VAT identity). */
+export function invoiceHasVatIdentity(issuer?: InvoicePdfInput['issuer']): boolean {
+  return Boolean(issuer?.companyLegalName?.trim() && issuer?.companyTaxId?.trim());
+}
+
+/** Document label for paid confirmation PDFs — receipt when VAT identity is not configured. */
+export function paidDocumentLabel(issuer?: InvoicePdfInput['issuer']): 'Invoice' | 'Payment receipt' {
+  return invoiceHasVatIdentity(issuer) ? 'Invoice' : 'Payment receipt';
+}
+
 export function generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
@@ -65,9 +75,12 @@ export function generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
+    const vatReady = invoiceHasVatIdentity(input.issuer);
+    const documentLabel = paidDocumentLabel(input.issuer);
+
     doc.fontSize(20).text(input.brandName, { align: 'left' });
     doc.moveDown(0.5);
-    doc.fontSize(10).fillColor('#555').text('Invoice');
+    doc.fontSize(10).fillColor('#555').text(documentLabel);
     doc.fillColor('#000');
     doc.moveDown();
 
@@ -107,7 +120,10 @@ export function generateInvoicePdfBuffer(input: InvoicePdfInput): Promise<Buffer
 
     doc.fontSize(13).text(`Total: ${input.total.toFixed(2)} ${input.currency}`, { align: 'right' });
     doc.moveDown(2);
-    doc.fontSize(9).fillColor('#666').text('Thank you for your business. This invoice was generated automatically.', {
+    const footer = vatReady
+      ? 'Thank you for your business. This invoice was generated automatically.'
+      : 'Payment confirmation receipt. Not a VAT tax invoice — company tax identity is not configured on this environment.';
+    doc.fontSize(9).fillColor('#666').text(footer, {
       align: 'center',
     });
 

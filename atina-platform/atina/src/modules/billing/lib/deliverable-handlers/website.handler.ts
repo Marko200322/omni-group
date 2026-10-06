@@ -1,6 +1,10 @@
 import { config } from '../../../../config';
 import { getDeliverable } from '../deliverable-catalog';
-import { DeliverableContentGeneratorService } from '../../service/deliverable-content-generator.service';
+import {
+  DeliverableContentGeneratorService,
+  isPlaceholderBrand,
+  resolveClientBrandName,
+} from '../../service/deliverable-content-generator.service';
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
 import { resolveVerticalDeliveryPack } from '../../../autonomy-loop/lib/vertical-delivery-resolver';
@@ -12,6 +16,9 @@ import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResu
 const content = new DeliverableContentGeneratorService();
 const docs = new DeliverableDocumentGeneratorService();
 const factory = new ProductFactoryService();
+
+const OMNI_CHROME_HTML_RE =
+  /ask\s*omi|omni\s*group\s*tech|client\s*site|digital\s*presence\s*—|powered by omni/i;
 
 function verticalContext(industryCategory?: string | null) {
   const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
@@ -30,7 +37,19 @@ function absoluteSiteUrl(publicUrl: string): string {
   return `${base}${publicUrl.startsWith('/') ? '' : '/'}${publicUrl}`;
 }
 
-async function assertSiteLive(absoluteUrl: string): Promise<{ ok: boolean; status: number; bytes: number }> {
+function extractHtmlTitle(html: string): string {
+  const m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  return (m?.[1] ?? '').replace(/\s+/g, ' ').trim();
+}
+
+async function assertSiteLive(absoluteUrl: string): Promise<{
+  ok: boolean;
+  status: number;
+  bytes: number;
+  detectedTitle: string;
+  omniChrome: boolean;
+  snippet: string;
+}> {
   try {
     const res = await fetch(absoluteUrl, {
       method: 'GET',
@@ -40,13 +59,26 @@ async function assertSiteLive(absoluteUrl: string): Promise<{ ok: boolean; statu
     });
     const text = await res.text();
     const bytes = Buffer.byteLength(text, 'utf8');
-    return { ok: res.status === 200 && bytes >= 800, status: res.status, bytes };
+    const detectedTitle = extractHtmlTitle(text);
+    const snippet = text.slice(0, 4000);
+    const omniChrome =
+      OMNI_CHROME_HTML_RE.test(snippet) ||
+      isPlaceholderBrand(detectedTitle) ||
+      /system\s*admin/i.test(detectedTitle);
+    return {
+      ok: res.status === 200 && bytes >= 800,
+      status: res.status,
+      bytes,
+      detectedTitle,
+      omniChrome,
+      snippet: snippet.slice(0, 500),
+    };
   } catch (err) {
     logger.warn('Site live probe failed', {
       absoluteUrl,
       error: err instanceof Error ? err.message : String(err),
     });
-    return { ok: false, status: 0, bytes: 0 };
+    return { ok: false, status: 0, bytes: 0, detectedTitle: '', omniChrome: false, snippet: '' };
   }
 }
 
@@ -56,9 +88,14 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
   async fulfill(ctx: FulfillmentContext): Promise<FulfillmentResult> {
     const deliverable = getDeliverable(ctx.deliverableId)!;
     const pack = verticalContext(ctx.industryCategory);
-    const brandTitle = ctx.clientName.trim() || deliverable.name;
+    const brandTitle = resolveClientBrandName({
+      clientName: ctx.clientName,
+      title: deliverable.name,
+      industryCategory: ctx.industryCategory,
+      verticalPack: pack,
+    });
     const baseSlug =
-      ctx.clientName
+      brandTitle
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
@@ -67,7 +104,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
 
     const brief = await content.generateProjectBrief({
       deliverableId: ctx.deliverableId,
-      clientName: ctx.clientName,
+      clientName: brandTitle,
       industryCategory: ctx.industryCategory,
       verticalPack: pack,
       generationHints: ctx.generationHints,
@@ -80,7 +117,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       slug,
       name: brandTitle,
       description: brief,
-      clientName: ctx.clientName,
+      clientName: brandTitle,
       clientEmail: ctx.clientEmail ?? null,
       industryCategory: ctx.industryCategory ?? null,
       publishSite: true,
@@ -99,14 +136,45 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
         `Published site not reachable (http=${live.status}, bytes=${live.bytes}): ${abs}`,
       );
     }
+    if (live.omniChrome || isPlaceholderBrand(brandTitle)) {
+      throw new Error(
+        `Published site rejected: Omni chrome / System Admin brand detected (title=${live.detectedTitle || brandTitle})`,
+      );
+    }
 
     const pageCount = (pipeline.pageCount as number) ?? null;
     const catalog = pipeline.ecommerceCatalog ?? null;
     const catalogCount = Array.isArray(catalog) ? catalog.length : null;
+    const contentQuality = pipeline.contentQuality as
+      | { ok?: boolean; thinPages?: string[]; omniChrome?: boolean; brandInHome?: boolean }
+      | null
+      | undefined;
+    const hasShopPage = Boolean(
+      pipeline.hasShopPage === true ||
+        (Array.isArray(pipeline.pageSlugs) &&
+          (pipeline.pageSlugs as string[]).some((s) => /shop/i.test(String(s)))),
+    );
+    const catalogVisible =
+      ctx.deliverableId === 'website-ecommerce' ? Boolean(catalogCount && catalogCount >= 4) : false;
+
+    if (contentQuality && contentQuality.ok === false) {
+      throw new Error(
+        `Site content quality failed (thin=${(contentQuality.thinPages ?? []).join(',') || 'n/a'}, brandInHome=${contentQuality.brandInHome}, omniChrome=${contentQuality.omniChrome})`,
+      );
+    }
+
+    if (ctx.deliverableId === 'website-ecommerce') {
+      if (!hasShopPage) {
+        throw new Error('E-commerce fulfillment missing shop page');
+      }
+      if (!catalogVisible) {
+        throw new Error('E-commerce fulfillment missing visible catalog (need 4+ products)');
+      }
+    }
 
     const doc = await docs.generateSiteDeliveryPack({
       deliverableId: ctx.deliverableId,
-      clientName: ctx.clientName,
+      clientName: brandTitle,
       industryCategory: ctx.industryCategory,
       publicUrl,
       absoluteUrl: abs,
@@ -131,8 +199,30 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
         keywords: pack.keywords,
         qualityGates: pack.qualityGates,
         pageCount,
+        pageSlugs: pipeline.pageSlugs ?? null,
+        contentQuality: contentQuality ?? null,
+        siteContentOk: contentQuality?.ok !== false,
         ecommerceCatalog: catalog,
-        liveProbe: { url: abs, status: live.status, bytes: live.bytes, ok: true },
+        hasShopPage: ctx.deliverableId === 'website-ecommerce' ? hasShopPage : undefined,
+        catalogVisible: ctx.deliverableId === 'website-ecommerce' ? catalogVisible : undefined,
+        siteTitle: brandTitle,
+        brandTitle,
+        ecommerceScope: ctx.deliverableId === 'website-ecommerce' ? 'hybrid' : undefined,
+        ecommerceHonesty: ctx.deliverableId === 'website-ecommerce' ? true : undefined,
+        ecommerceHonestyNote:
+          ctx.deliverableId === 'website-ecommerce'
+            ? 'HYBRID storefront: live catalog, cart, and order path — not full merchant inventory/tax/Stripe Connect'
+            : undefined,
+        claimsFullMerchantStore: false,
+        liveProbe: {
+          url: abs,
+          status: live.status,
+          bytes: live.bytes,
+          ok: true,
+          detectedTitle: live.detectedTitle,
+          omniChrome: live.omniChrome,
+          snippet: live.snippet,
+        },
       },
     };
   },

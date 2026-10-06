@@ -31,6 +31,16 @@ import { DeliverableFulfillmentService } from '../../billing/service/deliverable
 import { getSlackNotifier } from '../../../utils/slack-notifier.service';
 import logger from '../../../utils/logger';
 
+
+function resolveFulfillmentClientName(client?: { name?: string | null; company?: string | null } | null): string | null {
+  const company = client?.company?.trim() ?? '';
+  if (company.length >= 2) return company;
+  const name = client?.name?.trim() ?? '';
+  if (!name) return null;
+  if (/^(system\s*admin|admin|administrator)$/i.test(name)) return null;
+  return name;
+}
+
 let stripeClient: Stripe | null = null;
 
 function requireStripe(): Stripe {
@@ -1114,11 +1124,18 @@ export class PaymentsService {
         await this.db.markPaymentCompleted(client, paymentId);
       });
 
+      const { rows: userRows } = await this.db.getUserById(rows[0].user_id);
+      const client = userRows[0];
+      const purchasedAt = new Date().toISOString();
       const lineItems = [{
         description: `${deliverable.name} (${deliverable.billing})`,
         amount: paymentAmount,
         quantity: 1,
       }];
+      const manual = config.payments.manual;
+      const hasVatIdentity = Boolean(
+        manual.companyLegalName?.trim() && manual.companyTaxId?.trim(),
+      );
 
       const createdInvoice = await billingService.createInvoice({
         userId: rows[0].user_id,
@@ -1128,14 +1145,18 @@ export class PaymentsService {
         lineItems,
         billingDetails: {
           receiptType: 'deliverable_purchase',
+          documentKind: hasVatIdentity ? 'tax_invoice' : 'payment_receipt',
           deliverableId,
           industryCategory: metadata.industryCategory ?? null,
           billing: deliverable.billing,
+          planName: deliverable.name,
+          planSlug: deliverable.id,
+          billingCycle: deliverable.billing,
+          clientName: resolveFulfillmentClientName(client),
+          clientEmail: client?.email ?? null,
         },
       });
 
-      const { rows: userRows } = await this.db.getUserById(rows[0].user_id);
-      const client = userRows[0];
       if (client?.email) {
         const inv = createdInvoice as { invoice_number?: string };
         const invoiceNumber = inv?.invoice_number ?? `DEL-${paymentId.slice(0, 8).toUpperCase()}`;
@@ -1153,9 +1174,9 @@ export class PaymentsService {
             currency: rows[0].currency,
             paymentId,
             lineItems,
-            periodStart: new Date().toISOString(),
-            periodEnd: new Date().toISOString(),
-            purchasedAt: new Date().toISOString(),
+            periodStart: purchasedAt,
+            periodEnd: purchasedAt,
+            purchasedAt,
           }),
           'deliverable_invoice_email',
         );
@@ -1178,7 +1199,7 @@ export class PaymentsService {
         purchaseType: 'deliverable',
         deliverableId,
         industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
-        clientName: client?.name ?? null,
+        clientName: resolveFulfillmentClientName(client),
         clientEmail: client?.email ?? null,
       });
       dispatchFactoryPhaseAutoEvaluate();
@@ -1309,7 +1330,7 @@ export class PaymentsService {
       purchaseType: 'platform_plan',
       planSlug,
       industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
-      clientName: client?.name ?? null,
+      clientName: resolveFulfillmentClientName(client),
       clientEmail: client?.email ?? null,
     });
     dispatchFactoryPhaseAutoEvaluate();

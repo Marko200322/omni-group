@@ -113,6 +113,12 @@ jest.mock('../../modules/billing/service/revenue-allocation.service', () => ({
   })),
 }));
 
+jest.mock('../../modules/billing/service/deliverable-fulfillment.service', () => ({
+  DeliverableFulfillmentService: jest.fn().mockImplementation(() => ({
+    dispatchAfterPaymentConfirm: jest.fn(),
+  })),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PaymentsService } = require('../../modules/payments/service/payments.service');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -1435,6 +1441,69 @@ describe('PaymentsService', () => {
 
       expect(billingApi.createInvoice).toHaveBeenCalledWith(
         expect.objectContaining({ amount: 39, currency: 'EUR' })
+      );
+    });
+
+    it('confirmPendingPayment creates listable package invoice for deliverable purchase', async () => {
+      mockQuery
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              user_id: 'u1',
+              amount: 549,
+              currency: 'EUR',
+              status: 'pending',
+              metadata: {
+                purchaseType: 'deliverable',
+                deliverableId: 'setup-quick',
+                industryCategory: 'marketing',
+              },
+            },
+          ],
+          rowCount: 1,
+        } as never)
+        .mockResolvedValueOnce({
+          rows: [{ email: 'buyer@test.com', name: 'Buyer' }],
+          rowCount: 1,
+        } as never);
+
+      mockTransaction.mockImplementation(async (fn) => {
+        return fn({ query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) } as never);
+      });
+
+      billingApi.createInvoice.mockResolvedValueOnce({
+        invoice_number: 'INV-202610-0099',
+        amount: 549,
+        total_amount: 549,
+        currency: 'EUR',
+      });
+
+      await service.confirmPendingPayment('pay-setup-quick', 'admin-1', 'manual');
+
+      expect(billingApi.createInvoice).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'u1',
+          paymentId: 'pay-setup-quick',
+          amount: 549,
+          currency: 'EUR',
+          billingDetails: expect.objectContaining({
+            receiptType: 'deliverable_purchase',
+            deliverableId: 'setup-quick',
+            planName: 'Quick setup',
+            planSlug: 'setup-quick',
+            clientName: 'Buyer',
+            clientEmail: 'buyer@test.com',
+            documentKind: expect.stringMatching(/^(tax_invoice|payment_receipt)$/),
+          }),
+        })
+      );
+      expect(paymentNotifyApi.sendInvoiceConfirmationToClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          toEmail: 'buyer@test.com',
+          invoiceNumber: 'INV-202610-0099',
+          planSlug: 'setup-quick',
+          amount: 549,
+        })
       );
     });
   });
