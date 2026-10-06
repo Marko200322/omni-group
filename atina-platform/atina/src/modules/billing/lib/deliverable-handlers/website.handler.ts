@@ -60,7 +60,10 @@ async function assertSiteLive(absoluteUrl: string): Promise<{
     const text = await res.text();
     const bytes = Buffer.byteLength(text, 'utf8');
     const detectedTitle = extractHtmlTitle(text);
-    const snippet = text.slice(0, 4000);
+    // Judge visible page content, not inherited platform <head> OG defaults.
+    const bodyMatch = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const visible = bodyMatch?.[1] ?? text;
+    const snippet = visible.slice(0, 4000);
     const omniChrome =
       OMNI_CHROME_HTML_RE.test(snippet) ||
       isPlaceholderBrand(detectedTitle) ||
