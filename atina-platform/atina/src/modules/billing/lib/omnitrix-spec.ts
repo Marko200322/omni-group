@@ -209,6 +209,9 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'retainer_project',
   'sla_pack',
   'channel_status_honesty',
+  'no_simulated_harvest',
+  'support_faq',
+  'ai_avatar_honesty',
   'modules_metadata',
   'lead_gen_kickoff',
   'ai_support_setup',
@@ -269,17 +272,35 @@ export function scoreUltrMatrix(pkg: OmnitrixPackage, audit: OmnitrixAuditRow): 
   let honestyBase = pkg.excludes.length >= 2 ? 70 : pkg.excludes.length === 1 ? 50 : 20;
   honestyBase += audit.conditionalClaims > 0 ? 15 : 0;
   honestyBase += pkg.excludes.length >= 3 ? 15 : 0;
-  // Ecommerce must disclose HYBRID/limited merchant scope — never score as full store.
+  // Ecommerce must disclose Stripe Connect/LIVE as CONFIGURATION REQUIRED — never undersell as HYBRID incomplete.
   if (pkg.deliverableId === 'website-ecommerce') {
-    const excludesMerchant = pkg.excludes.some((e) => /stripe|inventory|tax|shipping|payment processing/i.test(e));
-    const claimsHybridScope = pkg.claims.some((c) =>
-      /hybrid|shop page|catalog products visible|handoff pdf|bank transfer/i.test(c.claim),
+    const excludesStripeConfig = pkg.excludes.some((e) =>
+      /stripe/i.test(e) && /configuration required|connect|live/i.test(e),
     );
+    const claimsCompleteStorefront = pkg.claims.some((c) =>
+      /storefront|shop page|catalog products visible|handoff pdf|bank transfer|order path/i.test(c.claim),
+    );
+    const undersellsHybrid = pkg.claims.some((c) => /\bhybrid\b/i.test(c.claim));
     const overclaimsFullStore = pkg.claims.some((c) =>
       /full\s+merchant\s+stack|live\s+stripe\s+connect|real\s+inventory\s+sync/i.test(c.claim),
     );
-    if (excludesMerchant && claimsHybridScope && !overclaimsFullStore) honestyBase += 10;
-    else honestyBase = Math.max(0, honestyBase - 25);
+    if (excludesStripeConfig && claimsCompleteStorefront && !undersellsHybrid && !overclaimsFullStore) {
+      honestyBase += 10;
+    } else {
+      honestyBase = Math.max(0, honestyBase - 25);
+    }
+  }
+  // Lead-gen must treat ads/Apollo as CONFIGURATION REQUIRED; never score simulated Titanis harvest as product.
+  if (pkg.deliverableId === 'lead-gen-retainer') {
+    const adsConfigRequired = pkg.excludes.some((e) =>
+      /configuration required/i.test(e) && /ads|linkedin|google|apollo|api/i.test(e),
+    );
+    const rejectsSimulatedHarvest = pkg.excludes.some((e) =>
+      /titanis|simulated harvest|invented/i.test(e),
+    );
+    const undersellsHybrid = pkg.claims.some((c) => /\bhybrid\b/i.test(c.claim));
+    if (adsConfigRequired && rejectsSimulatedHarvest && !undersellsHybrid) honestyBase += 5;
+    else if (!adsConfigRequired || !rejectsSimulatedHarvest) honestyBase = Math.max(0, honestyBase - 15);
   }
   const honesty = Math.min(100, honestyBase);
   const isSite = ['landing', 'website-business', 'website-ecommerce', 'white-label-setup', 'bundle-portal-presence', 'bundle-sales-launch'].includes(

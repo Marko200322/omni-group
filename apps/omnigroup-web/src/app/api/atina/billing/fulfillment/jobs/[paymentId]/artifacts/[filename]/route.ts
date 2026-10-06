@@ -22,12 +22,13 @@ export async function GET(_req: Request, { params }: Params) {
     }
     const buffer = await res.arrayBuffer();
     const contentType = res.headers.get('content-type') ?? 'application/octet-stream';
-    const disposition = res.headers.get('content-disposition');
+    // Rebuild disposition from the route filename so non-ASCII upstream labels cannot break the BFF response.
+    const safeName = String(filename || 'download').replace(/[^\x20-\x7E]/g, '_').replace(/[/\\?%*:|<>"]/g, '_') || 'download';
     return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        ...(disposition ? { 'Content-Disposition': disposition } : {}),
+        'Content-Disposition': `attachment; filename="${safeName}"`,
       },
     });
   } catch {

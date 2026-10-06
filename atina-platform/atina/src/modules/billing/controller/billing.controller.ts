@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { BillingService } from '../service/billing.service';
 import { RevenueAllocationService } from '../service/revenue-allocation.service';
 import { DeliverableFulfillmentReadService } from '../service/deliverable-fulfillment-read.service';
@@ -12,6 +13,14 @@ import { buildFactoryPhaseStatus } from '../lib/factory-phase-modules';
 import { getFactoryRuntimeSnapshot } from '../lib/factory-phase-runtime';
 import { getCatalogAuditSummary } from '../lib/package-catalog-audit';
 import { getPackageIndustryContext, listPackageIndustryMatrix } from '../lib/package-industry-problems';
+
+/** RFC 6266/5987 disposition that stays valid as a Node ByteString header. */
+export function buildAttachmentContentDisposition(downloadName: string, filePath: string): string {
+  const fallback = path.basename(filePath) || 'download';
+  const raw = String(downloadName || fallback).replace(/[\r\n"]/g, '').trim() || fallback;
+  const ascii = raw.replace(/[^\x20-\x7E]/g, '_').replace(/[/\\?%*:|<>]/g, '_') || fallback;
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(raw)}`;
+}
 
 export class BillingController {
   private service: BillingService;
@@ -159,7 +168,8 @@ export class BillingController {
       role: req.user!.role,
     });
     res.setHeader('Content-Type', file.contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.downloadName.replace(/"/g, '')}"`);
+    // Node rejects non-ByteString header values; package titles often include en-dashes.
+    res.setHeader('Content-Disposition', buildAttachmentContentDisposition(file.downloadName, file.filePath));
     fs.createReadStream(file.filePath).pipe(res);
   };
 

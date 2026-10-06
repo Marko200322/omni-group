@@ -116,6 +116,12 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
         ...leadGenStats,
         sampleLeadsSeeded: crmBootstrap.importedLeads,
       };
+      const opsTaskIds = await bootstrap.seedLeadGenOpsTasks({
+        userId: ctx.userId,
+        clientName: ctx.clientName,
+        pack,
+        channelStatuses: leadGenStats.channelStatuses,
+      });
       kickoffTicketId = await bootstrap.openKickoffSupportTicket({
         userId: ctx.userId,
         clientName: ctx.clientName,
@@ -132,6 +138,13 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
           clientName: ctx.clientName,
           sampleLeadsSeeded: crmBootstrap.importedLeads,
         }),
+        bootstrap.saveLeadGenPipelineWorkspace({
+          userId: ctx.userId,
+          paymentId: ctx.paymentId,
+          pack,
+          clientName: ctx.clientName,
+          stats: leadGenStats,
+        }),
         bootstrap.saveSlaOnboardingPack({
           userId: ctx.userId,
           paymentId: ctx.paymentId,
@@ -147,6 +160,8 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
             workspaceId: leadGenStats.workspaceId ?? null,
             liveLeadsGenerated: leadGenStats.leadsGenerated,
             sampleLeadsSeeded: crmBootstrap.importedLeads,
+            opsTaskIds,
+            note: 'Ops pack complete — live LinkedIn/Google Ads harvest requires CONNECTED APIs (CONFIGURATION REQUIRED until then).',
           },
         }),
       );
@@ -163,6 +178,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       ragSeeded: boolean;
       avatarProvider?: string;
       avatarConfigured?: boolean;
+      configurationRequired?: string[];
     } | null = null;
 
     if (ctx.deliverableId === 'ai-support-retainer') {
@@ -174,14 +190,18 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
         moduleSlugs: modules,
       });
       modulesActivated = aiSetup.modulesActivated;
+      kickoffTicketId = aiSetup.kickoffTicketId;
       aiSupportSetup = {
         modulesActivated: aiSetup.modulesActivated,
         ragSeeded: aiSetup.ragSeeded,
         avatarProvider: aiSetup.avatarProvision?.provider,
         avatarConfigured: aiSetup.avatarProvision?.configured,
+        configurationRequired: aiSetup.configurationRequired,
       };
       artifacts.push(
         aiSetup.setupArtifact,
+        aiSetup.knowledgeBaseArtifact,
+        aiSetup.faqArtifact,
         bootstrap.saveSlaOnboardingPack({
           userId: ctx.userId,
           paymentId: ctx.paymentId,
@@ -189,11 +209,16 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
           deliverableId: ctx.deliverableId,
           slaHours: 24,
           modulesActivated,
+          kickoffTicketId,
           industryCategory: ctx.industryCategory,
           extras: {
             ragSeeded: aiSetup.ragSeeded,
             avatarConfigured: aiSetup.avatarProvision?.configured ?? false,
             avatarProvider: aiSetup.avatarProvision?.provider ?? null,
+            configurationRequired: aiSetup.configurationRequired,
+            note: aiSetup.avatarProvision?.configured
+              ? 'Avatar + RAG + ticket queue provisioned.'
+              : 'CONFIGURATION REQUIRED for HeyGen/D-ID — KB + FAQ + ticket queue still delivered.',
           },
         }),
       );

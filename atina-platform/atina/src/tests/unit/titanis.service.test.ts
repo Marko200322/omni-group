@@ -64,7 +64,7 @@ describe('TitanisService', () => {
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('run lead-hunt uses full targetCount and mixed channel default', async () => {
+  it('run lead-hunt keeps planning target but never invents leads_generated', async () => {
     titanisRepo.getOwned.mockResolvedValueOnce({
       rows: [{ id: 's1', config: null }],
       rowCount: 1,
@@ -79,7 +79,9 @@ describe('TitanisService', () => {
       expect.objectContaining({
         mode: 'lead-hunt',
         target_count: 40,
-        leads_generated: 40,
+        planning_target: 40,
+        leads_generated: 0,
+        harvest_status: 'NO_LIVE_SOURCE',
         channel: 'mixed',
         state: { previous: 'ready', current: 'completed' },
       })
@@ -87,17 +89,21 @@ describe('TitanisService', () => {
     expect(titanisRepo.auditRunCompleted).toHaveBeenCalledWith('u1', 'runRow', {
       mode: 'lead-hunt',
       systemId: 's1',
+      harvest_status: 'NO_LIVE_SOURCE',
+      leads_generated: 0,
     });
+    expect(titanisRepo.updateAfterRun).toHaveBeenCalledWith('s1', 0, 'lead-hunt', 0);
   });
 
-  it('run follow-up scales targets and close mode revenue', async () => {
+  it('run follow-up and close never invent leads or revenue theater', async () => {
     titanisRepo.getOwned.mockResolvedValue({
       rows: [{ id: 's2', config: { outreach_channel: 'dm' } }],
       rowCount: 1,
     });
 
     await service.run('s2', 'u1', { mode: 'follow-up', targetCount: 20 });
-    expect(titanisRepo.createRun.mock.calls[0][2].leads_generated).toBe(10);
+    expect(titanisRepo.createRun.mock.calls[0][2].leads_generated).toBe(0);
+    expect(titanisRepo.createRun.mock.calls[0][2].planning_target).toBe(20);
 
     jest.clearAllMocks();
     titanisRepo.getOwned.mockResolvedValue({
@@ -108,10 +114,11 @@ describe('TitanisService', () => {
 
     await service.run('s2', 'u1', { mode: 'close', targetCount: 100 });
     const payload = titanisRepo.createRun.mock.calls[0][2];
-    expect(payload.leads_generated).toBe(50);
-    expect(payload.conversions).toBe(9);
-    expect(payload.estimated_revenue).toBe(1080);
+    expect(payload.leads_generated).toBe(0);
+    expect(payload.conversions).toBe(0);
+    expect(payload.estimated_revenue).toBe(0);
     expect(payload.channel).toBe('mixed');
+    expect(payload.harvest_status).toBe('NO_LIVE_SOURCE');
   });
 
   it('run throws when run row cannot be persisted', async () => {

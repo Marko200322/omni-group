@@ -53,14 +53,14 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'setup-quick': {
     promise: 'Your client portal, ready to use.',
     summary:
-      'We turn on login, billing, and notifications in your portal and send a clear setup guide. No tech talk required.',
+      'We grant real portal entitlements for billing and notifications, seed a welcome notice, and send a clear setup guide.',
     readMore:
-      'After payment confirmation you get a project in the system, a downloadable setup PDF with checklist, and portal access for billing and notifications. Delivery is automated in about 1–2 days. Custom domain on your DNS and a dedicated VPS are not included — ask if you need those later.',
+      'After payment confirmation you get a project, a downloadable setup PDF, user_modules entitlements for notifications + billing, org billing access, and a welcome notification in the inbox. Delivery is automated in about 1–2 days. Custom domain DNS and a dedicated VPS are not included.',
     when: 'Usually 1–2 days after payment',
     youGet: [
       'Client portal access (login)',
-      'Billing & notifications ready',
-      'Setup guide PDF + checklist',
+      'Billing & notifications entitlements',
+      'Welcome notification + setup PDF',
     ],
     notIncluded: ['Your own custom domain', 'Dedicated VPS'],
   },
@@ -116,22 +116,23 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   },
   'setup-full': {
     promise: 'Full portal onboarding with CRM and training pack.',
-    summary: 'CRM sample pipeline, automation modules, migration template, and 30 days of support window.',
+    summary:
+      'Labeled DEMO/industry CRM samples, automation module enabled (not live connectors), substantial migration CSV, training outline, 30-day support window.',
     readMore:
-      'Includes CRM seed, modules, CSV migration template, training outline PDF, and a registered 30-day support window. Hands-on legacy migration and live training calls need a support retainer.',
+      'Includes clearly labeled DEMO CRM samples or industry templates, portal entitlements (CRM/automation/notifications/billing), a substantial CSV migration template, training outline that states external automations are NOT CONNECTED, and a registered 30-day support window. Hands-on legacy migration and live training calls need a support retainer.',
     when: 'Usually 5–7 days after payment',
-    youGet: ['CRM + automation modules', 'Migration CSV template', 'Training outline PDF'],
-    notIncluded: ['Hands-on data migration', 'Live training calls'],
+    youGet: ['Labeled CRM demo samples', 'Migration CSV + training outline', 'Automation module (not live connectors)'],
+    notIncluded: ['Hands-on data migration', 'Live training calls', 'Fake automations-connected claims'],
   },
   'setup-custom': {
     promise: 'Production checklist pack for teams with their own ops.',
     summary:
-      'Deploy manifest, CRM seed, security/backup checklist, and an admin handoff PDF your operations team can execute.',
+      'Client-executable deploy runbook (DNS/SSL/backup PENDING), CRM seed, and admin handoff PDF — your team runs go-live.',
     readMore:
-      'This is a documented production-readiness pack, not a remote deploy onto your VPS. You receive the deploy manifest, CRM seed, and the custom-tier setup PDF (roles, notifications, backup/security checklist, admin handoff). We do not SSH into your servers or run a 24/7 SLA clock. Success: those artifacts are in your portal.',
+      'This is a documented production-readiness pack, not a remote deploy onto your VPS. You receive an actionable deploy runbook with PENDING statuses for DNS/SSL/backup/monitoring (never claimed done unless executed), CRM demo seed, entitlements, and the custom-tier setup PDF. We do not SSH into your servers or run a 24/7 SLA clock. Success: the honest runbook and CRM seed are in your portal.',
     when: 'Usually 3–5 days after payment',
-    youGet: ['Deploy manifest', 'CRM + modules', 'Enterprise setup PDF'],
-    notIncluded: ['Deploy on your servers', '24/7 SLA ops'],
+    youGet: ['Executable deploy runbook', 'CRM demo seed + entitlements', 'Enterprise setup PDF'],
+    notIncluded: ['Deploy on your servers', 'SSL/domain auto-completed', '24/7 SLA ops'],
   },
   integration: {
     promise: 'Integration guide your developer can follow.',
@@ -152,22 +153,29 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Private Slack on your workspace'],
   },
   'website-ecommerce': {
-    promise: 'Live storefront with catalog, cart, and working orders.',
+    promise: 'Live storefront with catalog, cart, inventory, and working orders.',
     summary:
-      'HYBRID: client-branded shop at /sites/{slug} with industry products, cart, and bank-transfer orders (card when Stripe is enabled) — not a full merchant inventory/tax stack.',
+      'Complete client-branded shop at /sites/{slug}: industry products, cart, per-SKU stock, tax/shipping settings, and bank-transfer orders (Stripe TEST when platform keys are configured). Stripe LIVE / Connect: EXTERNAL CONFIGURATION REQUIRED.',
     readMore:
-      'You get a hosted storefront URL, industry catalog (4+ products), shop page, and a working cart/order path. Your own Stripe Connect account, inventory sync, tax engine, and shipping carriers are not wired. Success: buyers can browse and place orders; handoff PDF is in your portal.',
+      'You get a hosted storefront URL, industry catalog (4+ products), shop page, inventory decrement, configurable tax/shipping, and a working cart/order path. Orders show up as CRM contacts and in-app notifications. Client Stripe LIVE / Connect merchant wiring is EXTERNAL CONFIGURATION REQUIRED. Success: buyers can browse and place orders; handoff PDF is in your portal.',
     when: 'Usually 5–8 days after payment',
-    youGet: ['Live storefront URL', 'Industry catalog (4+)', 'Working cart + order path'],
-    notIncluded: ['Inventory sync', 'Tax/shipping carriers', 'Your Stripe Connect account'],
+    youGet: [
+      'Live storefront URL',
+      'Industry catalog (4+) with stock',
+      'Tax/shipping settings on orders',
+      'Working cart + order path',
+      'Owner order notifications',
+    ],
+    notIncluded: ['Stripe LIVE / Connect merchant wiring (EXTERNAL CONFIGURATION REQUIRED)'],
   },
   'white-label-setup': {
     promise: 'Partner packaging + live landing for resale.',
-    summary: 'Brand PDF and a live landing page positioned for partner sales.',
-    readMore: 'Legal partner agreements and partner custom domains are separate.',
+    summary: 'Substantial brand PDF and a live partner landing — custom domain DNS is not automated.',
+    readMore:
+      'Legal partner agreements and custom domain DNS stay with the partner. Delivered public URL is the hosted /sites landing under your brand.',
     when: 'Usually 4–6 days after payment',
-    youGet: ['Brand packaging PDF', 'Live landing page'],
-    notIncluded: ['Legal agreements', 'Partner custom domain'],
+    youGet: ['Brand packaging PDF', 'Live partner landing'],
+    notIncluded: ['Legal agreements', 'Custom domain DNS (not automated)'],
   },
   'sales-enablement': {
     promise: 'Sales scripts and FAQ your team can use.',
@@ -186,22 +194,27 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Outbound hunting in lean mode'],
   },
   'lead-gen-retainer': {
-    promise: 'Monthly lead gen into your CRM.',
-    summary: 'Lead report, CRM pipeline, and outreach workspace — live hunting needs our outbound stack.',
+    promise: 'Monthly lead-gen ops pack into your CRM.',
+    summary:
+      'COMPLETE ops pack: lead report, CRM pipeline, sequences, weekly plan, channel status. Ads/Apollo/LinkedIn: CONFIGURATION REQUIRED / NOT CONNECTED until keys.',
     readMore:
-      'Outbound stack means Instantly/Apollo (or equivalent) plus scraper credentials on Omni’s side — not tools you must buy separately. If that stack is off, you still get the workspace and monthly report; live lead batches do not ship. No guaranteed meetings.',
+      'Ops pack ships COMPLETE after payment. Without API credentials, channels stay NOT CONNECTED, Titanis leads_generated stays 0, and simulated harvest cannot PASS — that is CONFIGURATION REQUIRED (external), not an incomplete HYBRID product. No guaranteed meetings.',
     when: 'Starts after first payment · renews monthly',
-    youGet: ['Monthly lead report', 'CRM + outreach modules'],
-    notIncluded: ['Guaranteed meetings'],
+    youGet: ['Monthly ops pack + channel status', 'CRM + outreach modules', 'Sequence templates + weekly plan'],
+    notIncluded: [
+      'Guaranteed meetings',
+      'Ads/Apollo harvest without keys (CONFIGURATION REQUIRED)',
+      'Simulated Titanis lead counts as PASS',
+    ],
   },
   'ai-support-retainer': {
-    promise: 'Monthly AI support setup for your clients.',
-    summary: 'AI support inbox, knowledge starter, and setup PDF.',
+    promise: 'Monthly AI support ops pack for your clients.',
+    summary: 'COMPLETE AI ops pack: inbox, RAG/FAQ seed, ticket queue. HeyGen/D-ID: CONFIGURATION REQUIRED / NOT CONNECTED until keys.',
     readMore:
-      'HeyGen/D-ID keys are optional. Without them you still get the AI inbox, knowledge seed, and setup PDF at the same price. Video avatar render is skipped until keys are configured — delivery status stays complete for the included artifacts.',
+      'Ops pack ships COMPLETE at the same price without HeyGen/D-ID. Video avatar stays NOT CONNECTED until keys exist — CONFIGURATION REQUIRED (external).',
     when: 'Starts after first payment · renews monthly',
-    youGet: ['AI support PDF', 'RAG knowledge seed', 'Avatar modules'],
-    notIncluded: ['Video avatar without AI keys'],
+    youGet: ['AI support PDF', 'RAG knowledge seed', 'Ticket queue + FAQ'],
+    notIncluded: ['Video avatar without AI keys (CONFIGURATION REQUIRED)'],
   },
   'bundle-portal-presence': {
     promise: 'Portal and landing live — one purchase.',

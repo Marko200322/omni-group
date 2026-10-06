@@ -1,16 +1,28 @@
 import { randomBytes } from 'crypto';
 import { AiMemoryService } from '../../ai-memory/service/ai-memory.service';
+import { AuthRepository } from '../../auth/repository/auth.repository';
 import { CrmService } from '../../crm/service/crm.service';
+import { NotificationsService } from '../../notifications/service/notifications.service';
 import { TasksService } from '../../tasks/service/tasks.service';
 import { TitanisService } from '../../titanis/service/titanis.service';
 import { resolveVerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
-import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
+import {
+  normalizeCategorySlug,
+  resolveVerticalSlug,
+} from '../../../shared/industry/industry-catalog';
+import { getIndustryCategory } from '../lib/category-pricing';
 import type { VerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
 import { DeliverableArtifactStoreService } from './deliverable-artifact-store.service';
 import { LocalInfrastructureService } from '../../autonomy-loop/service/local-infrastructure.service';
+import {
+  buildMigrationCsv,
+  buildProductionDeployRunbook,
+  buildTrainingOutlineMarkdown,
+} from '../lib/deliverable-handlers/artifact-helpers';
 import type { FulfillmentArtifact } from '../lib/deliverable-handlers/types';
 import { config } from '../../../config';
 import logger from '../../../utils/logger';
+import { grantUserModules } from '../../../utils/plan-module-access';
 import { isHeygenConfigured } from '../../video-meetings/providers/heygen-video.provider';
 import { isDidConfigured } from '../../video-meetings/providers/did-video.provider';
 import { getAvatarAgentAsync } from '../../video-meetings/avatar/avatar-agent.config';
@@ -20,6 +32,20 @@ export type CrmBootstrapResult = {
   clientContactId?: string;
   importedLeads: number;
   pipelineStages: string[];
+  /** Demo / industry template samples — never claim live migrated data. */
+  sampleKind: 'demo_industry_template';
+  labeledDemo: boolean;
+};
+
+/** Real portal entitlements (user_modules + org billing) — not task-only theater. */
+export type PortalEntitlementResult = {
+  modulesActivated: string[];
+  userModulesGranted: string[];
+  billingAccess: boolean;
+  orgRole: string | null;
+  notificationSeeded: boolean;
+  entitlementSource: 'user_modules+org';
+  portalReady: boolean;
 };
 
 /** Honest ads/outreach channel state — never claim live API without credentials. */
@@ -34,13 +60,18 @@ export type OutreachChannelStatus = {
 export type LeadGenBootstrapResult = {
   workspaceId?: string;
   runId?: string;
-  /** Live/API-backed leads only — 0 when channels are NOT CONNECTED. */
+  /** Live/API-backed leads only — never invented; 0 until real harvest adapter returns contacts. */
   leadsGenerated: number;
   /** Demo CRM samples seeded for kickoff visibility (not live harvest). */
   sampleLeadsSeeded: number;
   estimatedRevenue: number;
   channelStatuses: OutreachChannelStatus[];
-  mode: 'live_kickoff' | 'kickoff_pack_only';
+  /**
+   * kickoff_pack_only — ads/enrichment NOT CONNECTED; ops pack still complete.
+   * channels_ready — credentials CONNECTED but no live harvest adapter pulled contacts yet.
+   * live_harvest — real enrichment/ads harvest returned contacts (not Titanis theater).
+   */
+  mode: 'live_harvest' | 'channels_ready' | 'kickoff_pack_only';
 };
 
 function envPresent(key: string): boolean {
@@ -65,22 +96,27 @@ export function resolveLeadGenChannelStatuses(): OutreachChannelStatus[] {
     metaCreds &&
     ['true', '1', 'yes'].includes((process.env.MARKETING_ADS_LIVE_SYNC ?? '').trim().toLowerCase());
 
+  const linkedinAdsCreds =
+    envPresent('LINKEDIN_ADS_ACCESS_TOKEN') && envPresent('LINKEDIN_ADS_ACCOUNT_ID');
+  const linkedinLive =
+    linkedinAdsCreds &&
+    ['true', '1', 'yes'].includes((process.env.MARKETING_ADS_LIVE_SYNC ?? '').trim().toLowerCase());
+
   const apollo = envPresent('APOLLO_API_KEY');
   const email =
     envPresent('RESEND_API_KEY') ||
     (envPresent('SMTP_USER') && envPresent('SMTP_PASSWORD')) ||
     Boolean(config.aggregators?.comms?.url?.trim());
 
-  // No LinkedIn Ads / LinkedIn Marketing API adapter in this codebase yet.
-  const linkedinDetail = envPresent('LINKEDIN_ACCESS_TOKEN')
-    ? 'LINKEDIN_ACCESS_TOKEN set but LinkedIn Ads/Marketing API adapter is not wired — treat as NOT CONNECTED'
-    : 'No LinkedIn Ads/Marketing API credentials or adapter';
-
   return [
     {
       channel: 'linkedin',
-      status: 'NOT CONNECTED',
-      detail: linkedinDetail,
+      status: linkedinLive ? 'CONNECTED' : 'NOT CONNECTED',
+      detail: linkedinLive
+        ? 'LINKEDIN_ADS_* + MARKETING_ADS_LIVE_SYNC enabled'
+        : linkedinAdsCreds
+          ? 'Credentials present — set MARKETING_ADS_LIVE_SYNC=true for live pull'
+          : 'LINKEDIN_ADS_* incomplete or missing (CONFIGURATION REQUIRED)',
     },
     {
       channel: 'google_ads',
@@ -114,13 +150,24 @@ export function resolveLeadGenChannelStatuses(): OutreachChannelStatus[] {
 }
 
 function resolvePack(industryCategory?: string | null): VerticalDeliveryPack {
-  const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
-  const resolved = resolveVerticalSlug(slug);
+  const raw =
+    industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-') || 'professional';
+  const resolved = resolveVerticalSlug(raw);
+  if (resolved) {
+    return resolveVerticalDeliveryPack({
+      slug: resolved.verticalSlug,
+      category: resolved.category,
+      subtype: resolved.subtype,
+      name: resolved.name,
+    });
+  }
+  const category = normalizeCategorySlug(raw);
+  const meta = getIndustryCategory(category);
   return resolveVerticalDeliveryPack({
-    slug,
-    category: resolved?.category ?? 'general_business',
-    subtype: resolved?.subtype ?? null,
-    name: resolved?.name ?? slug,
+    slug: meta?.slug ?? category,
+    category: meta?.slug ?? category,
+    subtype: null,
+    name: meta?.name ?? category.replace(/_/g, ' '),
   });
 }
 
@@ -145,11 +192,11 @@ function sampleLeadsForPack(pack: VerticalDeliveryPack, count = 8) {
     firstName: ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn'][i % 8],
     lastName: ['Smith', 'Lee', 'Patel', 'Garcia', 'Kim', 'Brown', 'Novak', 'Silva'][i % 8],
     email: `lead${i + 1}@example-${pack.verticalSlug.slice(0, 12)}.demo`,
-    company: companies[i % companies.length],
+    company: `[DEMO] ${companies[i % companies.length]}`,
     status: i < 3 ? ('prospect' as const) : ('lead' as const),
-    source: 'fulfillment-bootstrap',
-    tags: [pack.verticalSlug, pack.category],
-    notes: hooks[i % hooks.length],
+    source: 'fulfillment-bootstrap-demo',
+    tags: [pack.verticalSlug, pack.category, 'DEMO_SAMPLE', 'industry_template'],
+    notes: `[DEMO SAMPLE — ${pack.displayName} industry template] ${hooks[i % hooks.length]}`,
   }));
 }
 
@@ -158,6 +205,8 @@ export class ClientDeliverableBootstrapService {
   private tasks = new TasksService();
   private titanis = new TitanisService();
   private artifacts = new DeliverableArtifactStoreService();
+  private authRepo = new AuthRepository();
+  private notifications = new NotificationsService();
 
   resolvePack(industryCategory?: string | null): VerticalDeliveryPack {
     return resolvePack(industryCategory);
@@ -214,6 +263,127 @@ export class ClientDeliverableBootstrapService {
       clientContactId,
       importedLeads: bulk.imported,
       pipelineStages,
+      sampleKind: 'demo_industry_template',
+      labeledDemo: true,
+    };
+  }
+
+  /**
+   * Grant real portal entitlements:
+   * - user_modules rows (checked by plan-module-access)
+   * - org membership with billing.read/manage (owner)
+   * - welcome notification so notifications inbox is live
+   * Tasks are secondary evidence only — never the sole activation signal.
+   */
+  async grantPortalEntitlements(input: {
+    userId: string;
+    moduleSlugs: string[];
+    clientName: string;
+    industryCategory?: string | null;
+    seedWelcomeNotification?: boolean;
+  }): Promise<PortalEntitlementResult> {
+    let userModulesGranted: string[] = [];
+    try {
+      userModulesGranted = await grantUserModules(input.userId, input.moduleSlugs);
+    } catch (err) {
+      logger.warn('user_modules grant failed', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: input.userId,
+      });
+    }
+
+    let billingAccess = false;
+    let orgRole: string | null = null;
+    try {
+      const org = await this.authRepo.ensureOrganization(input.userId, input.clientName);
+      orgRole = org.role ?? null;
+      billingAccess = orgRole === 'owner' || orgRole === 'admin' || orgRole === 'operator' || orgRole === 'member';
+    } catch (err) {
+      logger.warn('Portal billing org ensure failed', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: input.userId,
+      });
+    }
+
+    let notificationSeeded = false;
+    if (input.seedWelcomeNotification !== false && userModulesGranted.includes('notifications')) {
+      try {
+        await this.notifications.createNotification({
+          userId: input.userId,
+          type: 'portal_setup',
+          title: `Portal ready — ${input.clientName}`,
+          message: [
+            'Your client portal entitlements are active.',
+            'Billing access and notifications are enabled for your workspace.',
+            input.industryCategory ? `Industry: ${input.industryCategory}.` : '',
+          ]
+            .filter(Boolean)
+            .join(' '),
+          channel: 'in_app',
+          actionUrl: '/dashboard/billing',
+          metadata: {
+            modules: userModulesGranted,
+            source: 'fulfillment-bootstrap',
+            industryCategory: input.industryCategory ?? null,
+          },
+        });
+        notificationSeeded = true;
+      } catch (err) {
+        logger.warn('Welcome notification seed failed', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    for (const slug of userModulesGranted) {
+      try {
+        await this.tasks.createTask(input.userId, {
+          type: 'module_activation',
+          name: `Module entitled: ${slug}`,
+          description: `user_modules entitlement granted for ${slug} (${input.clientName}).`,
+          payload: {
+            moduleSlug: slug,
+            automated: true,
+            entitlementSource: 'user_modules+org',
+            taskTheaterOnly: false,
+          },
+        });
+      } catch {
+        /* plan limits — non-fatal; entitlement already in user_modules */
+      }
+    }
+
+    try {
+      const memory = new AiMemoryService();
+      await memory.remember(input.userId, {
+        namespace: 'portal-entitlements',
+        key: 'active',
+        value: {
+          modules: userModulesGranted,
+          billingAccess,
+          orgRole,
+          notificationSeeded,
+          clientName: input.clientName,
+          industryCategory: input.industryCategory ?? null,
+          grantedAt: new Date().toISOString(),
+        },
+      });
+    } catch {
+      /* memory optional */
+    }
+
+    const hasCore =
+      userModulesGranted.includes('notifications') && userModulesGranted.includes('billing');
+    const portalReady = hasCore && billingAccess && notificationSeeded;
+
+    return {
+      modulesActivated: userModulesGranted,
+      userModulesGranted,
+      billingAccess,
+      orgRole,
+      notificationSeeded,
+      entitlementSource: 'user_modules+org',
+      portalReady,
     };
   }
 
@@ -223,21 +393,11 @@ export class ClientDeliverableBootstrapService {
     clientName: string;
     industryCategory?: string | null;
   }): Promise<string[]> {
-    const activated: string[] = [];
-    for (const slug of input.moduleSlugs) {
-      try {
-        await this.tasks.createTask(input.userId, {
-          type: 'module_activation',
-          name: `Activate ${slug}`,
-          description: `Module ${slug} enabled for ${input.clientName} (${input.industryCategory ?? 'general'}).`,
-          payload: { moduleSlug: slug, automated: true },
-        });
-        activated.push(slug);
-      } catch {
-        /* skip on limit */
-      }
-    }
-    return activated;
+    const result = await this.grantPortalEntitlements({
+      ...input,
+      seedWelcomeNotification: input.moduleSlugs.includes('notifications'),
+    });
+    return result.modulesActivated;
   }
 
   async runLeadGenKickoff(input: {
@@ -252,8 +412,10 @@ export class ClientDeliverableBootstrapService {
         c.status === 'CONNECTED' &&
         (c.channel === 'apollo' || c.channel === 'google_ads' || c.channel === 'linkedin'),
     );
+    // Never treat Titanis planning as live harvest. Until a real harvest adapter
+    // returns contacts, mode is kickoff_pack_only or channels_ready.
     const mode: LeadGenBootstrapResult['mode'] =
-      liveChannels.length > 0 ? 'live_kickoff' : 'kickoff_pack_only';
+      liveChannels.length > 0 ? 'channels_ready' : 'kickoff_pack_only';
 
     const workspaces = await this.titanis.list(input.userId);
     let workspaceId = (workspaces[0] as { id?: string } | undefined)?.id;
@@ -267,44 +429,174 @@ export class ClientDeliverableBootstrapService {
       workspaceId = (created as { id?: string })?.id;
     }
 
-    if (!workspaceId) {
-      return {
-        leadsGenerated: 0,
-        sampleLeadsSeeded: 0,
-        estimatedRevenue: 0,
-        channelStatuses,
-        mode,
-      };
+    let runId: string | undefined;
+    // Optional planning run — leads_generated stays 0 (Titanis does not invent harvest).
+    if (workspaceId) {
+      try {
+        const run = (await this.titanis.run(workspaceId, input.userId, {
+          mode: 'lead-hunt',
+          targetCount: 25,
+        })) as { id?: string; output_payload?: Record<string, unknown> };
+        runId = run?.id;
+        const claimed = Number(run?.output_payload?.leads_generated ?? 0);
+        if (claimed > 0) {
+          logger.warn('Titanis returned non-zero leads_generated — ignored for fulfillment honesty', {
+            claimed,
+            workspaceId,
+          });
+        }
+      } catch (err) {
+        logger.warn('Titanis planning run skipped', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
-    // Only claim live leads when a real enrichment/ads channel is CONNECTED.
-    // Otherwise deliver workspace + kickoff pack without inventing LinkedIn/Ads harvest.
-    if (mode === 'kickoff_pack_only') {
-      return {
-        workspaceId,
-        leadsGenerated: 0,
-        sampleLeadsSeeded: 0,
-        estimatedRevenue: 0,
-        channelStatuses,
-        mode,
-      };
-    }
-
-    const run = (await this.titanis.run(workspaceId, input.userId, {
-      mode: 'lead-hunt',
-      targetCount: 25,
-    })) as { id?: string; output_payload?: Record<string, unknown> };
-
-    const output = (run?.output_payload ?? {}) as Record<string, unknown>;
     return {
       workspaceId,
-      runId: run?.id,
-      leadsGenerated: Number(output.leads_generated ?? 0),
+      runId,
+      leadsGenerated: 0,
       sampleLeadsSeeded: 0,
-      estimatedRevenue: Number(output.estimated_revenue ?? 0),
+      estimatedRevenue: 0,
       channelStatuses,
       mode,
     };
+  }
+
+  /** Actionable portal tasks ops can execute in week 1 (not vanity module flags). */
+  async seedLeadGenOpsTasks(input: {
+    userId: string;
+    clientName: string;
+    pack: VerticalDeliveryPack;
+    channelStatuses: OutreachChannelStatus[];
+  }): Promise<string[]> {
+    const connected = input.channelStatuses.filter((c) => c.status === 'CONNECTED').map((c) => c.channel);
+    const taskDefs = [
+      {
+        name: 'Week 1 — Confirm ICP + target list',
+        description: `Define ICP for ${input.pack.displayName}. Use CRM sample stages; replace demo @example leads with real prospects.`,
+        payload: { week: 1, action: 'confirm_icp', verticalSlug: input.pack.verticalSlug },
+      },
+      {
+        name: 'Week 1 — Load sequence templates',
+        description: 'Copy sequence templates from pipeline workspace into Outreach; personalize hooks before any send.',
+        payload: { week: 1, action: 'load_sequences', hooks: input.pack.outreachHooks.slice(0, 3) },
+      },
+      {
+        name: 'Week 1 — Channel status board review',
+        description: connected.length
+          ? `Connected: ${connected.join(', ')}. Confirm live sync before claiming harvest.`
+          : 'All ads/enrichment channels NOT CONNECTED — execute human/ops outbound from kickoff pack; do not report fake leads.',
+        payload: { week: 1, action: 'review_channels', channelStatuses: input.channelStatuses },
+      },
+      {
+        name: 'Week 2 — Pipeline hygiene',
+        description: `Move CRM contacts through lead → prospect → customer for ${input.clientName}. Log outcomes on kickoff ticket.`,
+        payload: { week: 2, action: 'pipeline_hygiene', stages: ['lead', 'prospect', 'customer'] },
+      },
+    ];
+    const created: string[] = [];
+    for (const t of taskDefs) {
+      try {
+        const task = await this.tasks.createTask(input.userId, {
+          type: 'lead_gen_ops',
+          name: t.name,
+          description: t.description,
+          payload: { ...t.payload, automated: true, clientVisible: true, actionable: true },
+        });
+        const id = (task as { id?: string })?.id;
+        if (id) created.push(id);
+      } catch {
+        /* plan limits */
+      }
+    }
+    return created;
+  }
+
+  saveLeadGenPipelineWorkspace(input: {
+    userId: string;
+    paymentId: string;
+    pack: VerticalDeliveryPack;
+    clientName: string;
+    stats: LeadGenBootstrapResult;
+  }): FulfillmentArtifact {
+    const { pack, stats, clientName } = input;
+    const channels = stats.channelStatuses ?? resolveLeadGenChannelStatuses();
+    const hooks = pack.outreachHooks.length
+      ? pack.outreachHooks
+      : [`${pack.displayName} intro`, `${pack.displayName} follow-up`, `${pack.displayName} breakup`];
+    const content = `# Lead Gen Pipeline Workspace — ${clientName}
+
+Vertical: ${pack.displayName}
+Mode: ${stats.mode}
+Workspace: ${stats.workspaceId ?? 'pending'}
+Generated: ${new Date().toISOString()}
+
+## CRM stages (operational)
+| Stage | Purpose | Exit criteria |
+|-------|---------|---------------|
+| lead | New / researched contact | Email + company known |
+| prospect | Engaged / replied / meeting booked | Next step dated |
+| customer | Won / active account | Handoff to delivery |
+
+Sample CRM rows are **demo seeds** (not live harvest). Replace before reporting pipeline KPIs.
+
+## Sequence templates (copy into Outreach — not auto-sent)
+### Seq A — Cold intro (Day 0)
+Subject: Quick idea for {{company}}
+Body: ${hooks[0]}
+CTA: 15-min call this week?
+
+### Seq B — Value follow-up (Day 3)
+Subject: Re: {{company}} / ${pack.displayName}
+Body: ${hooks[1] ?? hooks[0]}
+CTA: Share one KPI you want to move.
+
+### Seq C — Breakup (Day 8)
+Subject: Should I close the loop?
+Body: ${hooks[2] ?? hooks[0]}
+CTA: Reply "later" or book a slot.
+
+**Honesty:** Templates are for human/ops execution. LinkedIn/Google Ads sends stay blocked while channels are NOT CONNECTED.
+
+## Weekly plan (ops-executable)
+### Week 1 — Kickoff
+1. Confirm ICP + geo from vertical brief
+2. Review channel status board (below)
+3. Personalize Seq A/B/C for top 20 accounts
+4. Log activity on kickoff support ticket
+
+### Week 2 — Pipeline motion
+1. Move demo CRM rows or import real CSV
+2. Send only on CONNECTED email transport
+3. Book discovery calls into prospect stage
+
+### Week 3 — Optimize
+1. Drop non-responders; refresh hooks from ${pack.displayName} pack
+2. Update weekly snapshot on kickoff ticket
+
+### Week 4 — Monthly report
+1. Count real replies/meetings only (never Titanis planning targets)
+2. List channels still NOT CONNECTED / CONFIGURATION REQUIRED
+
+## Channel status board
+| Channel | Status | Detail |
+|---------|--------|--------|
+${channels.map((c) => `| ${c.channel} | **${c.status}** | ${c.detail} |`).join('\n')}
+
+Live leads generated this kickoff: **${stats.leadsGenerated}** (must stay 0 without a real harvest adapter).
+
+## Workflow map
+${pack.workflowSteps.map((s, i) => `${i + 1}. ${s.step} → \`${s.moduleSlug}\` (${s.action})`).join('\n')}
+`;
+    return this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: 'lead-gen-pipeline-workspace.md',
+      content,
+      type: 'lead_gen_pipeline_workspace',
+      downloadLabel: 'Lead gen pipeline workspace',
+    });
   }
 
   buildIntegrationConfig(input: {
@@ -317,24 +609,150 @@ export class ClientDeliverableBootstrapService {
     const secret = randomBytes(24).toString('hex');
     const webBase = config.app.webUrl.replace(/\/$/, '');
     const apiBase = config.app.url.replace(/\/$/, '');
+    const apiV1 = `${apiBase}/api/v1`;
+
+    const webhookEndpoints = {
+      paymentCompleted: `${apiV1}/payments/webhooks/stripe`,
+      deliverableReady: `${webBase}/api/atina/billing/fulfillment/jobs/${input.paymentId}`,
+      customIngress: `${apiV1}/integrations/inbound/${input.userId}`,
+    };
+
+    const envMap = {
+      STRIPE_WEBHOOK_SECRET: {
+        purpose: 'Verify Stripe payment.completed signatures',
+        where: 'Stripe Dashboard → Webhooks → Signing secret',
+        requiredWhen: 'Card payments enabled',
+      },
+      STRIPE_SECRET_KEY: {
+        purpose: 'Server-side Stripe API calls',
+        where: 'Stripe Dashboard → Developers → API keys',
+        requiredWhen: 'Card payments enabled',
+      },
+      OPENROUTER_API_KEY: {
+        purpose: 'Optional AI connector (not pre-wired)',
+        where: 'OpenRouter account → API keys',
+        requiredWhen: 'You enable AI features in your stack',
+      },
+      SMTP_URL_OR_RESEND_API_KEY: {
+        purpose: 'Transactional email from your domain',
+        where: 'Your ESP (Resend/SendGrid/SMTP provider)',
+        requiredWhen: 'You send mail from your own domain',
+      },
+      INTEGRATION_WEBHOOK_SECRET: {
+        purpose: 'HMAC for customIngress callbacks',
+        where: 'Copy webhookSecret from this JSON into your consumer',
+        requiredWhen: 'Always — rotate quarterly',
+        valueHint: 'Use webhookSecret field in this file (never commit to git)',
+      },
+      CLIENT_JWT_OR_PORTAL_CREDENTIALS: {
+        purpose: 'Bearer auth against Omni REST (login endpoint)',
+        where: 'Client portal user for this workspace',
+        requiredWhen: 'Calling protected /api/v1 routes',
+      },
+    };
+
+    const retryPolicy = {
+      maxAttempts: 5,
+      initialBackoffMs: 1000,
+      backoffMultiplier: 2,
+      maxBackoffMs: 60_000,
+      jitter: true,
+      deadLetterAfterAttempts: 5,
+      retryOnHttpStatus: [408, 429, 500, 502, 503, 504],
+      idempotencyHeader: 'Idempotency-Key',
+      note: 'Consumers must return 2xx quickly and process async; retry only on transient failures.',
+    };
+
+    const onboardingChecklist = [
+      {
+        step: 1,
+        title: 'Store webhookSecret securely',
+        action:
+          'Copy webhookSecret from this JSON into your secrets manager as INTEGRATION_WEBHOOK_SECRET. Do not commit it.',
+        doneWhen: 'Secret is in vault / env of the consumer only',
+      },
+      {
+        step: 2,
+        title: 'Register webhook endpoints',
+        action: `Point your Stripe (or payment) webhook at ${webhookEndpoints.paymentCompleted}. Point internal job status consumers at deliverableReady. Use customIngress for your own systems.`,
+        doneWhen: 'Provider dashboard shows endpoint + signing secret configured',
+      },
+      {
+        step: 3,
+        title: 'Add third-party API keys (only when you go live)',
+        action:
+          'Fill envMap keys that apply (Stripe, email, OpenRouter, etc.). Keys are NOT pre-connected — this pack documents how to wire them.',
+        doneWhen: 'Required env vars set in staging; unused keys left blank',
+      },
+      {
+        step: 4,
+        title: 'Verify HMAC + retry policy',
+        action:
+          'Implement signature check on inbound webhooks; apply retryPolicy (exponential backoff + dead-letter). Send Idempotency-Key on payment-confirm retries.',
+        doneWhen: 'Staging echo returns 2xx; failed deliveries land in DLQ after maxAttempts',
+      },
+      {
+        step: 5,
+        title: 'Sandbox end-to-end',
+        action:
+          'Run Auth → CRM contact → payment reference → payment.completed → artifact unlock using sampleEvents payloads.',
+        doneWhen: 'E2E green in staging with sandbox keys only',
+      },
+      {
+        step: 6,
+        title: 'Production cutover',
+        action:
+          'Rotate webhookSecret, swap live keys, disable sandbox endpoints, monitor p95 latency and failed fulfillment count for 24h.',
+        doneWhen: 'Live purchase produces downloadable artifacts; rollback flag documented',
+      },
+    ];
 
     return {
+      schema: 'omni-integration-config/v2',
       clientName: input.clientName,
       generatedAt: new Date().toISOString(),
-      apiBase: `${apiBase}/api/v1`,
-      webhooks: {
-        paymentCompleted: `${apiBase}/api/v1/payments/webhooks/stripe`,
-        deliverableReady: `${webBase}/api/atina/billing/fulfillment/jobs/${input.paymentId}`,
-        customIngress: `${apiBase}/api/v1/integrations/inbound/${input.userId}`,
-      },
+      status: 'DOCUMENTED_NOT_LIVE',
+      honestyNote:
+        'This package delivers a guide + config for your developer. Third-party tools (Stripe, ERP, CRM, AI, email) are NOT already connected until you add API keys and complete onboardingChecklist.',
+      apiBase: apiV1,
+      webhooks: webhookEndpoints,
+      webhookEndpoints,
       authentication: {
         type: 'Bearer JWT',
-        login: `${apiBase}/api/v1/auth/login`,
+        login: `${apiV1}/auth/login`,
         note: 'Use client portal credentials; rotate keys quarterly.',
       },
+      envMap,
+      retryPolicy,
+      onboardingChecklist,
       modules: pack.coreModules,
       webhookSecret: secret,
-      sampleEvents: ['payment.completed', 'deliverable.ready', 'crm.contact.created'],
+      sampleEvents: [
+        {
+          type: 'payment.completed',
+          example: {
+            event: 'payment.completed',
+            paymentId: input.paymentId,
+            status: 'completed',
+          },
+        },
+        {
+          type: 'deliverable.ready',
+          example: {
+            event: 'deliverable.ready',
+            paymentId: input.paymentId,
+            artifactTypes: ['pdf', 'json'],
+          },
+        },
+        {
+          type: 'crm.contact.created',
+          example: {
+            event: 'crm.contact.created',
+            email: 'lead@example.com',
+            source: pack.verticalSlug,
+          },
+        },
+      ],
       testingChecklist: pack.qualityGates,
     };
   }
@@ -351,6 +769,39 @@ export class ClientDeliverableBootstrapService {
       content: JSON.stringify(input.config, null, 2),
       type: 'integration_config',
       downloadLabel: 'Integration config (JSON)',
+    });
+  }
+
+  saveIntegrationOnboardingChecklist(input: {
+    userId: string;
+    paymentId: string;
+    config: Record<string, unknown>;
+  }): FulfillmentArtifact {
+    const checklist = Array.isArray(input.config.onboardingChecklist)
+      ? (input.config.onboardingChecklist as Array<Record<string, unknown>>)
+      : [];
+    const lines = [
+      '# Integration onboarding checklist',
+      '',
+      `Client: ${String(input.config.clientName ?? 'Client')}`,
+      '',
+      'Tools are **not** pre-connected. Execute these steps when you add API keys.',
+      '',
+      ...checklist.map((item) => {
+        const step = item.step ?? '?';
+        const title = String(item.title ?? 'Step');
+        const action = String(item.action ?? '');
+        const doneWhen = String(item.doneWhen ?? '');
+        return [`## ${step}. ${title}`, '', action, '', `Done when: ${doneWhen}`, ''].join('\n');
+      }),
+    ];
+    return this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: 'integration-onboarding-checklist.md',
+      content: lines.join('\n'),
+      type: 'integration_onboarding_checklist',
+      downloadLabel: 'Onboarding checklist (Markdown)',
     });
   }
 
@@ -371,20 +822,27 @@ export class ClientDeliverableBootstrapService {
 
 Client: ${clientName}
 Vertical: ${pack.displayName}
-Mode: ${stats.mode === 'live_kickoff' ? 'Live enrichment available' : 'Kickoff pack only (no live LinkedIn/Google Ads harvest)'}
+Mode: ${
+      stats.mode === 'live_harvest'
+        ? 'Live harvest returned contacts'
+        : stats.mode === 'channels_ready'
+          ? 'Channels CONNECTED — harvest adapter has not pulled contacts yet (leads_generated = 0)'
+          : 'Kickoff ops pack only (LinkedIn/Google Ads NOT CONNECTED)'
+    }
 
 ## Channel connection status (honest)
 ${channelLines}
 
 ## Kickoff results
-- Live leads generated: ${stats.leadsGenerated}
+- Live leads generated: ${stats.leadsGenerated} (never invented by Titanis)
 - Sample CRM leads seeded (demo, not live harvest): ${samples}
 - Estimated pipeline value (live only): €${stats.estimatedRevenue}
 - Workspace: ${stats.workspaceId ?? 'created'}
-- Titanis run: ${stats.runId ?? 'skipped — no connected enrichment/ads channel'}
+- Titanis planning run: ${stats.runId ?? 'n/a'} (planning only — not a harvest success metric)
 
 ## What you received now
-- Outreach workspace in portal
+- Pipeline workspace (CRM stages, sequence templates, weekly plan, channel board)
+- Outreach workspace in portal + actionable week-1 tasks
 - CRM pipeline seed for ${pack.displayName}
 - This kickoff report with channel honesty
 - Onboarding ticket for first outreach week
@@ -397,7 +855,7 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
 
 ## Connecting live channels
 1. Google Ads: set GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC=true
-2. LinkedIn Ads/Marketing: not wired yet — remains NOT CONNECTED until an adapter ships
+2. LinkedIn Ads/Marketing: set LINKEDIN_ADS_ACCESS_TOKEN + LINKEDIN_ADS_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true (CONFIGURATION REQUIRED until keys)
 3. Apollo enrichment: set APOLLO_API_KEY
 `;
     return this.artifacts.saveText({
@@ -414,18 +872,13 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     userId: string;
     paymentId: string;
     clientName: string;
+    industryCategory?: string | null;
   }): FulfillmentArtifact {
-    const csv = [
-      'first_name,last_name,email,company,phone,status,notes',
-      `Primary,Contact,client@example.com,${input.clientName.replace(/,/g, ' ')},,+381600000000,customer,Primary account row`,
-      'Lead,One,lead1@example.com,Example Co,,,lead,Import from spreadsheet',
-      'Lead,Two,lead2@example.com,Sample Ltd,,,prospect,Import from spreadsheet',
-    ].join('\n');
     return this.artifacts.saveText({
       userId: input.userId,
       paymentId: input.paymentId,
       filename: 'crm-migration-template.csv',
-      content: csv,
+      content: buildMigrationCsv(input.clientName, { industryCategory: input.industryCategory }),
       type: 'migration_template',
       downloadLabel: 'CRM migration template (CSV)',
     });
@@ -437,30 +890,14 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     clientName: string;
     industryCategory?: string | null;
   }): FulfillmentArtifact {
-    const content = `# Training & onboarding — ${input.clientName}
-
-## Session 1 — Portal & dashboard (30 min)
-- Login, profile, billing, deliveries panel
-- How to confirm payments and download artifacts
-
-## Session 2 — CRM & pipeline (30 min)
-- Import migration CSV, stages, follow-ups
-- Industry: ${input.industryCategory ?? 'general business'}
-
-## Session 3 — Automations (30 min)
-- Payment → fulfillment chain
-- Notifications and tasks
-
-## 30-day support window
-- Automated ticket queue active
-- Response SLA: 24 business hours
-- Minor copy/config changes included
-`;
     return this.artifacts.saveText({
       userId: input.userId,
       paymentId: input.paymentId,
       filename: 'training-outline.md',
-      content,
+      content: buildTrainingOutlineMarkdown({
+        clientName: input.clientName,
+        industryCategory: input.industryCategory,
+      }),
       type: 'training_outline',
       downloadLabel: 'Training outline',
     });
@@ -472,51 +909,57 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     clientName: string;
     deployPrep: Record<string, unknown>;
   }): FulfillmentArtifact {
-    const manifest = {
+    const manifest = buildProductionDeployRunbook({
       clientName: input.clientName,
-      generatedAt: new Date().toISOString(),
-      domainSsl: {
-        note: 'Point DNS A/AAAA to VPS; TLS via Caddy/nginx certbot',
-        webUrl: config.app.webUrl,
-        apiUrl: config.app.url,
-      },
-      backup: {
-        schedule: 'daily 02:00 UTC',
-        retentionDays: 14,
-        targets: ['postgres', 'uploads', 'product-factory output'],
-      },
-      monitoring: {
-        healthEndpoints: [`${config.app.url.replace(/\/$/, '')}/health`],
-        alertEmail: config.paymentNotifyEmail || config.admin.email,
-      },
-      sla: { uptimeTarget: '99.5%', incidentResponseHours: 4 },
+      deliverableId: 'setup-custom',
       deployPrep: input.deployPrep,
-    };
+    });
     return this.artifacts.saveText({
       userId: input.userId,
       paymentId: input.paymentId,
       filename: 'production-deploy-manifest.json',
       content: JSON.stringify(manifest, null, 2),
       type: 'production_deploy_manifest',
-      downloadLabel: 'Production deploy manifest',
+      downloadLabel: 'Production deploy runbook (JSON)',
     });
   }
 
   async runProductionDeployPrep(clientName: string): Promise<Record<string, unknown>> {
     const local = new LocalInfrastructureService();
     if (!local.isAvailable()) {
-      return { skipped: true, reason: 'local_infrastructure_unavailable' };
+      return {
+        skipped: true,
+        reason: 'local_infrastructure_unavailable',
+        sslProvisioned: false,
+        domainConfigured: false,
+        backupLive: false,
+        monitoringLive: false,
+        note: `Deploy prep skipped for ${clientName} — client must execute the production runbook checklist.`,
+      };
     }
     try {
-      return local.triggerDeploy({
+      const result = await local.triggerDeploy({
         phase: 'client_setup_custom',
         notes: `Production deploy prep for ${clientName}`,
         skipBlockingSteps: true,
       });
+      return {
+        skipped: false,
+        ...((result && typeof result === 'object' ? result : { result }) as Record<string, unknown>),
+        // Prep may run locally — never claim client DNS/SSL live without evidence.
+        sslProvisioned: false,
+        domainConfigured: false,
+        backupLive: false,
+        monitoringLive: false,
+      };
     } catch (err) {
       return {
         skipped: true,
         error: err instanceof Error ? err.message : String(err),
+        sslProvisioned: false,
+        domainConfigured: false,
+        backupLive: false,
+        monitoringLive: false,
       };
     }
   }
@@ -525,12 +968,13 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     userId: string;
     clientName: string;
     industryCategory?: string | null;
-  }): Promise<string[]> {
-    return this.activateModules({
+  }): Promise<PortalEntitlementResult> {
+    return this.grantPortalEntitlements({
       userId: input.userId,
       moduleSlugs: ['notifications', 'billing'],
       clientName: input.clientName,
       industryCategory: input.industryCategory,
+      seedWelcomeNotification: true,
     });
   }
 
@@ -720,6 +1164,7 @@ ${input.extras ? `\n## Notes\n${JSON.stringify(input.extras, null, 2)}\n` : ''}
       ['What is included monthly?', 'Welcome pack, SLA queue, portal modules, and maintenance listed on your package card — not unlimited build hours.'],
       ['Can you change copy on my site?', 'Minor copy/config changes are in scope for support retainers; net-new features need a scoped package.'],
       ['Is LinkedIn outreach live?', 'Only if LinkedIn is marked CONNECTED in your kickoff pack. Otherwise we deliver planning hooks and CRM seed only.'],
+      ['Are LinkedIn Ads connected?', 'Only when LINKEDIN_ADS_ACCESS_TOKEN, LINKEDIN_ADS_ACCOUNT_ID, and MARKETING_ADS_LIVE_SYNC are set. Otherwise status is NOT CONNECTED (CONFIGURATION REQUIRED).'],
       ['Are Google Ads connected?', 'Only when GOOGLE_ADS_* credentials and live sync are enabled. Otherwise status is NOT CONNECTED.'],
       [`What is our ${pack.displayName} focus?`, pack.valueProp],
       ['Where are my deliverables?', 'Dashboard → Deliveries. Download PDFs and markdown packs from the payment fulfillment card.'],
@@ -817,8 +1262,13 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
     modulesActivated: string[];
     ragSeeded: boolean;
     setupArtifact: FulfillmentArtifact;
+    faqArtifact: FulfillmentArtifact;
+    knowledgeBaseArtifact: FulfillmentArtifact;
     avatarProvision: { provider: string; configured: boolean; memoryKey: string };
+    configurationRequired: string[];
+    kickoffTicketId?: string;
   }> {
+    const pack = resolvePack(input.industryCategory);
     const modulesActivated = await this.activateModules({
       userId: input.userId,
       moduleSlugs: input.moduleSlugs,
@@ -835,6 +1285,28 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
       agentType: 'support',
     });
 
+    const faqEntries = [
+      {
+        q: 'How do I open a support ticket?',
+        a: 'Use the portal Support / Tasks inbox. AI support retainer targets 24h first response.',
+      },
+      {
+        q: 'Is the video avatar live?',
+        a: 'Only when HeyGen or D-ID keys are configured. Otherwise status is CONFIGURATION REQUIRED / NOT CONNECTED — text RAG still works.',
+      },
+      {
+        q: 'What knowledge is in the AI assistant?',
+        a: `Starter KB for ${pack.displayName}: value prop, FAQ seed, and ticket-queue guidance. Add docs via support dashboard.`,
+      },
+      {
+        q: 'Can clients book a meeting/avatar session?',
+        a: avatarProvision.configured
+          ? 'Yes — open /dashboard/support for the video/avatar path.'
+          : 'Meeting/avatar session path is ready in the portal once HeyGen/D-ID keys are set (CONFIGURATION REQUIRED until then).',
+      },
+      { q: `What is our ${pack.displayName} focus?`, a: pack.valueProp },
+    ];
+
     let ragSeeded = false;
     try {
       const memory = new AiMemoryService();
@@ -844,8 +1316,18 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
         value: {
           clientName: input.clientName,
           industryCategory: input.industryCategory ?? 'general',
-          note: `Support knowledge base for ${input.clientName}.`,
+          verticalSlug: pack.verticalSlug,
+          valueProp: pack.valueProp,
+          faqs: faqEntries,
+          note: `Support knowledge base for ${input.clientName} (${pack.displayName}).`,
+          meetingPath: '/dashboard/support',
         },
+      });
+      // Second memory entry = FAQ corpus for retrieval-style usage.
+      await memory.remember(input.userId, {
+        namespace: 'support-kb-faq',
+        key: input.paymentId.slice(0, 8),
+        value: { faqs: faqEntries, updatedAt: new Date().toISOString() },
       });
       ragSeeded = true;
     } catch {
@@ -854,6 +1336,14 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
 
     const webBase = config.app.webUrl.replace(/\/$/, '');
     const avatarReady = avatarProvision.configured;
+    const configurationRequired: string[] = [];
+    if (!isHeygenConfigured() && !isDidConfigured()) {
+      configurationRequired.push('HEYGEN_API_KEY or DID_API_KEY for video avatar sessions');
+    }
+    if (!avatarReady) {
+      configurationRequired.push('Video avatar provider (HeyGen/D-ID) — CONFIGURATION REQUIRED');
+    }
+
     const setup = {
       clientName: input.clientName,
       industryCategory: input.industryCategory ?? 'general',
@@ -866,9 +1356,10 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
       avatarProvider: avatarProvision.provider,
       avatarConfigured: avatarReady,
       avatarMemoryKey: avatarProvision.memoryKey,
+      configurationRequired,
       note: avatarReady
-        ? 'HeyGen/D-ID configured — video avatar path available in support dashboard.'
-        : 'RAG knowledge seed + support modules active. Video avatar NOT CONNECTED until HeyGen or D-ID keys are configured (live_portrait fallback only).',
+        ? 'HeyGen/D-ID configured — video avatar + meeting path available in support dashboard.'
+        : 'CONFIGURATION REQUIRED for video avatar (HeyGen/D-ID). Ops pack still complete: RAG knowledge base, FAQ seed, ticket queue, SLA pack.',
       channelHonesty: {
         heygen: isHeygenConfigured() ? 'CONNECTED' : 'NOT CONNECTED',
         did: isDidConfigured() ? 'CONNECTED' : 'NOT CONNECTED',
@@ -884,25 +1375,81 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
       downloadLabel: 'AI support setup guide',
     });
 
-    try {
-      await this.tasks.createTask(input.userId, {
-        type: 'ai_support_provisioning',
-        name: 'AI support retainer — provisioned',
+    const knowledgeBaseArtifact = this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: 'ai-support-knowledge-base.md',
+      content: `# AI Support Knowledge Base — ${input.clientName}
+
+Industry: ${pack.displayName}
+RAG seeded: ${ragSeeded}
+Avatar: ${avatarReady ? 'CONNECTED' : 'CONFIGURATION REQUIRED / NOT CONNECTED'}
+
+## Value proposition
+${pack.valueProp}
+
+## Starter corpus
+${faqEntries.map((f, i) => `### ${i + 1}. ${f.q}\n${f.a}`).join('\n\n')}
+
+## Meeting / avatar session path
+- Portal: ${webBase}/dashboard/support
+- ${
+        avatarReady
+          ? 'Provider keys present — start avatar/meeting session from support dashboard.'
+          : 'CONFIGURATION REQUIRED: add HeyGen or D-ID keys before live video avatar sessions. Ticket queue + FAQ still operational.'
+      }
+
+## Ops checklist
+1. Review FAQ seed and add client-specific answers
+2. Confirm kickoff ticket is open in portal Tasks
+3. Route first client questions through support inbox
+4. Only claim video avatar live when channelHonesty shows CONNECTED
+`,
+      type: 'ai_support_knowledge_base',
+      downloadLabel: 'AI support knowledge base',
+    });
+
+    const faqArtifact = this.saveSupportFaqSeed({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      clientName: input.clientName,
+      industryCategory: input.industryCategory,
+      pack,
+    });
+
+    for (const t of [
+      {
+        name: 'AI support — ticket queue active',
+        description: `Ticket queue + RAG for ${input.clientName}. Reply via portal support inbox.`,
+        payload: { actionable: true, queue: 'support', ragSeeded },
+      },
+      {
+        name: avatarReady
+          ? 'AI support — test avatar/meeting session'
+          : 'AI support — CONFIGURATION REQUIRED: avatar keys',
         description: avatarReady
-          ? `Avatar + RAG + meetings provisioned for ${input.clientName}.`
-          : `RAG + modules provisioned for ${input.clientName}; video avatar keys NOT CONNECTED.`,
+          ? 'Open /dashboard/support and run a test meeting/avatar session.'
+          : 'Add HeyGen or D-ID keys, then re-test avatar path. KB + FAQ already delivered.',
         payload: {
-          automated: true,
-          modules: effectiveModules,
-          ragSeeded,
+          actionable: true,
+          configurationRequired: !avatarReady,
           avatarConfigured: avatarReady,
         },
-      });
-    } catch {
-      /* plan limits */
+      },
+    ]) {
+      try {
+        await this.tasks.createTask(input.userId, {
+          type: 'ai_support_ops',
+          name: t.name,
+          description: t.description,
+          payload: { ...t.payload, automated: true, clientVisible: true },
+        });
+      } catch {
+        /* plan limits */
+      }
     }
 
-    await this.openKickoffSupportTicket({
+    const kickoffTicketId = await this.openKickoffSupportTicket({
       userId: input.userId,
       clientName: input.clientName,
       deliverableId: 'ai-support-retainer',
@@ -910,6 +1457,15 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
       industryCategory: input.industryCategory,
     });
 
-    return { modulesActivated: effectiveModules, ragSeeded, setupArtifact, avatarProvision };
+    return {
+      modulesActivated: effectiveModules,
+      ragSeeded,
+      setupArtifact,
+      faqArtifact,
+      knowledgeBaseArtifact,
+      avatarProvision,
+      configurationRequired,
+      kickoffTicketId,
+    };
   }
 }

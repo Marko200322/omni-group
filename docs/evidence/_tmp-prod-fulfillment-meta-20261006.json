@@ -1,0 +1,52 @@
+﻿{
+    "fetchedAt":  "2026-10-06T08:01:51.3384307Z",
+    "loginOk":  true,
+    "jobCount":  20,
+    "selected":  {
+                     "paymentId":  "59a397f8-4e4c-4f6a-bfe2-bf432e5395f2",
+                     "deliverableId":  "workflow-design",
+                     "status":  "completed",
+                     "industryCategory":  null,
+                     "clientName":  null,
+                     "artifactCount":  2,
+                     "artifacts":  [
+                                       {
+                                           "type":  "workflow_design",
+                                           "filename":  "workflow-sop-pack.pdf",
+                                           "downloadLabel":  "Workflow Design \u0026 SOP Pack",
+                                           "sizeBytes":  null,
+                                           "documentTitle":  null,
+                                           "documentSubstanceOk":  null,
+                                           "documentQuality":  null
+                                       },
+                                       {
+                                           "type":  "workflow_design_md",
+                                           "filename":  "workflow_design_md.md",
+                                           "downloadLabel":  "Workflow Design \u0026 SOP Pack (Markdown)",
+                                           "sizeBytes":  null,
+                                           "documentTitle":  null,
+                                           "documentSubstanceOk":  null,
+                                           "documentQuality":  null
+                                       }
+                                   ],
+                     "metadataKeys":  [
+                                          "id",
+                                          "paymentId",
+                                          "deliverableId",
+                                          "planSlug",
+                                          "purchaseType",
+                                          "status",
+                                          "reviewStatus",
+                                          "reviewNotes",
+                                          "releasedAt",
+                                          "error",
+                                          "publicUrl",
+                                          "projectId",
+                                          "artifacts",
+                                          "clientVisible",
+                                          "createdAt",
+                                          "updatedAt",
+                                          "completedAt"
+                                      ]
+                 }
+}

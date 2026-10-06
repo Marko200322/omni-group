@@ -41,6 +41,13 @@ describe('bundle step coverage', () => {
         setupTier: 'quick',
         modulesActivated: ['notifications', 'billing'],
         portalReady: true,
+        portalEntitlements: {
+          entitlementSource: 'user_modules+org',
+          userModulesGranted: ['notifications', 'billing'],
+          billingAccess: true,
+          notificationSeeded: true,
+          portalReady: true,
+        },
         ...docQuality(),
       },
     };
@@ -143,5 +150,50 @@ describe('bundle step coverage', () => {
     });
     expect(r.passed).toBe(false);
     expect(r.items.some((i) => i.id === 'bundle_steps_complete' && !i.passed)).toBe(true);
+  });
+
+  it('ops-clarity is partial when workflow step fails', () => {
+    const expected = expectedBundleStepIds('bundle-ops-clarity');
+    const audit: FulfillmentResult = {
+      status: 'completed',
+      artifacts: [
+        { type: 'audit_report', filename: 'technical-audit.pdf', storagePath: '/a' },
+        { type: 'audit_report_md', filename: 'audit_report_md.md', storagePath: '/am' },
+      ],
+      metadata: docQuality(2400),
+    };
+    const workflow: FulfillmentResult = {
+      status: 'partial',
+      artifacts: [],
+      metadata: { stepError: 'doc generation failed' },
+    };
+    const stepResults: BundleStepResult[] = [
+      { deliverableId: 'audit', status: 'completed', artifactCount: 2 },
+      { deliverableId: 'workflow-design', status: 'partial', artifactCount: 0, error: 'doc generation failed' },
+    ];
+    const merged = mergeBundleResults('bundle-ops-clarity', expected, [audit, workflow], stepResults);
+    expect(merged.status).toBe('partial');
+    expect(runFulfillmentQualityChecklist('bundle-ops-clarity', merged).passed).toBe(false);
+  });
+
+  it('portal-presence is partial when landing step is missing from results', () => {
+    const expected = expectedBundleStepIds('bundle-portal-presence');
+    const setup: FulfillmentResult = {
+      status: 'completed',
+      projectId: 'setup-proj',
+      artifacts: [{ type: 'pdf', filename: 'setup-quick.pdf', storagePath: '/s' }],
+      metadata: {
+        setupTier: 'quick',
+        modulesActivated: ['notifications', 'billing'],
+        portalReady: true,
+        ...docQuality(),
+      },
+    };
+    const stepResults: BundleStepResult[] = [
+      { deliverableId: 'setup-quick', status: 'completed', artifactCount: 1, projectId: 'setup-proj' },
+    ];
+    const merged = mergeBundleResults('bundle-portal-presence', expected, [setup], stepResults);
+    expect(merged.status).toBe('partial');
+    expect(merged.metadata?.reason).toBe('bundle_steps_incomplete');
   });
 });

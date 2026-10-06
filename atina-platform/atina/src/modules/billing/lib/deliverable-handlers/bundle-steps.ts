@@ -80,6 +80,7 @@ export function mergeBundleResults(
     if (setupMeta.portalReady != null) metadata.portalReady = setupMeta.portalReady;
     if (setupMeta.setupTier != null) metadata.setupTier = setupMeta.setupTier;
     if (setupMeta.crmBootstrap != null) metadata.crmBootstrap = setupMeta.crmBootstrap;
+    if (setupMeta.portalEntitlements != null) metadata.portalEntitlements = setupMeta.portalEntitlements;
   }
 
   const mergedQuality = mergeDocumentQuality(parts);

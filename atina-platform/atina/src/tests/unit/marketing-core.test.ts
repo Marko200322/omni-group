@@ -14,7 +14,12 @@ import { reconcileMarketing } from '../../modules/marketing/lib/reconcile';
 import { recommendNextEur } from '../../modules/marketing/lib/budget-optimizer';
 import { runWhatIf } from '../../modules/marketing/lib/scenario';
 import { computeMarketingHealth } from '../../modules/marketing/lib/health';
-import { GoogleAdsAdapter, ManualCsvAdapter, MetaAdsAdapter } from '../../modules/marketing/lib/adapters';
+import {
+  GoogleAdsAdapter,
+  LinkedInAdsAdapter,
+  ManualCsvAdapter,
+  MetaAdsAdapter,
+} from '../../modules/marketing/lib/adapters';
 import { MARKETING_ENGINE_VERSION, CHANNEL_CODES } from '../../modules/marketing/lib/constants';
 import { inferChannelFromAttribution } from '../../modules/marketing/lib/channel-infer';
 
@@ -149,7 +154,7 @@ describe('marketing core', () => {
     expect(h.kind).toBe('ACTUAL');
   });
 
-  it('CSV adapter parses rows; Google/Meta stubs are UNAVAILABLE without credentials', async () => {
+  it('CSV adapter parses rows; Google/Meta/LinkedIn stubs are UNAVAILABLE without credentials', async () => {
     const csv = await new ManualCsvAdapter('channel,amount,date\ngoogle_ads,50,2026-09-01\n').sync();
     expect(csv.status).toBe('success');
     expect(csv.rows?.[0].amountCents).toBe(5000);
@@ -157,14 +162,19 @@ describe('marketing core', () => {
     delete process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
     delete process.env.GOOGLE_ADS_CLIENT_ID;
     delete process.env.META_ADS_ACCESS_TOKEN;
+    delete process.env.LINKEDIN_ADS_ACCESS_TOKEN;
+    delete process.env.LINKEDIN_ADS_ACCOUNT_ID;
     delete process.env.MARKETING_ADS_LIVE_SYNC;
     const g = await new GoogleAdsAdapter().sync();
     const m = await new MetaAdsAdapter().sync();
+    const li = await new LinkedInAdsAdapter().sync();
     expect(g.kind).toBe('UNAVAILABLE');
     expect(m.kind).toBe('UNAVAILABLE');
+    expect(li.kind).toBe('UNAVAILABLE');
+    expect(li.message).toMatch(/LINKEDIN_ADS_/);
   });
 
-  it('Google/Meta report credentials-present gate when LIVE sync flag off', async () => {
+  it('Google/Meta/LinkedIn report credentials-present gate when LIVE sync flag off', async () => {
     process.env.GOOGLE_ADS_DEVELOPER_TOKEN = 'tok';
     process.env.GOOGLE_ADS_CLIENT_ID = 'cid';
     process.env.GOOGLE_ADS_CLIENT_SECRET = 'sec';
@@ -172,12 +182,17 @@ describe('marketing core', () => {
     process.env.GOOGLE_ADS_CUSTOMER_ID = '123';
     process.env.META_ADS_ACCESS_TOKEN = 'mt';
     process.env.META_ADS_AD_ACCOUNT_ID = 'act_1';
+    process.env.LINKEDIN_ADS_ACCESS_TOKEN = 'li-tok';
+    process.env.LINKEDIN_ADS_ACCOUNT_ID = '51234567';
     delete process.env.MARKETING_ADS_LIVE_SYNC;
     const g = await new GoogleAdsAdapter().sync();
     const m = await new MetaAdsAdapter().sync();
+    const li = await new LinkedInAdsAdapter().sync();
     expect(g.status).toBe('unavailable');
     expect(g.message).toMatch(/MARKETING_ADS_LIVE_SYNC/);
     expect(m.message).toMatch(/MARKETING_ADS_LIVE_SYNC/);
+    expect(li.status).toBe('unavailable');
+    expect(li.message).toMatch(/MARKETING_ADS_LIVE_SYNC/);
     delete process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
     delete process.env.GOOGLE_ADS_CLIENT_ID;
     delete process.env.GOOGLE_ADS_CLIENT_SECRET;
@@ -185,6 +200,8 @@ describe('marketing core', () => {
     delete process.env.GOOGLE_ADS_CUSTOMER_ID;
     delete process.env.META_ADS_ACCESS_TOKEN;
     delete process.env.META_ADS_AD_ACCOUNT_ID;
+    delete process.env.LINKEDIN_ADS_ACCESS_TOKEN;
+    delete process.env.LINKEDIN_ADS_ACCOUNT_ID;
   });
 
   it('parses Resend open/click webhook payloads', async () => {

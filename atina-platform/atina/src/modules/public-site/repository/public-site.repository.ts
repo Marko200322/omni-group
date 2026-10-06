@@ -199,6 +199,11 @@ export class PublicSiteRepository {
     buyerPhone?: string | null;
     items: unknown[];
     totalEur: number;
+    subtotalEur?: number;
+    taxEur?: number;
+    shippingEur?: number;
+    taxRatePercent?: number;
+    totals?: Record<string, unknown>;
     paymentReference: string;
     notes?: string | null;
   }) {
@@ -206,12 +211,16 @@ export class PublicSiteRepository {
       id: string;
       payment_reference: string;
       total_eur: string;
+      subtotal_eur: string | null;
+      tax_eur: string;
+      shipping_eur: string;
       status: string;
     }>(
       `INSERT INTO client_site_orders
-         (site_id, owner_user_id, buyer_name, buyer_email, buyer_phone, items, total_eur, payment_reference, notes)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
-       RETURNING id, payment_reference, total_eur, status`,
+         (site_id, owner_user_id, buyer_name, buyer_email, buyer_phone, items, total_eur,
+          subtotal_eur, tax_eur, shipping_eur, tax_rate_percent, totals, payment_reference, notes)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12::jsonb, $13, $14)
+       RETURNING id, payment_reference, total_eur, subtotal_eur, tax_eur, shipping_eur, status`,
       [
         input.siteId,
         input.ownerUserId,
@@ -220,6 +229,11 @@ export class PublicSiteRepository {
         input.buyerPhone ?? null,
         JSON.stringify(input.items),
         input.totalEur,
+        input.subtotalEur ?? input.totalEur,
+        input.taxEur ?? 0,
+        input.shippingEur ?? 0,
+        input.taxRatePercent ?? 0,
+        JSON.stringify(input.totals ?? {}),
         input.paymentReference,
         input.notes ?? null,
       ],
@@ -255,5 +269,82 @@ export class PublicSiteRepository {
       orderId,
     ]);
     return rows[0] ?? null;
+  }
+
+  async updateSiteBranding(siteId: string, branding: Record<string, unknown>): Promise<void> {
+    await query(
+      `UPDATE client_public_sites SET branding = $2::jsonb, updated_at = NOW() WHERE id = $1`,
+      [siteId, JSON.stringify(branding)],
+    );
+  }
+
+  async listShopOrdersByOwner(ownerUserId: string, limit = 50) {
+    const { rows } = await query<{
+      id: string;
+      site_id: string;
+      site_slug: string;
+      site_title: string;
+      buyer_name: string;
+      buyer_email: string;
+      items: unknown;
+      total_eur: string;
+      subtotal_eur: string | null;
+      tax_eur: string;
+      shipping_eur: string;
+      tax_rate_percent: string;
+      totals: Record<string, unknown>;
+      status: string;
+      payment_method: string;
+      payment_reference: string | null;
+      notes: string | null;
+      created_at: Date;
+    }>(
+      `SELECT o.id, o.site_id, s.slug AS site_slug, s.title AS site_title,
+              o.buyer_name, o.buyer_email, o.items, o.total_eur,
+              o.subtotal_eur, o.tax_eur, o.shipping_eur, o.tax_rate_percent, o.totals,
+              o.status, o.payment_method, o.payment_reference, o.notes, o.created_at
+       FROM client_site_orders o
+       JOIN client_public_sites s ON s.id = o.site_id
+       WHERE o.owner_user_id = $1
+       ORDER BY o.created_at DESC
+       LIMIT $2`,
+      [ownerUserId, limit],
+    );
+    return rows;
+  }
+
+  async listShopOrdersBySite(slug: string, ownerUserId: string, limit = 50) {
+    const { rows } = await query<{
+      id: string;
+      site_id: string;
+      site_slug: string;
+      site_title: string;
+      buyer_name: string;
+      buyer_email: string;
+      items: unknown;
+      total_eur: string;
+      subtotal_eur: string | null;
+      tax_eur: string;
+      shipping_eur: string;
+      tax_rate_percent: string;
+      totals: Record<string, unknown>;
+      status: string;
+      payment_method: string;
+      payment_reference: string | null;
+      notes: string | null;
+      created_at: Date;
+    }>(
+      `SELECT o.id, o.site_id, s.slug AS site_slug, s.title AS site_title,
+              o.buyer_name, o.buyer_email, o.items, o.total_eur,
+              o.subtotal_eur, o.tax_eur, o.shipping_eur, o.tax_rate_percent, o.totals,
+              o.status, o.payment_method, o.payment_reference, o.notes, o.created_at
+       FROM client_site_orders o
+       JOIN client_public_sites s ON s.id = o.site_id
+       WHERE s.slug = $1 AND o.owner_user_id = $2
+       ORDER BY o.created_at DESC
+       LIMIT $3`,
+      [slug, ownerUserId, limit],
+    );
+    return rows;
   }
 }

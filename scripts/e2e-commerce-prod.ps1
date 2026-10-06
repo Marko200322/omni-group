@@ -188,6 +188,114 @@ $jobCount = @($jobs.data.jobs).Count
 if (-not $jobs.ok) { throw 'Client deliveries list failed' }
 Write-Host "  client deliveries list OK jobs=$jobCount" -ForegroundColor Green
 
+# --- Document chain: invoice/receipt in Billing + PDF in Deliveries ---
+$jobDetail = Invoke-BffJson -Method GET -Path "/api/atina/billing/fulfillment/jobs/$paymentId" -Session $userSession
+if (-not $jobDetail.ok -or -not $jobDetail.data) {
+  throw "Client fulfillment job detail failed for $paymentId"
+}
+$artifactNames = @($jobDetail.data.artifacts | ForEach-Object { [string]$_.filename })
+$pdfArtifacts = @($artifactNames | Where-Object { $_ -match '\.pdf$' })
+if ($pdfArtifacts.Count -lt 1) {
+  throw "No PDF artifact in client deliveries for $paymentId; artifacts=$($artifactNames -join ',')"
+}
+$pdfName = $pdfArtifacts[0]
+$pdfUrl = "$web/api/atina/billing/fulfillment/jobs/$paymentId/artifacts/$([uri]::EscapeDataString($pdfName))"
+$pdfResp = Invoke-WebRequest -Uri $pdfUrl -WebSession $userSession -UseBasicParsing -TimeoutSec 120
+$pdfCt = [string]$pdfResp.Headers['Content-Type']
+if ($pdfResp.StatusCode -ne 200 -or $pdfResp.RawContentLength -lt 200) {
+  throw "PDF download failed status=$($pdfResp.StatusCode) bytes=$($pdfResp.RawContentLength) ct=$pdfCt"
+}
+if ($pdfCt -and $pdfCt -notmatch 'pdf|octet-stream') {
+  throw "PDF content-type unexpected: $pdfCt"
+}
+Write-Host "  client PDF OK file=$pdfName bytes=$($pdfResp.RawContentLength) ct=$pdfCt" -ForegroundColor Green
+
+$invList = Invoke-BffJson -Method GET -Path '/api/atina/billing/invoices?limit=20&page=1' -Session $userSession
+if (-not $invList.ok) { throw "Client invoice list failed: $($invList | ConvertTo-Json -Compress)" }
+$invoices = @($invList.data.invoices)
+if ($invoices.Count -lt 1) {
+  throw 'Client invoice list empty after paid package (payment_id filter / createInvoice gap)'
+}
+$matched = @($invoices | Where-Object {
+  ([string]$_.payment_id -eq $paymentId) -or ([string]$_.paymentId -eq $paymentId)
+})
+if ($matched.Count -lt 1) {
+  # Some serializers omit payment_id on list; fall back to billing_details.deliverableId + newest
+  $matched = @($invoices | Where-Object {
+    $bd = $_.billing_details
+    if (-not $bd) { $bd = $_.billingDetails }
+    $del = if ($bd) { [string]$bd.deliverableId } else { '' }
+    $del -eq $DeliverableId
+  })
+}
+if ($matched.Count -lt 1) {
+  $sample = ($invoices | Select-Object -First 3 | ForEach-Object {
+    "id=$($_.id);payment_id=$($_.payment_id);num=$($_.invoice_number)"
+  }) -join ' | '
+  throw "No invoice linked to paymentId=$paymentId (payment_id filter). sample=$sample"
+}
+$invoice = $matched[0]
+$invoiceId = [string]$invoice.id
+$bd = $invoice.billing_details
+if (-not $bd) { $bd = $invoice.billingDetails }
+$docKind = if ($bd) { [string]$bd.documentKind } else { '' }
+Write-Host "  client invoices OK total=$($invList.data.total) matched=$invoiceId docKind=$docKind" -ForegroundColor Green
+
+# BFF returns HTML by default; request JSON via Accept
+$invDetailParams = @{
+  Uri             = "$web/api/atina/billing/invoices/$invoiceId"
+  Method          = 'GET'
+  WebSession      = $userSession
+  UseBasicParsing = $true
+  TimeoutSec      = 60
+  Headers         = @{
+    Origin  = $web
+    Referer = "$web/"
+    Accept  = 'application/json'
+  }
+}
+$invDetailRaw = Invoke-WebRequest @invDetailParams
+$invDetail = $invDetailRaw.Content | ConvertFrom-Json
+if (-not $invDetail.ok -or -not $invDetail.data) {
+  throw "Invoice detail JSON failed: $($invDetailRaw.Content.Substring(0, [Math]::Min(200, $invDetailRaw.Content.Length)))"
+}
+$detailBd = $invDetail.data.billing_details
+if (-not $detailBd) { $detailBd = $invDetail.data.billingDetails }
+$detailKind = if ($detailBd) { [string]$detailBd.documentKind } else { '' }
+if ($detailKind -notin @('payment_receipt', 'tax_invoice')) {
+  throw "Invoice documentKind missing/unexpected: '$detailKind' (expected payment_receipt without firma VAT, or tax_invoice with VAT)"
+}
+$invHtml = Invoke-WebRequest -Uri "$web/api/atina/billing/invoices/$invoiceId" -WebSession $userSession -UseBasicParsing -TimeoutSec 60 -Headers @{
+  Origin  = $web
+  Referer = "$web/"
+  Accept  = 'text/html'
+}
+# PS 5.1 may surface HTML as byte[]; normalize before substring checks.
+if ($invHtml.Content -is [byte[]]) {
+  $html = [Text.Encoding]::UTF8.GetString($invHtml.Content)
+} else {
+  $html = [string]$invHtml.Content
+}
+if ($html.TrimStart().StartsWith('{')) {
+  throw "Printable invoice returned JSON instead of HTML (Accept/text negotiation bug)"
+}
+$expectedLabel = if ($detailKind -eq 'payment_receipt') { 'Payment receipt' } else { 'Invoice' }
+$labelHit = $html.IndexOf($expectedLabel, [StringComparison]::OrdinalIgnoreCase) -ge 0
+if (-not $labelHit -and $detailKind -eq 'payment_receipt') {
+  $labelHit = ($html -match '(?i)payment') -and ($html -match '(?i)receipt')
+}
+if (-not $labelHit -and $detailKind -eq 'tax_invoice') {
+  $labelHit = $html -match '(?i)\binvoice\b'
+}
+if (-not $labelHit) {
+  $preview = $html.Substring(0, [Math]::Min(180, $html.Length)) -replace '[\r\n]+', ' '
+  throw "Printable document missing label '$expectedLabel' (documentKind=$detailKind) preview=$preview"
+}
+if ($detailKind -eq 'payment_receipt' -and ($html -notmatch '(?i)not a vat tax invoice')) {
+  throw 'Payment receipt HTML missing VAT disclaimer'
+}
+Write-Host "  invoice/receipt HTML OK kind=$detailKind label=$expectedLabel" -ForegroundColor Green
+
 $projects = Invoke-BffJson -Method GET -Path '/api/atina/product-factory/projects?lane=client_order&limit=20' -Session $userSession
 $projectCount = @($projects.data.projects).Count
 Write-Host "  client orders/projects list OK projects=$projectCount" -ForegroundColor Green
@@ -197,12 +305,19 @@ Write-Host "  client orders/projects list OK projects=$projectCount" -Foreground
   webBase            = $web
   userEmail          = $userEmail
   deliverableId      = $DeliverableId
+  industryCategory   = $IndustryCategory
   stripePlanUrl      = [string]$planCo.data.url
   stripeDeliverable  = $delCo.data.paymentId
   stripeAmount       = $stripeAmount
   paidPaymentId      = $paymentId
   fulfillment        = $finalStatus
   artifacts          = $artifactCount
+  pdfArtifact        = $pdfName
+  pdfBytes           = $pdfResp.RawContentLength
+  invoiceId          = $invoiceId
+  invoiceNumber      = [string]$invoice.invoice_number
+  documentKind       = $detailKind
+  documentLabel      = $expectedLabel
   deliveryJobs       = $jobCount
   clientProjects     = $projectCount
   paymentsMode       = $methods.data.mode

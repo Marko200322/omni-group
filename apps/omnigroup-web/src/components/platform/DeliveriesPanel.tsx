@@ -27,11 +27,28 @@ const STATUS_META: Record<
   pending_review: { label: 'In QA review', color: 'text-violet-300', icon: Clock },
 };
 
+type ShopOrderRow = {
+  id: string;
+  siteSlug: string;
+  siteTitle: string;
+  buyerName: string;
+  buyerEmail: string;
+  totalEur: number;
+  subtotalEur?: number;
+  taxEur?: number;
+  shippingEur?: number;
+  status: string;
+  paymentMethod: string;
+  paymentReference: string | null;
+  createdAt: string;
+};
+
 type Props = { disabled?: boolean };
 
 export function DeliveriesPanel({ disabled }: Props) {
   const [jobs, setJobs] = useState<AtinaFulfillmentJob[]>([]);
   const [sites, setSites] = useState<AtinaClientSite[]>([]);
+  const [shopOrders, setShopOrders] = useState<ShopOrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,9 +56,10 @@ export function DeliveriesPanel({ disabled }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const [jobsRes, sitesRes] = await Promise.all([
+      const [jobsRes, sitesRes, ordersRes] = await Promise.all([
         fetch('/api/atina/billing/fulfillment/jobs?limit=30'),
         fetch('/api/atina/public-site/client-sites/mine'),
+        fetch('/api/atina/public-site/client-sites/mine/orders'),
       ]);
       const jobsJson = (await jobsRes.json()) as {
         ok?: boolean;
@@ -52,6 +70,10 @@ export function DeliveriesPanel({ disabled }: Props) {
         ok?: boolean;
         data?: { sites?: AtinaClientSite[] };
       };
+      const ordersJson = (await ordersRes.json()) as {
+        ok?: boolean;
+        data?: { orders?: ShopOrderRow[] };
+      };
       if (!jobsRes.ok || !jobsJson.ok) {
         setError(jobsJson.error ?? 'load_failed');
         return;
@@ -59,6 +81,9 @@ export function DeliveriesPanel({ disabled }: Props) {
       setJobs(jobsJson.data?.jobs ?? []);
       if (sitesRes.ok && sitesJson.ok) {
         setSites(sitesJson.data?.sites ?? []);
+      }
+      if (ordersRes.ok && ordersJson.ok) {
+        setShopOrders(ordersJson.data?.orders ?? []);
       }
     } catch {
       setError('network');
@@ -102,7 +127,7 @@ export function DeliveriesPanel({ disabled }: Props) {
     );
   }
 
-  const hasContent = jobs.length > 0 || sites.length > 0;
+  const hasContent = jobs.length > 0 || sites.length > 0 || shopOrders.length > 0;
 
   if (!hasContent) {
     return (
@@ -217,6 +242,44 @@ export function DeliveriesPanel({ disabled }: Props) {
                 >
                   Open <ExternalLink className="inline h-3 w-3" />
                 </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {shopOrders.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-wider text-slate-500">Shop orders on your sites</p>
+          <ul className="space-y-2">
+            {shopOrders.slice(0, 12).map((order) => (
+              <li
+                key={order.id}
+                className="rounded-lg border border-teal-500/15 bg-teal-500/5 px-3 py-2"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-white">
+                      {order.buyerName} · EUR {Number(order.totalEur).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {order.siteTitle} · {order.paymentReference ?? order.id.slice(0, 8)} ·{' '}
+                      {order.paymentMethod === 'stripe' ? 'Card' : 'Bank transfer'} · {order.status}
+                    </p>
+                    {(order.taxEur != null || order.shippingEur != null) && (
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        Subtotal EUR {(order.subtotalEur ?? order.totalEur).toFixed?.(2) ?? order.totalEur}
+                        {order.taxEur ? ` · tax EUR ${Number(order.taxEur).toFixed(2)}` : ''}
+                        {order.shippingEur
+                          ? ` · shipping EUR ${Number(order.shippingEur).toFixed(2)}`
+                          : ''}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {order.createdAt ? new Date(order.createdAt).toLocaleString() : ''}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>

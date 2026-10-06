@@ -42,6 +42,18 @@ export class PublicSiteController {
     sendSuccess(res, await this.service.listMyClientSites(req.user!.userId), 'Client sites');
   };
 
+  listMyShopOrders = async (req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, await this.service.listMyShopOrders(req.user!.userId), 'Shop orders');
+  };
+
+  listSiteShopOrders = async (req: Request, res: Response): Promise<void> => {
+    sendSuccess(
+      res,
+      await this.service.listSiteShopOrders(req.user!.userId, req.params.slug),
+      'Site shop orders',
+    );
+  };
+
   placeShopOrder = async (req: Request, res: Response): Promise<void> => {
     sendCreated(res, await this.service.placeShopOrder(req.params.slug, req.body), 'Order placed');
   };

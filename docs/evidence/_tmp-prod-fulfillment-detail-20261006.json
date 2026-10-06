@@ -1,0 +1,48 @@
+﻿{
+    "ok":  true,
+    "data":  {
+                 "id":  "b7f8ee78-3fb5-4cb8-b115-dc8440bab61b",
+                 "paymentId":  "4715e97c-16b8-4ec1-a1cc-c4374b19be6a",
+                 "deliverableId":  "bundle-portal-presence",
+                 "planSlug":  null,
+                 "purchaseType":  "deliverable",
+                 "status":  "completed",
+                 "reviewStatus":  "approved",
+                 "reviewNotes":  null,
+                 "releasedAt":  "2026-10-06T08:02:12.517Z",
+                 "error":  null,
+                 "publicUrl":  "/sites/marketing-studio-4715e97c16b8-muwe4p81",
+                 "projectId":  "780eab09-27ae-4093-a4ed-13cc195165bf",
+                 "artifacts":  [
+                                   {
+                                       "type":  "setup_pack",
+                                       "filename":  "setup-quick.pdf",
+                                       "downloadLabel":  "Quick Setup â Go-Live Checklist"
+                                   },
+                                   {
+                                       "type":  "setup_pack_md",
+                                       "filename":  "setup_pack_md.md",
+                                       "downloadLabel":  "Quick Setup â Go-Live Checklist (Markdown)"
+                                   },
+                                   {
+                                       "type":  "portal_modules",
+                                       "filename":  "portal-modules.json",
+                                       "downloadLabel":  "Portal modules bootstrap"
+                                   },
+                                   {
+                                       "type":  "site_delivery_pack",
+                                       "filename":  "landing-delivery.pdf",
+                                       "downloadLabel":  "Landing + copy â Delivery pack"
+                                   },
+                                   {
+                                       "type":  "site_delivery_pack_md",
+                                       "filename":  "site_delivery_pack_md.md",
+                                       "downloadLabel":  "Landing + copy â Delivery pack (Markdown)"
+                                   }
+                               ],
+                 "clientVisible":  true,
+                 "createdAt":  "2026-10-06T08:02:10.832Z",
+                 "updatedAt":  "2026-10-06T08:02:12.517Z",
+                 "completedAt":  "2026-10-06T08:02:12.517Z"
+             }
+}

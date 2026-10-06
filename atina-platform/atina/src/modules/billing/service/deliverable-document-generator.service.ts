@@ -1,7 +1,11 @@
 import { getAiClient } from '../../../integrations';
 import { getDeliverable } from '../lib/deliverable-catalog';
 import { resolveVerticalDeliveryPack } from '../../autonomy-loop/lib/vertical-delivery-resolver';
-import { resolveVerticalSlug } from '../../../shared/industry/industry-catalog';
+import { getIndustryCategory } from '../lib/category-pricing';
+import {
+  normalizeCategorySlug,
+  resolveVerticalSlug,
+} from '../../../shared/industry/industry-catalog';
 import logger from '../../../utils/logger';
 import type { DeliverablePdfSection } from './deliverable-document-pdf.service';
 import {
@@ -13,6 +17,10 @@ import {
   assessDocumentQuality,
   documentSubstancePasses,
 } from '../lib/deliverable-handlers/artifact-helpers';
+import {
+  resolveIndustryDocumentSubstance,
+  type IndustryDocumentSubstance,
+} from '../lib/industry-document-substance';
 
 export type StructuredDeliverableDoc = {
   title: string;
@@ -22,15 +30,34 @@ export type StructuredDeliverableDoc = {
 
 type VerticalPack = ReturnType<typeof verticalPackForIndustry>;
 
+/**
+ * Resolve either a vertical slug (e.g. healthcare-dental) or a category slug (healthcare).
+ * Category-only inputs must NOT fall through to general_business.
+ */
 function verticalPackForIndustry(industryCategory?: string | null) {
-  const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
-  const resolved = resolveVerticalSlug(slug);
+  const raw =
+    industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-') || 'professional';
+  const asVertical = resolveVerticalSlug(raw);
+  if (asVertical) {
+    return resolveVerticalDeliveryPack({
+      slug: asVertical.verticalSlug,
+      category: asVertical.category,
+      subtype: asVertical.subtype,
+      name: asVertical.name,
+    });
+  }
+  const category = normalizeCategorySlug(raw);
+  const meta = getIndustryCategory(category);
   return resolveVerticalDeliveryPack({
-    slug,
-    category: resolved?.category ?? 'general_business',
-    subtype: resolved?.subtype ?? null,
-    name: resolved?.name ?? slug,
+    slug: meta?.slug ?? category,
+    category: meta?.slug ?? category,
+    subtype: null,
+    name: meta?.name ?? category.replace(/_/g, ' '),
   });
+}
+
+function substanceForPack(pack: VerticalPack): IndustryDocumentSubstance {
+  return resolveIndustryDocumentSubstance(pack.category || pack.verticalSlug);
 }
 
 function bullets(items: string[]): string {
@@ -62,30 +89,37 @@ function fallbackAudit(
 ): StructuredDeliverableDoc {
   const modules = pack.coreModules.join(', ');
   const focus = pack.researchFocus;
+  const sub = substanceForPack(pack);
+  const industryLabel = sub.labelEn || industry;
   return {
     title: 'Technical & Digital Readiness Audit',
-    subtitle: `${clientName} — ${industry}`,
+    subtitle: `${clientName} — ${industryLabel}`,
     sections: [
       {
         heading: 'Executive summary',
         body: [
-          `${clientName} operates in ${industry}. This audit evaluates stack readiness, security posture, conversion funnel integrity, and operational automation maturity against ${pack.displayName} peer benchmarks.`,
+          `${clientName} operates in ${industryLabel} (${sub.categorySlug}). This audit evaluates stack readiness, security posture, conversion funnel integrity, and operational automation maturity against ${pack.displayName} peer benchmarks.`,
+          '',
+          `${industryLabel}-specific audit lenses:`,
+          bullets(sub.auditLenses),
           '',
           'Headline findings (deterministic baseline — refine with live discovery notes):',
           bullets([
             `Primary value thesis: ${pack.valueProp}`,
             `Recommended core modules: ${modules}`,
             `Top research lenses: ${focus.slice(0, 3).join('; ')}`,
+            `Domain tokens in scope: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
             '90-day outcome target: portal live, CRM pipeline seeded, first automation closed-loop, measurable lead response SLA',
           ]),
           '',
-          'Risk posture (preliminary): Medium until auth, backup, and payment-confirm paths are evidence-checked. Priority is reducing time-to-first-value without expanding attack surface.',
+          `Risk posture (preliminary) for ${industryLabel}: Medium until auth, backup, and payment-confirm paths are evidence-checked. Priority risks:`,
+          bullets(sub.operationalRisks.slice(0, 3)),
         ].join('\n'),
       },
       {
         heading: 'Current state assessment',
         body: [
-          `Industry focus areas for ${industry}:`,
+          `Industry focus areas for ${industryLabel}:`,
           bullets(focus.map((f) => `${f} — score current maturity (1–5) and evidence location`)),
           '',
           'Capability scorecard (fill during kickoff):',
@@ -95,6 +129,7 @@ function fallbackAudit(
             'Outbound/inbound attribution',
             'Billing / fulfillment handoff reliability',
             'Content & SEO basics for acquisition pages',
+            ...sub.auditLenses.slice(0, 2).map((l) => `${l} — evidence note`),
           ]),
           '',
           `Quality gates used as acceptance bar:`,
@@ -104,16 +139,16 @@ function fallbackAudit(
       {
         heading: 'Security & compliance',
         body: [
-          'Checklist — mark each item Pass / Fail / N/A with evidence:',
+          `Checklist for ${industryLabel} — mark each item Pass / Fail / N/A with evidence:`,
           numbered([
             'TLS everywhere (no mixed content); HSTS where applicable',
             'Secrets not in client bundles; rotation cadence documented',
             'Auth: password reset, session expiry, role separation for admin vs client',
             'Backup: encrypted at rest, restore drill within last 90 days',
             'Audit log for payment confirm and privilege changes',
-            'PII retention policy reviewed for local regulations',
             'Rate limits / abuse controls on public forms and APIs',
             'Dependency and image patch policy for production hosts',
+            ...sub.complianceChecklist,
           ]),
           '',
           'Milestone: complete this checklist before any production DNS cutover (Phase 1).',
@@ -122,11 +157,12 @@ function fallbackAudit(
       {
         heading: 'Recommended stack & integrations',
         body: [
-          `For ${clientName} in ${industry}, prioritize:`,
+          `For ${clientName} in ${industryLabel}, prioritize:`,
           bullets([
             `Modules: ${modules}`,
             `Primary offers: ${pack.recommendedDeliverables.map((d) => `${d.name} (€${d.clientPriceEur})`).join('; ') || 'setup + audit follow-ons'}`,
             `Keywords / positioning: ${pack.keywords.slice(0, 8).join(', ')}`,
+            ...sub.integrationNotes.slice(0, 2),
           ]),
           '',
           'Integration order (avoid big-bang):',
@@ -145,7 +181,8 @@ function fallbackAudit(
           bullets([
             'Kickoff + access inventory',
             'Portal/auth smoke tests',
-            'Security checklist baseline',
+            `Security checklist baseline (${industryLabel} compliance items)`,
+            ...sub.setupMilestones.slice(0, 1),
           ]),
           '',
           'Phase 2 — Days 31–60 (revenue path)',
@@ -154,7 +191,7 @@ function fallbackAudit(
           'Phase 3 — Days 61–90 (scale & measure)',
           bullets([
             ...pack.workflowSteps.slice(4).map((s) => `${s.step}: ${s.action}`),
-            'KPI review: response time, conversion, fulfillment cycle time',
+            `KPI review (${industryLabel}): ${sub.kpiSet.slice(0, 3).join('; ')}`,
             'Acceptance: owner sign-off against quality gates',
           ]),
           '',
@@ -163,18 +200,21 @@ function fallbackAudit(
             'M1 Go-live checklist green',
             'M2 First closed automation loop',
             'M3 ROI dashboard reviewed with client',
+            ...sub.setupMilestones.map((m, i) => `M${i + 4} ${m}`),
           ]),
         ].join('\n'),
       },
       {
         heading: 'ROI estimate & acceptance checklist',
         body: [
-          'Conservative model for this vertical assumes 15–25% lead-response improvement and reduced admin hours from automation within 90 days. Track weekly: inbound volume, time-to-first-response, paid conversion, fulfillment defects.',
+          `Conservative model for ${industryLabel} assumes 15–25% operational improvement and reduced admin hours from automation within 90 days. Track weekly KPIs:`,
+          bullets(sub.kpiSet),
           '',
           'Acceptance checklist (purchase justification):',
           bullets([
-            '☐ Executive summary names client + industry',
+            `☐ Executive summary names client + ${industryLabel}`,
             '☐ Security checklist completed with evidence notes',
+            `☐ Industry compliance items covered: ${sub.distinctiveTokens.slice(0, 3).join(', ')}`,
             '☐ Stack recommendations map to activated modules',
             '☐ 90-day roadmap has dated phases + milestones',
             '☐ ROI metrics owners assigned',
@@ -187,6 +227,8 @@ function fallbackAudit(
 }
 
 function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDeliverableDoc {
+  const sub = substanceForPack(pack);
+  const industryLabel = sub.labelEn || pack.displayName;
   const stepSections: DeliverablePdfSection[] = pack.workflowSteps.map((s, idx) => ({
     heading: `Process step ${idx + 1}: ${s.step}`,
     body: [
@@ -194,6 +236,9 @@ function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDel
       `Primary module: ${s.moduleSlug}`,
       `Owner role: ${idx === 0 ? 'Growth / ops lead' : idx === pack.workflowSteps.length - 1 ? 'Account owner' : 'Specialist + reviewer'}`,
       `SLA: respond or advance stage within ${idx === 0 ? '4 business hours' : '1 business day'}`,
+      '',
+      `${industryLabel} nuance:`,
+      bullets(sub.workflowNuances.slice(0, 2)),
       '',
       'SOP snippet:',
       numbered([
@@ -204,20 +249,24 @@ function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDel
       ]),
       '',
       `Tools available in this vertical: ${pack.coreModules.join(', ')}`,
+      `Domain tokens: ${sub.distinctiveTokens.slice(0, 3).join(', ')}`,
     ].join('\n'),
   }));
 
   return {
     title: 'Workflow Design & SOP Pack',
-    subtitle: `${clientName} — ${pack.displayName}`,
+    subtitle: `${clientName} — ${industryLabel}`,
     sections: [
       {
         heading: 'Process map overview',
         body: [
-          `${clientName} (${pack.displayName}) end-to-end flow:`,
+          `${clientName} (${industryLabel}) end-to-end flow:`,
           numbered(pack.workflowSteps.map((s) => `${s.step} → ${s.action}`)),
           '',
           `Value proposition this workflow protects: ${pack.valueProp}`,
+          '',
+          `${industryLabel} workflow nuances:`,
+          bullets(sub.workflowNuances),
           '',
           'RACI (default): Responsible = module operator; Accountable = client admin; Consulted = Omni fulfillment; Informed = finance on paid events.',
         ].join('\n'),
@@ -229,13 +278,11 @@ function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDel
           'Automations to enable after manual dry-run:',
           bullets(pack.workflowSteps.map((s) => `${s.step}: auto-${s.action} with human override`)),
           '',
-          'KPI set:',
-          bullets([
-            'Stage conversion %',
-            'Median time in stage',
-            'Automation success vs manual fallback rate',
-            'Client-visible SLA breaches',
-          ]),
+          `${industryLabel} KPI set:`,
+          bullets(sub.kpiSet),
+          '',
+          'Operational risks to watch:',
+          bullets(sub.operationalRisks.slice(0, 3)),
           '',
           'Rollout checklist:',
           bullets([
@@ -243,6 +290,7 @@ function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDel
             '☐ Day 3: dry-run with sample lead',
             '☐ Week 2: enable first automation',
             '☐ Week 4: KPI review + SOP sign-off',
+            ...sub.setupMilestones.map((m) => `☐ Milestone: ${m}`),
             ...pack.qualityGates.map((g) => `☐ Gate: ${g}`),
           ]),
         ].join('\n'),
@@ -252,20 +300,26 @@ function fallbackWorkflow(clientName: string, pack: VerticalPack): StructuredDel
 }
 
 function fallbackIntegration(clientName: string, pack: VerticalPack): StructuredDeliverableDoc {
+  const sub = substanceForPack(pack);
+  const industryLabel = sub.labelEn || pack.displayName;
   return {
     title: 'Custom Integration Guide',
-    subtitle: `${clientName} — ${pack.displayName}`,
+    subtitle: `${clientName} — ${industryLabel}`,
     sections: [
       {
         heading: 'API overview',
         body: [
-          `${clientName} integrations should treat Omni REST surfaces as the system of record for payments, deliverables, and portal identity.`,
+          `${clientName} (${industryLabel}) integrations should treat Omni REST surfaces as the system of record for payments, deliverables, and portal identity.`,
+          '',
+          'Scope honesty: this package is a documented map + integration-config.json — tools are NOT already connected until your developer adds API keys.',
           '',
           bullets([
             'Base path: /api/v1 (JWT bearer)',
             'Idempotency: send Idempotency-Key on payment-confirm and webhook retries',
             `Vertical modules in scope: ${pack.coreModules.join(', ')}`,
+            `Industry domain tokens: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
             'Error contract: JSON { error, code, requestId } — log requestId for support',
+            'Download integration-config.json for envMap, webhookEndpoints, retryPolicy, and onboardingChecklist',
           ]),
           '',
           'Sequence (happy path): Auth → create/update CRM contact → attach payment reference → await payment.completed webhook → unlock deliverable artifacts.',
@@ -292,11 +346,14 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
           numbered([
             'Verify HMAC signature header before mutating CRM',
             'Return 2xx quickly; process async if heavy',
-            'Retry policy: exponential backoff; dead-letter after N failures',
+            'Apply retryPolicy from integration-config.json (exponential backoff + dead-letter)',
             'Map payment_id ↔ external invoice id in a durable table',
           ]),
           '',
-          `Industry note (${pack.displayName}): tag webhook payloads with source=${pack.verticalSlug} for reporting.`,
+          `${industryLabel} integration notes:`,
+          bullets(sub.integrationNotes),
+          '',
+          `Industry note: tag webhook payloads with source=${pack.verticalSlug} for reporting (never embed sensitive ${sub.distinctiveTokens[0]} payloads).`,
         ].join('\n'),
       },
       {
@@ -306,7 +363,7 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
             'Transactional mail: payment received, deliverable ready, password reset',
             'Admin notify on failed webhook or stuck fulfillment job',
             'Manual bank-transfer path remains first-class; Stripe optional',
-            'Never invent merchant IDs — leave placeholders until credentials exist',
+            'Never invent merchant IDs — leave placeholders until credentials exist (see envMap)',
           ]),
           '',
           'Payment confirm checklist:',
@@ -316,6 +373,26 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
             '☐ Fulfillment job enqueued',
             '☐ Client can download artifacts',
           ]),
+        ].join('\n'),
+      },
+      {
+        heading: 'Onboarding when you add API keys',
+        body: [
+          'Execute this checklist with integration-config.json open (also delivered as integration-onboarding-checklist.md):',
+          '',
+          numbered([
+            'Store webhookSecret as INTEGRATION_WEBHOOK_SECRET in your vault — never commit it',
+            'Register webhookEndpoints in Stripe/provider dashboards',
+            'Fill only the envMap keys you need (Stripe, email, AI) — unused stay blank',
+            'Implement HMAC verify + retryPolicy; send Idempotency-Key on retries',
+            'Sandbox E2E: Auth → CRM → payment → artifact unlock using sampleEvents',
+            'Production cutover: rotate secrets, swap live keys, monitor 24h',
+          ]),
+          '',
+          `${industryLabel} compliance before cutover:`,
+          bullets(sub.complianceChecklist.slice(0, 3).map((c) => `☐ ${c}`)),
+          '',
+          'Done when: staging E2E green and live keys are not mixed with sandbox.',
         ].join('\n'),
       },
       {
@@ -330,6 +407,7 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
             'Staging end-to-end purchase → artifact',
             'Production keys rotated + secrets scan clean',
             'Rollback: disable webhook consumer flag',
+            ...sub.setupMilestones,
           ]),
           '',
           'Day-1 ops: monitor error rate, p95 webhook latency, failed fulfillment count.',
@@ -343,6 +421,7 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
             'Rate-limit public endpoints; CAPTCHA on lead forms if abuse appears',
             'Escalation: dashboard support → on-call email → incident channel',
             `ROI hook for ${clientName}: fewer manual reconciliations after webhook automation`,
+            ...sub.operationalRisks.slice(0, 2),
           ]),
           '',
           'Acceptance checklist:',
@@ -351,6 +430,7 @@ function fallbackIntegration(clientName: string, pack: VerticalPack): Structured
             '☐ Webhook signature verified in staging',
             '☐ Payment → deliverable E2E green',
             '☐ Runbook contacts confirmed',
+            `☐ ${industryLabel} integration notes reviewed`,
           ]),
         ].join('\n'),
       },
@@ -363,16 +443,18 @@ function fallbackSetup(
   clientName: string,
   pack: VerticalPack,
 ): StructuredDeliverableDoc {
-  const industry = pack.displayName;
+  const sub = substanceForPack(pack);
+  const industry = sub.labelEn || pack.displayName;
   const commonKickoff = [
     {
       heading: 'Kickoff scope & owners',
       body: [
-        `${clientName} — ${industry} — ${tier} setup tier.`,
+        `${clientName} — ${industry} (${sub.categorySlug}) — ${tier} setup tier.`,
         '',
         bullets([
           `Value thesis: ${pack.valueProp}`,
           `Modules to activate: ${pack.coreModules.join(', ')}`,
+          `Domain focus: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
           'Owners: client admin (access), Omni fulfillment (config), finance (payment confirm)',
         ]),
         '',
@@ -380,8 +462,9 @@ function fallbackSetup(
         bullets([
           '☐ Access list collected',
           '☐ Brand/legal name confirmed',
-          '☐ Industry category locked for vertical pack',
+          `☐ Industry category locked (${sub.categorySlug}) for vertical pack`,
           '☐ Success metric agreed (e.g. first paid delivery < 7 days)',
+          ...sub.setupMilestones.slice(0, 2).map((m) => `☐ ${m}`),
         ]),
       ].join('\n'),
     },
@@ -405,7 +488,7 @@ function fallbackSetup(
             ]),
             '',
             'Acceptance: client can log in without Omni assistance (Milestone M1).',
-            'KPI: time-to-first-login < 1 business day after kickoff.',
+            `KPI (${industry}): ${sub.kpiSet[0]}`,
           ].join('\n'),
         },
         {
@@ -433,6 +516,9 @@ function fallbackSetup(
               'Schedule Day 5 check-in for open issues',
             ]),
             '',
+            `${industry} compliance reminders:`,
+            bullets(sub.complianceChecklist.slice(0, 3)),
+            '',
             `Industry hooks to mention on handoff: ${pack.outreachHooks.join('; ')}`,
             '',
             'Go-live acceptance: ☐ smoke green ☐ client login ☐ payment path ☐ hypercare calendar invite',
@@ -454,6 +540,9 @@ function fallbackSetup(
             `Seed pipeline for ${industry} with stages aligned to:`,
             numbered(pack.workflowSteps.map((s) => s.step)),
             '',
+            `${industry} workflow nuances:`,
+            bullets(sub.workflowNuances),
+            '',
             bullets([
               'Assign stage owners and SLA clocks',
               'Tag lead source for attribution',
@@ -471,6 +560,7 @@ function fallbackSetup(
               'Map legacy fields → CRM schema before import',
               'Dry-run import on staging; spot-check 10 records',
               'Production import with rollback snapshot',
+              ...sub.operationalRisks.slice(0, 2).map((r) => `Watch: ${r}`),
             ]),
             '',
             'Checklist: ☐ mapping sheet ☐ dry-run ☐ spot-check ☐ prod import ☐ SLA clock starts',
@@ -492,6 +582,7 @@ function fallbackSetup(
               'Confirming a payment',
               'Downloading deliverables',
               'Opening a support ticket',
+              ...sub.discoveryQuestions.slice(0, 2).map((q) => `Discuss: ${q}`),
             ]),
             '',
             'Support window: 30 days priority email; response SLA 24h business days.',
@@ -502,7 +593,10 @@ function fallbackSetup(
           body: [
             bullets(pack.qualityGates.map((g) => `☐ ${g}`)),
             '',
-            'Milestones: M1 portal live · M2 CRM seeded · M3 automation dry-run · M4 training complete.',
+            `${industry} KPIs:`,
+            bullets(sub.kpiSet.map((k) => `☐ Track: ${k}`)),
+            '',
+            `Milestones: M1 portal live · M2 CRM seeded · M3 automation dry-run · M4 training complete · ${sub.setupMilestones.map((m, i) => `M${i + 5} ${m}`).join(' · ')}.`,
           ].join('\n'),
         },
       ],
@@ -535,6 +629,7 @@ function fallbackSetup(
             'Rate limits on auth and public APIs',
             'Audit log review cadence (weekly for first month)',
             'Dependency/image patch window defined',
+            ...sub.complianceChecklist.slice(0, 3),
           ]),
           '',
           'Day 0 go-live security checklist: ☐ secrets ☐ TLS ☐ backups ☐ alerts ☐ least privilege',
@@ -548,6 +643,7 @@ function fallbackSetup(
             'Incident contact matrix + rollback procedure',
             'Runbook + env template + deploy script access for client ops',
             `Vertical modules: ${pack.coreModules.join(', ')}`,
+            `Domain tokens: ${sub.distinctiveTokens.slice(0, 4).join(', ')}`,
           ]),
           '',
           'Acceptance: production deploy manifest attached; restore drill date recorded; KPI owners named.',
@@ -563,6 +659,9 @@ function fallbackSetup(
             'Day 90: SLA report + next-quarter backlog',
           ]),
           '',
+          `${industry} KPIs:`,
+          bullets(sub.kpiSet),
+          '',
           bullets(pack.qualityGates.map((g) => `☐ ${g}`)),
         ].join('\n'),
       },
@@ -571,17 +670,22 @@ function fallbackSetup(
 }
 
 function fallbackSales(clientName: string, pack: VerticalPack): StructuredDeliverableDoc {
+  const sub = substanceForPack(pack);
+  const industryLabel = sub.labelEn || pack.displayName;
   return {
     title: 'Sales Enablement Pack',
-    subtitle: `${clientName} — ${pack.displayName}`,
+    subtitle: `${clientName} — ${industryLabel}`,
     sections: [
       {
         heading: 'Demo script (15 minutes)',
         body: [
-          `Audience: ${pack.displayName} buyers for ${clientName}.`,
+          `Audience: ${industryLabel} buyers for ${clientName}.`,
+          '',
+          `Open on ${industryLabel} pains:`,
+          bullets(sub.salesPains),
           '',
           numbered([
-            '0:00–2:00 — Open on pain: admin overload / slow follow-up / unclear delivery',
+            `0:00–2:00 — Open on pain: ${sub.salesPains[0]}`,
             `2:00–5:00 — Value prop: ${pack.valueProp}`,
             '5:00–9:00 — Live path: portal → pricing → payment reference → deliverable unlock',
             '9:00–12:00 — Show CRM stage + automation handoff',
@@ -590,16 +694,16 @@ function fallbackSales(clientName: string, pack: VerticalPack): StructuredDelive
           '',
           'Talk track hooks:',
           bullets(pack.outreachHooks),
+          '',
+          `Domain language to use: ${sub.distinctiveTokens.join(', ')}`,
         ].join('\n'),
       },
       {
         heading: 'Discovery questions & objection handling',
         body: [
-          'Discovery:',
+          `${industryLabel} discovery:`,
           bullets([
-            'Where do leads stall today?',
-            'Who confirms payments / owns follow-up?',
-            'What does “done” look like in 30 days?',
+            ...sub.discoveryQuestions,
             `Which of these matters most: ${pack.researchFocus.slice(0, 3).join('; ')}?`,
           ]),
           '',
@@ -609,6 +713,7 @@ function fallbackSales(clientName: string, pack: VerticalPack): StructuredDelive
             '“Too expensive” → Anchor to hours saved + faster cash collection; show package ROI checklist',
             '“Need custom” → Path: setup-full → integration → custom-software milestones',
             '“No time” → Quick setup Day-1 checklist; we drive first go-live',
+            ...sub.operationalRisks.slice(0, 2).map((r) => `“We are fine” → Counter with risk: ${r}`),
           ]),
         ].join('\n'),
       },
@@ -622,19 +727,22 @@ function fallbackSales(clientName: string, pack: VerticalPack): StructuredDelive
             : 'Map packages from catalog: audit, setup, sales-enablement, retainers.',
           '',
           `Positioning keywords: ${pack.keywords.join(', ')}`,
+          '',
+          `${industryLabel} compliance talking points:`,
+          bullets(sub.complianceChecklist.slice(0, 3)),
         ].join('\n'),
       },
       {
         heading: 'Email templates',
         body: [
           'Template A — Intro after demo:',
-          `"Hi {{name}}, following our walkthrough for ${clientName}: portal + payment + delivery path is ready to activate. Proposed kickoff: {{date}}. Reply YES to lock the slot."`,
+          `"Hi {{name}}, following our walkthrough for ${clientName} (${industryLabel}): portal + payment + delivery path is ready to activate. Proposed kickoff: {{date}}. Reply YES to lock the slot."`,
           '',
           'Template B — Nudge (Day 3):',
-          `"Quick check — still blocked on {{blocker}}? We can start with Quick Setup and expand after first win."`,
+          `"Quick check — still blocked on {{blocker}}? We can start with Quick Setup and expand after first win on ${sub.kpiSet[0]}."`,
           '',
           'Template C — Close (Week 1):',
-          `"Sharing the go-live checklist and ROI acceptance items. If we start Monday, Milestone M1 is Friday."`,
+          `"Sharing the go-live checklist and ROI acceptance items for ${industryLabel}. If we start Monday, Milestone M1 is Friday (${sub.setupMilestones[0]})."`,
         ].join('\n'),
       },
       {
@@ -647,9 +755,11 @@ function fallbackSales(clientName: string, pack: VerticalPack): StructuredDelive
             '☐ Payment path explained',
             '☐ Champion + economic buyer identified',
             ...pack.qualityGates.map((g) => `☐ ${g}`),
+            ...sub.setupMilestones.map((m) => `☐ ${m}`),
           ]),
           '',
-          'Sales KPIs: demo→paid conversion, days-to-close, attach rate of setup/audit.',
+          `${industryLabel} sales KPIs: demo→paid conversion, days-to-close, attach rate of setup/audit; plus:`,
+          bullets(sub.kpiSet),
         ].join('\n'),
       },
     ],
@@ -678,7 +788,8 @@ function fallbackSoftwareHandoff(input: {
             `Client: ${input.clientName}`,
             `Industry context: ${industry}`,
             `Project: ${input.projectName}`,
-            'Stack baseline: Node.js API + static client shell',
+            'Stack baseline: Node.js API + static SPA shell (productized starter)',
+            'Scope: starter deliverable complete — not unlimited custom build hours',
           ]),
         ].join('\n'),
       },
@@ -687,23 +798,38 @@ function fallbackSoftwareHandoff(input: {
         body: [
           numbered([
             `Source tree at: ${input.outputDir}`,
-            'Local verify: npm test && npm start',
-            'Environment template documented (no secrets committed)',
+            'README.md — local run + deploy steps',
+            '.env.example — copy to .env before start (no secrets committed)',
+            'tests/enhanced.test.js — smoke tests; fulfillment records testsPassed from real run',
             'Handoff PDF + markdown bundle for operators',
           ]),
           '',
-          'Acceptance: tests recorded in fulfillment metadata; build status completed.',
+          'Acceptance: testsPassed=true from factory test run; build status completed.',
+        ].join('\n'),
+      },
+      {
+        heading: 'How to run the scaffold',
+        body: [
+          numbered([
+            `cd ${input.outputDir}`,
+            'cp .env.example .env  (set JWT_SECRET before shared deploys)',
+            'npm test',
+            'npm start',
+            'Open http://localhost:4100 — curl /health and /api/v1/meta',
+          ]),
+          '',
+          'Day-0 checklist: ☐ .env filled ☐ npm test green ☐ /health 200 ☐ SPA loads',
         ].join('\n'),
       },
       {
         heading: 'Architecture',
         body: [
           bullets([
-            'API routes under src/routes/ (or project equivalent)',
-            'Schema / migrations under src/db/',
-            'Config via env — never hardcode credentials',
-            'Separate client shell for UI; CORS locked to known origins in prod',
-            'Health endpoint for uptime probes; structured error logging',
+            'API routes under src/routes/api.js',
+            'Schema / migrations under src/db/schema.sql',
+            'Config via env (.env.example) — never hardcode credentials',
+            'Static client shell in public/; CORS via CORS_ORIGIN in prod',
+            'Health endpoint /health for uptime probes; structured JSON errors',
           ]),
           '',
           'Extend carefully: add feature flags for risky paths; keep healthz for uptime probes.',
@@ -714,10 +840,11 @@ function fallbackSoftwareHandoff(input: {
         heading: 'Deployment runbook',
         body: [
           numbered([
-            'Set PORT, DATABASE_URL, JWT/session secrets',
-            'Build container or process manager unit',
-            'Run migrations; smoke /health',
-            'Attach TLS terminator; confirm backups',
+            'Copy tree to host or containerize (Node 20+)',
+            'Set PORT, DATABASE_URL, JWT_SECRET, CORS_ORIGIN, NODE_ENV=production from .env.example',
+            'Apply src/db/schema.sql if using Postgres',
+            'npm test && npm start under systemd/PM2/Docker',
+            'TLS terminator in front; confirm /health and backup job',
             'Record deploy timestamp and rollback tag',
           ]),
           '',
@@ -730,8 +857,8 @@ function fallbackSoftwareHandoff(input: {
         body: [
           'Checklist:',
           bullets([
-            '☐ Unit tests green in CI/local',
-            '☐ Auth happy/fail paths',
+            '☐ Unit/smoke tests green in CI/local (npm test)',
+            '☐ Auth happy/fail paths when you add auth',
             '☐ Critical business flow E2E',
             '☐ Backup/restore note for Day 0',
             '☐ Week 2: performance snapshot',
@@ -749,7 +876,7 @@ function fallbackSoftwareHandoff(input: {
           bullets([
             'SLA: acknowledge within 1 business day unless retainer says otherwise',
             'Security issues: escalate immediately; rotate secrets if needed',
-            'Do not ship with placeholder credentials',
+            'Do not ship with placeholder credentials from .env.example',
           ]),
         ].join('\n'),
       },
@@ -830,7 +957,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
   }): Promise<StructuredDeliverableDoc> {
     const pack = verticalPackForIndustry(input.industryCategory);
     return this.aiDoc(
-      `Integration architect. Sections: API overview, Auth, Webhooks, Email/Payments, Testing & go-live checklist, Security runbook.`,
+      `Integration architect. Sections: API overview, Auth, Webhooks, Email/Payments, Onboarding when you add API keys, Testing & go-live checklist, Security runbook. Never claim tools are already connected.`,
       { clientName: input.clientName, modules: pack.coreModules, industry: pack.displayName },
       fallbackIntegration(input.clientName, pack),
       input.generationHints,
@@ -923,7 +1050,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
       sections.splice(3, 0, {
         heading: 'Channel honesty',
         body: [
-          'LinkedIn Ads/Marketing and Google Ads stay NOT CONNECTED until API credentials and live sync are configured.',
+          'LinkedIn Ads (LINKEDIN_ADS_*) and Google Ads stay NOT CONNECTED until API credentials and MARKETING_ADS_LIVE_SYNC are configured.',
           'Kickoff still delivers CRM seed, outreach workspace, SLA pack, and a channel status report — never a fake live harvest.',
         ].join('\n'),
       });
@@ -965,7 +1092,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
     const pack = verticalPackForIndustry(input.industryCategory);
     const niche = pack.displayName;
     return this.aiDoc(
-      `Brand strategist. Sections: Brand voice, Domain/DNS, Email setup, Sales collateral, Launch checklist with milestones.`,
+      `Brand strategist. Sections: Brand voice, Partner DNS checklist (partner-owned, not automated), Email setup, Sales collateral, Launch checklist with milestones.`,
       { clientName: input.clientName, industry: niche },
       {
         title: 'White-Label Launch Pack',
@@ -991,20 +1118,22 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
             ].join('\n'),
           },
           {
-            heading: 'Domain & DNS',
+            heading: 'Partner DNS checklist (not automated)',
             body: [
-              `Stand up ${input.clientName}'s public hostname before demos so prospects never see an unfinished host.`,
+              `Omni does not register or automate custom domain DNS for ${input.clientName}. Your delivered public asset is the hosted partner landing under /sites/{slug}.`,
+              '',
+              'If you later point your own domain (partner keeps DNS control), use this checklist:',
               '',
               numbered([
-                'Choose apex + www strategy (prefer https://www or apex with single canonical)',
-                'Point A/AAAA or CNAME to the hosting edge Omni publishes for your partner landing',
-                'Enable HTTPS (Caddy / Let\'s Encrypt) and verify certificate auto-renew',
-                'Optional api. subdomain reserved for future integrations — do not advertise until live',
-                'Add a simple /status or health note only after DNS + TLS are green',
+                'Choose apex + www strategy (prefer https://www or apex with a single canonical)',
+                'Lower TTL, then point A/AAAA or CNAME to the host you control — Omni does not change your registrar',
+                'Enable HTTPS on your edge and verify certificate auto-renew',
+                'Optional api. subdomain only after TLS is green — do not advertise until live',
+                'Keep demos on the Omni /sites/{slug} URL until your custom domain is verified',
               ]),
               '',
-              'Checklist: ☐ registrar access ☐ DNS TTL lowered ☐ TLS green ☐ canonical URL decided',
-              'Milestone: DNS green before public outreach (Day 0).',
+              'Checklist: ☐ registrar access ☐ DNS TTL lowered ☐ TLS green ☐ canonical URL decided ☐ /sites landing still works as fallback',
+              'Honesty: custom domain is partner-owned configuration — not part of automated white-label delivery.',
             ].join('\n'),
           },
           {
@@ -1030,7 +1159,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
               '',
               bullets([
                 'Resale positioning pitch (problem → outcome → proof → next step)',
-                'Pricing table tied to recommended packages (EUR, delivery model AUTOMATED/HYBRID/HUMAN)',
+                'Pricing table tied to recommended packages (EUR, delivery model AUTOMATED / CONFIGURATION REQUIRED / HUMAN)',
                 'Onboarding email sequence for partner demos (3 touches max)',
                 'Objection sheet: timeline, scope boundaries, what is not included',
                 ...pack.outreachHooks.slice(0, 4).map((h) => `Hook: ${h}`),
@@ -1063,10 +1192,10 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
               'What Omni automates vs what the partner owns after launch.',
               '',
               bullets([
-                'Automated: partner landing publish, brand PDF pack, fulfillment kickoff for sold SKUs',
-                'Partner-owned: legal entity, local pricing markups, human sales calls, custom domain contracts',
+                'Automated: partner landing publish at /sites/{slug}, brand PDF pack, fulfillment kickoff for sold SKUs',
+                'Partner-owned: legal entity, local pricing markups, human sales calls, custom domain DNS (not automated)',
                 'Escalation: support ticket with payment/order ID when a sold package needs rework',
-                'Honesty rule: never claim LinkedIn/Google Ads live if channels are NOT CONNECTED',
+                'Honesty rule: never claim custom domain or LinkedIn/Google Ads live if not configured',
               ]),
               '',
               `Prepared for ${input.clientName} · vertical ${niche} · white-label-setup`,
@@ -1090,7 +1219,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
     const pack = verticalPackForIndustry(input.industryCategory);
     const kind =
       input.deliverableId === 'website-ecommerce'
-        ? 'ecommerce storefront (HYBRID)'
+        ? 'ecommerce storefront (complete)'
         : input.deliverableId === 'website-business'
           ? 'multi-page business website'
           : 'landing page';
@@ -1129,8 +1258,13 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
     ];
     if (input.deliverableId === 'website-ecommerce') {
       sections.push({
-        heading: 'Checkout scope (honest HYBRID)',
-        body: 'Buyers get a live shop page, industry catalog, cart, and a working order path (bank transfer with payment reference; card checkout when Stripe is enabled for the platform). This is not a full merchant stack: inventory sync, tax engine, shipping carriers, and client Stripe Connect are out of scope unless purchased separately.',
+        heading: 'Checkout & shop operations',
+        body: [
+          'Buyers get a live shop page, industry catalog with per-SKU stock, cart, configurable tax/shipping, and a working order path.',
+          'Bank transfer always works (payment reference on each order). Card checkout uses Stripe TEST when platform keys are configured.',
+          'Orders create a CRM contact and an in-app notification for the site owner; stock decrements on each successful order.',
+          'EXTERNAL CONFIGURATION REQUIRED: Stripe LIVE keys and client Stripe Connect / own merchant account are not wired by this package.',
+        ].join('\n\n'),
       });
     }
     if (input.deliverableId === 'website-business') {
@@ -1167,7 +1301,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
       industry: pack.displayName,
     });
     return this.aiDoc(
-      `Staff engineer writing client handoff. Sections: overview, artifacts, architecture, deployment runbook, test plan & milestones, support.`,
+      `Staff engineer writing client handoff. Sections: overview, artifacts, how to run the scaffold, architecture, deployment runbook, test plan & milestones, support. Document npm test/start, .env.example, and deploy steps explicitly.`,
       {
         clientName: input.clientName,
         projectName: input.projectName,

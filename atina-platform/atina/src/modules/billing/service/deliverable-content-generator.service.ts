@@ -97,7 +97,12 @@ export function resolveClientBrandName(input: {
       /e-?commerce|retail|shop|store|marketplace/i.test(
         `${niche} ${input.industryCategory ?? ''} ${input.verticalPack?.category ?? ''}`,
       );
-    return `${niche} ${shopLike ? 'Store' : 'Studio'}`;
+    // Always Title-Case the synthetic brand (avoid "marketing Studio").
+    const nicheTitle = niche
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+    return `${nicheTitle} ${shopLike ? 'Store' : 'Studio'}`;
   }
   return 'Client Store';
 }
@@ -355,6 +360,153 @@ function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
         { name: 'Funnel audit', description: 'Conversion review with prioritized fixes.', priceEur: 320 },
       ],
     },
+    construction: {
+      services: [
+        'Project scoping with clear milestones and site photos',
+        'Estimate packages and change-order workflows',
+        'Safety and compliance documentation packs',
+        'Client update cadence during active builds',
+      ],
+      outcomes: ['fewer scope disputes', 'faster approvals', 'predictable handoffs'],
+      audience: 'builders, contractors, and property owners who need clarity before work starts',
+      proof: 'Every job starts with a written scope, timeline, and acceptance criteria.',
+      products: [
+        { name: 'Site walkthrough', description: 'On-site assessment with photo report.', priceEur: 149 },
+        { name: 'Estimate package', description: 'Itemized quote with materials and labor.', priceEur: 290 },
+        { name: 'Permit pack', description: 'Document checklist and filing support.', priceEur: 390 },
+        { name: 'Renovation sprint', description: 'Focused one-week delivery block.', priceEur: 1490 },
+        { name: 'Project retainer', description: 'Weekly updates and change-order control.', priceEur: 690 },
+        { name: 'Safety briefing', description: 'Crew briefing pack for active sites.', priceEur: 180 },
+        { name: 'Handoff walkthrough', description: 'Final inspection with punch list.', priceEur: 220 },
+        { name: 'Maintenance plan', description: '12-month maintenance checklist.', priceEur: 320 },
+      ],
+    },
+    finance: {
+      services: [
+        'Cash-flow and reporting clarity for operators',
+        'Bookkeeping handoff with monthly close cadence',
+        'Invoice and collections process design',
+        'Board-ready financial summaries',
+      ],
+      outcomes: ['cleaner books', 'faster close', 'decision-ready numbers'],
+      audience: 'founders and finance leads who need trustworthy numbers without the noise',
+      proof: 'Reports arrive on a fixed cadence with explanations, not just exports.',
+      products: [
+        { name: 'Finance intake', description: 'Systems review and chart-of-accounts check.', priceEur: 190 },
+        { name: 'Monthly close', description: 'Close package with variance notes.', priceEur: 490 },
+        { name: 'Cash-flow map', description: '13-week cash forecast model.', priceEur: 390 },
+        { name: 'Collections reset', description: 'Invoice and dunning workflow setup.', priceEur: 320 },
+        { name: 'Board pack', description: 'One-page financial briefing for leadership.', priceEur: 290 },
+        { name: 'Tax-ready folder', description: 'Year-end document organization.', priceEur: 450 },
+        { name: 'Advisory hour', description: 'Focused session on a defined decision.', priceEur: 160 },
+        { name: 'Retainer (monthly)', description: 'Ongoing bookkeeping support block.', priceEur: 890 },
+      ],
+    },
+    education: {
+      services: [
+        'Program pages with clear outcomes and schedules',
+        'Enrollment and inquiry intake flows',
+        'Parent/student FAQ and policy pages',
+        'Course catalog structure with pricing',
+      ],
+      outcomes: ['higher enrollment clarity', 'fewer repeat questions', 'smoother onboarding'],
+      audience: 'schools, tutors, and training providers who need a credible enrollment path',
+      proof: 'Prospects understand outcomes, pricing, and next steps before they inquire.',
+      products: [
+        { name: 'Program consult', description: 'Outcome mapping for one course track.', priceEur: 120 },
+        { name: 'Enrollment pack', description: 'Forms, FAQ, and confirmation emails.', priceEur: 390 },
+        { name: 'Catalog rewrite', description: 'Course list with clear pricing tiers.', priceEur: 490 },
+        { name: 'Open house kit', description: 'Landing + agenda + follow-up sequence.', priceEur: 320 },
+        { name: 'Parent FAQ', description: 'Policy and logistics page set.', priceEur: 180 },
+        { name: 'Cohort launch', description: 'Launch checklist for a new intake.', priceEur: 590 },
+        { name: 'Tutor bundle', description: 'Profile pages for up to five instructors.', priceEur: 290 },
+        { name: 'Monthly ops', description: 'Content and enrollment support retainer.', priceEur: 690 },
+      ],
+    },
+    automotive: {
+      services: [
+        'Service menu pages with transparent pricing bands',
+        'Booking and estimate request flows',
+        'Fleet and warranty documentation packs',
+        'Parts and accessory catalog setup',
+      ],
+      outcomes: ['more booked bays', 'clearer estimates', 'fewer no-shows'],
+      audience: 'workshops, dealers, and fleet operators that need trust before the visit',
+      proof: 'Customers see services, pricing bands, and how to book in under a minute.',
+      products: [
+        { name: 'Diagnostic check', description: 'Standard inspection with written findings.', priceEur: 79 },
+        { name: 'Oil + filter', description: 'Maintenance service with checklist.', priceEur: 89 },
+        { name: 'Brake package', description: 'Front brake service estimate band.', priceEur: 249 },
+        { name: 'Detailing day', description: 'Interior and exterior detail package.', priceEur: 190 },
+        { name: 'Fleet inspection', description: 'Multi-vehicle inspection day.', priceEur: 690 },
+        { name: 'Warranty review', description: 'Coverage summary and next steps.', priceEur: 120 },
+        { name: 'Parts bundle', description: 'Common wear-item kit for one model.', priceEur: 160 },
+        { name: 'Shop retainer', description: 'Priority booking block (monthly).', priceEur: 390 },
+      ],
+    },
+    beauty: {
+      services: [
+        'Service menus with duration and pricing',
+        'Booking-ready offer pages and packages',
+        'Aftercare guides and FAQ',
+        'Retail product catalog for in-chair upsell',
+      ],
+      outcomes: ['more booked appointments', 'clearer packages', 'higher retail attach'],
+      audience: 'salons, spas, and beauty studios that want a polished booking front door',
+      proof: 'Clients know what to book, what it costs, and how to prepare.',
+      products: [
+        { name: 'Signature cut', description: 'Cut and finish with consultation.', priceEur: 55 },
+        { name: 'Color refresh', description: 'Root touch-up with aftercare kit.', priceEur: 95 },
+        { name: 'Spa facial', description: '60-minute facial with skin plan.', priceEur: 79 },
+        { name: 'Bridal trial', description: 'Trial look with photo notes.', priceEur: 120 },
+        { name: 'Membership', description: 'Monthly services credit package.', priceEur: 149 },
+        { name: 'Retail starter', description: 'Three take-home essentials.', priceEur: 68 },
+        { name: 'Group package', description: 'Party booking for up to four guests.', priceEur: 290 },
+        { name: 'Studio day', description: 'Private studio hire (half day).', priceEur: 390 },
+      ],
+    },
+    agriculture: {
+      services: [
+        'Seasonal offer and produce catalog pages',
+        'B2B ordering and delivery windows',
+        'Farm story and certification proof',
+        'Wholesale inquiry and sample request flows',
+      ],
+      outcomes: ['clearer wholesale intake', 'seasonal demand visibility', 'trusted provenance'],
+      audience: 'farms, co-ops, and agrifood sellers that need a credible storefront',
+      proof: 'Buyers see what is in season, how to order, and delivery expectations upfront.',
+      products: [
+        { name: 'Seasonal box', description: 'Weekly produce box for households.', priceEur: 42 },
+        { name: 'Wholesale crate', description: 'Trade crate for restaurants.', priceEur: 120 },
+        { name: 'Soil consult', description: 'Field visit with written recommendations.', priceEur: 190 },
+        { name: 'Sample pack', description: 'Buyer sample set with tasting notes.', priceEur: 65 },
+        { name: 'Delivery route', description: 'Local delivery window (weekly).', priceEur: 35 },
+        { name: 'Certification pack', description: 'Docs folder for retail onboarding.', priceEur: 220 },
+        { name: 'Farm tour', description: 'Guided visit for partners or schools.', priceEur: 150 },
+        { name: 'Season plan', description: 'Planting and sales calendar workshop.', priceEur: 390 },
+      ],
+    },
+    home_services: {
+      services: [
+        'Job intake with photos and priority triage',
+        'Fixed-scope packages for common repairs',
+        'Recurring maintenance plans',
+        'Before/after proof and review requests',
+      ],
+      outcomes: ['faster quoting', 'fewer callback disputes', 'repeat bookings'],
+      audience: 'homeowners and property managers who want reliable local service',
+      proof: 'Every job has a written scope, arrival window, and completion checklist.',
+      products: [
+        { name: 'Diagnostic visit', description: 'On-site assessment with options.', priceEur: 69 },
+        { name: 'Standard repair', description: 'Fixed-scope repair up to 2 hours.', priceEur: 149 },
+        { name: 'Deep clean', description: 'Full-home clean package.', priceEur: 190 },
+        { name: 'Seasonal tune-up', description: 'HVAC or appliance maintenance visit.', priceEur: 120 },
+        { name: 'Emergency callout', description: 'Priority same-day response window.', priceEur: 220 },
+        { name: 'Property plan', description: 'Monthly maintenance retainer.', priceEur: 290 },
+        { name: 'Smart-home setup', description: 'Device install and handoff training.', priceEur: 180 },
+        { name: 'Move-in checklist', description: 'Full property readiness walkthrough.', priceEur: 160 },
+      ],
+    },
   };
 
   const direct = packs[key];
@@ -402,7 +554,7 @@ function shopPageBody(brand: string, niche: string, copy: NicheCopy): string {
     '2. Enter your name and email',
     '3. Place the order and complete payment with the reference you receive',
     '',
-    'Working storefront path: catalog, cart, and orders. Inventory sync, tax engine, and client Stripe Connect are separate upgrades.',
+    'Working storefront path: catalog, cart, and orders. Client Stripe Connect / LIVE merchant account: CONFIGURATION REQUIRED (external).',
   ].join('\n');
 }
 
@@ -726,8 +878,22 @@ Rules:
       });
 
       if (chat?.content) {
-        const fromAi = parsePagesJson(chat.content, Math.min(3, pageCount));
-        if (fromAi) return ensureShopPage(fromAi);
+        const fromAi = parsePagesJson(chat.content, Math.min(1, pageCount));
+        if (fromAi) {
+          const pages = ensureShopPage(fromAi);
+          const quality = assessGeneratedSiteQuality({
+            pages,
+            brandName,
+            deliverableId: input.deliverableId,
+          });
+          if (quality.ok) return pages;
+          logger.warn('AI website pages failed quality gate — using template fallback', {
+            thinPages: quality.thinPages,
+            brandInHome: quality.brandInHome,
+            omniChrome: quality.omniChrome,
+            awkwardEnglish: quality.awkwardEnglish,
+          });
+        }
       }
     } catch (err) {
       logger.warn('AI website page generation failed — using template fallback', {
@@ -793,7 +959,14 @@ Rules:
     clientName: string;
     industryCategory?: string | null;
     verticalPack?: VerticalDeliveryPack;
-  }): Array<{ id: string; name: string; description: string; priceEur: number; sku: string }> {
+  }): Array<{
+    id: string;
+    name: string;
+    description: string;
+    priceEur: number;
+    sku: string;
+    stockQty: number;
+  }> {
     const niche = englishNicheLabel({
       verticalPack: input.verticalPack,
       industryCategory: input.industryCategory,
@@ -816,6 +989,8 @@ Rules:
       name: p.name,
       description: `${p.description} Sold by ${brand}.`,
       priceEur: p.priceEur,
+      // Simple per-SKU inventory — decremented when buyers place orders.
+      stockQty: 20 + i * 5,
     }));
   }
 }

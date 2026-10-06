@@ -67,13 +67,28 @@ export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {
       paymentId: ctx.paymentId,
       config: integrationConfig,
     });
+    const checklistArtifact = bootstrap.saveIntegrationOnboardingChecklist({
+      userId: ctx.userId,
+      paymentId: ctx.paymentId,
+      config: integrationConfig,
+    });
     const base = await deliverDocPack(ctx, 'integration_guide', 'integration-guide.pdf', doc);
     return {
       ...base,
-      artifacts: [...base.artifacts, configArtifact],
+      artifacts: [...base.artifacts, configArtifact, checklistArtifact],
       metadata: {
         ...base.metadata,
-        integrationConfig: { webhookSecret: '***redacted***' },
+        integrationConfig: {
+          webhookSecret: '***redacted***',
+          schema: integrationConfig.schema,
+          status: integrationConfig.status,
+          hasEnvMap: Boolean(integrationConfig.envMap),
+          hasRetryPolicy: Boolean(integrationConfig.retryPolicy),
+          hasOnboardingChecklist: Array.isArray(integrationConfig.onboardingChecklist),
+          hasWebhookEndpoints: Boolean(
+            integrationConfig.webhookEndpoints || integrationConfig.webhooks,
+          ),
+        },
       },
     };
   },

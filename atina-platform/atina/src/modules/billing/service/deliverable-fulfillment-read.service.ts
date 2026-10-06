@@ -9,6 +9,17 @@ export type FulfillmentArtifactView = {
   downloadLabel?: string;
 };
 
+/** Summary exposed on admin/client fulfillment job APIs for remote substance verify. */
+export type DocumentQualitySummary = {
+  sectionCount: number;
+  totalBodyChars: number;
+  minSectionBodyChars: number;
+  checklistOrMilestoneHits: number;
+  clientNamePresent: boolean;
+  industryPresent: boolean;
+  bundleDocs?: number;
+};
+
 export type FulfillmentJobView = {
   id: string;
   paymentId: string;
@@ -22,6 +33,11 @@ export type FulfillmentJobView = {
   error: string | null;
   publicUrl: string | null;
   projectId: string | null;
+  /** Industry slug from checkout/matrix — null only when never provided. */
+  industryCategory: string | null;
+  /** Machine-checkable document substance metrics (when computed at fulfillment). */
+  documentQuality: DocumentQualitySummary | null;
+  documentSubstanceOk: boolean | null;
   artifacts: FulfillmentArtifactView[];
   clientVisible: boolean;
   createdAt: string;
@@ -33,7 +49,39 @@ function isAdminRole(role: string): boolean {
   return role === 'admin' || role === 'superadmin' || role === 'operator';
 }
 
-function toView(row: FulfillmentJobRow): FulfillmentJobView {
+function readIndustryCategory(result: Record<string, unknown>): string | null {
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  const raw = meta.industryCategory ?? result.industryCategory;
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  return trimmed.length ? trimmed : null;
+}
+
+function readDocumentQuality(result: Record<string, unknown>): DocumentQualitySummary | null {
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  const q = meta.documentQuality;
+  if (!q || typeof q !== 'object') return null;
+  const o = q as Record<string, unknown>;
+  return {
+    sectionCount: Number(o.sectionCount ?? 0),
+    totalBodyChars: Number(o.totalBodyChars ?? 0),
+    minSectionBodyChars: Number(o.minSectionBodyChars ?? 0),
+    checklistOrMilestoneHits: Number(o.checklistOrMilestoneHits ?? 0),
+    clientNamePresent: o.clientNamePresent !== false,
+    industryPresent: o.industryPresent !== false,
+    ...(typeof o.bundleDocs === 'number' ? { bundleDocs: o.bundleDocs } : {}),
+  };
+}
+
+function readDocumentSubstanceOk(result: Record<string, unknown>): boolean | null {
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  const v = meta.documentSubstanceOk;
+  if (typeof v === 'boolean') return v;
+  return null;
+}
+
+/** Pure mapper — exported for unit tests of admin API metadata shape. */
+export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView {
   const result = (row.result ?? {}) as Record<string, unknown>;
   const rawArtifacts = Array.isArray(result.artifacts) ? result.artifacts : [];
   const artifacts: FulfillmentArtifactView[] = [];
@@ -62,6 +110,9 @@ function toView(row: FulfillmentJobRow): FulfillmentJobView {
     error: row.error,
     publicUrl: typeof result.publicUrl === 'string' ? result.publicUrl : null,
     projectId: typeof result.projectId === 'string' ? result.projectId : null,
+    industryCategory: readIndustryCategory(result),
+    documentQuality: readDocumentQuality(result),
+    documentSubstanceOk: readDocumentSubstanceOk(result),
     artifacts,
     clientVisible: row.review_status === 'approved' || row.review_status == null,
     createdAt: row.created_at.toISOString(),
@@ -75,12 +126,12 @@ export class DeliverableFulfillmentReadService {
 
   async listForUser(userId: string, limit = 50): Promise<FulfillmentJobView[]> {
     const rows = await this.repo.listByUserId(userId, limit);
-    return rows.map(toView);
+    return rows.map(toFulfillmentJobView);
   }
 
   async listForAdmin(input: { limit?: number; status?: FulfillmentJobRow['status'] }): Promise<FulfillmentJobView[]> {
     const rows = await this.repo.listAdmin(input);
-    return rows.map(toView);
+    return rows.map(toFulfillmentJobView);
   }
 
   async getJob(paymentId: string, userId: string, role: string): Promise<FulfillmentJobView> {
@@ -89,7 +140,7 @@ export class DeliverableFulfillmentReadService {
     if (row.user_id !== userId && !isAdminRole(role)) {
       throw new AuthorizationError('Not allowed to view this fulfillment job');
     }
-    return toView(row);
+    return toFulfillmentJobView(row);
   }
 
   async getArtifactFile(input: {
@@ -124,7 +175,8 @@ export class DeliverableFulfillmentReadService {
 
     const resolved = path.resolve(storagePath);
     const root = path.resolve(process.cwd(), 'data', 'client-deliverables');
-    if (!resolved.startsWith(root)) {
+    const rel = path.relative(root, resolved);
+    if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) {
       throw new AuthorizationError('Invalid artifact path');
     }
 

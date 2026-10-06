@@ -70,6 +70,14 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       industryCategory: ctx.industryCategory,
     });
 
+    const faqPack = bootstrap.saveSupportFaqSeed({
+      userId: ctx.userId,
+      paymentId: ctx.paymentId,
+      clientName: ctx.clientName,
+      industryCategory: ctx.industryCategory,
+      pack,
+    });
+
     const slaPack = bootstrap.saveSlaOnboardingPack({
       userId: ctx.userId,
       paymentId: ctx.paymentId,
@@ -82,7 +90,7 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       extras: {
         crmImportedLeads: crm.importedLeads,
         verticalSlug: pack.verticalSlug,
-        note: 'Vertical CRM/automation kickoff — LinkedIn/Google Ads remain NOT CONNECTED until APIs are wired.',
+        note: 'Vertical CRM/automation ops pack complete — LinkedIn/Google Ads remain NOT CONNECTED until APIs are wired (CONFIGURATION REQUIRED).',
       },
     });
 
@@ -98,7 +106,7 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
 
     return {
       projectId: pipeline.projectId as string,
-      artifacts: [pdf, md, slaPack],
+      artifacts: [pdf, md, slaPack, faqPack],
       status: 'completed',
       metadata: {
         ...buildDocumentQualityMetadata(doc, ctx),
@@ -137,22 +145,46 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
 
     let siteResult: FulfillmentResult | null = null;
     if (ctx.deliverableId === 'white-label-setup') {
-      siteResult = await websiteFulfillmentHandler.fulfill({
-        ...ctx,
-        deliverableId: 'landing',
-      });
+      try {
+        siteResult = await websiteFulfillmentHandler.fulfill({
+          ...ctx,
+          deliverableId: 'landing',
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error('White-label partner landing failed', {
+          paymentId: ctx.paymentId,
+          error: message,
+        });
+        siteResult = {
+          artifacts: [],
+          status: 'partial',
+          metadata: { stepError: message, deliverableId: 'landing' },
+        };
+      }
     }
+
+    // Brand pack alone is not enough — partner landing must be live.
+    const landingOk =
+      ctx.deliverableId !== 'white-label-setup' ||
+      (siteResult?.status === 'completed' && Boolean(siteResult.publicUrl?.trim()));
 
     return {
       publicUrl: siteResult?.publicUrl ?? null,
       projectId: siteResult?.projectId,
       artifacts: [pdf, md, ...(siteResult?.artifacts ?? [])],
-      status: 'completed',
+      status: landingOk ? 'completed' : 'partial',
       metadata: {
         ...(siteResult?.metadata ?? {}),
         ...docMeta,
         includesLanding: ctx.deliverableId === 'white-label-setup',
         salesPackReady: ctx.deliverableId === 'sales-enablement',
+        ...(landingOk
+          ? {}
+          : {
+              reason: 'white_label_landing_required',
+              landingStatus: siteResult?.status ?? 'missing',
+            }),
       },
     };
   },

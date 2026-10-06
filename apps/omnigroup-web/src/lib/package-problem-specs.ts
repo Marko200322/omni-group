@@ -59,6 +59,8 @@ export const PACKAGE_PROBLEM_SPECS_WEB: Record<string, WebPackageProblemSpec> = 
       'No integration map for developers',
       'Auth notes missing for third-party tools',
       'Sample events not provided',
+      'Env map / retry policy missing from config JSON',
+      'No onboarding checklist when adding API keys',
     ],
   },
   'workflow-design': {
@@ -187,6 +189,7 @@ export const PACKAGE_PROBLEM_SPECS_WEB: Record<string, WebPackageProblemSpec> = 
       'No isolated workspace project',
       'API + SPA scaffold not delivered',
       'Build/test gate not recorded',
+      'README / .env.example / run-deploy docs missing',
     ],
   },
   'bundle-portal-presence': {

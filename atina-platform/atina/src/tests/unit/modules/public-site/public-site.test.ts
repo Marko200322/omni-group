@@ -71,27 +71,29 @@ describe('PublicSiteService', () => {
 describe('priceShopItemsFromCatalog', () => {
   const branding = {
     catalog: [
-      { id: 'sku-1', name: 'Everyday essentials set', priceEur: 42 },
-      { id: 'sku-2', name: 'Signature product', priceEur: 68 },
+      { id: 'sku-1', name: 'Everyday essentials set', priceEur: 42, stockQty: 20 },
+      { id: 'sku-2', name: 'Signature product', priceEur: 68, stockQty: 20 },
     ],
   };
 
   it('reprices from the site catalog and ignores client amounts', () => {
     const priced = priceShopItemsFromCatalog(branding, [
-      { id: 'sku-1', name: 'Hacked', priceEur: 1, quantity: 2 },
+      { id: 'sku-1', quantity: 2 },
     ]);
-    expect(priced).toEqual([{ id: 'sku-1', name: 'Everyday essentials set', priceEur: 42, quantity: 2 }]);
+    expect(priced).toEqual([
+      { id: 'sku-1', name: 'Everyday essentials set', priceEur: 42, quantity: 2, stockQty: 20 },
+    ]);
   });
 
   it('rejects unknown catalog ids', () => {
     expect(() =>
-      priceShopItemsFromCatalog(branding, [{ id: 'not-real', name: 'X', priceEur: 1, quantity: 1 }]),
+      priceShopItemsFromCatalog(branding, [{ id: 'not-real', quantity: 1 }]),
     ).toThrow(ValidationError);
   });
 });
 
 describe('scaffoldFromProject ecommerce', () => {
-  it('seeds industry catalog and shop page (not Omni Starter packs)', async () => {
+  it('seeds industry catalog, shop settings, and shop page (not Omni Starter packs)', async () => {
     const createClientSite = jest.fn().mockResolvedValue({
       id: 'site-1',
       slug: 'harbor',
@@ -131,12 +133,20 @@ describe('scaffoldFromProject ecommerce', () => {
       siteType: string;
       title: string;
       pages: Array<{ slug: string }>;
-      branding: { catalog: Array<{ name: string }> };
+      branding: {
+        catalog: Array<{ name: string; stockQty?: number }>;
+        shopSettings?: { taxRatePercent: number; shippingFlatEur: number };
+      };
     };
     expect(arg.siteType).toBe('ecommerce');
     expect(arg.title).toBe('Harbor Goods');
     expect(arg.pages.some((p) => p.slug === 'shop')).toBe(true);
     expect(arg.branding.catalog.length).toBeGreaterThanOrEqual(4);
     expect(arg.branding.catalog.some((p) => /Omni|Starter$/i.test(p.name))).toBe(false);
+    expect(arg.branding.catalog.every((p) => typeof p.stockQty === 'number' && p.stockQty > 0)).toBe(
+      true,
+    );
+    expect(arg.branding.shopSettings?.taxRatePercent).toBe(20);
+    expect(arg.branding.shopSettings?.shippingFlatEur).toBe(4.9);
   });
 });

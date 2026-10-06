@@ -92,19 +92,92 @@ const MODULE_BOOTSTRAP_IDS = new Set([
 const SETUP_IDS = new Set(['setup-quick', 'setup-full', 'setup-custom', 'bundle-portal-presence']);
 
 function crmBootstrapOk(result: FulfillmentResult): boolean {
-  const crm = result.metadata?.crmBootstrap as { importedLeads?: number } | undefined;
-  if (crm && Number(crm.importedLeads ?? 0) > 0) return true;
-  const mods = result.metadata?.modulesActivated;
-  return Array.isArray(mods) ? mods.length > 0 : Boolean(mods);
+  const crm = result.metadata?.crmBootstrap as {
+    importedLeads?: number;
+    labeledDemo?: boolean;
+    sampleKind?: string;
+  } | undefined;
+  // Require real seeded leads — modulesActivated / portalReady alone must not pass.
+  if (!crm || Number(crm.importedLeads ?? 0) <= 0) return false;
+  if (crm.labeledDemo === false) return false;
+  return true;
 }
 
 function modulesOk(result: FulfillmentResult): boolean {
+  const automation = result.metadata?.automationHonesty as
+    | { automationConnected?: boolean; status?: string }
+    | undefined;
+  if (automation?.automationConnected === true) return false;
+  if (
+    automation &&
+    automation.status &&
+    automation.status !== 'MODULE_ENABLED_NOT_CONNECTED'
+  ) {
+    return false;
+  }
   const mods = result.metadata?.modulesActivated;
   if (Array.isArray(mods) && mods.length > 0) return true;
-  if (result.metadata?.crmBootstrap) return true;
-  if (result.metadata?.portalReady) return true;
+  // portalReady alone is insufficient (anti task-theater / flag-only completion).
+  if (result.metadata?.portalReady === true && !(Array.isArray(mods) && mods.length > 0)) {
+    return false;
+  }
   if (result.metadata?.aiSupportSetup) return true;
   return false;
+}
+
+function portalEntitlementsOk(result: FulfillmentResult): boolean {
+  const mods = Array.isArray(result.metadata?.modulesActivated)
+    ? (result.metadata.modulesActivated as string[])
+    : [];
+  const entitlements = result.metadata?.portalEntitlements as
+    | {
+        entitlementSource?: string;
+        userModulesGranted?: string[];
+        billingAccess?: boolean;
+        notificationSeeded?: boolean;
+        portalReady?: boolean;
+      }
+    | undefined;
+  const granted = entitlements?.userModulesGranted ?? [];
+  const hasCore =
+    (mods.includes('notifications') || granted.includes('notifications')) &&
+    (mods.includes('billing') || granted.includes('billing'));
+  if (!hasCore) return false;
+  // portalReady flag alone is never enough.
+  if (!entitlements) return false;
+  return (
+    entitlements.entitlementSource === 'user_modules+org' &&
+    entitlements.billingAccess === true &&
+    entitlements.notificationSeeded === true &&
+    granted.includes('notifications') &&
+    granted.includes('billing')
+  );
+}
+
+function productionManifestOk(result: FulfillmentResult): boolean {
+  const hasArtifact = result.artifacts.some(
+    (a) => a.type === 'production_deploy_manifest' || a.filename.includes('production-deploy'),
+  );
+  if (!hasArtifact) return false;
+  const honesty = result.metadata?.deployHonesty as
+    | {
+        sslProvisioned?: boolean;
+        domainConfigured?: boolean;
+        runbookExecutable?: boolean;
+      }
+    | undefined;
+  const prep = result.metadata?.deployPrep as
+    | { skipped?: boolean; sslProvisioned?: boolean; domainConfigured?: boolean }
+    | undefined;
+  // Fail if SSL/domain falsely claimed done (especially when deploy prep skipped).
+  if (honesty?.sslProvisioned === true || honesty?.domainConfigured === true) return false;
+  if (prep?.sslProvisioned === true || prep?.domainConfigured === true) return false;
+  if (prep?.skipped === true) {
+    // ssl/domain already proven not claimed true above
+    return honesty?.runbookExecutable === true;
+  }
+  // Require honesty metadata so skipped-deploy theater cannot pass via artifact filename alone.
+  return honesty?.runbookExecutable === true;
 }
 
 function docSubstanceOk(deliverableId: string, result: FulfillmentResult): boolean {
@@ -160,9 +233,17 @@ function omniChromeDetected(result: FulfillmentResult): boolean {
 function ecommerceHonestyOk(result: FulfillmentResult): boolean {
   if (result.metadata?.claimsFullMerchantStore === true) return false;
   const scope = String(result.metadata?.ecommerceScope ?? '').toLowerCase();
-  if (scope === 'hybrid' || scope === 'demo' || scope === 'demo_catalog') return true;
+  // Accept complete/storefront (preferred) and legacy hybrid/demo markers during transition.
+  if (
+    scope === 'complete' ||
+    scope === 'storefront' ||
+    scope === 'hybrid' ||
+    scope === 'demo' ||
+    scope === 'demo_catalog'
+  ) {
+    return true;
+  }
   if (result.metadata?.ecommerceHonestyNote) return true;
-  // Delivery PDF honesty section is recorded as flag by handler.
   if (result.metadata?.ecommerceHonesty === true) return true;
   return false;
 }
@@ -185,7 +266,7 @@ export function runFulfillmentQualityChecklist(
         : `Expected completed status, got ${result.status}`,
   });
 
-  if (WEBSITE_IDS.has(deliverableId)) {
+  if (LIVE_URL_IDS.has(deliverableId)) {
     items.push({
       id: 'public_url',
       passed: Boolean(result.publicUrl?.trim()),
@@ -229,8 +310,8 @@ export function runFulfillmentQualityChecklist(
         id: 'ecommerce_honesty',
         passed: honesty,
         message: honesty
-          ? 'E-commerce honesty: HYBRID scope recorded (usable shop, not full merchant stack)'
-          : 'website-ecommerce must disclose HYBRID scope (not claim a full merchant store)',
+          ? 'E-commerce honesty: complete storefront; Stripe Connect/LIVE = CONFIGURATION REQUIRED'
+          : 'website-ecommerce must disclose Stripe Connect/LIVE as CONFIGURATION REQUIRED (not claim live Connect)',
       });
     }
     if (deliverableId === 'website-business') {
@@ -300,14 +381,13 @@ export function runFulfillmentQualityChecklist(
   }
 
   if (deliverableId === 'white-label-setup') {
+    const hasLive = Boolean(result.publicUrl?.trim());
     items.push({
       id: 'white_label_live',
-      passed: Boolean(result.publicUrl?.trim()) || Boolean(result.metadata?.includesLanding),
-      message: result.publicUrl?.trim()
-        ? `White-label landing: ${result.publicUrl}`
-        : result.metadata?.includesLanding
-          ? 'White-label landing included'
-          : 'White-label requires published branding site',
+      passed: hasLive,
+      message: hasLive
+        ? `White-label partner landing: ${result.publicUrl}`
+        : 'White-label requires published partner landing (publicUrl) — brand PDF alone is insufficient',
     });
   }
 
@@ -318,16 +398,16 @@ export function runFulfillmentQualityChecklist(
       message: result.projectId ? 'Setup project scaffold verified' : 'Setup requires verified project scaffold',
     });
     if (deliverableId === 'setup-quick' || deliverableId === 'bundle-portal-presence') {
+      const ok = portalEntitlementsOk(result);
       const mods = Array.isArray(result.metadata?.modulesActivated)
         ? (result.metadata.modulesActivated as string[])
         : [];
       items.push({
         id: 'portal_modules',
-        passed: mods.length > 0,
-        message:
-          mods.length > 0
-            ? `Portal modules activated: ${mods.join(', ')}`
-            : 'Portal modules activated (notifications, billing) — portalReady flag alone is insufficient',
+        passed: ok,
+        message: ok
+          ? `Portal entitlements granted (user_modules+org): ${mods.join(', ') || 'notifications, billing'}`
+          : 'Portal entitlements require user_modules (notifications+billing), billing access, and welcome notification — portalReady flag alone is insufficient',
       });
     }
     if (deliverableId === 'setup-full') {
@@ -345,22 +425,25 @@ export function runFulfillmentQualityChecklist(
         id: 'crm_bootstrap',
         passed: crmBootstrapOk(result),
         message: crmBootstrapOk(result)
-          ? 'CRM pipeline seeded'
-          : 'Full onboarding requires CRM bootstrap',
+          ? 'CRM pipeline seeded with labeled demo/industry samples'
+          : 'Full onboarding requires CRM bootstrap with imported demo/industry leads (not modules-only)',
       });
     }
     if (deliverableId === 'setup-custom') {
+      const manifestOk = productionManifestOk(result);
       items.push({
         id: 'production_manifest',
-        passed: result.artifacts.some(
-          (a) => a.type === 'production_deploy_manifest' || a.filename.includes('production-deploy'),
-        ),
-        message: 'Production deploy manifest (SSL, backup, monitoring, SLA) included',
+        passed: manifestOk,
+        message: manifestOk
+          ? 'Production deploy runbook included with honest PENDING SSL/domain status'
+          : 'Production deploy manifest must be an executable runbook — skipped deploy cannot claim SSL/domain done',
       });
       items.push({
         id: 'crm_bootstrap',
         passed: crmBootstrapOk(result),
-        message: crmBootstrapOk(result) ? 'CRM pipeline seeded' : 'Custom deploy requires CRM bootstrap',
+        message: crmBootstrapOk(result)
+          ? 'CRM pipeline seeded with labeled demo/industry samples'
+          : 'Custom deploy requires CRM bootstrap with imported leads (not modules-only)',
       });
     }
   }
@@ -376,19 +459,26 @@ export function runFulfillmentQualityChecklist(
     const hasReport = result.artifacts.some(
       (a) => a.type === 'lead_gen_report' || a.filename.includes('lead-gen-kickoff'),
     );
+    const hasPipelineWorkspace = result.artifacts.some(
+      (a) =>
+        a.type === 'lead_gen_pipeline_workspace' ||
+        a.filename.includes('lead-gen-pipeline-workspace'),
+    );
+    const modeOk =
+      stats?.mode === 'kickoff_pack_only' ||
+      stats?.mode === 'channels_ready' ||
+      stats?.mode === 'live_harvest';
     const kickoffOk =
       hasReport &&
-      (Boolean(stats?.workspaceId) ||
-        Number(stats?.sampleLeadsSeeded ?? 0) > 0 ||
-        Number(stats?.leadsGenerated ?? 0) > 0 ||
-        stats?.mode === 'kickoff_pack_only' ||
-        stats?.mode === 'live_kickoff');
+      hasPipelineWorkspace &&
+      modeOk &&
+      (Boolean(stats?.workspaceId) || Number(stats?.sampleLeadsSeeded ?? 0) > 0);
     items.push({
       id: 'lead_gen_kickoff',
       passed: kickoffOk,
       message: kickoffOk
-        ? `Lead gen kickoff pack delivered (mode=${stats?.mode ?? 'unknown'}, live=${stats?.leadsGenerated ?? 0}, samples=${stats?.sampleLeadsSeeded ?? 0})`
-        : 'Lead gen retainer requires kickoff pack (workspace/report) — not fake live harvest',
+        ? `Lead gen ops pack delivered (mode=${stats?.mode ?? 'unknown'}, live=${stats?.leadsGenerated ?? 0}, samples=${stats?.sampleLeadsSeeded ?? 0})`
+        : 'Lead gen retainer requires pipeline workspace + kickoff report (honest mode) — not fake live harvest',
     });
     const channels = stats?.channelStatuses;
     const honestyOk =
@@ -403,6 +493,29 @@ export function runFulfillmentQualityChecklist(
       message: honestyOk
         ? `Channel statuses recorded: ${channels!.map((c) => `${c.channel}=${c.status}`).join(', ')}`
         : 'Lead gen must mark LinkedIn/Google Ads/etc CONNECTED or NOT CONNECTED',
+    });
+
+    // Anti-theater: simulated/invented harvest cannot PASS.
+    // Only mode=live_harvest + CONNECTED enrichment may claim leadsGenerated > 0.
+    const liveClaimed = Number(stats?.leadsGenerated ?? 0);
+    const enrichmentConnected = Array.isArray(channels)
+      ? channels.some(
+          (c) =>
+            (c.channel === 'linkedin' || c.channel === 'google_ads' || c.channel === 'apollo') &&
+            c.status === 'CONNECTED',
+        )
+      : false;
+    const harvestAllowed =
+      stats?.mode === 'live_harvest' && enrichmentConnected && honestyOk;
+    const simulatedHarvest = liveClaimed > 0 && !harvestAllowed;
+    items.push({
+      id: 'no_simulated_harvest',
+      passed: !simulatedHarvest,
+      message: simulatedHarvest
+        ? `Rejected simulated harvest: leadsGenerated=${liveClaimed} without live_harvest + CONNECTED enrichment`
+        : liveClaimed > 0
+          ? `Live harvest recorded (${liveClaimed}) with CONNECTED enrichment channel`
+          : 'No simulated harvest — live leads=0 until real adapter returns contacts',
     });
   }
 
@@ -446,6 +559,16 @@ export function runFulfillmentQualityChecklist(
         ? `Automated support active (SLA ${support.slaHours}h)`
         : 'Support retainer requires automated support queue',
     });
+    const hasFaq = result.artifacts.some(
+      (a) => a.type === 'support_faq_seed' || a.filename.includes('support-faq'),
+    );
+    items.push({
+      id: 'support_faq',
+      passed: hasFaq,
+      message: hasFaq
+        ? 'Support FAQ seed delivered'
+        : 'Support retainer requires downloadable FAQ seed',
+    });
   }
 
   if (deliverableId === 'ai-support-retainer') {
@@ -453,19 +576,40 @@ export function runFulfillmentQualityChecklist(
       ragSeeded?: boolean;
       modulesActivated?: string[];
       avatarConfigured?: boolean;
+      configurationRequired?: string[];
     } | undefined;
     const hasArtifact = result.artifacts.some(
       (a) => a.type === 'ai_support_setup' || a.filename.includes('ai-support-setup'),
+    );
+    const hasKb = result.artifacts.some(
+      (a) =>
+        a.type === 'ai_support_knowledge_base' ||
+        a.filename.includes('ai-support-knowledge') ||
+        a.type === 'support_faq_seed',
     );
     items.push({
       id: 'ai_support_setup',
       passed: Boolean(
         hasArtifact &&
-          ((ai?.modulesActivated?.length ?? 0) > 0 || modulesOk(result) || ai?.ragSeeded || ai?.avatarConfigured),
+          hasKb &&
+          ((ai?.modulesActivated?.length ?? 0) > 0 || modulesOk(result) || ai?.ragSeeded),
       ),
-      message: hasArtifact
-        ? 'AI support setup artifact + modules provisioned'
-        : 'AI support retainer requires avatar/RAG/meetings setup',
+      message: hasArtifact && hasKb
+        ? `AI support ops pack (RAG/KB/FAQ) provisioned; avatarConfigured=${Boolean(ai?.avatarConfigured)}`
+        : 'AI support retainer requires setup + knowledge base/FAQ (avatar keys optional)',
+    });
+    // Avatar missing keys must be honest — not a silent fail.
+    const avatarHonest =
+      ai?.avatarConfigured === true ||
+      (Array.isArray(ai?.configurationRequired) && ai!.configurationRequired!.length > 0) ||
+      ai?.avatarConfigured === false;
+    items.push({
+      id: 'ai_avatar_honesty',
+      passed: Boolean(hasArtifact && avatarHonest),
+      message:
+        ai?.avatarConfigured === true
+          ? 'Video avatar CONNECTED'
+          : 'Avatar CONFIGURATION REQUIRED recorded honestly (ops pack still complete)',
     });
   }
 

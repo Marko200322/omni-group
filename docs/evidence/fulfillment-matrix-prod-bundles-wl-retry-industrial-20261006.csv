@@ -1,0 +1,3 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+bundle-portal-presence,industrial,PASS,,5,c4cddd78-b908-43f9-a057-387f7f7adc00,"",7,2026-10-06T10:12:47.1223129+02:00
+bundle-ops-clarity,industrial,PASS,,4,356f8925-1af6-41b3-8806-9eaedb31ecfe,"",36,2026-10-06T10:13:45.9158975+02:00

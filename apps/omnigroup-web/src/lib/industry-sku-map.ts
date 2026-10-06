@@ -33,14 +33,14 @@ const CLUSTER_SKUS: Record<CapabilityCluster, RecommendedSku[]> = {
     { id: 'bundle-portal-presence', why: 'Portal plus landing in one checkout when both are needed.' },
   ],
   commerce: [
-    { id: 'website-ecommerce', why: 'Live HYBRID storefront with catalog, cart, and orders — not full merchant inventory/tax.' },
+    { id: 'website-ecommerce', why: 'Complete live storefront with catalog, cart, and orders. Stripe Connect/LIVE: CONFIGURATION REQUIRED.' },
     { id: 'landing', why: 'A campaign page while the catalog is still being defined.' },
     { id: 'setup-quick', why: 'Portal for orders, files, and billing status.' },
     { id: 'sales-enablement', why: 'Offer language and FAQ for the catalog you already sell.' },
   ],
   growth: [
     { id: 'landing', why: 'A public page so campaigns have a place to land.' },
-    { id: 'lead-gen-retainer', why: 'CRM workspace and monthly report; live outbound needs the disclosed stack.' },
+    { id: 'lead-gen-retainer', why: 'COMPLETE ops pack (CRM + sequences + status). Ads/Apollo CONFIGURATION REQUIRED — Titanis leads_generated=0 until keys.' },
     { id: 'sales-enablement', why: 'Scripts and hooks aligned to the niche offer.' },
     { id: 'bundle-sales-launch', why: 'Landing plus sales kit in one purchase.' },
   ],

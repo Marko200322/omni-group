@@ -600,6 +600,160 @@ export const LEGACY_SMB_DELIVERY_PROFILES: Record<string, CategoryDeliveryProfil
   LEGACY_SMB_INDUSTRY_CATEGORIES.map((meta) => [meta.slug, legacySmbProfile(meta)] as const)
 );
 
+/** Rich overrides so consulting PDFs differ by vertical (not name-swap only). */
+Object.assign(LEGACY_SMB_DELIVERY_PROFILES, {
+  healthcare: profile('healthcare', 'Zdravstvo', {
+    primaryDeliverables: ['audit', 'workflow-design', 'setup-quick', 'support-priority'],
+    coreModules: ['crm', 'automation', 'notifications', 'compliance', 'billing'],
+    marketIntensityDefault: 48,
+    researchFocus: [
+      'patient intake digitization',
+      'clinical scheduling no-show reduction',
+      'HIPAA/PHI handling maturity',
+      'referral leakage between clinics',
+    ],
+    outreachHooks: [
+      'PHI-safe intake + reminder automation',
+      'Referral follow-up without leaking clinical notes',
+      'Front-desk overload reduced with portal booking',
+    ],
+    baseKeywords: ['healthcare', 'patient intake', 'HIPAA', 'clinical scheduling', 'PHI'],
+    qualityGates: [
+      ...STANDARD_QUALITY_GATES,
+      'PHI field map reviewed (no PHI in marketing CRM)',
+      'BAA vendor list attached before go-live',
+    ],
+    workflowSteps: [
+      { step: 'Patient / referral intake', moduleSlug: 'crm', action: 'create-contact' },
+      { step: 'Eligibility + consent check', moduleSlug: 'compliance', action: 'record' },
+      { step: 'Schedule appointment', moduleSlug: 'automation', action: 'run' },
+      { step: 'Reminder sequence', moduleSlug: 'notifications', action: 'send' },
+      { step: 'Visit close + follow-up', moduleSlug: 'follow-up-automation', action: 'sequence' },
+      { step: 'Billing reconcile', moduleSlug: 'billing', action: 'invoice' },
+    ],
+  }),
+  legal: profile('legal', 'Pravo', {
+    primaryDeliverables: ['audit', 'workflow-design', 'setup-full', 'integration'],
+    coreModules: ['crm', 'contracts', 'digital-signature', 'compliance', 'billing'],
+    marketIntensityDefault: 58,
+    researchFocus: [
+      'matter intake cycle time',
+      'conflict check automation',
+      'retainer collection friction',
+      'attorney-client privilege tooling risk',
+    ],
+    outreachHooks: [
+      'Conflict-check gate before matter open',
+      'Engagement + e-sign without privilege leaks',
+      'Retainer → work start in days, not weeks',
+    ],
+    baseKeywords: ['legal', 'matter intake', 'conflict check', 'retainer', 'e-sign'],
+    qualityGates: [
+      ...STANDARD_QUALITY_GATES,
+      'Conflict check Pass before engagement',
+      'Privilege-safe note templates reviewed',
+    ],
+    workflowSteps: [
+      { step: 'Matter lead capture', moduleSlug: 'crm', action: 'create-contact' },
+      { step: 'Conflict check', moduleSlug: 'compliance', action: 'record' },
+      { step: 'Engagement letter', moduleSlug: 'contracts', action: 'create' },
+      { step: 'E-sign request', moduleSlug: 'digital-signature', action: 'request' },
+      { step: 'Retainer invoice', moduleSlug: 'billing', action: 'invoice' },
+      { step: 'Matter kickoff', moduleSlug: 'tasks', action: 'create' },
+    ],
+  }),
+  finance: profile('finance', 'Finansije', {
+    primaryDeliverables: ['audit', 'integration', 'setup-full', 'workflow-design'],
+    coreModules: ['billing', 'crm', 'compliance', 'notifications', 'automation'],
+    marketIntensityDefault: 58,
+    researchFocus: [
+      'KYC/AML onboarding friction',
+      'bank transfer reconciliation lag',
+      'segregation of duties gaps',
+      'audit trail completeness',
+    ],
+    outreachHooks: [
+      'Reconciliation that matches payment references',
+      'Dual-control payment confirm → unlock',
+      'KYC packet before kickoff, not after',
+    ],
+    baseKeywords: ['finance', 'KYC', 'AML', 'reconciliation', 'audit trail'],
+    qualityGates: [
+      ...STANDARD_QUALITY_GATES,
+      'Segregation of duties documented',
+      'Reconciliation dry-run signed',
+    ],
+    workflowSteps: [
+      { step: 'Client KYC packet', moduleSlug: 'compliance', action: 'record' },
+      { step: 'CRM onboarding ledger', moduleSlug: 'crm', action: 'create-contact' },
+      { step: 'Quote + invoice', moduleSlug: 'billing', action: 'invoice' },
+      { step: 'Reconcile payment', moduleSlug: 'automation', action: 'run' },
+      { step: 'Notify unlock', moduleSlug: 'notifications', action: 'send' },
+      { step: 'Exception queue', moduleSlug: 'tasks', action: 'create' },
+    ],
+  }),
+  'real-estate': profile('real-estate', 'Nekretnine', {
+    primaryDeliverables: ['sales-enablement', 'setup-quick', 'landing', 'lead-gen-retainer'],
+    coreModules: ['client-hunter', 'crm', 'outreach', 'follow-up-automation', 'billing'],
+    marketIntensityDefault: 58,
+    researchFocus: [
+      'buyer lead response SLA',
+      'showing no-show rate',
+      'MLS/listing sync accuracy',
+      'offer deadline ownership',
+    ],
+    outreachHooks: [
+      'Buyer leads answered before they go cold',
+      'Showing reminders that actually raise show rate',
+      'Offer deadlines owned in CRM, not inboxes',
+    ],
+    baseKeywords: ['real estate', 'listing', 'showing', 'buyer qualification', 'MLS'],
+    qualityGates: [
+      ...STANDARD_QUALITY_GATES,
+      'Fair-housing language reviewed on templates',
+      'Offer deadline clocks configured',
+    ],
+    workflowSteps: [
+      { step: 'Capture buyer/seller lead', moduleSlug: 'client-hunter', action: 'hunt' },
+      { step: 'Buyer qualification', moduleSlug: 'lead-scoring', action: 'score' },
+      { step: 'CRM listing stage', moduleSlug: 'crm', action: 'create-contact' },
+      { step: 'Book showing', moduleSlug: 'outreach', action: 'send' },
+      { step: 'Showing reminder', moduleSlug: 'follow-up-automation', action: 'sequence' },
+      { step: 'Offer + close billing', moduleSlug: 'billing', action: 'invoice' },
+    ],
+  }),
+  education: profile('education', 'Obrazovanje', {
+    primaryDeliverables: ['setup-quick', 'workflow-design', 'audit', 'support-priority'],
+    coreModules: ['crm', 'billing', 'notifications', 'automation', 'analytics'],
+    marketIntensityDefault: 52,
+    researchFocus: [
+      'inquiry to enrollment conversion',
+      'cohort fill rate',
+      'attendance exception handling',
+      'FERPA-minded student data minimization',
+    ],
+    outreachHooks: [
+      'Enrollment path from inquiry to paid seat',
+      'Cohort onboarding without spreadsheet chaos',
+      'Attendance exceptions to advisors fast',
+    ],
+    baseKeywords: ['education', 'enrollment', 'cohort', 'attendance', 'FERPA', 'curriculum'],
+    qualityGates: [
+      ...STANDARD_QUALITY_GATES,
+      'Student vs marketing list separation confirmed',
+      'Curriculum version attached to cohort',
+    ],
+    workflowSteps: [
+      { step: 'Inquiry capture', moduleSlug: 'crm', action: 'create-contact' },
+      { step: 'Advise + place', moduleSlug: 'outreach', action: 'sequence' },
+      { step: 'Enrollment payment', moduleSlug: 'billing', action: 'invoice' },
+      { step: 'Roster unlock', moduleSlug: 'automation', action: 'run' },
+      { step: 'Attendance notify', moduleSlug: 'notifications', action: 'send' },
+      { step: 'Progress analytics', moduleSlug: 'analytics', action: 'track' },
+    ],
+  }),
+});
+
 export const DEFAULT_DELIVERY_PROFILE: CategoryDeliveryProfile = profile(
   'professional',
   'Profesionalne usluge',

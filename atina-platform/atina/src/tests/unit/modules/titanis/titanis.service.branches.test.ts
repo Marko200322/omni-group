@@ -40,26 +40,28 @@ describe('TitanisService extra branches', () => {
     titanisRepo.createRun.mockResolvedValue({ rows: [{ id: 'run1' }], rowCount: 1 });
   });
 
-  it('run floors fractional targetCount', async () => {
+  it('run floors fractional targetCount and keeps leads_generated at 0', async () => {
     titanisRepo.getOwned.mockResolvedValueOnce({
       rows: [{ id: 's1', config: { outreach_channel: 'email' } }],
       rowCount: 1,
     });
     await service.run('s1', 'u1', { mode: 'lead-hunt', targetCount: 9.9 });
     expect(titanisRepo.createRun.mock.calls[0][2].target_count).toBe(9);
-    expect(titanisRepo.createRun.mock.calls[0][2].leads_generated).toBe(9);
+    expect(titanisRepo.createRun.mock.calls[0][2].planning_target).toBe(9);
+    expect(titanisRepo.createRun.mock.calls[0][2].leads_generated).toBe(0);
+    expect(titanisRepo.createRun.mock.calls[0][2].harvest_status).toBe('NO_LIVE_SOURCE');
   });
 
-  it('run follow-up uses non-close conversion rate and revenue multiplier', async () => {
+  it('run follow-up does not invent conversions or revenue', async () => {
     titanisRepo.getOwned.mockResolvedValueOnce({
       rows: [{ id: 's1', config: { outreach_channel: 'mixed' } } as Record<string, unknown>],
       rowCount: 1,
     });
     await service.run('s1', 'u1', { mode: 'follow-up', targetCount: 3 });
     const payload = titanisRepo.createRun.mock.calls[0][2];
-    expect(payload.leads_generated).toBe(2);
-    expect(payload.conversions).toBe(1);
-    expect(payload.estimated_revenue).toBe(55);
+    expect(payload.leads_generated).toBe(0);
+    expect(payload.conversions).toBe(0);
+    expect(payload.estimated_revenue).toBe(0);
     expect(payload.channel).toBe('mixed');
   });
 });

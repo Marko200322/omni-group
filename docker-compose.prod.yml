@@ -98,6 +98,8 @@ services:
       FORGE_VAULT_PATH: /var/omni/forge/vault.db
     volumes:
       - forge_data:/var/omni/forge
+      # Persist handoff PDFs / package artifacts across atina-api recreates.
+      - deliverable_data:/app/data/client-deliverables
       - ${AUTONOMY_REPO_MOUNT:-./}:/repo:ro
     ports:
       - '${ATINA_PORT:-3000}:3000'
@@ -197,6 +199,7 @@ volumes:
   caddy_config:
   upload_data:
   forge_data:
+  deliverable_data:
 
 networks:
   omni_net:

@@ -27,6 +27,8 @@ export class ProductFactoryTestService {
           'src/routes/api.js',
           'public/index.html',
           'tests/enhanced.test.js',
+          '.env.example',
+          'README.md',
           '.factory-meta.json',
         ]
       : [

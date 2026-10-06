@@ -19,6 +19,7 @@ import {
   renderPublicIndexHtml,
   renderEnhancedReadme,
   renderEnhancedSmokeTestJs,
+  renderEnvExample,
 } from '../lib/greenfield-enhanced-templates';
 
 export type GreenfieldBuildResult = {
@@ -103,6 +104,7 @@ export class GreenfieldBuilderService {
       [path.join(publicDir, 'index.html'), renderPublicIndexHtml(spec)],
       [path.join(testsDir, 'enhanced.test.js'), renderEnhancedSmokeTestJs(spec)],
       [path.join(root, 'README.md'), renderEnhancedReadme(spec)],
+      [path.join(root, '.env.example'), renderEnvExample(spec)],
       [path.join(root, '.factory-meta.json'), renderFactoryMeta({ ...spec, lane: spec.lane })],
     ];
 

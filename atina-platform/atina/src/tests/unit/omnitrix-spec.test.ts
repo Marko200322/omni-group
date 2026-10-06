@@ -29,23 +29,34 @@ describe('OmniTrix / UltrMatrix package readiness', () => {
     expect(audit.packageCount).toBeGreaterThanOrEqual(20);
   });
 
-  it('website-ecommerce honesty requires HYBRID scope — not full merchant claims', () => {
+  it('website-ecommerce honesty requires Stripe Connect CONFIGURATION REQUIRED — not HYBRID undersell', () => {
     const pkg = buildOmnitrixPackage('website-ecommerce', 'M6');
     expect(pkg).not.toBeNull();
     const audit = auditOmnitrixPackage(pkg!);
     const ultra = scoreUltrMatrix(pkg!, audit);
-    expect(pkg!.excludes.some((e) => /stripe|inventory|tax|shipping/i.test(e))).toBe(true);
     expect(
-      pkg!.claims.some((c) => /hybrid|shop page|catalog|handoff/i.test(c.claim)) ||
-        /hybrid|not a full merchant/i.test(
-          // description is on delivery spec; claims come from includes
-          pkg!.claims.map((c) => c.claim).join(' '),
-        ),
+      pkg!.excludes.some((e) => /stripe/i.test(e) && /configuration required|connect|live/i.test(e)),
+    ).toBe(true);
+    expect(pkg!.claims.every((c) => !/\bhybrid\b/i.test(c.claim))).toBe(true);
+    expect(
+      pkg!.claims.some((c) => /storefront|shop page|catalog|inventory|tax|shipping|handoff|order/i.test(c.claim)),
     ).toBe(true);
     expect(pkg!.claims.every((c) => !/full\s+merchant\s+stack|live\s+stripe\s+connect/i.test(c.claim))).toBe(
       true,
     );
     expect(ultra.honesty).toBeGreaterThanOrEqual(70);
     expect(audit.contractCoverageOk).toBe(true);
+  });
+
+  it('lead-gen-retainer honesty treats ads/Apollo as CONFIGURATION REQUIRED — not HYBRID; rejects simulated Titanis PASS', () => {
+    const pkg = buildOmnitrixPackage('lead-gen-retainer', 'M6');
+    expect(pkg).not.toBeNull();
+    const ultra = scoreUltrMatrix(pkg!, auditOmnitrixPackage(pkg!));
+    expect(
+      pkg!.excludes.some((e) => /configuration required/i.test(e) && /ads|linkedin|google|apollo|api/i.test(e)),
+    ).toBe(true);
+    expect(pkg!.excludes.some((e) => /titanis|simulated harvest/i.test(e))).toBe(true);
+    expect(pkg!.claims.every((c) => !/\bhybrid\b/i.test(c.claim))).toBe(true);
+    expect(ultra.honesty).toBeGreaterThanOrEqual(70);
   });
 });

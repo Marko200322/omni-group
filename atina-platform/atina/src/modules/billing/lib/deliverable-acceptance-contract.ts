@@ -36,11 +36,23 @@ const CR = {
     required: true,
   },
   setupProject: { id: 'setup_project', label: 'Setup project scaffold', required: true },
-  portalModules: { id: 'portal_modules', label: 'Portal modules (notifications, billing)', required: true },
-  migrationTemplate: { id: 'migration_template', label: 'CRM migration template (CSV)', required: true },
+  portalModules: {
+    id: 'portal_modules',
+    label: 'Portal entitlements (notifications + billing via user_modules/org)',
+    required: true,
+  },
+  migrationTemplate: { id: 'migration_template', label: 'Substantial CRM migration template (CSV)', required: true },
   trainingOutline: { id: 'training_outline', label: 'Training & onboarding outline', required: true },
-  crmBootstrap: { id: 'crm_bootstrap', label: 'CRM pipeline seeded with leads', required: true },
-  productionManifest: { id: 'production_manifest', label: 'Production deploy manifest', required: true },
+  crmBootstrap: {
+    id: 'crm_bootstrap',
+    label: 'CRM pipeline seeded with labeled demo/industry leads',
+    required: true,
+  },
+  productionManifest: {
+    id: 'production_manifest',
+    label: 'Honest production deploy runbook (SSL/domain not falsely DONE)',
+    required: true,
+  },
   integrationConfig: { id: 'integration_config', label: 'Integration config JSON + webhooks', required: true },
   supportAutomation: { id: 'support_automation', label: 'Automated support queue + SLA', required: true },
   retainerProject: { id: 'retainer_project', label: 'Retainer project in client workspace', required: true },
@@ -48,6 +60,21 @@ const CR = {
   channelHonesty: {
     id: 'channel_status_honesty',
     label: 'Ads/outreach channels marked CONNECTED or NOT CONNECTED',
+    required: true,
+  },
+  noSimulatedHarvest: {
+    id: 'no_simulated_harvest',
+    label: 'No simulated/invented live harvest counts',
+    required: true,
+  },
+  supportFaq: {
+    id: 'support_faq',
+    label: 'Support FAQ seed artifact',
+    required: true,
+  },
+  aiAvatarHonesty: {
+    id: 'ai_avatar_honesty',
+    label: 'Avatar CONNECTED or CONFIGURATION REQUIRED (honest)',
     required: true,
   },
   businessPages: { id: 'page_count', label: 'Multi-page business site (5+ pages)', required: true },
@@ -61,7 +88,7 @@ const CR = {
   },
   ecommerceHonesty: {
     id: 'ecommerce_honesty',
-    label: 'Honest HYBRID scope (usable shop, not full merchant stack)',
+    label: 'Stripe Connect/LIVE disclosed as CONFIGURATION REQUIRED (complete storefront, not HYBRID incomplete)',
     required: true,
   },
   whiteLabelSite: { id: 'white_label_live', label: 'White-label landing published', required: true },
@@ -148,14 +175,14 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Priority support',
     description: DELIVERABLE_CATALOG[6].description,
     billing: 'monthly',
-    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack],
+    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack, CR.supportFaq],
   },
   'support-dedicated': {
     deliverableId: 'support-dedicated',
     name: 'Dedicated support',
     description: DELIVERABLE_CATALOG[7].description,
     billing: 'monthly',
-    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack],
+    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack, CR.supportFaq],
   },
   landing: {
     deliverableId: 'landing',
@@ -201,7 +228,15 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'White-label packaging',
     description: DELIVERABLE_CATALOG[11].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance, CR.whiteLabelSite, CR.liveProbe, CR.noOmniChrome],
+    criteria: [
+      CR.status,
+      CR.pdf,
+      CR.docSubstance,
+      CR.publicUrl,
+      CR.whiteLabelSite,
+      CR.liveProbe,
+      CR.noOmniChrome,
+    ],
   },
   'sales-enablement': {
     deliverableId: 'sales-enablement',
@@ -239,6 +274,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.retainerProject,
       CR.slaPack,
       CR.channelHonesty,
+      CR.noSimulatedHarvest,
     ],
   },
   'ai-support-retainer': {
@@ -253,6 +289,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.modulesBootstrap,
       CR.retainerProject,
       CR.slaPack,
+      CR.aiAvatarHonesty,
     ],
   },
   'custom-software': {

@@ -1,0 +1,8 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+landing,marketing,PASS,,2,0f647519-7e06-4d68-b6d8-b9b44c8ecb4b,"",5,2026-10-06T07:59:22.6133632+02:00
+website-business,marketing,PASS,,2,a437e43a-a75c-4ba9-89a1-d5a8b9edb9ab,"",6,2026-10-06T07:59:40.4417267+02:00
+website-ecommerce,marketing,PASS,,2,8f490fb7-c23e-49df-b799-787aa86bcb5b,"",5,2026-10-06T07:59:57.2169576+02:00
+white-label-setup,marketing,FAIL,,0,44b0dd4d-2e51-4a4b-9f9d-04f6d1ddbf57,"Fulfillment failed: duplicate key value violates unique constraint 'product_factory_projects_owner_user_id_lane_slug_key'",5,2026-10-06T08:00:14.1695606+02:00
+custom-software,marketing,FAIL,,0,6e698d1a-c282-41e0-9f00-922de9c8982a,"Fulfillment failed: Automated quality gate failed: software_test_gate: Custom software requires testsPassed=true (buildStatus alone is insufficient)",18,2026-10-06T08:00:44.3018257+02:00
+bundle-portal-presence,marketing,PASS,,5,75cf1e95-3ff4-43c5-909b-e1da5a1ba441,"",5,2026-10-06T08:01:01.4403844+02:00
+bundle-sales-launch,marketing,PASS,,4,5b85c0dc-7177-4ba8-9710-d208cad5f584,"",5,2026-10-06T08:01:18.3492419+02:00

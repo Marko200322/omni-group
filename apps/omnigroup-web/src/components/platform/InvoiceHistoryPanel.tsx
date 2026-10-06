@@ -6,12 +6,18 @@ import { motion } from 'framer-motion';
 type InvoiceRow = {
   id?: string;
   invoice_number?: string;
+  payment_id?: string | null;
   total_amount?: number | string;
   amount?: number | string;
   currency?: string;
   status?: string;
   line_items?: Array<{ description?: string; amount?: number }>;
   created_at?: string;
+  billing_details?: {
+    documentKind?: string;
+    planName?: string;
+    deliverableId?: string;
+  } | null;
 };
 
 function formatDate(iso?: string) {
@@ -71,23 +77,26 @@ export function InvoiceHistoryPanel() {
       animate={{ opacity: 1, y: 0 }}
     >
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-medium text-white">Invoice history</h3>
+        <h3 className="text-sm font-medium text-white">Billing documents</h3>
         {!loading && !error && (
-          <span className="text-xs text-slate-500">{total} invoice{total === 1 ? '' : 's'}</span>
+          <span className="text-xs text-slate-500">{total} document{total === 1 ? '' : 's'}</span>
         )}
       </div>
 
-      {loading && <p className="mt-3 text-xs text-slate-500">Loading invoices…</p>}
+      {loading && <p className="mt-3 text-xs text-slate-500">Loading documents…</p>}
       {error && <p className="mt-3 text-xs text-amber-300/90">{error}</p>}
       {!loading && !error && rows.length === 0 && (
         <p className="mt-3 text-xs text-slate-500">
-          No invoices yet. They appear after a confirmed plan or package payment.
+          No documents yet. Payment receipts and invoices appear after a confirmed plan or package payment.
         </p>
       )}
 
       {rows.length > 0 && (
         <ul className="mt-3 divide-y divide-white/5">
-          {rows.map((inv) => (
+          {rows.map((inv) => {
+            const isReceipt = inv.billing_details?.documentKind === 'payment_receipt';
+            const docLabel = isReceipt ? 'Payment receipt' : 'Invoice';
+            return (
             <li
               key={inv.id ?? inv.invoice_number ?? inv.created_at}
               className="flex flex-wrap items-baseline justify-between gap-2 py-2.5 text-sm"
@@ -97,6 +106,8 @@ export function InvoiceHistoryPanel() {
                   {inv.invoice_number ?? inv.id?.slice(0, 8) ?? '—'}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500">
+                  {docLabel}
+                  {' · '}
                   {formatDate(inv.created_at)}
                   {inv.line_items?.[0]?.description
                     ? ` · ${inv.line_items[0].description}`
@@ -117,12 +128,13 @@ export function InvoiceHistoryPanel() {
                     rel="noreferrer"
                     className="mt-1 inline-block text-[11px] text-cyan-300/90 hover:text-white"
                   >
-                    View / print invoice
+                    {isReceipt ? 'View / print receipt' : 'View / print invoice'}
                   </a>
                 ) : null}
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </motion.div>

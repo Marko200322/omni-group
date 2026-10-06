@@ -313,6 +313,146 @@ export class MetaAdsAdapter implements MarketingSpendAdapter {
   }
 }
 
+/** True when LinkedIn Marketing API spend credentials are present (does not call the API). */
+export function linkedInAdsCredentialsPresent(): boolean {
+  return envPresent('LINKEDIN_ADS_ACCESS_TOKEN') && envPresent('LINKEDIN_ADS_ACCOUNT_ID');
+}
+
+function linkedInDateParts(d: Date): { year: number; month: number; day: number } {
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+}
+
+function formatLinkedInDateRange(start: Date, end: Date): string {
+  const s = linkedInDateParts(start);
+  const e = linkedInDateParts(end);
+  return `(start:(year:${s.year},month:${s.month},day:${s.day}),end:(year:${e.year},month:${e.month},day:${e.day}))`;
+}
+
+function linkedInSpentOn(dateRange?: {
+  start?: { year?: number; month?: number; day?: number };
+}): string {
+  const y = dateRange?.start?.year;
+  const m = dateRange?.start?.month;
+  const d = dateRange?.start?.day;
+  if (y && m && d) {
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * LinkedIn Marketing API (adAnalytics) — LIVE only with LINKEDIN_ADS_* + MARKETING_ADS_LIVE_SYNC.
+ * Never invents spend; fail-soft on API errors. Does not call LinkedIn without credentials + flag.
+ */
+export class LinkedInAdsAdapter implements MarketingSpendAdapter {
+  name = 'linkedin';
+
+  async sync(): Promise<AdapterSyncResult> {
+    if (!linkedInAdsCredentialsPresent()) {
+      return {
+        adapter: this.name,
+        kind: 'UNAVAILABLE',
+        status: 'unavailable',
+        message: 'LINKEDIN_ADS_* incomplete (need ACCESS_TOKEN, ACCOUNT_ID)',
+      };
+    }
+    if (!liveSyncEnabled()) {
+      return {
+        adapter: this.name,
+        kind: 'UNAVAILABLE',
+        status: 'unavailable',
+        message:
+          'Credentials present — set MARKETING_ADS_LIVE_SYNC=true to enable LIVE LinkedIn Ads pull',
+      };
+    }
+
+    try {
+      const token = process.env.LINKEDIN_ADS_ACCESS_TOKEN!.trim();
+      const rawAccount = process.env.LINKEDIN_ADS_ACCOUNT_ID!.trim();
+      const numericId = rawAccount.replace(/^urn:li:sponsoredAccount:/i, '');
+      const accountUrn = `urn:li:sponsoredAccount:${numericId}`;
+
+      const until = new Date();
+      const since = new Date(Date.now() - 7 * 864e5);
+      const dateRange = formatLinkedInDateRange(since, until);
+      // Rest.li List(): encode URN only; keep List(...) wrapper literal.
+      const accountsParam = `List(${encodeURIComponent(accountUrn)})`;
+      const url =
+        `https://api.linkedin.com/rest/adAnalytics` +
+        `?q=analytics` +
+        `&pivot=CAMPAIGN` +
+        `&timeGranularity=DAILY` +
+        `&dateRange=${encodeURIComponent(dateRange)}` +
+        `&accounts=${accountsParam}` +
+        `&fields=impressions,clicks,costInLocalCurrency,pivotValues,dateRange`;
+
+      const version =
+        process.env.LINKEDIN_ADS_API_VERSION?.trim() || '202401';
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'LinkedIn-Version': version,
+          'X-Restli-Protocol-Version': '2.0.0',
+        },
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return {
+          adapter: this.name,
+          kind: 'UNAVAILABLE',
+          status: 'failed',
+          message: `LinkedIn Ads API ${res.status}: ${body.slice(0, 180)}`,
+        };
+      }
+
+      const json = (await res.json()) as {
+        elements?: Array<{
+          costInLocalCurrency?: string | number;
+          impressions?: number | string;
+          clicks?: number | string;
+          pivotValues?: string[];
+          dateRange?: {
+            start?: { year?: number; month?: number; day?: number };
+          };
+        }>;
+      };
+
+      const rows = (json.elements ?? []).map((r) => {
+        const spend = parseFloat(String(r.costInLocalCurrency ?? '0'));
+        const amountCents = Math.round((Number.isFinite(spend) ? spend : 0) * 100);
+        const spentOn = linkedInSpentOn(r.dateRange);
+        const campaignUrn = String(r.pivotValues?.[0] ?? 'unknown');
+        const campaignId = campaignUrn.replace(/^urn:li:sponsoredCampaign:/i, '') || campaignUrn;
+        return {
+          channelCode: 'linkedin',
+          amountCents,
+          spentOn,
+          impressions: Number(r.impressions ?? 0) || undefined,
+          clicks: Number(r.clicks ?? 0) || undefined,
+          campaignExternalId: campaignId,
+          campaignName: campaignUrn.startsWith('urn:') ? undefined : campaignUrn,
+          idempotencyKey: `linkedin:${numericId}:${campaignId}:${spentOn}:${amountCents}`,
+        };
+      });
+
+      return {
+        adapter: this.name,
+        kind: 'ACTUAL',
+        status: 'success',
+        message: `LinkedIn Ads LIVE: ${rows.length} campaign-day rows (LAST_7_DAYS)`,
+        rows,
+      };
+    } catch (err) {
+      return {
+        adapter: this.name,
+        kind: 'UNAVAILABLE',
+        status: 'failed',
+        message: err instanceof Error ? err.message.slice(0, 200) : 'linkedin_ads_sync_failed',
+      };
+    }
+  }
+}
+
 export function defaultAdapters(): MarketingSpendAdapter[] {
-  return [new GoogleAdsAdapter(), new MetaAdsAdapter()];
+  return [new GoogleAdsAdapter(), new MetaAdsAdapter(), new LinkedInAdsAdapter()];
 }

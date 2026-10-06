@@ -269,6 +269,11 @@ function dispatchRevenueAllocation(input: {
   );
 }
 
+function normalizePaymentIndustry(raw?: string | null): string | null {
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function dispatchAutoFulfillment(input: {
   paymentId: string;
   userId: string;
@@ -279,7 +284,10 @@ function dispatchAutoFulfillment(input: {
   clientName?: string | null;
   clientEmail?: string | null;
 }): void {
-  deliverableFulfillment.dispatchAfterPaymentConfirm(input);
+  deliverableFulfillment.dispatchAfterPaymentConfirm({
+    ...input,
+    industryCategory: normalizePaymentIndustry(input.industryCategory),
+  });
 }
 
 function dispatchFactoryPhaseAutoEvaluate(): void {
@@ -713,10 +721,26 @@ export class PaymentsService {
       stripeInvoiceId: invoice.id,
     });
 
-    let planSlug =
+    let stripeSubMeta: Stripe.Metadata | null =
       typeof invoice.subscription === 'object' && invoice.subscription && 'metadata' in invoice.subscription
-        ? String((invoice.subscription as Stripe.Subscription).metadata?.planSlug ?? '')
-        : '';
+        ? (invoice.subscription as Stripe.Subscription).metadata
+        : null;
+    // Invoice payloads often carry only the subscription id — retrieve metadata so industry is not dropped.
+    if (!stripeSubMeta && subscriptionId) {
+      try {
+        const sub = await requireStripe().subscriptions.retrieve(subscriptionId);
+        stripeSubMeta = sub.metadata ?? null;
+      } catch (err) {
+        logger.warn('Stripe subscription metadata retrieve skipped', {
+          error: err instanceof Error ? err.message : String(err),
+          subscriptionId,
+        });
+      }
+    }
+    let planSlug = String(stripeSubMeta?.planSlug ?? '');
+    let invoiceIndustryCategory = normalizePaymentIndustry(
+      typeof stripeSubMeta?.industryCategory === 'string' ? stripeSubMeta.industryCategory : null,
+    );
     try {
       const plan = await billingService.getPlanById(subRows[0].plan_id);
       if (!planSlug) planSlug = plan.slug;
@@ -765,6 +789,7 @@ export class PaymentsService {
         purchaseType: 'platform_plan',
         planSlug,
         billingCycle: (subRows[0] as { billing_cycle?: string }).billing_cycle ?? 'monthly',
+        ...(invoiceIndustryCategory ? { industryCategory: invoiceIndustryCategory } : {}),
       },
     });
 
@@ -778,6 +803,7 @@ export class PaymentsService {
         purchaseType: 'platform_plan',
         planSlug: planSlug || null,
         deliverableId: planSlug ? resolvePlanDeliverableId(planSlug) : null,
+        industryCategory: invoiceIndustryCategory,
       });
     }
   }
@@ -1198,7 +1224,9 @@ export class PaymentsService {
         userId: rows[0].user_id,
         purchaseType: 'deliverable',
         deliverableId,
-        industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+        industryCategory: normalizePaymentIndustry(
+          typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+        ),
         clientName: resolveFulfillmentClientName(client),
         clientEmail: client?.email ?? null,
       });
@@ -1329,7 +1357,9 @@ export class PaymentsService {
       userId: rows[0].user_id,
       purchaseType: 'platform_plan',
       planSlug,
-      industryCategory: typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+      industryCategory: normalizePaymentIndustry(
+        typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null,
+      ),
       clientName: resolveFulfillmentClientName(client),
       clientEmail: client?.email ?? null,
     });

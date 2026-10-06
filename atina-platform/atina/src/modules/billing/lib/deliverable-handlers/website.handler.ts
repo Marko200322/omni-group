@@ -8,7 +8,11 @@ import {
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
 import { resolveVerticalDeliveryPack } from '../../../autonomy-loop/lib/vertical-delivery-resolver';
-import { resolveVerticalSlug } from '../../../../shared/industry/industry-catalog';
+import {
+  normalizeCategorySlug,
+  resolveVerticalSlug,
+} from '../../../../shared/industry/industry-catalog';
+import { getIndustryCategory } from '../category-pricing';
 import logger from '../../../../utils/logger';
 import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
@@ -21,13 +25,24 @@ const OMNI_CHROME_HTML_RE =
   /ask\s*omi\b|powered by omni|omni group tech(?!\s+intake)|omnigrouptech\.com\/(login|pricing|products|register)\b/i;
 
 function verticalContext(industryCategory?: string | null) {
-  const slug = industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';
-  const resolved = resolveVerticalSlug(slug);
+  const raw =
+    industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-') || 'professional';
+  const resolved = resolveVerticalSlug(raw);
+  if (resolved) {
+    return resolveVerticalDeliveryPack({
+      slug: resolved.verticalSlug,
+      category: resolved.category,
+      subtype: resolved.subtype,
+      name: resolved.name,
+    });
+  }
+  const category = normalizeCategorySlug(raw);
+  const meta = getIndustryCategory(category);
   return resolveVerticalDeliveryPack({
-    slug,
-    category: resolved?.category ?? 'general_business',
-    subtype: resolved?.subtype ?? null,
-    name: resolved?.name ?? slug,
+    slug: meta?.slug ?? category,
+    category: meta?.slug ?? category,
+    subtype: null,
+    name: meta?.name ?? category.replace(/_/g, ' '),
   });
 }
 
@@ -60,17 +75,23 @@ async function assertSiteLive(absoluteUrl: string): Promise<{
     const text = await res.text();
     const bytes = Buffer.byteLength(text, 'utf8');
     const detectedTitle = extractHtmlTitle(text);
-    // Judge visible page content, not inherited platform <head>/RSC payload defaults.
+    // Judge visible page text only — ignore scripts, styles, comments, and tag attributes
+    // (Next.js/RSC payloads and prefetch links can embed omnigrouptech.com URLs in markup).
     const bodyMatch = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     const rawBody = bodyMatch?.[1] ?? text;
     const visible = rawBody
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ');
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<\/?[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     const snippet = visible.slice(0, 4000);
-    const omniChrome =
-      OMNI_CHROME_HTML_RE.test(snippet) ||
+    const titleLooksPlaceholder =
       isPlaceholderBrand(detectedTitle) ||
-      /system\s*admin/i.test(detectedTitle);
+      /system\s*admin/i.test(detectedTitle) ||
+      /omni\s*group/i.test(detectedTitle);
+    const omniChrome = OMNI_CHROME_HTML_RE.test(snippet) || titleLooksPlaceholder;
     return {
       ok: res.status === 200 && bytes >= 800,
       status: res.status,
@@ -217,11 +238,11 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
         catalogVisible: ctx.deliverableId === 'website-ecommerce' ? catalogVisible : undefined,
         siteTitle: brandTitle,
         brandTitle,
-        ecommerceScope: ctx.deliverableId === 'website-ecommerce' ? 'hybrid' : undefined,
+        ecommerceScope: ctx.deliverableId === 'website-ecommerce' ? 'complete' : undefined,
         ecommerceHonesty: ctx.deliverableId === 'website-ecommerce' ? true : undefined,
         ecommerceHonestyNote:
           ctx.deliverableId === 'website-ecommerce'
-            ? 'HYBRID storefront: live catalog, cart, and order path — not full merchant inventory/tax/Stripe Connect'
+            ? 'Complete sellable storefront: industry catalog, cart, inventory, tax/shipping settings, bank-transfer orders; Stripe TEST when platform keys configured. EXTERNAL CONFIGURATION REQUIRED for Stripe LIVE / Connect.'
             : undefined,
         claimsFullMerchantStore: false,
         liveProbe: {

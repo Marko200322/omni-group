@@ -311,7 +311,7 @@ const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
       {
         id: 'integration',
         name: 'Custom integration',
-        description: 'Nango, OpenRouter, scraper, email — connect your existing tools.',
+        description: 'Documented map for Stripe, AI, scraper, email — your developer wires keys; tools are not pre-connected.',
         priceLabel: '',
         href: serviceCatalogHref('integration'),
       },
@@ -370,7 +370,7 @@ const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
       {
         id: 'white-label-setup',
         name: 'White-label packaging',
-        description: 'Branding, domain, pricing, and materials for partner sales.',
+        description: 'Brand pack and live partner landing for resale — custom domain not included.',
         priceLabel: '',
         href: serviceCatalogHref('white-label-setup'),
       },

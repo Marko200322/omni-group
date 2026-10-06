@@ -2,6 +2,8 @@
  * Honest delivery contract for public marketing.
  * Do not claim AUTOMATED unless the factory ships the listed artifacts
  * without a human finishing the commercial scope.
+ * External Stripe LIVE / ads API / firma / provider keys = CONFIGURATION REQUIRED,
+ * not an incomplete-product HYBRID label.
  */
 export type AutomationLevel = 'AUTOMATED' | 'SEMI_AUTOMATED' | 'HUMAN_DELIVERY';
 
@@ -20,26 +22,28 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'setup-quick',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the listed portal, PDF, and project artifacts.',
+    humanIntervention: 'None for real portal entitlements (notifications + billing), welcome notice, and setup PDF.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Automated after payment',
+    label: 'COMPLETE · real portal entitlements',
   },
   {
     deliverableId: 'setup-full',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Factory opens CRM/automation modules; migration and training still need a person.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for the COMPLETE onboarding pack (labeled DEMO CRM samples, entitlements, migration CSV, training outline). External automations stay NOT CONNECTED. Hands-on migration/training calls remain out of scope.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Factory starts it · human finishes onboarding',
+    publicNameNote: 'CRM samples are labeled DEMO/industry templates — not live customer data.',
+    label: 'COMPLETE onboarding pack · external automations NOT CONNECTED',
   },
   {
     deliverableId: 'setup-custom',
-    automationLevel: 'HUMAN_DELIVERY',
-    humanIntervention: 'Domain, SSL, backup, monitoring, and SLA work is implemented by a person.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for the COMPLETE deploy runbook pack (JSON checklist, CRM seed, entitlements, enterprise PDF). DNS/SSL/backup/monitoring stay PENDING for client ops — not remote go-live.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Human implementation after payment',
+    publicNameNote: 'Pack is executable documentation; client ops perform go-live.',
+    label: 'COMPLETE runbook pack · DNS/SSL PENDING on client',
   },
   {
     deliverableId: 'audit',
@@ -52,10 +56,11 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'integration',
     automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Guide PDF and config map are generated; live third-party wiring is not included.',
+    humanIntervention:
+      'Guide PDF and config map are generated. Live third-party wiring is CONFIGURATION REQUIRED (external credentials).',
     nameMatchesScope: true,
     publicNameNote: 'Name is “Custom integration”; scope is a documented integration pack, not a live connect.',
-    label: 'Docs automated · live wiring not included',
+    label: 'Docs automated · live wiring CONFIGURATION REQUIRED',
   },
   {
     deliverableId: 'workflow-design',
@@ -87,37 +92,40 @@ const ROWS: DeliveryHonesty[] = [
   },
   {
     deliverableId: 'landing',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Factory publishes a hosted landing; copy is an AI first draft, not a custom brand system.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention: 'None for the listed live landing and niche copy pack.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Hosted page automated · copy is a first draft',
+    label: 'Automated after payment',
   },
   {
     deliverableId: 'website-business',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Factory publishes a multi-page hosted site; custom domain and CMS training are not included.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention: 'None for the listed multi-page hosted site. Custom domain is out of scope.',
     nameMatchesScope: true,
     publicNameNote: 'Hosted on omnigrouptech.com — not a custom-domain production site.',
-    label: 'Hosted site automated · domain work not included',
+    label: 'Hosted site automated · domain out of scope',
   },
   {
     deliverableId: 'website-ecommerce',
-    automationLevel: 'SEMI_AUTOMATED',
+    automationLevel: 'AUTOMATED',
     humanIntervention:
-      'Factory publishes a live HYBRID storefront (catalog, cart, order path). A person is needed for inventory sync, tax, shipping carriers, and client Stripe Connect.',
+      'None for the listed storefront (catalog, cart, inventory, tax/shipping settings, bank-transfer orders). Stripe LIVE / Connect is EXTERNAL CONFIGURATION REQUIRED.',
     nameMatchesScope: true,
     publicNameNote:
-      'Public name is E-commerce storefront — usable shop UI + orders; not a full merchant stack.',
-    label: 'HYBRID storefront automated · not full merchant stack',
+      'Complete sellable storefront. Stripe LIVE / Connect is external configuration — not an incomplete HYBRID shop.',
+    label: 'Storefront automated · Stripe LIVE/Connect EXTERNAL CONFIGURATION REQUIRED',
+    prePurchaseWarning:
+      'Storefront ships complete (catalog, cart, inventory, tax/shipping, bank-transfer orders). Stripe LIVE / Connect merchant wiring is EXTERNAL CONFIGURATION REQUIRED and is not claimed as included.',
   },
   {
     deliverableId: 'white-label-setup',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Brand PDF and hosted landing are generated; partner legal and partner DNS are not included.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for brand PDF and hosted partner landing. Partner legal agreements are CONFIGURATION REQUIRED (external counsel).',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Packaging automated · legal/DNS not included',
+    label: 'Packaging automated · legal CONFIGURATION REQUIRED',
   },
   {
     deliverableId: 'sales-enablement',
@@ -129,31 +137,34 @@ const ROWS: DeliveryHonesty[] = [
   },
   {
     deliverableId: 'vertical-package',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'CRM/automation modules and a vertical brief are opened; industry tailoring is a seed, not a rebuild.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for CRM/automation seed and vertical brief. Live ads APIs are CONFIGURATION REQUIRED for CONNECTED channels.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Workspace seeded · not a custom rebuild',
+    label: 'Ops pack automated · ads APIs CONFIGURATION REQUIRED',
   },
   {
     deliverableId: 'lead-gen-retainer',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Workspace and monthly report are created; outbound quality depends on the live stack and a person.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for the COMPLETE ops pack (PDF, CRM, sequences, weekly plan, channel status). Ads/Apollo/LinkedIn are CONFIGURATION REQUIRED / NOT CONNECTED until user keys. Titanis leads_generated stays 0; simulated harvest cannot PASS.',
     nameMatchesScope: true,
-    publicNameNote: 'Does not guarantee qualified meetings.',
-    label: 'Workspace automated · outbound still needs a person',
+    publicNameNote: 'Does not guarantee qualified meetings. Channels are not HYBRID incomplete product.',
+    label: 'Ops pack COMPLETE · ads/Apollo CONFIGURATION REQUIRED',
     prePurchaseWarning:
-      'Price does not change if you have no outbound stack. You still get the CRM workspace and monthly report; live prospecting does not run without Instantly/Apollo (or equivalent) configured on our side.',
+      'Ops pack ships COMPLETE. LinkedIn/Google Ads/Apollo stay NOT CONNECTED until credentials — CONFIGURATION REQUIRED (external). Without keys, Titanis leads_generated=0 and simulated harvest cannot PASS. No guaranteed meetings.',
   },
   {
     deliverableId: 'ai-support-retainer',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Knowledge seed and assistant modules are opened; video avatar needs configured provider keys.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for the COMPLETE AI ops pack (inbox, RAG seed, FAQ, ticket queue). HeyGen/D-ID video avatar is CONFIGURATION REQUIRED / NOT CONNECTED until user keys.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Assistant seeded · video needs provider keys',
+    label: 'Ops pack COMPLETE · HeyGen/D-ID CONFIGURATION REQUIRED',
     prePurchaseWarning:
-      'Price does not change if HeyGen/D-ID keys are missing. You still get the AI inbox, RAG seed, and setup PDF. Video avatar render is skipped until those keys exist.',
+      'Ops pack ships COMPLETE at the same price without HeyGen/D-ID. Video avatar stays NOT CONNECTED until keys exist — CONFIGURATION REQUIRED (external).',
   },
   {
     deliverableId: 'custom-software',
@@ -165,16 +176,16 @@ const ROWS: DeliveryHonesty[] = [
   },
   {
     deliverableId: 'bundle-portal-presence',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Combines automated portal artifacts with a hosted landing first draft.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention: 'None for the combined portal and landing artifacts listed.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Portal automated · landing is a first draft',
+    label: 'Automated after payment',
   },
   {
     deliverableId: 'bundle-sales-launch',
-    automationLevel: 'SEMI_AUTOMATED',
-    humanIntervention: 'Hosted landing plus sales PDF; live sales calls are not included.',
+    automationLevel: 'AUTOMATED',
+    humanIntervention: 'None for hosted landing plus sales PDF. Live sales calls are out of scope.',
     nameMatchesScope: true,
     publicNameNote: '',
     label: 'Pack + page automated · no live sales calls',

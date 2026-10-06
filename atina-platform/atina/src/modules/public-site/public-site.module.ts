@@ -55,6 +55,13 @@ export class PublicSiteModule implements IModule {
       this.controller.listMyClientSites,
     );
     this.router.get(
+      '/client-sites/mine/orders',
+      authenticate,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listMyShopOrders,
+    );
+    this.router.get(
       '/client-sites',
       validateQuery(ListPublishedClientSitesQueryDto),
       validateBody(StrictEmptyBodyDto),
@@ -66,6 +73,14 @@ export class PublicSiteModule implements IModule {
       validateQuery(StrictEmptyBodyDto),
       validateBody(StrictEmptyBodyDto),
       this.controller.getClientSite,
+    );
+    this.router.get(
+      '/client-sites/:slug/orders',
+      authenticate,
+      validateParams(ClientSiteSlugParamDto),
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.listSiteShopOrders,
     );
     this.router.post(
       '/client-sites/:slug/orders',

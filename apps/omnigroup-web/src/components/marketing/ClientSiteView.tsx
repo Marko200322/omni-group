@@ -12,6 +12,13 @@ type CatalogItem = {
   description: string;
   priceEur: number;
   sku?: string;
+  stockQty?: number;
+};
+
+type ShopSettings = {
+  currency: string;
+  taxRatePercent: number;
+  shippingFlatEur: number;
 };
 
 type Props = {
@@ -87,7 +94,34 @@ function renderBody(body: string) {
   return nodes;
 }
 
-function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: CatalogItem[] }) {
+function readShopSettings(branding: Record<string, unknown> | undefined): ShopSettings {
+  const raw = branding?.shopSettings;
+  if (raw && typeof raw === 'object') {
+    const row = raw as Record<string, unknown>;
+    return {
+      currency: typeof row.currency === 'string' ? row.currency : 'EUR',
+      taxRatePercent:
+        typeof row.taxRatePercent === 'number' && Number.isFinite(row.taxRatePercent)
+          ? row.taxRatePercent
+          : 20,
+      shippingFlatEur:
+        typeof row.shippingFlatEur === 'number' && Number.isFinite(row.shippingFlatEur)
+          ? row.shippingFlatEur
+          : 4.9,
+    };
+  }
+  return { currency: 'EUR', taxRatePercent: 20, shippingFlatEur: 4.9 };
+}
+
+function EcommerceCatalog({
+  site,
+  catalog,
+  shopSettings,
+}: {
+  site: ClientPublicSite;
+  catalog: CatalogItem[];
+  shopSettings: ShopSettings;
+}) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
@@ -95,15 +129,23 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
   const [result, setResult] = useState<{
     paymentReference: string;
     totalEur: number;
+    subtotalEur?: number;
+    taxEur?: number;
+    shippingEur?: number;
     checkoutUrl?: string;
     paymentMethod?: string;
+    instructions?: string;
+    bankDetails?: { iban?: string | null; accountName?: string | null; reference?: string };
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const items = catalog
     .filter((p) => (cart[p.id] ?? 0) > 0)
     .map((p) => ({ id: p.id, name: p.name, priceEur: p.priceEur, quantity: cart[p.id] }));
-  const total = items.reduce((s, i) => s + i.priceEur * i.quantity, 0);
+  const subtotal = items.reduce((s, i) => s + i.priceEur * i.quantity, 0);
+  const taxEur = Math.round(subtotal * (shopSettings.taxRatePercent / 100) * 100) / 100;
+  const shippingEur = items.length > 0 ? shopSettings.shippingFlatEur : 0;
+  const total = Math.round((subtotal + taxEur + shippingEur) * 100) / 100;
 
   const submit = async () => {
     setLoading(true);
@@ -119,8 +161,13 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
         data?: {
           paymentReference: string;
           totalEur: number;
+          subtotalEur?: number;
+          taxEur?: number;
+          shippingEur?: number;
           checkoutUrl?: string;
           paymentMethod?: string;
+          instructions?: string;
+          bankDetails?: { iban?: string | null; accountName?: string | null; reference?: string };
         };
         error?: string;
       };
@@ -144,10 +191,28 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
         <p className="mt-2">
           Reference: <span className="font-mono">{result.paymentReference}</span>
         </p>
+        {result.subtotalEur != null ? (
+          <div className="mt-2 space-y-0.5 text-slate-300">
+            <p>Subtotal: EUR {result.subtotalEur.toFixed(2)}</p>
+            {result.taxEur != null && result.taxEur > 0 ? (
+              <p>Tax: EUR {result.taxEur.toFixed(2)}</p>
+            ) : null}
+            {result.shippingEur != null && result.shippingEur > 0 ? (
+              <p>Shipping: EUR {result.shippingEur.toFixed(2)}</p>
+            ) : null}
+          </div>
+        ) : null}
         <p className="mt-1">Total: EUR {result.totalEur.toFixed(2)}</p>
         <p className="mt-3 text-slate-300">
-          Complete bank transfer with the reference above. The store owner will confirm your order.
+          {result.instructions ??
+            'Complete bank transfer with the reference above. The store owner will confirm your order.'}
         </p>
+        {result.bankDetails?.iban ? (
+          <p className="mt-2 font-mono text-xs text-slate-400">
+            IBAN: {result.bankDetails.iban}
+            {result.bankDetails.accountName ? ` · ${result.bankDetails.accountName}` : ''}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -155,39 +220,65 @@ function EcommerceCatalog({ site, catalog }: { site: ClientPublicSite; catalog: 
   return (
     <div className="mt-8 space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        {catalog.map((product) => (
-          <div key={product.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <p className="font-medium text-white">{product.name}</p>
-            <p className="mt-1 text-xs text-slate-400">{product.description}</p>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-lg font-bold text-teal-200">EUR {product.priceEur.toFixed(2)}</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="rounded-lg border border-white/10 px-2 py-1 text-sm"
-                  onClick={() => setCart((c) => ({ ...c, [product.id]: Math.max(0, (c[product.id] ?? 0) - 1) }))}
-                >
-                  −
-                </button>
-                <span className="w-6 text-center text-sm">{cart[product.id] ?? 0}</span>
-                <button
-                  type="button"
-                  className="rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 py-1 text-sm text-teal-100"
-                  onClick={() => setCart((c) => ({ ...c, [product.id]: (c[product.id] ?? 0) + 1 }))}
-                >
-                  +
-                </button>
+        {catalog.map((product) => {
+          const stock = product.stockQty ?? 25;
+          const inCart = cart[product.id] ?? 0;
+          const atMax = inCart >= stock;
+          return (
+            <div key={product.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="font-medium text-white">{product.name}</p>
+              <p className="mt-1 text-xs text-slate-400">{product.description}</p>
+              <p className="mt-2 text-[11px] uppercase tracking-wide text-slate-500">
+                {stock > 0 ? `${stock} in stock` : 'Out of stock'}
+                {product.sku ? ` · ${product.sku}` : ''}
+              </p>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-lg font-bold text-teal-200">EUR {product.priceEur.toFixed(2)}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-white/10 px-2 py-1 text-sm"
+                    onClick={() =>
+                      setCart((c) => ({ ...c, [product.id]: Math.max(0, (c[product.id] ?? 0) - 1) }))
+                    }
+                  >
+                    −
+                  </button>
+                  <span className="w-6 text-center text-sm">{inCart}</span>
+                  <button
+                    type="button"
+                    disabled={stock <= 0 || atMax}
+                    className="rounded-lg border border-teal-500/30 bg-teal-500/10 px-2 py-1 text-sm text-teal-100 disabled:opacity-40"
+                    onClick={() =>
+                      setCart((c) => ({
+                        ...c,
+                        [product.id]: Math.min(stock, (c[product.id] ?? 0) + 1),
+                      }))
+                    }
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {items.length > 0 && (
         <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4">
-          <p className="text-sm text-slate-300">
-            Cart total: <strong className="text-white">EUR {total.toFixed(2)}</strong>
-          </p>
+          <div className="space-y-1 text-sm text-slate-300">
+            <p>
+              Subtotal: <strong className="text-white">EUR {subtotal.toFixed(2)}</strong>
+            </p>
+            <p>
+              Tax ({shopSettings.taxRatePercent}%): EUR {taxEur.toFixed(2)}
+            </p>
+            <p>Shipping: EUR {shippingEur.toFixed(2)}</p>
+            <p>
+              Total: <strong className="text-white">EUR {total.toFixed(2)}</strong>
+            </p>
+          </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <input
               className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
@@ -251,6 +342,11 @@ export function ClientSiteView({ site }: Props) {
         typeof (p as CatalogItem).name === 'string',
     );
   }, [site.branding]);
+
+  const shopSettings = useMemo(
+    () => readShopSettings(site.branding as Record<string, unknown> | undefined),
+    [site.branding],
+  );
 
   const niche =
     typeof site.branding?.niche === 'string' ? site.branding.niche : null;
@@ -339,11 +435,13 @@ export function ClientSiteView({ site }: Props) {
           <>
             <h2 className="font-display text-3xl font-semibold text-white">Shop</h2>
             <p className="mt-3 text-sm text-slate-400">
-              Catalog for {displayTitle} — add to cart and place an order. Checkout uses bank
-              transfer with a payment reference (card when enabled).
+              Catalog for {displayTitle} — add to cart and place an order. Prices include configurable
+              tax ({shopSettings.taxRatePercent}%) and flat shipping (EUR{' '}
+              {shopSettings.shippingFlatEur.toFixed(2)}). Checkout uses bank transfer with a payment
+              reference (card when Stripe is configured).
             </p>
             {catalog.length > 0 ? (
-              <EcommerceCatalog site={site} catalog={catalog} />
+              <EcommerceCatalog site={site} catalog={catalog} shopSettings={shopSettings} />
             ) : (
               <p className="mt-8 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-50">
                 Catalog is being prepared for this storefront. Check back shortly or contact the

@@ -13,47 +13,17 @@ import type {
   ClientSiteShopOrderDtoType,
 } from '../dto/public-site.dto';
 import { PublicSiteRepository } from '../repository/public-site.repository';
+import {
+  computeShopOrderTotals,
+  decrementCatalogStock,
+  defaultEcommerceShopSettings,
+  priceShopItemsFromCatalog,
+  shopSettingsFromBranding,
+} from '../lib/shop-order';
 
 const contentGenerator = new DeliverableContentGeneratorService();
 
-type ShopCatalogItem = { id: string; name: string; priceEur: number; quantity: number };
-
-function catalogRowsFromBranding(branding: unknown): Array<{ id: string; name: string; priceEur: number }> {
-  const catalog =
-    branding && typeof branding === 'object' && 'catalog' in branding
-      ? (branding as { catalog?: unknown }).catalog
-      : null;
-  if (!Array.isArray(catalog)) return [];
-  const rows: Array<{ id: string; name: string; priceEur: number }> = [];
-  for (const raw of catalog) {
-    if (!raw || typeof raw !== 'object') continue;
-    const row = raw as Record<string, unknown>;
-    const id = typeof row.id === 'string' ? row.id.trim() : '';
-    const name = typeof row.name === 'string' ? row.name.trim() : '';
-    const priceEur = typeof row.priceEur === 'number' ? row.priceEur : Number(row.priceEur);
-    if (!id || !Number.isFinite(priceEur) || priceEur < 0) continue;
-    rows.push({ id, name: name || id, priceEur });
-  }
-  return rows;
-}
-
-export function priceShopItemsFromCatalog(
-  branding: unknown,
-  items: ClientSiteShopOrderDtoType['items'],
-): ShopCatalogItem[] {
-  const catalog = catalogRowsFromBranding(branding);
-  if (!catalog.length) throw new ValidationError('This shop has no priced catalog');
-  return items.map((item) => {
-    const row = catalog.find((c) => c.id === item.id);
-    if (!row) throw new ValidationError(`Unknown catalog item: ${item.id}`);
-    return {
-      id: row.id,
-      name: row.name,
-      priceEur: row.priceEur,
-      quantity: item.quantity,
-    };
-  });
-}
+export { priceShopItemsFromCatalog } from '../lib/shop-order';
 
 /** Fallback only — prefer content-generator pages. No Omni marketing chrome. */
 const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
@@ -106,6 +76,88 @@ const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
     ].join('\n'),
   },
 ];
+
+function bankTransferInstructions(paymentReference: string): {
+  paymentMethod: 'manual';
+  instructions: string;
+  bankDetails: {
+    accountName: string | null;
+    iban: string | null;
+    bankName: string | null;
+    swift: string | null;
+    currency: string;
+    reference: string;
+  };
+} {
+  const manual = config.payments.manual;
+  const accountName = manual.accountName?.trim() || null;
+  const iban = manual.iban?.trim() || null;
+  const bankName = manual.bankName?.trim() || null;
+  const swift = manual.swift?.trim() || null;
+  const currency = manual.currency?.trim() || 'EUR';
+  const lines = [
+    'Complete payment via bank transfer using the reference above.',
+    accountName ? `Account name: ${accountName}` : null,
+    iban ? `IBAN: ${iban}` : null,
+    bankName ? `Bank: ${bankName}` : null,
+    swift ? `SWIFT/BIC: ${swift}` : null,
+    'The store owner will confirm your order after funds arrive.',
+  ].filter(Boolean);
+  return {
+    paymentMethod: 'manual',
+    instructions: lines.join(' '),
+    bankDetails: {
+      accountName,
+      iban,
+      bankName,
+      swift,
+      currency,
+      reference: paymentReference,
+    },
+  };
+}
+
+function mapShopOrderRow(row: {
+  id: string;
+  site_id: string;
+  site_slug: string;
+  site_title: string;
+  buyer_name: string;
+  buyer_email: string;
+  items: unknown;
+  total_eur: string;
+  subtotal_eur: string | null;
+  tax_eur: string;
+  shipping_eur: string;
+  tax_rate_percent: string;
+  totals: Record<string, unknown>;
+  status: string;
+  payment_method: string;
+  payment_reference: string | null;
+  notes: string | null;
+  created_at: Date;
+}) {
+  return {
+    id: row.id,
+    siteId: row.site_id,
+    siteSlug: row.site_slug,
+    siteTitle: row.site_title,
+    buyerName: row.buyer_name,
+    buyerEmail: row.buyer_email,
+    items: row.items,
+    totalEur: Number(row.total_eur),
+    subtotalEur: row.subtotal_eur != null ? Number(row.subtotal_eur) : Number(row.total_eur),
+    taxEur: Number(row.tax_eur ?? 0),
+    shippingEur: Number(row.shipping_eur ?? 0),
+    taxRatePercent: Number(row.tax_rate_percent ?? 0),
+    totals: row.totals ?? {},
+    status: row.status,
+    paymentMethod: row.payment_method,
+    paymentReference: row.payment_reference,
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
+}
 
 export class PublicSiteService {
   private readonly repo = new PublicSiteRepository();
@@ -273,6 +325,8 @@ export class PublicSiteService {
           })
         : [];
 
+    const shopSettings = siteType === 'ecommerce' ? defaultEcommerceShopSettings() : null;
+
     const site = await this.repo.createClientSite({
       ownerUserId: input.userId,
       projectId: input.projectId,
@@ -284,8 +338,16 @@ export class PublicSiteService {
         clientName: brandTitle,
         niche,
         ...(catalog.length ? { catalog } : {}),
-        ...(siteType === 'ecommerce'
-          ? { checkout: { currency: 'EUR', provider: 'manual_bank_transfer' } }
+        ...(shopSettings
+          ? {
+              shopSettings,
+              checkout: {
+                currency: shopSettings.currency,
+                provider: 'manual_bank_transfer',
+                taxRatePercent: shopSettings.taxRatePercent,
+                shippingFlatEur: shopSettings.shippingFlatEur,
+              },
+            }
           : {}),
       },
       pages: pages.map((p) => ({
@@ -304,15 +366,25 @@ export class PublicSiteService {
     return { sites: rows.map((r) => this.mapClientSite(r)) };
   }
 
+  async listMyShopOrders(userId: string, limit = 50) {
+    const rows = await this.repo.listShopOrdersByOwner(userId, limit);
+    return { orders: rows.map(mapShopOrderRow) };
+  }
+
+  async listSiteShopOrders(userId: string, slug: string, limit = 50) {
+    const rows = await this.repo.listShopOrdersBySite(slug, userId, limit);
+    return { orders: rows.map(mapShopOrderRow) };
+  }
+
   async placeShopOrder(slug: string, body: ClientSiteShopOrderDtoType) {
     const site = await this.repo.getPublishedClientSite(slug);
     if (!site || site.site_type !== 'ecommerce') {
       throw new NotFoundError('E-commerce site');
     }
 
+    const settings = shopSettingsFromBranding(site.branding);
     const pricedItems = priceShopItemsFromCatalog(site.branding, body.items);
-    const total = pricedItems.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
-    if (total <= 0) throw new ValidationError('Order total must be positive');
+    const totals = computeShopOrderTotals(pricedItems, settings);
 
     const paymentReference = `SHOP-${slug.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
     const order = await this.repo.createShopOrder({
@@ -322,10 +394,30 @@ export class PublicSiteService {
       buyerEmail: body.buyerEmail,
       buyerPhone: body.buyerPhone ?? null,
       items: pricedItems,
-      totalEur: Math.round(total * 100) / 100,
+      totalEur: totals.totalEur,
+      subtotalEur: totals.subtotalEur,
+      taxEur: totals.taxEur,
+      shippingEur: totals.shippingEur,
+      taxRatePercent: totals.taxRatePercent,
+      totals: { ...totals },
       paymentReference,
       notes: body.notes ?? null,
     });
+
+    // Decrement per-SKU stock on the live catalog (simple inventory).
+    try {
+      const branding =
+        site.branding && typeof site.branding === 'object'
+          ? (site.branding as Record<string, unknown>)
+          : {};
+      const nextBranding = decrementCatalogStock(
+        branding,
+        pricedItems.map((i) => ({ id: i.id, quantity: i.quantity })),
+      );
+      await this.repo.updateSiteBranding(site.id, nextBranding);
+    } catch {
+      /* non-fatal — order already recorded */
+    }
 
     const nameParts = body.buyerName.trim().split(/\s+/);
     try {
@@ -337,14 +429,43 @@ export class PublicSiteService {
         status: 'prospect',
         source: `shop:${slug}`,
         tags: ['shop-order', slug],
-        notes: `Order ${paymentReference} — EUR ${total.toFixed(2)}`,
-        customFields: { orderId: order.id, paymentReference },
+        notes: `Order ${paymentReference} — EUR ${totals.totalEur.toFixed(2)} (subtotal ${totals.subtotalEur.toFixed(2)} + tax ${totals.taxEur.toFixed(2)} + shipping ${totals.shippingEur.toFixed(2)})`,
+        customFields: {
+          orderId: order.id,
+          paymentReference,
+          totals,
+          items: pricedItems,
+        },
+      });
+    } catch {
+      /* non-fatal */
+    }
+
+    try {
+      const { NotificationsService } = await import(
+        '../../notifications/service/notifications.service'
+      );
+      const notifications = new NotificationsService();
+      await notifications.createNotification({
+        userId: site.owner_user_id,
+        type: 'shop_order',
+        title: `New shop order — ${paymentReference}`,
+        message: `${body.buyerName} ordered EUR ${totals.totalEur.toFixed(2)} on ${site.title}`,
+        actionUrl: '/dashboard/deliveries',
+        metadata: {
+          orderId: order.id,
+          paymentReference,
+          siteSlug: slug,
+          totalEur: totals.totalEur,
+          buyerEmail: body.buyerEmail,
+        },
       });
     } catch {
       /* non-fatal */
     }
 
     const stripeReady = Boolean(config.stripe.secretKey.trim());
+    const bank = bankTransferInstructions(order.payment_reference);
 
     if (stripeReady) {
       try {
@@ -357,12 +478,20 @@ export class PublicSiteService {
           ownerUserId: site.owner_user_id,
           buyerEmail: body.buyerEmail,
           buyerName: body.buyerName,
-          items: pricedItems.map((i) => ({
-            name: i.name,
-            priceEur: i.priceEur,
-            quantity: i.quantity,
-          })),
-          totalEur: Math.round(total * 100) / 100,
+          items: [
+            ...pricedItems.map((i) => ({
+              name: i.name,
+              priceEur: i.priceEur,
+              quantity: i.quantity,
+            })),
+            ...(totals.taxEur > 0
+              ? [{ name: `Tax (${totals.taxRatePercent}%)`, priceEur: totals.taxEur, quantity: 1 }]
+              : []),
+            ...(totals.shippingEur > 0
+              ? [{ name: 'Shipping', priceEur: totals.shippingEur, quantity: 1 }]
+              : []),
+          ],
+          totalEur: totals.totalEur,
         });
         if (checkout.sessionId) {
           await this.repo.updateShopOrderStripe(order.id, checkout.sessionId);
@@ -370,12 +499,17 @@ export class PublicSiteService {
         return {
           orderId: order.id,
           paymentReference: order.payment_reference,
-          totalEur: Number(order.total_eur),
-          currency: 'EUR',
+          totalEur: totals.totalEur,
+          subtotalEur: totals.subtotalEur,
+          taxEur: totals.taxEur,
+          shippingEur: totals.shippingEur,
+          taxRatePercent: totals.taxRatePercent,
+          currency: totals.currency,
           status: order.status,
           paymentMethod: 'stripe',
           checkoutUrl: checkout.url,
-          instructions: 'Redirecting to secure card checkout.',
+          bankTransfer: bank,
+          instructions: 'Redirecting to secure card checkout (Stripe TEST/LIVE keys as configured). Bank transfer remains available with the payment reference.',
         };
       } catch {
         /* fall through to manual bank transfer */
@@ -385,12 +519,14 @@ export class PublicSiteService {
     return {
       orderId: order.id,
       paymentReference: order.payment_reference,
-      totalEur: Number(order.total_eur),
-      currency: 'EUR',
+      totalEur: totals.totalEur,
+      subtotalEur: totals.subtotalEur,
+      taxEur: totals.taxEur,
+      shippingEur: totals.shippingEur,
+      taxRatePercent: totals.taxRatePercent,
+      currency: totals.currency,
       status: order.status,
-      paymentMethod: 'manual',
-      instructions:
-        'Complete payment via bank transfer using the reference above. The store owner will confirm your order.',
+      ...bank,
     };
   }
 

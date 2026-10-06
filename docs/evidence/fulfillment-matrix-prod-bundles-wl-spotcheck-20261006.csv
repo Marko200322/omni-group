@@ -1,0 +1,13 @@
+﻿deliverableId,industryCategory,status,score,artifacts,paymentId,error,elapsedSec,checkedAt
+bundle-portal-presence,marketing,PASS,,5,4715e97c-16b8-4ec1-a1cc-c4374b19be6a,"",28,2026-10-06T10:02:20.7693146+02:00
+bundle-sales-launch,marketing,PASS,,4,57d6e66e-7a46-48f0-81eb-786503901e97,"",19,2026-10-06T10:02:54.6797355+02:00
+bundle-ops-clarity,marketing,PASS,,4,43606031-575d-4acf-b328-9ba732775f60,"",37,2026-10-06T10:03:47.3658396+02:00
+white-label-setup,marketing,PASS,,4,38a6bd6f-c5e3-4c4e-aedb-7f2bd14c0111,"",6,2026-10-06T10:04:08.2979073+02:00
+bundle-portal-presence,beauty,PASS,,5,480e7112-0a31-475b-8c30-bea204689cc5,"",31,2026-10-06T10:04:55.6994551+02:00
+bundle-sales-launch,beauty,PASS,,4,639533ae-be95-4aaf-b072-d658d8aae61b,"",19,2026-10-06T10:05:30.1829139+02:00
+bundle-ops-clarity,beauty,PASS,,4,91a465ec-dcfd-47fe-bd32-65275af22274,"",170,2026-10-06T10:08:34.9083963+02:00
+white-label-setup,beauty,PASS,,4,dbc7a840-8e0a-4118-9254-acf6439bbc58,"",39,2026-10-06T10:09:30.9253960+02:00
+bundle-portal-presence,industrial,FAIL,,0,e8309c59-b6fc-4621-a1aa-1eb650488bb5,"The remote server returned an error: (500) Internal Server Error.",4,2026-10-06T10:09:50.6208788+02:00
+bundle-sales-launch,industrial,PASS,,4,33f9975e-7608-4aa9-a8e7-0b872869f899,"",15,2026-10-06T10:10:20.6106031+02:00
+bundle-ops-clarity,industrial,FAIL,,0,,"The remote server returned an error: (502) Bad Gateway.",0,2026-10-06T10:10:35.8115653+02:00
+white-label-setup,industrial,PASS,,4,cc6618f1-a587-4c0a-b62e-8166c7246d0b,"",74,2026-10-06T10:12:05.6586954+02:00

@@ -105,6 +105,19 @@ export type AtinaFulfillmentJob = {
   error: string | null;
   publicUrl: string | null;
   projectId: string | null;
+  /** Industry slug from checkout/matrix — null when never provided. */
+  industryCategory?: string | null;
+  /** Machine-checkable document substance metrics (when computed at fulfillment). */
+  documentQuality?: {
+    sectionCount: number;
+    totalBodyChars: number;
+    minSectionBodyChars: number;
+    checklistOrMilestoneHits: number;
+    clientNamePresent: boolean;
+    industryPresent: boolean;
+    bundleDocs?: number;
+  } | null;
+  documentSubstanceOk?: boolean | null;
   artifacts: Array<{ type: string; filename: string; downloadLabel?: string }>;
   createdAt: string;
   updatedAt: string;

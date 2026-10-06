@@ -77,6 +77,13 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         metadata: {
           modulesActivated: ['notifications', 'billing'],
           portalReady: true,
+          portalEntitlements: {
+            entitlementSource: 'user_modules+org',
+            userModulesGranted: ['notifications', 'billing'],
+            billingAccess: true,
+            notificationSeeded: true,
+            portalReady: true,
+          },
           ...stepsMeta,
           ...siteMeta(),
         },
@@ -122,9 +129,10 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
             ecommerceCatalog: [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }],
             hasShopPage: true,
             catalogVisible: true,
-            ecommerceScope: 'hybrid',
+            ecommerceScope: 'complete',
             ecommerceHonesty: true,
-            ecommerceHonestyNote: 'HYBRID storefront — not a full merchant Stripe shop',
+            ecommerceHonestyNote:
+              'Complete storefront — Stripe Connect/LIVE CONFIGURATION REQUIRED (external)',
             claimsFullMerchantStore: false,
           }
         : {};
@@ -142,6 +150,10 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   }
 
   if (deliverableId.startsWith('setup-')) {
+    const modules =
+      deliverableId === 'setup-quick'
+        ? ['notifications', 'billing']
+        : ['notifications', 'billing', 'crm', 'automation'];
     return {
       ...base,
       projectId: 'proj-setup',
@@ -158,9 +170,30 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       ],
       metadata: {
         ...passingDocQuality(deliverableId),
-        modulesActivated: ['notifications', 'billing', 'crm'],
+        modulesActivated: modules,
         portalReady: true,
-        crmBootstrap: { importedLeads: 8 },
+        portalEntitlements: {
+          entitlementSource: 'user_modules+org',
+          userModulesGranted: modules,
+          billingAccess: true,
+          notificationSeeded: true,
+          portalReady: true,
+        },
+        crmBootstrap: { importedLeads: 8, labeledDemo: true, sampleKind: 'demo_industry_template' },
+        automationHonesty: {
+          automationModuleEnabled: modules.includes('automation'),
+          automationConnected: false,
+          status: 'MODULE_ENABLED_NOT_CONNECTED',
+        },
+        deployPrep: { skipped: true, sslProvisioned: false, domainConfigured: false },
+        deployHonesty: {
+          sslProvisioned: false,
+          domainConfigured: false,
+          backupLive: false,
+          monitoringLive: false,
+          runbookExecutable: true,
+          deployPrepStatus: 'skipped',
+        },
       },
     };
   }
@@ -171,8 +204,23 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       artifacts: [
         ...base.artifacts,
         { type: 'integration_config', filename: 'integration-config.json', downloadLabel: 'JSON', storagePath: '/i' },
+        {
+          type: 'integration_onboarding_checklist',
+          filename: 'integration-onboarding-checklist.md',
+          downloadLabel: 'Checklist',
+          storagePath: '/ic',
+        },
       ],
-      metadata: { ...passingDocQuality(deliverableId) },
+      metadata: {
+        ...passingDocQuality(deliverableId),
+        integrationConfig: {
+          webhookSecret: '***redacted***',
+          hasEnvMap: true,
+          hasRetryPolicy: true,
+          hasWebhookEndpoints: true,
+          hasOnboardingChecklist: true,
+        },
+      },
     };
   }
 
@@ -183,6 +231,12 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       artifacts: [
         ...base.artifacts,
         { type: 'lead_gen_report', filename: 'lead-gen-kickoff.pdf', downloadLabel: 'Kickoff', storagePath: '/lg' },
+        {
+          type: 'lead_gen_pipeline_workspace',
+          filename: 'lead-gen-pipeline-workspace.md',
+          downloadLabel: 'Pipeline workspace',
+          storagePath: '/pw',
+        },
         slaArtifact('lead-gen-sla-onboarding.pdf'),
       ],
       metadata: {
@@ -209,11 +263,23 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       artifacts: [
         ...base.artifacts,
         { type: 'ai_support_setup', filename: 'ai-support-setup.json', downloadLabel: 'Setup', storagePath: '/a' },
+        {
+          type: 'ai_support_knowledge_base',
+          filename: 'ai-support-knowledge-base.md',
+          downloadLabel: 'KB',
+          storagePath: '/kb',
+        },
+        { type: 'support_faq_seed', filename: 'support-faq-seed.md', downloadLabel: 'FAQ', storagePath: '/faq' },
         slaArtifact('ai-support-sla-onboarding.pdf'),
       ],
       metadata: {
         modulesActivated: ['support-avatar', 'video-meetings', 'ai-rag'],
-        aiSupportSetup: { ragSeeded: true, modulesActivated: ['support-avatar'] },
+        aiSupportSetup: {
+          ragSeeded: true,
+          modulesActivated: ['support-avatar'],
+          avatarConfigured: false,
+          configurationRequired: ['HEYGEN_API_KEY or DID_API_KEY for video avatar sessions'],
+        },
       },
     };
   }
@@ -222,7 +288,11 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     return {
       ...base,
       projectId: 'proj-support',
-      artifacts: [...base.artifacts, slaArtifact(`${deliverableId}-sla-onboarding.pdf`)],
+      artifacts: [
+        ...base.artifacts,
+        slaArtifact(`${deliverableId}-sla-onboarding.pdf`),
+        { type: 'support_faq_seed', filename: 'support-faq-seed.md', downloadLabel: 'FAQ', storagePath: '/faq' },
+      ],
       metadata: {
         supportAutomation: { slaHours: deliverableId === 'support-dedicated' ? 8 : 24 },
         modulesActivated: ['notifications', 'support-avatar'],
@@ -296,6 +366,23 @@ describe('fulfillment quality checklist — failures block release', () => {
     });
     expect(r.passed).toBe(false);
     expect(r.items.some((i) => i.id === 'status_completed' && !i.passed)).toBe(true);
+  });
+
+  it('fails white-label without publicUrl even if includesLanding flag is set', () => {
+    const r = runFulfillmentQualityChecklist('white-label-setup', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'white-label-setup.pdf', storagePath: '/w' },
+        { type: 'md', filename: 'white-label-setup.md', storagePath: '/wm' },
+      ],
+      metadata: {
+        includesLanding: true,
+        ...passingDocQuality('white-label-setup'),
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'white_label_live' && !i.passed)).toBe(true);
+    expect(r.items.some((i) => i.id === 'public_url' && !i.passed)).toBe(true);
   });
 
   it('fails landing without public URL', () => {
@@ -373,5 +460,48 @@ describe('fulfillment quality checklist — failures block release', () => {
     });
     expect(r.passed).toBe(false);
     expect(r.items.some((i) => i.id === 'ecommerce_shop_page' && !i.passed)).toBe(true);
+  });
+
+  it('fails setup-quick when only portalReady is set', () => {
+    const r = runFulfillmentQualityChecklist('setup-quick', {
+      status: 'completed',
+      projectId: 'proj-1',
+      artifacts: [{ type: 'pdf', filename: 'setup.pdf', storagePath: '/x' }],
+      metadata: {
+        portalReady: true,
+        modulesActivated: [],
+        ...passingDocQuality('setup-quick'),
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'portal_modules' && !i.passed)).toBe(true);
+  });
+
+  it('fails setup-custom when skipped deploy claims SSL done', () => {
+    const r = runFulfillmentQualityChecklist('setup-custom', {
+      status: 'completed',
+      projectId: 'proj-1',
+      artifacts: [
+        { type: 'pdf', filename: 'setup.pdf', storagePath: '/x' },
+        {
+          type: 'production_deploy_manifest',
+          filename: 'production-deploy-manifest.json',
+          storagePath: '/p',
+        },
+      ],
+      metadata: {
+        ...passingDocQuality('setup-custom'),
+        modulesActivated: ['crm', 'notifications', 'billing'],
+        crmBootstrap: { importedLeads: 8, labeledDemo: true },
+        deployPrep: { skipped: true },
+        deployHonesty: {
+          sslProvisioned: true,
+          domainConfigured: true,
+          runbookExecutable: true,
+        },
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'production_manifest' && !i.passed)).toBe(true);
   });
 });

@@ -77,8 +77,10 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
       'Auth notes missing for third-party tools',
       'Sample events not provided',
       'Config JSON not downloadable',
+      'No onboarding checklist when adding API keys',
     ],
-    businessOutcome: 'Integration guide + config JSON ready for your developer to connect systems',
+    businessOutcome:
+      'Integration guide + usable config JSON (env map, webhooks, retry) + onboarding checklist — tools not pre-connected',
   },
   'workflow-design': {
     primaryProblemTemplate: '{industry} processes live in people’s heads, not documented workflows',
@@ -151,10 +153,12 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
       'Catalog not digital',
       'Fewer than 4 industry products',
       'No working cart / order path',
+      'No inventory or tax/shipping on orders',
       'Shop branded as admin/demo placeholder',
-      'Not positioned as HYBRID storefront vs full merchant stack',
+      'Stripe Connect/LIVE sold as included instead of CONFIGURATION REQUIRED',
     ],
-    businessOutcome: 'Live HYBRID storefront with 4+ industry products, cart, and working order path',
+    businessOutcome:
+      'Complete live storefront with 4+ industry products, cart, inventory, tax/shipping settings, and working order path',
   },
   'white-label-setup': {
     primaryProblemTemplate: '{industry} partners need resale-ready branding and packaging',
@@ -197,27 +201,29 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
     primaryProblemTemplate: '{industry} pipeline is empty — outbound and lead research are manual',
     secondaryProblems: [
       'No hunt automation workspace',
-      'CRM not fed with leads',
-      'No monthly lead report',
+      'CRM stages / sequence templates missing',
+      'No weekly ops plan or channel status board',
+      'Fake live lead counts claimed without APIs',
       'Pipeline refresh not scheduled',
       'Outreach ops not included',
-      'Autonomy campaign suggestions missing from report',
       'Welcome pack for lead-gen lane missing',
     ],
-    businessOutcome: 'Monthly lead-gen PDF, CRM pipeline, hunter/titanis modules, and lead report',
+    businessOutcome:
+      'Complete monthly ops pack: CRM pipeline, sequences, weekly plan, honest channel status — live harvest only when APIs CONNECTED',
   },
   'ai-support-retainer': {
     primaryProblemTemplate: '{industry} clients expect AI support but building RAG + avatar in-house is expensive',
     secondaryProblems: [
       'No knowledge base starter',
       'Support not AI-assisted',
-      'Video meetings module missing',
+      'FAQ / ticket queue missing',
       'Support inbox not provisioned',
       'Setup pack for assistant missing',
       'Monthly knowledge updates undefined',
-      'Video avatar render gated on provider keys (honest)',
+      'Video avatar render gated on provider keys (CONFIGURATION REQUIRED — honest)',
     ],
-    businessOutcome: 'AI RAG seed, support avatar, video meetings — maintained monthly',
+    businessOutcome:
+      'AI RAG + FAQ + ticket queue ops pack; video avatar when HeyGen/D-ID keys present — maintained monthly',
   },
   'custom-software': {
     primaryProblemTemplate: '{industry} needs a software foundation but full custom build is over budget',
@@ -228,9 +234,10 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
       'No isolated workspace project',
       'API + SPA scaffold not delivered',
       'Build/test gate not recorded',
-      'Scope creep risk without bounded starter',
+      'README / .env.example / run-deploy docs missing',
     ],
-    businessOutcome: 'Node API + SPA scaffold, tests, and handoff PDF — bounded starter scope',
+    businessOutcome:
+      'Node API + SPA starter with README, .env.example, smoke tests, and run/deploy handoff PDF',
   },
   'bundle-portal-presence': {
     primaryProblemTemplate:

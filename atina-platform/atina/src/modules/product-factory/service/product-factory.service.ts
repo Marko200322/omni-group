@@ -225,7 +225,14 @@ export class ProductFactoryService {
     skipWebsite?: boolean;
     enhancedGreenfield?: boolean;
     verticalPack?: VerticalDeliveryPack;
-    ecommerceCatalog?: Array<{ id: string; name: string; description: string; priceEur: number; sku: string }>;
+    ecommerceCatalog?: Array<{
+      id: string;
+      name: string;
+      description: string;
+      priceEur: number;
+      sku: string;
+      stockQty?: number;
+    }>;
     generationHints?: FulfillmentGenerationHints;
   }): Promise<Record<string, unknown>> {
     const row = await this.repo.createProject({
@@ -316,8 +323,9 @@ export class ProductFactoryService {
       hasShopPage,
       contentQuality,
       ecommerceCatalog: ecommerceCatalog ?? null,
-      testsPassed: true,
-      testPassed: true,
+      testsPassed: tested.test.passed === true,
+      testPassed: tested.test.passed === true,
+      testChecks: tested.test.checks,
       buildStatus: finalRow?.deploy_status || finalRow?.status || 'completed',
     };
   }
@@ -329,7 +337,14 @@ export class ProductFactoryService {
       pages?: GeneratedSitePage[];
       publish?: boolean;
       verticalPack?: VerticalDeliveryPack;
-      ecommerceCatalog?: Array<{ id: string; name: string; description: string; priceEur: number; sku: string }>;
+      ecommerceCatalog?: Array<{
+        id: string;
+        name: string;
+        description: string;
+        priceEur: number;
+        sku: string;
+        stockQty?: number;
+      }>;
       brandTitle?: string;
       clientName?: string;
     },
@@ -364,12 +379,31 @@ export class ProductFactoryService {
         verticalPack: opts.verticalPack,
       });
     }
+    const shopSettings =
+      deliverableId === 'website-ecommerce'
+        ? {
+            currency: 'EUR',
+            taxRatePercent: 20,
+            shippingFlatEur: 4.9,
+            bankTransferEnabled: true,
+          }
+        : null;
     const branding = {
       clientName,
       verticalSlug: opts.verticalPack?.verticalSlug ?? null,
       niche: nicheLabel,
       catalog,
-      checkout: { currency: 'EUR', provider: 'manual_bank_transfer' },
+      ...(shopSettings
+        ? {
+            shopSettings,
+            checkout: {
+              currency: shopSettings.currency,
+              provider: 'manual_bank_transfer',
+              taxRatePercent: shopSettings.taxRatePercent,
+              shippingFlatEur: shopSettings.shippingFlatEur,
+            },
+          }
+        : { checkout: { currency: 'EUR', provider: 'manual_bank_transfer' } }),
       seo: {
         title: brandTitle,
         description: opts.verticalPack?.valueProp ?? row.description ?? brandTitle,

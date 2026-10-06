@@ -14,9 +14,9 @@ Izvor istine: `deliverable-acceptance-contract.ts` + `deliverable-catalog.ts` de
 
 | # | Paket | Obavezno posle plaćanja |
 |---|-------|-------------------------|
-| 1 | setup-quick | PDF, project, portal moduli (notifications, billing) |
-| 2 | setup-full | + CRM seed, migration CSV, training outline, automations |
-| 3 | setup-custom | + production deploy manifest, deploy prep |
+| 1 | setup-quick | PDF, project, real portal entitlements (user_modules notifications+billing, org billing access, welcome notice) — not task-only |
+| 2 | setup-full | + labeled DEMO/industry CRM seed, substantial migration CSV, training outline, automation module enabled (NOT CONNECTED) |
+| 3 | setup-custom | + client-executable production deploy runbook; SSL/domain PENDING unless actually done; skipped deploy prep OK only with honest checklist |
 | 4 | audit | PDF audit report |
 | 5 | workflow-design | PDF workflow/SOP pack |
 | 6 | integration | PDF guide + integration-config.json + webhooks |

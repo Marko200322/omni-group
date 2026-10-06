@@ -28,6 +28,24 @@ type FulfillmentRunOutcome = {
   attemptNumber: number;
 };
 
+/** Empty / whitespace industry from Stripe metadata must not become a silent blank. */
+export function normalizeFulfillmentIndustry(raw?: string | null): string | null {
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function industryFromResultMetadata(result: Record<string, unknown> | null | undefined): string | null {
+  if (!result) return null;
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  return normalizeFulfillmentIndustry(
+    typeof meta.industryCategory === 'string'
+      ? meta.industryCategory
+      : typeof result.industryCategory === 'string'
+        ? result.industryCategory
+        : null,
+  );
+}
+
 export class DeliverableFulfillmentService {
   private readonly repo = new DeliverableFulfillmentRepository();
   private readonly notifications = new PaymentNotificationsService();
@@ -206,6 +224,14 @@ export class DeliverableFulfillmentService {
       const attemptNumber = this.resolveAttemptNumber(job, opts?.attemptNumber);
       const retryNotes = opts?.retryNotes ?? job.review_notes;
 
+      const industryCategory = normalizeFulfillmentIndustry(input.industryCategory);
+      if (input.industryCategory != null && industryCategory == null) {
+        logger.warn('Fulfillment received blank industryCategory — treating as unset', {
+          paymentId: input.paymentId,
+          deliverableId,
+        });
+      }
+
       const ctx: FulfillmentContext = {
         paymentId: input.paymentId,
         userId: input.userId,
@@ -213,7 +239,7 @@ export class DeliverableFulfillmentService {
         jobId: job.id,
         clientName: clientName.length >= 2 ? clientName : 'Client',
         clientEmail: input.clientEmail ?? null,
-        industryCategory: input.industryCategory ?? null,
+        industryCategory,
         planSlug: input.planSlug ?? null,
         purchaseType: input.purchaseType,
       };
@@ -275,7 +301,12 @@ export class DeliverableFulfillmentService {
         status: outcome.result.status,
         automated: true,
         reviewStatus,
-        metadata: outcome.result.metadata ?? {},
+        // Always persist industry on job result when provided (remote admin verify).
+        industryCategory,
+        metadata: {
+          ...(outcome.result.metadata ?? {}),
+          industryCategory,
+        },
         fulfillmentMeta: {
           attemptNumber: outcome.attemptNumber,
           checklist: outcome.checklist,
@@ -378,6 +409,7 @@ export class DeliverableFulfillmentService {
     const user = await this.lookupUser(job.user_id);
     const meta = (result.fulfillmentMeta as Record<string, unknown> | undefined) ?? {};
     const checklist = meta.checklist as FulfillmentChecklistResult | undefined;
+    const industryCategory = industryFromResultMetadata(result);
 
     const ctx: FulfillmentContext = {
       paymentId,
@@ -386,7 +418,7 @@ export class DeliverableFulfillmentService {
       jobId: job.id,
       clientName: this.resolveBrandFromUser(user),
       clientEmail: user?.email ?? null,
-      industryCategory: null,
+      industryCategory,
       planSlug: job.plan_slug,
       purchaseType: job.purchase_type,
     };
@@ -405,7 +437,10 @@ export class DeliverableFulfillmentService {
         .filter((a) => a.filename && a.storagePath),
       status: 'completed',
       publicUrl: typeof result.publicUrl === 'string' ? result.publicUrl : null,
-      metadata: (result.metadata as Record<string, unknown>) ?? {},
+      metadata: {
+        ...((result.metadata as Record<string, unknown>) ?? {}),
+        industryCategory,
+      },
       projectId: typeof result.projectId === 'string' ? result.projectId : undefined,
     };
 
@@ -416,7 +451,7 @@ export class DeliverableFulfillmentService {
     await this.fulfillmentMemory.rememberSuccess({
       userId: job.user_id,
       deliverableId: job.deliverable_id ?? 'unknown',
-      industryCategory: null,
+      industryCategory,
       paymentId,
       result: fulfillmentResult,
       checklist,
@@ -464,6 +499,7 @@ export class DeliverableFulfillmentService {
         purchaseType: job.purchase_type,
         deliverableId: job.deliverable_id,
         planSlug: job.plan_slug,
+        industryCategory: industryFromResultMetadata(job.result),
         clientName: this.resolveBrandFromUser(user),
         clientEmail: user?.email ?? null,
       },

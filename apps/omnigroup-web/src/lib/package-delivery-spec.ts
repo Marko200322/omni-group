@@ -58,12 +58,13 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-quick',
     description:
-      'Client portal with login, billing, notifications, setup PDF, and onboarding pack — automated in 24–48h.',
+      'Real portal entitlements: notifications + billing access (user_modules + org), welcome notice, setup PDF — automated in 24–48h.',
     descriptionSr:
-      'Klijentski portal (login, billing, obaveštenja), setup PDF i onboarding paket — automatizovano za 24–48h.',
+      'Prava portal ovlašćenja: obaveštenja + billing pristup (user_modules + org), welcome notifikacija, setup PDF — 24–48h.',
     includes: [
       'Downloadable setup PDF + markdown pack',
-      'Portal modules: notifications, billing',
+      'Portal entitlements: notifications + billing (not task-only)',
+      'Welcome notification in portal inbox',
       'Project created in your workspace',
       'Onboarding checklist in PDF',
     ],
@@ -102,20 +103,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-full',
     description:
-      'CRM seeded with sample pipeline, automation modules, migration CSV template, training outline PDF, and 30-day support window in the system.',
+      'CRM seeded with labeled DEMO/industry template leads, automation module enabled (external automations NOT CONNECTED), substantial migration CSV + training outline, 30-day support window.',
     descriptionSr:
-      'CRM sa demo pipeline-om, automation moduli, CSV šablon, training outline PDF i 30-dnevni support prozor u sistemu.',
+      'CRM sa označenim DEMO/industry sample leadovima, automation modul (eksterne automatizacije NOT CONNECTED), CSV + training outline, 30-dnevni support.',
     includes: [
-      'Setup PDF + CRM with sample leads',
-      'Modules: CRM, automation, notifications, billing',
-      'Migration CSV template (download)',
-      'Training outline document',
+      'Setup PDF + CRM with labeled DEMO / industry template samples',
+      'Entitlements: CRM, automation, notifications, billing',
+      'Substantial migration CSV template (download)',
+      'Training outline (module honesty: automations NOT CONNECTED)',
       '30-day support window registered',
     ],
     excludes: [
       'Hands-on data migration from legacy tools',
       'Live training calls (add Support retainer)',
       'Daily human support without retainer',
+      'Claiming external automations are connected',
     ],
     anchorByPhase: { M1: 890, M3: 1095, M4: 1095, M6: 1690 },
     minCheckoutPhase: 'M1',
@@ -132,17 +134,22 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-custom',
     description:
-      'Production deploy manifest (checklist JSON), CRM seed, modules, and enterprise setup PDF — for teams with their own ops.',
+      'Client-executable production deploy runbook (DNS/SSL/backup/monitoring marked PENDING), CRM seed, entitlements, enterprise setup PDF — your ops team executes go-live.',
     descriptionSr:
-      'Production deploy manifest (JSON checklist), CRM seed, moduli i enterprise setup PDF.',
+      'Klijentski production deploy runbook (DNS/SSL/backup/monitoring = PENDING), CRM seed, ovlašćenja, enterprise setup PDF — vaš ops tim izvršava go-live.',
     includes: [
-      'Production deploy manifest artifact',
-      'CRM seed + full module activation',
+      'Production deploy runbook JSON (actionable checklist)',
+      'Honest PENDING status for DNS/SSL/backup/monitoring',
+      'CRM demo seed + portal entitlements',
       'Custom-tier setup PDF',
-      'Security/backup checklist section in PDF',
       'Admin handoff runbook section',
     ],
-    excludes: ['Deploy on client-owned servers', '24/7 SLA operations', 'Backup/monitoring on client infra'],
+    excludes: [
+      'Remote deploy onto client-owned servers',
+      'Claiming SSL/domain done when not provisioned',
+      '24/7 SLA operations',
+      'Backup/monitoring live on client infra without your execution',
+    ],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
@@ -185,19 +192,20 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'integration',
     description:
-      'Integration guide PDF plus integration-config.json (webhook URLs, auth notes, sample events) — ready for your developer.',
+      'Integration guide PDF plus usable integration-config.json (env map, webhook endpoints, retry policy) and an onboarding checklist — for your developer to wire APIs. Tools are not pre-connected.',
     descriptionSr:
-      'Integration vodič PDF + integration-config.json — za vašeg developera.',
+      'Integration vodič PDF + upotrebljiv integration-config.json (env mapa, webhook endpointi, retry politika) i onboarding checklist — za vašeg developera. Alati nisu unapred povezani.',
     includes: [
       'Integration guide PDF',
-      'integration-config.json download',
-      'Webhook endpoint map',
+      'integration-config.json (env map, webhook endpoints, retry policy)',
+      'Onboarding checklist when you add API keys (PDF section + Markdown)',
       'Auth notes for third-party connectors',
       'Sample event payloads for developers',
     ],
     excludes: [
-      'Live connection to client Stripe/ERP/CRM',
-      'OAuth app registration on third-party tools',
+      'Live connection to client Stripe/ERP/CRM (CONFIGURATION REQUIRED — external credentials)',
+      'OAuth app registration on third-party tools (CONFIGURATION REQUIRED — external)',
+      'Claiming tools are already connected without your API keys',
     ],
     anchorByPhase: { M2: 990, M4: 1490, M6: 1990 },
     minCheckoutPhase: 'M2',
@@ -236,6 +244,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
+      'FAQ seed (industry Q&A)',
       'Support queue with 24h response target + kickoff ticket',
       'Workspace project visible in portal',
       'Notifications, AI support assistant, and ticket inbox',
@@ -287,6 +296,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
+      'FAQ seed (industry Q&A)',
       'Support queue with 8h response target + kickoff ticket',
       'Workspace project visible in portal',
       'Video meetings module',
@@ -305,9 +315,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'landing',
     description:
-      'Live client-branded landing at /sites/{slug} with niche sales copy (AI + vertical pack). HYBRID/HUMAN: stock photography, brand voice polish, and unlimited revision rounds are not included.',
+      'Live client-branded landing at /sites/{slug} with niche sales copy (AI + vertical pack) — complete product after publish.',
     descriptionSr:
-      'Live klijentski landing na /sites/{slug} sa niche copy-jem (AI + vertical pack). HYBRID/HUMAN: stock foto, brand voice polish i neograničene revizije nisu uključeni.',
+      'Live klijentski landing na /sites/{slug} sa niche copy-jem (AI + vertical pack) — kompletan proizvod nakon objave.',
     includes: [
       'Published live URL under client brand title',
       'Niche-specific sales copy (not Omni template chrome)',
@@ -316,8 +326,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     excludes: [
       'Custom domain DNS',
-      'Stock photography licensing (HUMAN)',
-      'Unlimited revision rounds / brand-voice rewrite (HUMAN)',
+      'Stock photography licensing',
+      'Unlimited revision rounds / brand-voice rewrite',
     ],
     anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
     phaseUnlocks: [
@@ -348,9 +358,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'website-business',
     description:
-      'Multi-page client-branded business site (5+ pages with real section copy): services, pricing, contact — live at /sites/{slug}. HYBRID/HUMAN: custom photography and brand-voice rewrites beyond first draft are not automated.',
+      'Multi-page client-branded business site (5+ pages with real section copy): services, pricing, contact — live at /sites/{slug}. Complete hosted site product.',
     descriptionSr:
-      'Višestrani klijentski sajt (5+ strana sa realnim copy-jem) — live na /sites/{slug}. HYBRID/HUMAN: custom foto i brand-voice rewrite van first draft-a nisu automatizovani.',
+      'Višestrani klijentski sajt (5+ strana sa realnim copy-jem): usluge, cene, kontakt — live na /sites/{slug}. Kompletan hostovani sajt.',
     includes: [
       'Live URL with 5+ niche pages under client brand',
       'Linked to your workspace project',
@@ -360,8 +370,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     excludes: [
       'Custom domain',
       'CMS training',
-      'Copywriting beyond AI/vertical first draft (HUMAN)',
-      'Custom photography / illustration (HUMAN)',
+      'Copywriting beyond AI/vertical first draft',
+      'Custom photography / illustration',
     ],
     anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
     phaseUnlocks: [
@@ -392,23 +402,26 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'website-ecommerce',
     description:
-      'HYBRID storefront: live client-branded shop at /sites/{slug} with industry catalog (4+ products), cart, and working order path (bank transfer; card when Stripe is enabled). Not a full merchant stack — HUMAN follow-up for real SKUs/photos, inventory sync, tax, Stripe Connect, shipping carriers.',
+      'Complete sellable storefront: live client-branded shop at /sites/{slug} with industry catalog (4+ products), cart, inventory per SKU, configurable tax/shipping, and working order path (bank transfer always; Stripe TEST when platform keys are configured). Stripe LIVE / Connect: CONFIGURATION REQUIRED (external).',
     descriptionSr:
-      'HYBRID prodavnica: live shop na /sites/{slug} sa industrijskim katalogom (4+ proizvoda), korpom i radnim order path-om. Nije pun merchantski stack — HUMAN follow-up za prave SKU/foto, magacin, poreze, Stripe Connect, kurire.',
+      'Kompletna prodavnica: live shop na /sites/{slug} sa industrijskim katalogom (4+ proizvoda), korpom, zalihama po SKU, podesivim porezom/dostavom i radnim order path-om (bank transfer uvek; Stripe TEST kad su ključevi konfigurisani). Stripe LIVE / Connect: CONFIGURATION REQUIRED (eksterno).',
     includes: [
       'Live storefront URL (/sites/{slug})',
       'Shop page always present for ecommerce',
       '4+ industry-real catalog products visible in UI',
-      'Working cart + shop order API (bank transfer / Stripe when enabled)',
+      'Working cart + shop order API (bank transfer always; Stripe TEST when configured)',
+      'Inventory quantity per SKU with stock decrement on order',
+      'Configurable tax rate and flat shipping in shop settings (structured on each order)',
+      'Order confirmation visible to site owner (CRM contact + in-app notification + order list)',
       'Client-branded title and tagline (not System Admin / Omni chrome)',
-      'Delivery handoff PDF with live URL and HYBRID checkout scope note',
+      'Delivery handoff PDF with live URL and payment configuration notes',
     ],
     excludes: [
-      'Real inventory sync (HUMAN)',
-      'Client Stripe Connect / own merchant account wiring (HUMAN)',
-      'Tax engine and shipping carrier integrations (HUMAN)',
-      'Product photography and final SKU pricing sign-off (HUMAN)',
+      'Stripe LIVE keys and client Stripe Connect / own merchant account wiring (EXTERNAL CONFIGURATION REQUIRED)',
+      'Carrier/API shipping rate engines (flat shipping setting is included)',
+      'Product photography and final SKU pricing sign-off (client replaces seed catalog)',
       'Payment processing fees',
+      'Ads / remarketing pixel account IDs (EXTERNAL CONFIGURATION REQUIRED)',
     ],
     anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
     minCheckoutPhase: 'M3',
@@ -418,9 +431,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'white-label-setup',
     description:
-      'White-label brand PDF plus live partner landing (client-branded, not Omni chrome). HYBRID/HUMAN: partner legal agreements and custom domain remain out of automated scope.',
+      'White-label brand PDF plus live partner landing (client-branded, not Omni chrome) — complete packaging product.',
     descriptionSr:
-      'White-label brand PDF plus live partner landing (klijentski brand, bez Omni chrome-a). HYBRID/HUMAN: partnerski ugovori i custom domen nisu u automatizovanom scope-u.',
+      'White-label brand PDF plus live partner landing (klijentski brand, bez Omni chrome-a) — kompletan packaging proizvod.',
     includes: [
       'Brand & packaging PDF',
       'Live partner landing under client brand',
@@ -428,7 +441,10 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Favicon + Open Graph meta on partner page',
       'One-pager section for partner pitch in PDF',
     ],
-    excludes: ['Partner legal agreements (HUMAN)', 'Custom domain for partner'],
+    excludes: [
+      'Partner legal agreements (CONFIGURATION REQUIRED — external counsel)',
+      'Custom domain DNS (not automated — partner owns DNS)',
+    ],
     anchorByPhase: { M2: 1290, M4: 1790, M6: 2490 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
@@ -461,14 +477,15 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Vertical solution PDF',
       'CRM pipeline seeded',
       'SLA & onboarding pack + kickoff ticket',
+      'FAQ seed (industry Q&A)',
       'Workspace project visible in portal',
       'Modules: CRM, automation, billing',
       'Ongoing maintenance & vertical updates included monthly',
     ],
     excludes: [
-      'Video avatar (needs AI-support retainer + HeyGen)',
+      'Video avatar (CONFIGURATION REQUIRED — AI-support retainer + HeyGen/D-ID keys)',
       'Outbound lead hunting in lean mode',
-      'Live LinkedIn/Google Ads API (marked NOT CONNECTED until credentials)',
+      'Live LinkedIn/Google Ads API (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* + live sync for CONNECTED)',
     ],
     anchorByPhase: { M2: 349, M4: 549, M6: 790 },
     minCheckoutPhase: 'M2',
@@ -485,14 +502,15 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly kickoff pack: lead-gen PDF, CRM pipeline, outreach workspace, channel status sheet (LinkedIn/Google Ads marked NOT CONNECTED until APIs are live) — requires outbound stack.',
+      'Monthly lead-gen ops pack COMPLETE after payment: PDF, CRM pipeline, sequence templates, weekly plan, outreach workspace, and honest channel status (CONNECTED / NOT CONNECTED). LinkedIn Ads (LINKEDIN_ADS_*) / Google Ads / Apollo: CONFIGURATION REQUIRED until user keys + MARKETING_ADS_LIVE_SYNC — Titanis leads_generated stays 0 and simulated harvest cannot PASS.',
     descriptionSr:
-      'Mesečni kickoff: lead-gen PDF, CRM, outreach workspace, status kanala (LinkedIn/Google Ads = NOT CONNECTED dok API nije živ) — zahteva outbound stack.',
+      'Mesečni lead-gen ops paket COMPLETE nakon plaćanja: PDF, CRM pipeline, sequence šabloni, nedeljni plan, outreach workspace i status kanala (CONNECTED / NOT CONNECTED). LinkedIn Ads (LINKEDIN_ADS_*) / Google Ads / Apollo: CONFIGURATION REQUIRED dok nema ključeva + MARKETING_ADS_LIVE_SYNC — Titanis leads_generated ostaje 0; simulirani harvest ne može PASS.',
     includes: [
       'Welcome PDF',
-      'Honest channel status (CONNECTED / NOT CONNECTED)',
-      'CRM and outreach workspace + kickoff ticket',
-      'Kickoff report (live harvest only when channels CONNECTED)',
+      'Honest channel status board (CONNECTED / NOT CONNECTED · ads/Apollo CONFIGURATION REQUIRED)',
+      'Pipeline workspace: CRM stages, sequence templates, weekly plan',
+      'CRM and outreach workspace + actionable portal tasks + kickoff ticket',
+      'Kickoff report (live harvest only when a real adapter returns contacts; else leads_generated=0)',
       'SLA & onboarding pack',
       'Workspace project visible in portal',
       'Scheduled pipeline refresh when stack is live',
@@ -500,7 +518,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     excludes: [
       'Guaranteed qualified meetings',
-      'Pretending LinkedIn/Google Ads are live without API credentials',
+      'LinkedIn/Google Ads/Apollo live harvest without API credentials (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* / Apollo keys)',
+      'Invented Titanis lead counts / simulated harvest as fulfillment PASS',
       'Works fully in lean prod (scraper/outbound off)',
     ],
     anchorByPhase: { M4: 690, M6: 990 },
@@ -513,8 +532,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       },
       {
         fromPhase: 'M6',
-        includes: ['Apollo-enriched lead batches when F4 is live'],
-        includesSr: ['Apollo lead batch-evi kad je F4 aktivan'],
+        includes: ['Apollo-enriched lead batches when F4 is live (CONFIGURATION REQUIRED — Apollo keys)'],
+        includesSr: ['Apollo lead batch-evi kad je F4 aktivan (CONFIGURATION REQUIRED — Apollo ključevi)'],
       },
     ],
     leanCheckout: true,
@@ -523,26 +542,28 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'ai-support-retainer',
     description:
-      'Monthly: AI support setup pack, RAG knowledge seed, SLA/onboarding pack, workspace project — video avatar needs HeyGen/D-ID keys (otherwise NOT CONNECTED).',
+      'Monthly AI support ops pack COMPLETE after payment: setup PDF, RAG knowledge seed, SLA/onboarding pack, workspace project. HeyGen/D-ID video avatar: CONFIGURATION REQUIRED / NOT CONNECTED until user keys.',
     descriptionSr:
-      'Mesečno: AI support setup, RAG seed, SLA/onboarding paket, workspace projekat — video avatar zahteva HeyGen/D-ID (inače NOT CONNECTED).',
+      'Mesečni AI support ops paket COMPLETE nakon plaćanja: setup PDF, RAG seed, SLA/onboarding paket, workspace projekat. HeyGen/D-ID video avatar: CONFIGURATION REQUIRED / NOT CONNECTED dok nema ključeva.',
     includes: [
       'Welcome PDF',
-      'AI knowledge base starter',
-      'SLA & onboarding pack + kickoff ticket',
+      'AI knowledge base starter + FAQ seed',
+      'SLA & onboarding pack + kickoff ticket + ticket queue',
       'Workspace project visible in portal',
       'AI assistant, video meetings, and support inbox modules',
-      'Support assistant setup pack (honest avatarConfigured flag)',
+      'Support assistant setup pack (honest avatarConfigured / CONFIGURATION REQUIRED / NOT CONNECTED)',
       'AI support maintenance & knowledge updates included monthly',
     ],
-    excludes: ['Ultra-realistic video without HeyGen/D-ID subscription'],
+    excludes: [
+      'Ultra-realistic video avatar without HeyGen/D-ID keys (CONFIGURATION REQUIRED — external)',
+    ],
     anchorByPhase: { M3: 349, M4: 490, M5: 590, M6: 690 },
     minCheckoutPhase: 'M3',
     phaseUnlocks: [
       {
         fromPhase: 'M6',
-        includes: ['HeyGen/D-ID video avatar render when keys configured'],
-        includesSr: ['HeyGen/D-ID video avatar kad su ključevi podešeni'],
+        includes: ['HeyGen/D-ID video avatar render when keys configured (CONFIGURATION REQUIRED)'],
+        includesSr: ['HeyGen/D-ID video avatar kad su ključevi podešeni (CONFIGURATION REQUIRED)'],
       },
     ],
     leanCheckout: true,
@@ -551,13 +572,16 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'custom-software',
     description:
-      'Starter codebase only: Node API + SPA scaffold, tests, handoff PDF — not a finished custom product or unlimited build hours.',
-    descriptionSr: 'Samo starter kod: Node API + SPA scaffold, testovi, handoff PDF — nije gotov custom proizvod ni neograničeni razvoj.',
+      'Productized starter software: Node API + SPA scaffold with README, .env.example, smoke tests, and handoff PDF (run/deploy) — not a finished custom product or unlimited build hours.',
+    descriptionSr:
+      'Produktivizovani starter softver: Node API + SPA scaffold sa README, .env.example, smoke testovima i handoff PDF (run/deploy) — nije gotov custom proizvod ni neograničeni razvoj.',
     includes: [
-      'Starter project in your workspace',
-      'Automated test checklist',
-      'Software handoff PDF',
-      'API and web app starter kit',
+      'Starter project in your workspace (enhanced greenfield)',
+      'README with run and deploy instructions',
+      '.env.example for local/staging secrets',
+      'Smoke tests with testsPassed from real test run',
+      'Software handoff PDF (run/deploy documented)',
+      'API routes + static SPA shell + SQL schema starter',
     ],
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
     anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },

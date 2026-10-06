@@ -200,5 +200,23 @@ describe('BillingController', () => {
       role: 'user',
     });
     expect(r.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf');
+    expect(r.setHeader).toHaveBeenCalledWith(
+      'Content-Disposition',
+      expect.stringMatching(/^attachment; filename="[^"]+"; filename\*=UTF-8''/),
+    );
+  });
+
+  it('buildAttachmentContentDisposition keeps ASCII ByteString when label has en-dash', async () => {
+    const { buildAttachmentContentDisposition } = await import(
+      '../../modules/billing/controller/billing.controller'
+    );
+    const header = buildAttachmentContentDisposition(
+      'Quick Setup — Go-Live Checklist',
+      '/data/client-deliverables/u/p/setup-quick.pdf',
+    );
+    expect(header).toContain('filename="Quick Setup _ Go-Live Checklist"');
+    expect(header).toContain("filename*=UTF-8''Quick%20Setup%20%E2%80%94%20Go-Live%20Checklist");
+    // Must be representable as Latin-1 for Node setHeader
+    expect(() => Buffer.from(header, 'latin1')).not.toThrow();
   });
 });

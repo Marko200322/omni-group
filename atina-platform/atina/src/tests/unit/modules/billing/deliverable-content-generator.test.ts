@@ -105,6 +105,7 @@ describe('deliverable content generator quality', () => {
     expect(catalog[0]?.name.toLowerCase()).not.toContain('starter package');
     expect(catalog.some((p) => /omni|starter package|growth package/i.test(p.name))).toBe(false);
     expect(catalog.every((p) => p.priceEur > 0)).toBe(true);
+    expect(catalog.every((p) => typeof p.stockQty === 'number' && p.stockQty > 0)).toBe(true);
     expect(catalog[0]?.description).toMatch(/Harbor Goods/);
   });
 

@@ -25,7 +25,8 @@ for (const id of ids) {
 
 assert(honesty.includes("AUTOMATED' | 'SEMI_AUTOMATED' | 'HUMAN_DELIVERY"), 'Automation enum must be complete');
 assert(catalog.includes("name: 'E-commerce storefront'"), 'Public ecommerce name must say storefront');
-assert(catalog.includes('HYBRID'), 'Public ecommerce description must disclose HYBRID scope');
+assert(catalog.includes('CONFIGURATION REQUIRED'), 'Public ecommerce description must disclose Stripe Connect CONFIGURATION REQUIRED');
+assert(!catalog.includes('HYBRID'), 'Public ecommerce description must not undersell as HYBRID incomplete');
 assert(!catalog.includes("name: 'E-commerce website'"), 'Public catalog must not sell a full e-commerce website name');
 assert(!catalog.includes("name: 'E-commerce demo storefront'"), 'Public catalog must not use demo-only storefront name');
 assert(offers.includes('automationLevel'), 'ClientOffer must carry automationLevel');
@@ -41,8 +42,10 @@ assert(honesty.includes("'lead-gen-retainer'"), 'Lead gen must be classified');
 assert(honesty.includes("'support-dedicated'"), 'Dedicated support must be classified');
 assert(honesty.includes("automationLevel: 'HUMAN_DELIVERY'"), 'Human delivery packages must exist');
 assert(honesty.includes('prePurchaseWarning'), 'Dependencies and SLA targets must warn before Buy now');
+assert(honesty.includes('CONFIGURATION REQUIRED'), 'External deps must use CONFIGURATION REQUIRED language');
 assert(honesty.includes('HeyGen/D-ID'), 'AI support must disclose the video-key fallback');
-assert(honesty.includes('outbound stack'), 'Lead gen must disclose the outbound-stack dependency');
+assert(honesty.includes('ads/Apollo') || honesty.includes('ads APIs'), 'Lead gen must disclose ads/Apollo CONFIGURATION REQUIRED');
+assert(honesty.includes('leads_generated') || honesty.includes('Titanis'), 'Lead gen must disclose Titanis leads_generated=0 honesty');
 assert(honesty.includes('not an automated SLA clock'), 'Support retainers must not claim an SLA engine');
 assert(offerCard.includes('prePurchaseWarning'), 'OfferCard must render the pre-purchase warning');
 assert(!offers.includes('support queue with 24h SLA'), 'Priority support copy must not claim an SLA clock');

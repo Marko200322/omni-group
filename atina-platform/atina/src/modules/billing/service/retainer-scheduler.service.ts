@@ -65,7 +65,7 @@ export class RetainerSchedulerService {
         });
 
         await getSlackNotifier().notify({
-          text: `Monthly lead-gen run: ${stats.leadsGenerated} leads for user ${job.user_id.slice(0, 8)}`,
+          text: `Monthly lead-gen refresh: mode=${stats.mode}, live_leads=${stats.leadsGenerated}, user=${job.user_id.slice(0, 8)}`,
         });
         processed += 1;
       }
