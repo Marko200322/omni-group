@@ -130,6 +130,12 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
         industryCategory: ctx.industryCategory,
       });
       artifacts.push(
+        bootstrap.saveLeadGenAnalysisPack({
+          userId: ctx.userId,
+          paymentId: ctx.paymentId,
+          clientName: ctx.clientName,
+          stats: leadGenStats,
+        }),
         bootstrap.saveLeadGenReport({
           userId: ctx.userId,
           paymentId: ctx.paymentId,
@@ -160,8 +166,13 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
             workspaceId: leadGenStats.workspaceId ?? null,
             liveLeadsGenerated: leadGenStats.leadsGenerated,
             sampleLeadsSeeded: crmBootstrap.importedLeads,
+            analysisRules: leadGenStats.analysis.rulesVersion,
+            huntReady: leadGenStats.analysis.huntReady,
+            huntGate: leadGenStats.hunt.gate.reason,
+            rawFetched: leadGenStats.hunt.rawFetched,
+            hotLeads: leadGenStats.hunt.hotCount,
             opsTaskIds,
-            note: 'Ops pack complete — live LinkedIn/Google Ads harvest requires CONNECTED APIs (CONFIGURATION REQUIRED until then).',
+            note: 'Analysis→hot hunt — live Apollo/Hunter only when analysis huntReady + LEAD_LIVE_HARVEST_ON_KICKOFF + enrichment keys; ads stay CONFIGURATION REQUIRED until CONNECTED.',
           },
         }),
       );

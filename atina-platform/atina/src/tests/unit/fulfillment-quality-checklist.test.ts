@@ -235,6 +235,12 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       projectId: 'proj-leadgen',
       artifacts: [
         ...base.artifacts,
+        {
+          type: 'lead_gen_analysis',
+          filename: 'lead-gen-analysis-pack.md',
+          downloadLabel: 'ICP analysis',
+          storagePath: '/la',
+        },
         { type: 'lead_gen_report', filename: 'lead-gen-kickoff.pdf', downloadLabel: 'Kickoff', storagePath: '/lg' },
         {
           type: 'lead_gen_pipeline_workspace',
@@ -254,6 +260,8 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
             { channel: 'linkedin', status: 'NOT CONNECTED' },
             { channel: 'google_ads', status: 'NOT CONNECTED' },
           ],
+          analysis: { rulesVersion: 'hot-v1', huntReady: false },
+          hunt: { gate: { shouldHunt: false, reason: 'analysis_not_hunt_ready' }, rawFetched: 0, hotCount: 0 },
         },
         crmBootstrap: { importedLeads: 8 },
         modulesActivated: ['client-hunter', 'outreach'],

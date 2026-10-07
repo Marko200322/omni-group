@@ -38,6 +38,13 @@ import {
   type LeadGenMode,
   type OutreachChannelStatus,
 } from '../lib/lead-gen-ops-pack';
+import {
+  buildLeadGenAnalysisPack,
+  planLiveHuntFromAnalysis,
+  renderLeadGenAnalysisMarkdown,
+  type LeadGenAnalysisPack,
+  type LiveHuntOutcome,
+} from '../lib/lead-gen-analysis-hunt';
 
 export type { ChannelConnectionStatus, LeadGenMode, OutreachChannelStatus };
 
@@ -64,7 +71,7 @@ export type PortalEntitlementResult = {
 export type LeadGenBootstrapResult = {
   workspaceId?: string;
   runId?: string;
-  /** Live/API-backed leads only — never invented; 0 until real harvest adapter returns contacts. */
+  /** Hot live leads only (Phase C filter) — never invented; 0 if none hot or hunt gated off. */
   leadsGenerated: number;
   /** Demo CRM samples seeded for kickoff visibility (not live harvest). */
   sampleLeadsSeeded: number;
@@ -73,10 +80,14 @@ export type LeadGenBootstrapResult = {
   /**
    * kickoff_pack_only — ads/enrichment NOT CONNECTED; ops pack still complete.
    * channels_ready — credentials CONNECTED but no live harvest adapter pulled contacts yet.
-   * live_harvest — real enrichment/ads harvest returned contacts (not Titanis theater).
+   * live_harvest — real enrichment/ads harvest returned HOT contacts (not Titanis theater).
    * Mode is rule-based via resolveLeadGenMode — never random.
    */
   mode: LeadGenMode;
+  /** Phase A ICP analysis — always present after kickoff. */
+  analysis: LeadGenAnalysisPack;
+  /** Phase B/C hunt outcome — honest 0 when gated or no hot leads. */
+  hunt: LiveHuntOutcome;
 };
 
 function envPresent(key: string): boolean {
@@ -390,6 +401,9 @@ export class ClientDeliverableBootstrapService {
     const pack = input.pack ?? resolvePack(input.industryCategory);
     const channelStatuses = resolveLeadGenChannelStatuses();
 
+    // Phase A — always: ICP analysis before any Apollo/Hunter call.
+    const analysis = buildLeadGenAnalysisPack({ pack, channelStatuses });
+
     const workspaces = await this.titanis.list(input.userId);
     let workspaceId = (workspaces[0] as { id?: string } | undefined)?.id;
 
@@ -425,37 +439,22 @@ export class ClientDeliverableBootstrapService {
       }
     }
 
-    // Real harvest path only when opt-in + enrichment providers active — never invent.
-    let leadsGenerated = 0;
-    if (isLiveHarvestOnKickoffEnabled()) {
+    const liveHarvestEnabled = isLiveHarvestOnKickoffEnabled();
+    let enrichmentActive = false;
+    let rawContacts: Awaited<ReturnType<ReturnType<typeof getLeadDatabaseService>['enrichFromHuntContext']>> =
+      [];
+
+    // Phase B — probe enrichment only when analysis says ready + live harvest opt-in.
+    if (analysis.huntReady && liveHarvestEnabled) {
       try {
         const leadDb = getLeadDatabaseService();
-        if (leadDb.isEnrichmentActive()) {
-          const contacts = await leadDb.enrichFromHuntContext({
+        enrichmentActive = leadDb.isEnrichmentActive();
+        if (enrichmentActive) {
+          rawContacts = await leadDb.enrichFromHuntContext({
             verticalSlug: pack.verticalSlug,
-            verticalName: pack.displayName,
+            // ICP keywords from Phase A — not blind vertical-name dump.
+            verticalName: analysis.searchKeywords || pack.displayName,
           });
-          leadsGenerated = contacts.length;
-          if (leadsGenerated > 0) {
-            try {
-              await this.crm.bulkImport(input.userId, {
-                contacts: contacts.map((c, i) => ({
-                  firstName: c.firstName ?? 'Lead',
-                  lastName: c.lastName ?? String(i + 1),
-                  email: c.email ?? undefined,
-                  company: c.company ?? undefined,
-                  status: 'lead' as const,
-                  source: `live_harvest:${c.provider ?? 'enrichment'}`,
-                  tags: [pack.verticalSlug, 'LIVE_HARVEST', c.provider ?? 'unknown'],
-                  notes: `[LIVE HARVEST] ${c.title ?? ''} ${c.companyDomain ?? ''}`.trim(),
-                })),
-              });
-            } catch (err) {
-              logger.warn('Live harvest CRM import skipped', {
-                error: err instanceof Error ? err.message : String(err),
-              });
-            }
-          }
         } else {
           logger.info('LEAD_LIVE_HARVEST_ON_KICKOFF set but enrichment inactive — leads stay 0', {
             verticalSlug: pack.verticalSlug,
@@ -465,7 +464,43 @@ export class ClientDeliverableBootstrapService {
         logger.warn('Live harvest adapter failed — leads_generated stays 0', {
           error: err instanceof Error ? err.message : String(err),
         });
-        leadsGenerated = 0;
+        rawContacts = [];
+        enrichmentActive = false;
+      }
+    } else if (liveHarvestEnabled && !analysis.huntReady) {
+      logger.info('Live harvest flag on but analysis not huntReady — no Apollo/Hunter call', {
+        reason: analysis.huntBlockedReason,
+        verticalSlug: pack.verticalSlug,
+      });
+    }
+
+    // Phase C — hot filter only; gate + filter are pure (0 is honest).
+    const hunt = planLiveHuntFromAnalysis({
+      analysis,
+      liveHarvestEnabled,
+      enrichmentActive,
+      rawContacts,
+    });
+    const leadsGenerated = hunt.leadsGenerated;
+
+    if (leadsGenerated > 0 && hunt.filter) {
+      try {
+        await this.crm.bulkImport(input.userId, {
+          contacts: hunt.filter.hot.map((c, i) => ({
+            firstName: c.firstName ?? 'Lead',
+            lastName: c.lastName ?? String(i + 1),
+            email: c.email ?? undefined,
+            company: c.company ?? undefined,
+            status: 'lead' as const,
+            source: `live_harvest_hot:${c.provider ?? 'enrichment'}`,
+            tags: [pack.verticalSlug, 'LIVE_HARVEST', 'HOT', c.provider ?? 'unknown'],
+            notes: `[HOT LIVE HARVEST] ${c.title ?? ''} ${c.companyDomain ?? ''}`.trim(),
+          })),
+        });
+      } catch (err) {
+        logger.warn('Live harvest CRM import skipped', {
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
 
@@ -479,6 +514,8 @@ export class ClientDeliverableBootstrapService {
       estimatedRevenue: 0,
       channelStatuses,
       mode,
+      analysis,
+      hunt,
     };
   }
 
@@ -765,6 +802,33 @@ export class ClientDeliverableBootstrapService {
     });
   }
 
+  saveLeadGenAnalysisPack(input: {
+    userId: string;
+    paymentId: string;
+    clientName: string;
+    stats: LeadGenBootstrapResult;
+  }): FulfillmentArtifact {
+    const content = renderLeadGenAnalysisMarkdown({
+      clientName: input.clientName,
+      analysis: input.stats.analysis,
+      hunt: {
+        gate: input.stats.hunt.gate,
+        rawFetched: input.stats.hunt.rawFetched,
+        hotCount: input.stats.hunt.hotCount,
+        rejectedCount: input.stats.hunt.rejectedCount,
+        leadsGenerated: input.stats.hunt.leadsGenerated,
+      },
+    });
+    return this.artifacts.saveText({
+      userId: input.userId,
+      paymentId: input.paymentId,
+      filename: 'lead-gen-analysis-pack.md',
+      content,
+      type: 'lead_gen_analysis',
+      downloadLabel: 'Lead gen ICP analysis pack',
+    });
+  }
+
   saveLeadGenReport(input: {
     userId: string;
     paymentId: string;
@@ -778,29 +842,39 @@ export class ClientDeliverableBootstrapService {
     const channelLines = (stats.channelStatuses ?? resolveLeadGenChannelStatuses())
       .map((c) => `- ${c.channel}: **${c.status}** — ${c.detail}`)
       .join('\n');
+    const hunt = stats.hunt;
     const content = `# Lead Gen — Kickoff Pack
 
 Client: ${clientName}
 Vertical: ${pack.displayName}
 Mode: ${
       stats.mode === 'live_harvest'
-        ? 'Live harvest returned contacts'
+        ? 'Live harvest returned HOT contacts (post ICP filter)'
         : stats.mode === 'channels_ready'
-          ? 'Channels CONNECTED — harvest adapter has not pulled contacts yet (leads_generated = 0)'
+          ? 'Channels CONNECTED — hunt gated or no hot leads yet (leads_generated = 0)'
           : 'Kickoff ops pack only (LinkedIn/Google Ads NOT CONNECTED)'
     }
 
 ## Channel connection status (honest)
 ${channelLines}
 
+## Analysis → hunt (not blind dump)
+- Phase A analysis: **present** (rules ${stats.analysis.rulesVersion})
+- Hunt ready (analysis): ${stats.analysis.huntReady ? 'YES' : 'NO'}
+- Phase B gate: ${hunt.gate.shouldHunt ? 'HUNT' : 'NO HUNT'} — ${hunt.gate.reason}
+- Raw enrichment rows: ${hunt.rawFetched}
+- Hot after Phase C filter: ${hunt.hotCount} (rejected ${hunt.rejectedCount})
+- Search keywords used: \`${stats.analysis.searchKeywords}\`
+
 ## Kickoff results
-- Live leads generated: ${stats.leadsGenerated} (never invented by Titanis)
+- Live HOT leads generated: ${stats.leadsGenerated} (never invented; never raw dump count)
 - Sample CRM leads seeded (demo, not live harvest): ${samples}
 - Estimated pipeline value (live only): €${stats.estimatedRevenue}
 - Workspace: ${stats.workspaceId ?? 'created'}
 - Titanis planning run: ${stats.runId ?? 'n/a'} (planning only — not a harvest success metric)
 
 ## What you received now
+- ICP analysis pack (Phase A — always)
 - Pipeline workspace (CRM stages, sequence templates, weekly plan, channel board)
 - Outreach workspace in portal + actionable week-1 tasks
 - CRM pipeline seed for ${pack.displayName}
@@ -813,12 +887,12 @@ ${pack.workflowSteps.map((s, i) => `${i + 1}. ${s.step} (${s.moduleSlug})`).join
 ## Outreach hooks (planning — not auto-sent to LinkedIn/Ads)
 ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
 
-## Connecting live channels (deterministic — no fake harvest)
+## Connecting live channels (deterministic — analysis then hot hunt)
 1. Google Ads spend sync: GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID + MARKETING_ADS_LIVE_SYNC=true
 2. LinkedIn Ads: LINKEDIN_ADS_ACCESS_TOKEN + LINKEDIN_ADS_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true
 3. Meta Ads: META_ADS_ACCESS_TOKEN + META_ADS_AD_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true
-4. Apollo / Hunter live harvest on kickoff: APOLLO_API_KEY (or HUNTER_API_KEY), LEAD_DATABASE_ENABLED=true, LEAD_DATABASE_ROLLOUT_PHASE=F4 (or F3+), LEAD_LIVE_HARVEST_ON_KICKOFF=true
-5. Without those flags, mode stays kickoff_pack_only / channels_ready and leads_generated=0
+4. Apollo / Hunter hot hunt on kickoff: APOLLO_API_KEY (or HUNTER_API_KEY), LEAD_DATABASE_ENABLED=true, LEAD_DATABASE_ROLLOUT_PHASE=F4 (or F3+), LEAD_LIVE_HARVEST_ON_KICKOFF=true
+5. Without those flags, mode stays kickoff_pack_only / channels_ready and leads_generated=0 — analysis pack still ships
 `;
     return this.artifacts.saveText({
       userId: input.userId,

@@ -477,6 +477,15 @@ export function runFulfillmentQualityChecklist(
         a.type === 'lead_gen_pipeline_workspace' ||
         a.filename.includes('lead-gen-pipeline-workspace'),
     );
+    const hasAnalysis = result.artifacts.some(
+      (a) =>
+        a.type === 'lead_gen_analysis' ||
+        a.filename.includes('lead-gen-analysis'),
+    );
+    const analysisMeta = (stats as { analysis?: { huntReady?: boolean; rulesVersion?: string } } | undefined)
+      ?.analysis;
+    const huntMeta = (stats as { hunt?: { gate?: { shouldHunt?: boolean; reason?: string } } } | undefined)
+      ?.hunt;
     const modeOk =
       stats?.mode === 'kickoff_pack_only' ||
       stats?.mode === 'channels_ready' ||
@@ -484,14 +493,24 @@ export function runFulfillmentQualityChecklist(
     const kickoffOk =
       hasReport &&
       hasPipelineWorkspace &&
+      hasAnalysis &&
       modeOk &&
+      Boolean(analysisMeta?.rulesVersion) &&
       (Boolean(stats?.workspaceId) || Number(stats?.sampleLeadsSeeded ?? 0) > 0);
     items.push({
       id: 'lead_gen_kickoff',
       passed: kickoffOk,
       message: kickoffOk
-        ? `Lead gen ops pack delivered (mode=${stats?.mode ?? 'unknown'}, live=${stats?.leadsGenerated ?? 0}, samples=${stats?.sampleLeadsSeeded ?? 0})`
-        : 'Lead gen retainer requires pipeline workspace + kickoff report (honest mode) — not fake live harvest',
+        ? `Lead gen ops pack + analysis delivered (mode=${stats?.mode ?? 'unknown'}, live_hot=${stats?.leadsGenerated ?? 0}, samples=${stats?.sampleLeadsSeeded ?? 0}, hunt=${huntMeta?.gate?.shouldHunt ? 'yes' : 'no'})`
+        : 'Lead gen retainer requires analysis pack + pipeline workspace + kickoff report (honest mode) — not blind harvest',
+    });
+    items.push({
+      id: 'lead_gen_analysis_before_hunt',
+      passed: hasAnalysis && Boolean(analysisMeta?.rulesVersion),
+      message:
+        hasAnalysis && analysisMeta?.rulesVersion
+          ? `ICP analysis artifact present (rules=${analysisMeta.rulesVersion}, huntReady=${analysisMeta.huntReady ?? false})`
+          : 'Lead gen must persist Phase A ICP analysis before any live hunt claim',
     });
     const channels = stats?.channelStatuses;
     const honestyOk =

@@ -89,6 +89,7 @@ describe('lead-gen channel honesty', () => {
       projectId: 'proj-1',
       artifacts: [
         { type: 'pdf', filename: 'welcome.pdf', storagePath: '/p' },
+        { type: 'lead_gen_analysis', filename: 'lead-gen-analysis-pack.md', storagePath: '/a' },
         { type: 'lead_gen_report', filename: 'lead-gen-kickoff-report.md', storagePath: '/r' },
         {
           type: 'lead_gen_pipeline_workspace',
@@ -106,10 +107,13 @@ describe('lead-gen channel honesty', () => {
           workspaceId: 'ws',
           mode: 'kickoff_pack_only',
           channelStatuses: resolveLeadGenChannelStatuses(),
+          analysis: { rulesVersion: 'hot-v1', huntReady: false },
+          hunt: { gate: { shouldHunt: false, reason: 'analysis_not_hunt_ready' }, rawFetched: 0, hotCount: 0 },
         },
       },
     });
     expect(checklist.items.find((i) => i.id === 'lead_gen_kickoff')?.passed).toBe(true);
+    expect(checklist.items.find((i) => i.id === 'lead_gen_analysis_before_hunt')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'channel_status_honesty')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'no_simulated_harvest')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'retainer_project')?.passed).toBe(true);
