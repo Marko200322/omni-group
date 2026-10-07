@@ -727,6 +727,25 @@ function Apply-DeployConfigProdEnvFiles {
     $(if (Test-DeployConfigBool $Config 'outreachSendEnabled' $false) { 'true' } else { 'false' })
   )
 
+  # Lead machine honesty: default off — Marko opts in via deploy.config.json
+  if ($null -ne $Config.PSObject.Properties['leadDatabaseEnabled']) {
+    Set-EnvLineInDeployFile $atinaEnv 'LEAD_DATABASE_ENABLED' (
+      $(if (Test-DeployConfigBool $Config 'leadDatabaseEnabled' $false) { 'true' } else { 'false' })
+    )
+  }
+  $leadPhase = Get-DeployConfigTrim $Config 'leadDatabaseRolloutPhase'
+  if ($leadPhase) { Set-EnvLineInDeployFile $atinaEnv 'LEAD_DATABASE_ROLLOUT_PHASE' $leadPhase }
+  if ($null -ne $Config.PSObject.Properties['leadLiveHarvestOnKickoff']) {
+    Set-EnvLineInDeployFile $atinaEnv 'LEAD_LIVE_HARVEST_ON_KICKOFF' (
+      $(if (Test-DeployConfigBool $Config 'leadLiveHarvestOnKickoff' $false) { 'true' } else { 'false' })
+    )
+  }
+  if ($null -ne $Config.PSObject.Properties['marketingAdsLiveSync']) {
+    Set-EnvLineInDeployFile $atinaEnv 'MARKETING_ADS_LIVE_SYNC' (
+      $(if (Test-DeployConfigBool $Config 'marketingAdsLiveSync' $false) { 'true' } else { 'false' })
+    )
+  }
+
   foreach ($entry in (Get-DeployConfigWebEnvPatches $Config $SiteDomain).GetEnumerator()) {
     Set-EnvLineInDeployFile $webEnv $entry.Key $entry.Value
   }

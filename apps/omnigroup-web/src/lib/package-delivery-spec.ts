@@ -502,15 +502,15 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly lead-gen ops pack COMPLETE after payment: PDF, CRM pipeline, sequence templates, weekly plan, outreach workspace, and honest channel status (CONNECTED / NOT CONNECTED). LinkedIn Ads (LINKEDIN_ADS_*) / Google Ads / Apollo: CONFIGURATION REQUIRED until user keys + MARKETING_ADS_LIVE_SYNC — Titanis leads_generated stays 0 and simulated harvest cannot PASS.',
+      'Monthly lead-gen ops pack COMPLETE after payment: deterministic CRM stages, sequence templates, weekly plan, channel board (same industry → same structure), honest CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — else leads_generated=0; Titanis never invents; simulated harvest cannot PASS.',
     descriptionSr:
-      'Mesečni lead-gen ops paket COMPLETE nakon plaćanja: PDF, CRM pipeline, sequence šabloni, nedeljni plan, outreach workspace i status kanala (CONNECTED / NOT CONNECTED). LinkedIn Ads (LINKEDIN_ADS_*) / Google Ads / Apollo: CONFIGURATION REQUIRED dok nema ključeva + MARKETING_ADS_LIVE_SYNC — Titanis leads_generated ostaje 0; simulirani harvest ne može PASS.',
+      'Mesečni lead-gen ops paket COMPLETE nakon plaćanja: deterministički CRM stage-ovi, sequence šabloni, nedeljni plan, channel board (ista industrija → ista struktura), pošten CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — inače leads_generated=0; Titanis ne izmišlja; simulirani harvest ne može PASS.',
     includes: [
       'Welcome PDF',
       'Honest channel status board (CONNECTED / NOT CONNECTED · ads/Apollo CONFIGURATION REQUIRED)',
-      'Pipeline workspace: CRM stages, sequence templates, weekly plan',
+      'Deterministic pipeline workspace: CRM stages, sequence templates, weekly plan (industry-aware, reproducible)',
       'CRM and outreach workspace + actionable portal tasks + kickoff ticket',
-      'Kickoff report (live harvest only when a real adapter returns contacts; else leads_generated=0)',
+      'Kickoff report (live harvest only when LEAD_LIVE_HARVEST_ON_KICKOFF + enrichment returns contacts; else leads_generated=0)',
       'SLA & onboarding pack',
       'Workspace project visible in portal',
       'Scheduled pipeline refresh when stack is live',
@@ -518,8 +518,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     excludes: [
       'Guaranteed qualified meetings',
-      'LinkedIn/Google Ads/Apollo live harvest without API credentials (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* / Apollo keys)',
-      'Invented Titanis lead counts / simulated harvest as fulfillment PASS',
+      'LinkedIn/Google Ads/Apollo live harvest without API credentials (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* / Apollo keys + LEAD_* flags)',
+      'Invented Titanis lead counts / simulated harvest / Math.random theater as fulfillment PASS',
       'Works fully in lean prod (scraper/outbound off)',
     ],
     anchorByPhase: { M4: 690, M6: 990 },

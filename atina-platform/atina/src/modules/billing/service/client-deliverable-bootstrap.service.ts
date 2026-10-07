@@ -27,6 +27,19 @@ import { isHeygenConfigured } from '../../video-meetings/providers/heygen-video.
 import { isDidConfigured } from '../../video-meetings/providers/did-video.provider';
 import { getAvatarAgentAsync } from '../../video-meetings/avatar/avatar-agent.config';
 import { getSlackNotifier } from '../../../utils/slack-notifier.service';
+import { getLeadDatabaseService } from '../../../integrations';
+import {
+  CRM_PIPELINE_STAGES,
+  buildDemoSampleLeads,
+  isLiveHarvestOnKickoffEnabled,
+  renderPipelineWorkspaceMarkdown,
+  resolveLeadGenMode,
+  type ChannelConnectionStatus,
+  type LeadGenMode,
+  type OutreachChannelStatus,
+} from '../lib/lead-gen-ops-pack';
+
+export type { ChannelConnectionStatus, LeadGenMode, OutreachChannelStatus };
 
 export type CrmBootstrapResult = {
   clientContactId?: string;
@@ -48,15 +61,6 @@ export type PortalEntitlementResult = {
   portalReady: boolean;
 };
 
-/** Honest ads/outreach channel state — never claim live API without credentials. */
-export type ChannelConnectionStatus = 'CONNECTED' | 'NOT CONNECTED';
-
-export type OutreachChannelStatus = {
-  channel: 'linkedin' | 'google_ads' | 'apollo' | 'email' | 'meta_ads';
-  status: ChannelConnectionStatus;
-  detail: string;
-};
-
 export type LeadGenBootstrapResult = {
   workspaceId?: string;
   runId?: string;
@@ -70,8 +74,9 @@ export type LeadGenBootstrapResult = {
    * kickoff_pack_only — ads/enrichment NOT CONNECTED; ops pack still complete.
    * channels_ready — credentials CONNECTED but no live harvest adapter pulled contacts yet.
    * live_harvest — real enrichment/ads harvest returned contacts (not Titanis theater).
+   * Mode is rule-based via resolveLeadGenMode — never random.
    */
-  mode: 'live_harvest' | 'channels_ready' | 'kickoff_pack_only';
+  mode: LeadGenMode;
 };
 
 function envPresent(key: string): boolean {
@@ -176,29 +181,6 @@ function splitName(full: string): { first: string; last: string } {
   return { first: parts[0] ?? 'Client', last: parts.slice(1).join(' ') || 'Account' };
 }
 
-function sampleLeadsForPack(pack: VerticalDeliveryPack, count = 8) {
-  const hooks = pack.outreachHooks.length ? pack.outreachHooks : [`${pack.displayName} prospect`];
-  const companies = [
-    `${pack.displayName.split(' ')[0]} Partners`,
-    'Northline Group',
-    'Summit Ventures',
-    'Atlas Digital',
-    'Prime Solutions',
-    'Horizon Labs',
-    'BluePeak Co',
-    'Vertex Systems',
-  ];
-  return Array.from({ length: count }, (_, i) => ({
-    firstName: ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn'][i % 8],
-    lastName: ['Smith', 'Lee', 'Patel', 'Garcia', 'Kim', 'Brown', 'Novak', 'Silva'][i % 8],
-    email: `lead${i + 1}@example-${pack.verticalSlug.slice(0, 12)}.demo`,
-    company: `[DEMO] ${companies[i % companies.length]}`,
-    status: i < 3 ? ('prospect' as const) : ('lead' as const),
-    source: 'fulfillment-bootstrap-demo',
-    tags: [pack.verticalSlug, pack.category, 'DEMO_SAMPLE', 'industry_template'],
-    notes: `[DEMO SAMPLE — ${pack.displayName} industry template] ${hooks[i % hooks.length]}`,
-  }));
-}
 
 export class ClientDeliverableBootstrapService {
   private crm = new CrmService();
@@ -242,10 +224,10 @@ export class ClientDeliverableBootstrapService {
       });
     }
 
-    const samples = sampleLeadsForPack(pack, 8);
+    const samples = buildDemoSampleLeads(pack, 8);
     const bulk = await this.crm.bulkImport(input.userId, { contacts: samples });
 
-    const pipelineStages = ['lead', 'prospect', 'customer'];
+    const pipelineStages = [...CRM_PIPELINE_STAGES];
     for (const stage of pipelineStages) {
       try {
         await this.tasks.createTask(input.userId, {
@@ -407,15 +389,6 @@ export class ClientDeliverableBootstrapService {
   }): Promise<LeadGenBootstrapResult> {
     const pack = input.pack ?? resolvePack(input.industryCategory);
     const channelStatuses = resolveLeadGenChannelStatuses();
-    const liveChannels = channelStatuses.filter(
-      (c) =>
-        c.status === 'CONNECTED' &&
-        (c.channel === 'apollo' || c.channel === 'google_ads' || c.channel === 'linkedin'),
-    );
-    // Never treat Titanis planning as live harvest. Until a real harvest adapter
-    // returns contacts, mode is kickoff_pack_only or channels_ready.
-    const mode: LeadGenBootstrapResult['mode'] =
-      liveChannels.length > 0 ? 'channels_ready' : 'kickoff_pack_only';
 
     const workspaces = await this.titanis.list(input.userId);
     let workspaceId = (workspaces[0] as { id?: string } | undefined)?.id;
@@ -452,10 +425,56 @@ export class ClientDeliverableBootstrapService {
       }
     }
 
+    // Real harvest path only when opt-in + enrichment providers active — never invent.
+    let leadsGenerated = 0;
+    if (isLiveHarvestOnKickoffEnabled()) {
+      try {
+        const leadDb = getLeadDatabaseService();
+        if (leadDb.isEnrichmentActive()) {
+          const contacts = await leadDb.enrichFromHuntContext({
+            verticalSlug: pack.verticalSlug,
+            verticalName: pack.displayName,
+          });
+          leadsGenerated = contacts.length;
+          if (leadsGenerated > 0) {
+            try {
+              await this.crm.bulkImport(input.userId, {
+                contacts: contacts.map((c, i) => ({
+                  firstName: c.firstName ?? 'Lead',
+                  lastName: c.lastName ?? String(i + 1),
+                  email: c.email ?? undefined,
+                  company: c.company ?? undefined,
+                  status: 'lead' as const,
+                  source: `live_harvest:${c.provider ?? 'enrichment'}`,
+                  tags: [pack.verticalSlug, 'LIVE_HARVEST', c.provider ?? 'unknown'],
+                  notes: `[LIVE HARVEST] ${c.title ?? ''} ${c.companyDomain ?? ''}`.trim(),
+                })),
+              });
+            } catch (err) {
+              logger.warn('Live harvest CRM import skipped', {
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
+        } else {
+          logger.info('LEAD_LIVE_HARVEST_ON_KICKOFF set but enrichment inactive — leads stay 0', {
+            verticalSlug: pack.verticalSlug,
+          });
+        }
+      } catch (err) {
+        logger.warn('Live harvest adapter failed — leads_generated stays 0', {
+          error: err instanceof Error ? err.message : String(err),
+        });
+        leadsGenerated = 0;
+      }
+    }
+
+    const mode = resolveLeadGenMode({ channelStatuses, liveLeadsGenerated: leadsGenerated });
+
     return {
       workspaceId,
       runId,
-      leadsGenerated: 0,
+      leadsGenerated,
       sampleLeadsSeeded: 0,
       estimatedRevenue: 0,
       channelStatuses,
@@ -522,73 +541,14 @@ export class ClientDeliverableBootstrapService {
   }): FulfillmentArtifact {
     const { pack, stats, clientName } = input;
     const channels = stats.channelStatuses ?? resolveLeadGenChannelStatuses();
-    const hooks = pack.outreachHooks.length
-      ? pack.outreachHooks
-      : [`${pack.displayName} intro`, `${pack.displayName} follow-up`, `${pack.displayName} breakup`];
-    const content = `# Lead Gen Pipeline Workspace — ${clientName}
-
-Vertical: ${pack.displayName}
-Mode: ${stats.mode}
-Workspace: ${stats.workspaceId ?? 'pending'}
-Generated: ${new Date().toISOString()}
-
-## CRM stages (operational)
-| Stage | Purpose | Exit criteria |
-|-------|---------|---------------|
-| lead | New / researched contact | Email + company known |
-| prospect | Engaged / replied / meeting booked | Next step dated |
-| customer | Won / active account | Handoff to delivery |
-
-Sample CRM rows are **demo seeds** (not live harvest). Replace before reporting pipeline KPIs.
-
-## Sequence templates (copy into Outreach — not auto-sent)
-### Seq A — Cold intro (Day 0)
-Subject: Quick idea for {{company}}
-Body: ${hooks[0]}
-CTA: 15-min call this week?
-
-### Seq B — Value follow-up (Day 3)
-Subject: Re: {{company}} / ${pack.displayName}
-Body: ${hooks[1] ?? hooks[0]}
-CTA: Share one KPI you want to move.
-
-### Seq C — Breakup (Day 8)
-Subject: Should I close the loop?
-Body: ${hooks[2] ?? hooks[0]}
-CTA: Reply "later" or book a slot.
-
-**Honesty:** Templates are for human/ops execution. LinkedIn/Google Ads sends stay blocked while channels are NOT CONNECTED.
-
-## Weekly plan (ops-executable)
-### Week 1 — Kickoff
-1. Confirm ICP + geo from vertical brief
-2. Review channel status board (below)
-3. Personalize Seq A/B/C for top 20 accounts
-4. Log activity on kickoff support ticket
-
-### Week 2 — Pipeline motion
-1. Move demo CRM rows or import real CSV
-2. Send only on CONNECTED email transport
-3. Book discovery calls into prospect stage
-
-### Week 3 — Optimize
-1. Drop non-responders; refresh hooks from ${pack.displayName} pack
-2. Update weekly snapshot on kickoff ticket
-
-### Week 4 — Monthly report
-1. Count real replies/meetings only (never Titanis planning targets)
-2. List channels still NOT CONNECTED / CONFIGURATION REQUIRED
-
-## Channel status board
-| Channel | Status | Detail |
-|---------|--------|--------|
-${channels.map((c) => `| ${c.channel} | **${c.status}** | ${c.detail} |`).join('\n')}
-
-Live leads generated this kickoff: **${stats.leadsGenerated}** (must stay 0 without a real harvest adapter).
-
-## Workflow map
-${pack.workflowSteps.map((s, i) => `${i + 1}. ${s.step} → \`${s.moduleSlug}\` (${s.action})`).join('\n')}
-`;
+    const content = renderPipelineWorkspaceMarkdown({
+      clientName,
+      pack,
+      mode: stats.mode,
+      workspaceId: stats.workspaceId,
+      channelStatuses: channels,
+      leadsGenerated: stats.leadsGenerated,
+    });
     return this.artifacts.saveText({
       userId: input.userId,
       paymentId: input.paymentId,
@@ -853,10 +813,12 @@ ${pack.workflowSteps.map((s, i) => `${i + 1}. ${s.step} (${s.moduleSlug})`).join
 ## Outreach hooks (planning — not auto-sent to LinkedIn/Ads)
 ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
 
-## Connecting live channels
-1. Google Ads: set GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC=true
-2. LinkedIn Ads/Marketing: set LINKEDIN_ADS_ACCESS_TOKEN + LINKEDIN_ADS_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true (CONFIGURATION REQUIRED until keys)
-3. Apollo enrichment: set APOLLO_API_KEY
+## Connecting live channels (deterministic — no fake harvest)
+1. Google Ads spend sync: GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID + MARKETING_ADS_LIVE_SYNC=true
+2. LinkedIn Ads: LINKEDIN_ADS_ACCESS_TOKEN + LINKEDIN_ADS_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true
+3. Meta Ads: META_ADS_ACCESS_TOKEN + META_ADS_AD_ACCOUNT_ID + MARKETING_ADS_LIVE_SYNC=true
+4. Apollo / Hunter live harvest on kickoff: APOLLO_API_KEY (or HUNTER_API_KEY), LEAD_DATABASE_ENABLED=true, LEAD_DATABASE_ROLLOUT_PHASE=F4 (or F3+), LEAD_LIVE_HARVEST_ON_KICKOFF=true
+5. Without those flags, mode stays kickoff_pack_only / channels_ready and leads_generated=0
 `;
     return this.artifacts.saveText({
       userId: input.userId,
