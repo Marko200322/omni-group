@@ -1,0 +1,21 @@
+﻿{
+  "clientName": "Client",
+  "industryCategory": "admin_support",
+  "avatarSupportUrl": "https://omnigrouptech.com/dashboard/support",
+  "videoMeetingsUrl": "https://omnigrouptech.com/dashboard/support",
+  "modules": [
+    "video-meetings"
+  ],
+  "ragNamespace": "support-kb",
+  "ragSeeded": true,
+  "voiceProvider": "elevenlabs",
+  "avatarProvider": "heygen",
+  "avatarConfigured": true,
+  "avatarMemoryKey": "84298e4d",
+  "configurationRequired": [],
+  "note": "HeyGen/D-ID configured â video avatar + meeting path available in support dashboard.",
+  "channelHonesty": {
+    "heygen": "CONNECTED",
+    "did": "CONNECTED"
+  }
+}

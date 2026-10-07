@@ -1,0 +1,281 @@
+﻿[
+    {
+        "deliverableId":  "website-ecommerce",
+        "industry":  "fitness",
+        "paymentId":  "5d3ebb04-5395-49af-b96a-e66948dff88c",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  2,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "website-ecommerce-delivery.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "website-ecommerce-delivery.pdf",
+                               "http":  200,
+                               "bytes":  3997,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "no_publicUrl"
+                  ]
+    },
+    {
+        "deliverableId":  "landing",
+        "industry":  "construction",
+        "paymentId":  "1addcab2-01cd-4d12-b1a6-6369778a395f",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  2,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "landing-delivery.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "landing-delivery.pdf",
+                               "http":  200,
+                               "bytes":  3006,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "no_publicUrl"
+                  ]
+    },
+    {
+        "deliverableId":  "website-business",
+        "industry":  "legal",
+        "paymentId":  "808b610c-bdf0-4ed2-9c8e-20d10593ec45",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  2,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "website-business-delivery.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "website-business-delivery.pdf",
+                               "http":  200,
+                               "bytes":  3215,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "no_publicUrl"
+                  ]
+    },
+    {
+        "deliverableId":  "audit",
+        "industry":  "technology",
+        "paymentId":  "86d42553-934f-465c-b054-69020e7f5dcc",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  2,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "technical-audit.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "technical-audit.pdf",
+                               "http":  200,
+                               "bytes":  7304,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "pdf_thin_7304b"
+                  ]
+    },
+    {
+        "deliverableId":  "setup-quick",
+        "industry":  "marketing",
+        "paymentId":  "cdb628f0-13f3-481c-9a1b-a22a2a76f8f2",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  3,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "setup-quick.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "setup-quick.pdf",
+                               "http":  200,
+                               "bytes":  4098,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "pdf_thin_4098b"
+                  ]
+    },
+    {
+        "deliverableId":  "lead-gen-retainer",
+        "industry":  "finance",
+        "paymentId":  "1673d4f0-53b6-4f69-a8ac-1bbe63038730",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  5,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "lead-gen-retainer-welcome.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "lead-gen-retainer-welcome.pdf",
+                               "http":  200,
+                               "bytes":  4173,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "pdf_thin_4173b"
+                  ]
+    },
+    {
+        "deliverableId":  "custom-software",
+        "industry":  "healthcare",
+        "paymentId":  "57a0a464-f87d-4a13-acf5-576429c1a8b3",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  2,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "software-handoff.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "software-handoff.pdf",
+                               "http":  200,
+                               "bytes":  4889,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "pdf_thin_4889b"
+                  ]
+    },
+    {
+        "deliverableId":  "bundle-sales-launch",
+        "industry":  "ecommerce",
+        "paymentId":  "dbd89c7b-d6e6-41b7-bba0-383585c88cc9",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  4,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "landing-delivery.pdf",
+                     "sales-enablement.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "landing-delivery.pdf",
+                               "http":  200,
+                               "bytes":  2995,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           },
+                           {
+                               "name":  "sales-enablement.pdf",
+                               "http":  200,
+                               "bytes":  6089,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "no_publicUrl; pdf_thin_2995b; pdf_thin_6089b"
+                  ]
+    },
+    {
+        "deliverableId":  "support-priority",
+        "industry":  "hospitality",
+        "paymentId":  "b891ab9b-c1f0-477c-9982-755c3efa59f3",
+        "jobStatus":  "completed",
+        "checklistScore":  "",
+        "checklistPassed":  "",
+        "artifactCount":  4,
+        "publicUrls":  [
+
+                       ],
+        "pdfs":  [
+                     "support-priority-welcome.pdf"
+                 ],
+        "liveChecks":  [
+                           {
+                               "name":  "support-priority-welcome.pdf",
+                               "http":  200,
+                               "bytes":  3694,
+                               "contentType":  "application/pdf",
+                               "thin":  true,
+                               "notes":  ""
+                           }
+                       ],
+        "verdict":  "FAIL",
+        "notes":  [
+                      "NO_CHECKLIST_ON_JOB",
+                      "pdf_thin_3694b"
+                  ]
+    }
+]

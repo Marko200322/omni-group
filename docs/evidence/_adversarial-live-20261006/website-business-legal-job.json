@@ -1,0 +1,33 @@
+﻿{
+    "id":  "47050b29-2253-4a29-a571-9c06ef7b1af6",
+    "paymentId":  "808b610c-bdf0-4ed2-9c8e-20d10593ec45",
+    "deliverableId":  "website-business",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T12:06:48.189Z",
+    "error":  null,
+    "publicUrl":  "/sites/legal-studio-808b610cbdf0-muwmv8xg",
+    "projectId":  "057530d2-b7eb-4fae-8a40-28cb7a48775f",
+    "industryCategory":  "legal",
+    "documentQuality":  null,
+    "documentSubstanceOk":  null,
+    "artifacts":  [
+                      {
+                          "type":  "site_delivery_pack",
+                          "filename":  "website-business-delivery.pdf",
+                          "downloadLabel":  "Business website â Delivery pack"
+                      },
+                      {
+                          "type":  "site_delivery_pack_md",
+                          "filename":  "site_delivery_pack_md.md",
+                          "downloadLabel":  "Business website â Delivery pack (Markdown)"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T12:06:47.216Z",
+    "updatedAt":  "2026-10-06T12:06:48.189Z",
+    "completedAt":  "2026-10-06T12:06:48.189Z"
+}

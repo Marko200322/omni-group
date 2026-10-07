@@ -1,0 +1,599 @@
+﻿[
+    {
+        "deliverableId":  "ai-support-retainer",
+        "industry":  "admin_support",
+        "paymentId":  "84298e4d-2886-48ef-9c05-d749feaee5a2",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  6,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  5932,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\ai-support-retainer-admin_support-ai-support-retainer-welcome.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "ai-support-retainer-welcome.pdf",
+                              "floor":  5000
+                          }
+                      ],
+        "portalListed":  true,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=ai-support-retainer-welcome.pdf/5932",
+                      "md=retainer_welcome_md.md",
+                      "md=ai-support-setup.json",
+                      "portal_detail_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "audit",
+        "industry":  "agriculture",
+        "paymentId":  "6fb0c30a-8ffc-46ac-bf99-f48def459a09",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  2,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  13220,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\audit-agriculture-technical-audit.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "technical-audit.pdf",
+                              "floor":  12000
+                          }
+                      ],
+        "portalListed":  true,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=technical-audit.pdf/13220",
+                      "md=audit_report_md.md",
+                      "brand_soft_ok",
+                      "portal_detail_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "bundle-ops-clarity",
+        "industry":  "ai_data",
+        "paymentId":  "1d35809f-1255-43f3-a752-484f3d5a906f",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  13320,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-ops-clarity-ai_data-technical-audit.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "technical-audit.pdf",
+                              "floor":  8000
+                          },
+                          {
+                              "bytes":  9053,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-ops-clarity-ai_data-workflow-sop-pack.pdf",
+                              "primary":  false,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "workflow-sop-pack.pdf",
+                              "floor":  2000
+                          }
+                      ],
+        "portalListed":  true,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=technical-audit.pdf/13320",
+                      "pdf_ok=workflow-sop-pack.pdf/9053",
+                      "md=audit_report_md.md",
+                      "md=workflow_design_md.md",
+                      "brand_soft_ok",
+                      "portal_detail_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "bundle-portal-presence",
+        "industry":  "audio_music",
+        "paymentId":  "609bb5d7-d92a-4928-9506-34b2722734c6",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  5,
+        "publicUrl":  "https://omnigrouptech.com/sites/audio-music-studio-609bb5d7d92a-mux8d6ai",
+        "publicUrlHttp":  200,
+        "publicUrlBytes":  15037,
+        "publicUrlTitle":  "Audio \u0026amp; Music Studio",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  9909,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-portal-presence-audio_music-setup-quick.pdf",
+                              "primary":  false,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "setup-quick.pdf",
+                              "floor":  2000
+                          },
+                          {
+                              "bytes":  10570,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-portal-presence-audio_music-landing-delivery.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "landing-delivery.pdf",
+                              "floor":  8000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "publicUrl_ok",
+                      "pdf_ok=setup-quick.pdf/9909",
+                      "pdf_ok=landing-delivery.pdf/10570",
+                      "md=setup_pack_md.md",
+                      "md=portal-modules.json"
+                  ]
+    },
+    {
+        "deliverableId":  "bundle-sales-launch",
+        "industry":  "automotive",
+        "paymentId":  "22c68efa-a232-4d8b-b890-7ec1af539a1a",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "https://omnigrouptech.com/sites/automotive-studio-22c68efaa232-muxjau8r",
+        "publicUrlHttp":  200,
+        "publicUrlBytes":  14563,
+        "publicUrlTitle":  "Automotive Studio",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  10569,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-sales-launch-automotive-landing-delivery.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "landing-delivery.pdf",
+                              "floor":  8000
+                          },
+                          {
+                              "bytes":  7387,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\bundle-sales-launch-automotive-sales-enablement.pdf",
+                              "primary":  false,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "sales-enablement.pdf",
+                              "floor":  2000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "publicUrl_ok",
+                      "pdf_ok=landing-delivery.pdf/10569",
+                      "pdf_ok=sales-enablement.pdf/7387",
+                      "md=site_delivery_pack_md.md",
+                      "md=sales-enablement_md.md"
+                  ]
+    },
+    {
+        "deliverableId":  "custom-software",
+        "industry":  "beauty",
+        "paymentId":  "2d673409-b2f7-46b8-ad97-1ad2556af2af",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  2,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  6895,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\custom-software-beauty-software-handoff.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "software-handoff.pdf",
+                              "floor":  6000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=software-handoff.pdf/6895",
+                      "md=software_handoff_md.md",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "integration",
+        "industry":  "business_consulting",
+        "paymentId":  "c84fb20b-43d2-4380-b687-19c8fd485ba3",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  9948,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\integration-business_consulting-integration-guide.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "integration-guide.pdf",
+                              "floor":  8000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=integration-guide.pdf/9948",
+                      "md=integration_guide_md.md",
+                      "md=integration-config.json"
+                  ]
+    },
+    {
+        "deliverableId":  "landing",
+        "industry":  "community_moderation",
+        "paymentId":  "f0e594d7-1448-4759-9da9-2e24e728855f",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  2,
+        "publicUrl":  "https://omnigrouptech.com/sites/community-moderation-studio-f0e594d71448-mux8v1ro",
+        "publicUrlHttp":  200,
+        "publicUrlBytes":  15585,
+        "publicUrlTitle":  "Community \u0026amp; Moderation Studio",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  10572,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\landing-community_moderation-landing-delivery.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "landing-delivery.pdf",
+                              "floor":  10000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "publicUrl_ok",
+                      "pdf_ok=landing-delivery.pdf/10572",
+                      "md=site_delivery_pack_md.md"
+                  ]
+    },
+    {
+        "deliverableId":  "lead-gen-retainer",
+        "industry":  "construction",
+        "paymentId":  "4a0ab15c-59f1-468d-9f74-bca25597e877",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  5,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  6134,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\lead-gen-retainer-construction-lead-gen-retainer-welcome.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "lead-gen-retainer-welcome.pdf",
+                              "floor":  5000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=lead-gen-retainer-welcome.pdf/6134",
+                      "md=retainer_welcome_md.md",
+                      "md=lead-gen-kickoff-report.md",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "sales-enablement",
+        "industry":  "creator_services",
+        "paymentId":  "dafe0935-b2c4-48ef-a6aa-f6dabfee1598",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  2,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  7446,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\sales-enablement-creator_services-sales-enablement.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "sales-enablement.pdf",
+                              "floor":  7000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=sales-enablement.pdf/7446",
+                      "md=sales-enablement_md.md",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "setup-custom",
+        "industry":  "customer_service",
+        "paymentId":  "9c21ad23-84ba-49c4-99a6-4cd477f84781",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  9966,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\setup-custom-customer_service-setup-custom.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "setup-custom.pdf",
+                              "floor":  8000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=setup-custom.pdf/9966",
+                      "md=setup_pack_md.md",
+                      "md=portal-modules.json",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "setup-full",
+        "industry":  "design_creative",
+        "paymentId":  "0ce6bc6c-c991-448c-bdf7-0d850af19b94",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  6,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  10520,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\setup-full-design_creative-setup-full.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "setup-full.pdf",
+                              "floor":  8000
+                          },
+                          {
+                              "bytes":  4291,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\setup-full-design_creative-training-outline.pdf",
+                              "primary":  false,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "training-outline.pdf",
+                              "floor":  2000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=setup-full.pdf/10520",
+                      "pdf_ok=training-outline.pdf/4291",
+                      "md=setup_pack_md.md",
+                      "md=portal-modules.json",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "setup-quick",
+        "industry":  "development_it",
+        "paymentId":  "47b7e518-55e8-4b38-9e00-8fb4405c8bcf",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  3,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  9901,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\setup-quick-development_it-setup-quick.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "setup-quick.pdf",
+                              "floor":  9000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=setup-quick.pdf/9901",
+                      "md=setup_pack_md.md",
+                      "md=portal-modules.json",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "support-dedicated",
+        "industry":  "ecommerce",
+        "paymentId":  "f912ee2d-4bbb-4ec6-bb53-258b750a56dc",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  5685,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\support-dedicated-ecommerce-support-dedicated-welcome.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "support-dedicated-welcome.pdf",
+                              "floor":  5000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=support-dedicated-welcome.pdf/5685",
+                      "md=retainer_welcome_md.md",
+                      "md=support-dedicated-sla-onboarding.md",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "support-priority",
+        "industry":  "education",
+        "paymentId":  "ea2781f8-f1b2-4aa7-83e4-5b1470f62ef8",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  true,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  5829,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\support-priority-education-support-priority-welcome.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "support-priority-welcome.pdf",
+                              "floor":  5000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=support-priority-welcome.pdf/5829",
+                      "md=retainer_welcome_md.md",
+                      "md=support-priority-sla-onboarding.md",
+                      "brand_soft_ok"
+                  ]
+    },
+    {
+        "deliverableId":  "vertical-package",
+        "industry":  "education_training",
+        "paymentId":  "868d33e0-398f-4d56-9e87-9878f086d2cf",
+        "matrixScore":  "100",
+        "jobStatus":  "completed",
+        "checklistScore":  "100",
+        "checklistPassed":  true,
+        "artifactCount":  4,
+        "publicUrl":  "",
+        "publicUrlHttp":  null,
+        "publicUrlBytes":  null,
+        "publicUrlTitle":  "",
+        "brandOk":  false,
+        "industryHintOk":  true,
+        "pdfChecks":  [
+                          {
+                              "bytes":  9488,
+                              "saved":  "C:\\dev\\omni group\\docs\\evidence\\_manual-live-20261007\\vertical-package-education_training-vertical-solution-pack.pdf",
+                              "primary":  true,
+                              "http":  200,
+                              "ok":  true,
+                              "filename":  "vertical-solution-pack.pdf",
+                              "floor":  5000
+                          }
+                      ],
+        "portalListed":  false,
+        "verdict":  "PASS",
+        "notes":  [
+                      "pdf_ok=vertical-solution-pack.pdf/9488",
+                      "md=vertical_pack_md.md",
+                      "md=vertical-package-sla-onboarding.md",
+                      "WARN_brand_weak"
+                  ]
+    }
+]

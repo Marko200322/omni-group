@@ -1,0 +1,157 @@
+﻿{
+  "schema": "omni-integration-config/v2",
+  "clientName": "Client",
+  "generatedAt": "2026-10-06T21:37:55.595Z",
+  "status": "DOCUMENTED_NOT_LIVE",
+  "honestyNote": "This package delivers a guide + config for your developer. Third-party tools (Stripe, ERP, CRM, AI, email) are NOT already connected until you add API keys and complete onboardingChecklist.",
+  "apiBase": "https://api.omnigrouptech.com/api/v1",
+  "webhooks": {
+    "paymentCompleted": "https://api.omnigrouptech.com/api/v1/payments/webhooks/stripe",
+    "deliverableReady": "https://omnigrouptech.com/api/atina/billing/fulfillment/jobs/b94c57af-5a8e-41ff-97d7-60f2a2ca50df",
+    "customIngress": "https://api.omnigrouptech.com/api/v1/integrations/inbound/e86b2b89-ad8c-4e20-97ce-97d5496668a0"
+  },
+  "webhookEndpoints": {
+    "paymentCompleted": "https://api.omnigrouptech.com/api/v1/payments/webhooks/stripe",
+    "deliverableReady": "https://omnigrouptech.com/api/atina/billing/fulfillment/jobs/b94c57af-5a8e-41ff-97d7-60f2a2ca50df",
+    "customIngress": "https://api.omnigrouptech.com/api/v1/integrations/inbound/e86b2b89-ad8c-4e20-97ce-97d5496668a0"
+  },
+  "authentication": {
+    "type": "Bearer JWT",
+    "login": "https://api.omnigrouptech.com/api/v1/auth/login",
+    "note": "Use client portal credentials; rotate keys quarterly."
+  },
+  "envMap": {
+    "STRIPE_WEBHOOK_SECRET": {
+      "purpose": "Verify Stripe payment.completed signatures",
+      "where": "Stripe Dashboard â Webhooks â Signing secret",
+      "requiredWhen": "Card payments enabled"
+    },
+    "STRIPE_SECRET_KEY": {
+      "purpose": "Server-side Stripe API calls",
+      "where": "Stripe Dashboard â Developers â API keys",
+      "requiredWhen": "Card payments enabled"
+    },
+    "OPENROUTER_API_KEY": {
+      "purpose": "Optional AI connector (not pre-wired)",
+      "where": "OpenRouter account â API keys",
+      "requiredWhen": "You enable AI features in your stack"
+    },
+    "SMTP_URL_OR_RESEND_API_KEY": {
+      "purpose": "Transactional email from your domain",
+      "where": "Your ESP (Resend/SendGrid/SMTP provider)",
+      "requiredWhen": "You send mail from your own domain"
+    },
+    "INTEGRATION_WEBHOOK_SECRET": {
+      "purpose": "HMAC for customIngress callbacks",
+      "where": "Copy webhookSecret from this JSON into your consumer",
+      "requiredWhen": "Always â rotate quarterly",
+      "valueHint": "Use webhookSecret field in this file (never commit to git)"
+    },
+    "CLIENT_JWT_OR_PORTAL_CREDENTIALS": {
+      "purpose": "Bearer auth against Omni REST (login endpoint)",
+      "where": "Client portal user for this workspace",
+      "requiredWhen": "Calling protected /api/v1 routes"
+    }
+  },
+  "retryPolicy": {
+    "maxAttempts": 5,
+    "initialBackoffMs": 1000,
+    "backoffMultiplier": 2,
+    "maxBackoffMs": 60000,
+    "jitter": true,
+    "deadLetterAfterAttempts": 5,
+    "retryOnHttpStatus": [
+      408,
+      429,
+      500,
+      502,
+      503,
+      504
+    ],
+    "idempotencyHeader": "Idempotency-Key",
+    "note": "Consumers must return 2xx quickly and process async; retry only on transient failures."
+  },
+  "onboardingChecklist": [
+    {
+      "step": 1,
+      "title": "Store webhookSecret securely",
+      "action": "Copy webhookSecret from this JSON into your secrets manager as INTEGRATION_WEBHOOK_SECRET. Do not commit it.",
+      "doneWhen": "Secret is in vault / env of the consumer only"
+    },
+    {
+      "step": 2,
+      "title": "Register webhook endpoints",
+      "action": "Point your Stripe (or payment) webhook at https://api.omnigrouptech.com/api/v1/payments/webhooks/stripe. Point internal job status consumers at deliverableReady. Use customIngress for your own systems.",
+      "doneWhen": "Provider dashboard shows endpoint + signing secret configured"
+    },
+    {
+      "step": 3,
+      "title": "Add third-party API keys (only when you go live)",
+      "action": "Fill envMap keys that apply (Stripe, email, OpenRouter, etc.). Keys are NOT pre-connected â this pack documents how to wire them.",
+      "doneWhen": "Required env vars set in staging; unused keys left blank"
+    },
+    {
+      "step": 4,
+      "title": "Verify HMAC + retry policy",
+      "action": "Implement signature check on inbound webhooks; apply retryPolicy (exponential backoff + dead-letter). Send Idempotency-Key on payment-confirm retries.",
+      "doneWhen": "Staging echo returns 2xx; failed deliveries land in DLQ after maxAttempts"
+    },
+    {
+      "step": 5,
+      "title": "Sandbox end-to-end",
+      "action": "Run Auth â CRM contact â payment reference â payment.completed â artifact unlock using sampleEvents payloads.",
+      "doneWhen": "E2E green in staging with sandbox keys only"
+    },
+    {
+      "step": 6,
+      "title": "Production cutover",
+      "action": "Rotate webhookSecret, swap live keys, disable sandbox endpoints, monitor p95 latency and failed fulfillment count for 24h.",
+      "doneWhen": "Live purchase produces downloadable artifacts; rollback flag documented"
+    }
+  ],
+  "modules": [
+    "automation",
+    "crm",
+    "tasks",
+    "notifications",
+    "client-hunter"
+  ],
+  "webhookSecret": "03c1f23598e7e456f4e2cdfb4380f310fbe084affeb7ac7e",
+  "sampleEvents": [
+    {
+      "type": "payment.completed",
+      "example": {
+        "event": "payment.completed",
+        "paymentId": "b94c57af-5a8e-41ff-97d7-60f2a2ca50df",
+        "status": "completed"
+      }
+    },
+    {
+      "type": "deliverable.ready",
+      "example": {
+        "event": "deliverable.ready",
+        "paymentId": "b94c57af-5a8e-41ff-97d7-60f2a2ca50df",
+        "artifactTypes": [
+          "pdf",
+          "json"
+        ]
+      }
+    },
+    {
+      "type": "crm.contact.created",
+      "example": {
+        "event": "crm.contact.created",
+        "email": "lead@example.com",
+        "source": "admin_support"
+      }
+    }
+  ],
+  "testingChecklist": [
+    "Research complete (TAM + competition in research_data)",
+    "Artifacts generated (module, landing, workflow, outreach, quality pack)",
+    "Dynamic pricing quote valid for verticalSlug",
+    "CRM pipeline and lead source defined",
+    "Outreach draft reviewed before send (domain warmup)",
+    "Smoke test / owner sign-off before client delivery"
+  ]
+}

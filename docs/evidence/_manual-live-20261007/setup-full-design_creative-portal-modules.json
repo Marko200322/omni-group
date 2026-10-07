@@ -1,0 +1,30 @@
+﻿{
+  "clientName": "Client",
+  "deliverableId": "setup-full",
+  "generatedAt": "2026-10-06T22:46:26.128Z",
+  "modulesActivated": [
+    "crm",
+    "automation",
+    "notifications",
+    "billing"
+  ],
+  "expected": [
+    "notifications",
+    "billing"
+  ],
+  "portalReady": true,
+  "portalEntitlements": {
+    "entitlementSource": "user_modules+org",
+    "userModulesGranted": [
+      "crm",
+      "automation",
+      "notifications",
+      "billing"
+    ],
+    "billingAccess": true,
+    "notificationSeeded": true,
+    "orgRole": "owner"
+  },
+  "notes": "Real entitlements: user_modules rows + org billing access + welcome notification. Task rows alone are not sufficient."
+}
+

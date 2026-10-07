@@ -1,0 +1,33 @@
+﻿{
+    "id":  "dcbe73a6-21ab-4d14-8571-d266fc910c92",
+    "paymentId":  "1addcab2-01cd-4d12-b1a6-6369778a395f",
+    "deliverableId":  "landing",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T12:33:12.482Z",
+    "error":  null,
+    "publicUrl":  "/sites/construction-studio-1addcab201cd-muwnt79a",
+    "projectId":  "bb42499f-0b57-46c4-a053-06d817e5a4a7",
+    "industryCategory":  "construction",
+    "documentQuality":  null,
+    "documentSubstanceOk":  null,
+    "artifacts":  [
+                      {
+                          "type":  "site_delivery_pack",
+                          "filename":  "landing-delivery.pdf",
+                          "downloadLabel":  "Landing + copy â Delivery pack"
+                      },
+                      {
+                          "type":  "site_delivery_pack_md",
+                          "filename":  "site_delivery_pack_md.md",
+                          "downloadLabel":  "Landing + copy â Delivery pack (Markdown)"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T12:33:11.410Z",
+    "updatedAt":  "2026-10-06T12:33:12.482Z",
+    "completedAt":  "2026-10-06T12:33:12.482Z"
+}

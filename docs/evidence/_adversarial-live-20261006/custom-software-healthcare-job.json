@@ -1,0 +1,40 @@
+﻿{
+    "id":  "8be98ef5-f2e1-4341-920c-bcb078e56c8d",
+    "paymentId":  "57a0a464-f87d-4a13-acf5-576429c1a8b3",
+    "deliverableId":  "custom-software",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T12:01:01.937Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "ce3e5da6-d4bc-4725-80c9-6cb816b27e71",
+    "industryCategory":  "healthcare",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  2775,
+                            "minSectionBodyChars":  290,
+                            "checklistOrMilestoneHits":  30,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "artifacts":  [
+                      {
+                          "type":  "software_handoff",
+                          "filename":  "software-handoff.pdf",
+                          "downloadLabel":  "Custom Software â Handoff Documentation"
+                      },
+                      {
+                          "type":  "software_handoff_md",
+                          "filename":  "software_handoff_md.md",
+                          "downloadLabel":  "Custom Software â Handoff Documentation (Markdown)"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T12:01:00.616Z",
+    "updatedAt":  "2026-10-06T12:01:01.937Z",
+    "completedAt":  "2026-10-06T12:01:01.937Z"
+}

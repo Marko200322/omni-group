@@ -1,0 +1,48 @@
+﻿{
+    "id":  "916770ac-83fe-460c-94af-7f7adb8ad797",
+    "paymentId":  "1673d4f0-53b6-4f69-a8ac-1bbe63038730",
+    "deliverableId":  "lead-gen-retainer",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T12:53:57.872Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "9cb4ade7-0a6a-4006-9d0b-dc69bd022142",
+    "industryCategory":  "finance",
+    "documentQuality":  null,
+    "documentSubstanceOk":  null,
+    "artifacts":  [
+                      {
+                          "type":  "retainer_welcome",
+                          "filename":  "lead-gen-retainer-welcome.pdf",
+                          "downloadLabel":  "Lead gen retainer â Welcome \u0026 Service Scope"
+                      },
+                      {
+                          "type":  "retainer_welcome_md",
+                          "filename":  "retainer_welcome_md.md",
+                          "downloadLabel":  "Lead gen retainer â Welcome \u0026 Service Scope (Markdown)"
+                      },
+                      {
+                          "type":  "lead_gen_report",
+                          "filename":  "lead-gen-kickoff-report.md",
+                          "downloadLabel":  "Lead gen kickoff report"
+                      },
+                      {
+                          "type":  "lead_gen_pipeline_workspace",
+                          "filename":  "lead-gen-pipeline-workspace.md",
+                          "downloadLabel":  "Lead gen pipeline workspace"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "lead-gen-retainer-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T12:53:49.747Z",
+    "updatedAt":  "2026-10-06T12:53:57.872Z",
+    "completedAt":  "2026-10-06T12:53:57.872Z"
+}

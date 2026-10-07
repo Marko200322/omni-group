@@ -1,0 +1,26 @@
+﻿{
+  "clientName": "Client",
+  "deliverableId": "setup-quick",
+  "generatedAt": "2026-10-06T21:44:09.633Z",
+  "modulesActivated": [
+    "notifications",
+    "billing"
+  ],
+  "expected": [
+    "notifications",
+    "billing"
+  ],
+  "portalReady": true,
+  "portalEntitlements": {
+    "entitlementSource": "user_modules+org",
+    "userModulesGranted": [
+      "notifications",
+      "billing"
+    ],
+    "billingAccess": true,
+    "notificationSeeded": true,
+    "orgRole": "owner"
+  },
+  "notes": "Real entitlements: user_modules rows + org billing access + welcome notification. Task rows alone are not sufficient."
+}
+

@@ -1,0 +1,32 @@
+﻿[
+    {
+        "deliverableId":  "landing",
+        "industry":  "healthcare",
+        "paymentId":  "230018d2-c81e-4872-aac8-edecaabc3030",
+        "status":  "PASS",
+        "score":  "100",
+        "publicUrl":  "https://omnigrouptech.com/sites/healthcare-studio-230018d2c81e-muxuzkbx",
+        "pdfBytes":  "10854",
+        "notes":  "fresh_live_ok"
+    },
+    {
+        "deliverableId":  "audit",
+        "industry":  "construction",
+        "paymentId":  "4328dc4a-cdb4-46a9-8e48-2de68202da95",
+        "status":  "PASS",
+        "score":  "100",
+        "publicUrl":  "",
+        "pdfBytes":  "13172",
+        "notes":  "fresh_live_ok"
+    },
+    {
+        "deliverableId":  "setup-quick",
+        "industry":  "web3",
+        "paymentId":  "9962f070-532e-41e9-bc7f-141d959b31f9",
+        "status":  "PASS",
+        "score":  "100",
+        "publicUrl":  "",
+        "pdfBytes":  "9809",
+        "notes":  "fresh_live_ok"
+    }
+]

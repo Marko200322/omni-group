@@ -1,0 +1,51 @@
+﻿{
+    "id":  "582a690f-22d9-4d93-afc5-284a77d85918",
+    "paymentId":  "dbd89c7b-d6e6-41b7-bba0-383585c88cc9",
+    "deliverableId":  "bundle-sales-launch",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T09:38:10.280Z",
+    "error":  null,
+    "publicUrl":  "/sites/e-commerce-store-dbd89c7bd6e6-muwhk3xi",
+    "projectId":  "7c14de72-4c34-4b44-bdba-d925e5d8e464",
+    "industryCategory":  "ecommerce",
+    "documentQuality":  {
+                            "sectionCount":  5,
+                            "totalBodyChars":  3614,
+                            "minSectionBodyChars":  550,
+                            "checklistOrMilestoneHits":  20,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true,
+                            "bundleDocs":  1
+                        },
+    "documentSubstanceOk":  true,
+    "artifacts":  [
+                      {
+                          "type":  "site_delivery_pack",
+                          "filename":  "landing-delivery.pdf",
+                          "downloadLabel":  "Landing + copy â Delivery pack"
+                      },
+                      {
+                          "type":  "site_delivery_pack_md",
+                          "filename":  "site_delivery_pack_md.md",
+                          "downloadLabel":  "Landing + copy â Delivery pack (Markdown)"
+                      },
+                      {
+                          "type":  "sales-enablement",
+                          "filename":  "sales-enablement.pdf",
+                          "downloadLabel":  "Sales Enablement Pack"
+                      },
+                      {
+                          "type":  "sales-enablement_md",
+                          "filename":  "sales-enablement_md.md",
+                          "downloadLabel":  "Sales Enablement Pack (Markdown)"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T09:38:09.495Z",
+    "updatedAt":  "2026-10-06T09:38:10.280Z",
+    "completedAt":  "2026-10-06T09:38:10.280Z"
+}

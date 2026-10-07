@@ -1,0 +1,45 @@
+﻿{
+    "id":  "3d664f88-0d9d-4f26-a3d4-ec5acfcd2308",
+    "paymentId":  "cdb628f0-13f3-481c-9a1b-a22a2a76f8f2",
+    "deliverableId":  "setup-quick",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-06T10:42:09.548Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "73f70a62-de06-4501-834b-94cb93fbf5e8",
+    "industryCategory":  "marketing",
+    "documentQuality":  {
+                            "sectionCount":  4,
+                            "totalBodyChars":  1942,
+                            "minSectionBodyChars":  336,
+                            "checklistOrMilestoneHits":  27,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "artifacts":  [
+                      {
+                          "type":  "setup_pack",
+                          "filename":  "setup-quick.pdf",
+                          "downloadLabel":  "Quick Setup â Go-Live Checklist"
+                      },
+                      {
+                          "type":  "setup_pack_md",
+                          "filename":  "setup_pack_md.md",
+                          "downloadLabel":  "Quick Setup â Go-Live Checklist (Markdown)"
+                      },
+                      {
+                          "type":  "portal_modules",
+                          "filename":  "portal-modules.json",
+                          "downloadLabel":  "Portal modules bootstrap"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-06T10:42:08.856Z",
+    "updatedAt":  "2026-10-06T10:42:09.548Z",
+    "completedAt":  "2026-10-06T10:42:09.548Z"
+}
