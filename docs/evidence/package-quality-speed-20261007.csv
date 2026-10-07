@@ -1,0 +1,21 @@
+﻿deliverableId,industry,status,score,elapsedSec,artifacts,publicUrl,pdfBytes,notes
+setup-quick,marketing,PASS,100,5,3,,9918,paymentId=d53434b1-1052-4776-9b21-8f0f5757b4e2; gate=checklist; pdf=setup-quick.pdf
+setup-full,marketing,PASS,100,5,6,,10704,paymentId=40956762-c501-4433-85b8-3180e109cf05; gate=checklist; pdf=setup-full.pdf
+setup-custom,marketing,PASS,100,5,4,,9977,paymentId=fbf272f0-93fe-40e6-a09d-14d20d87445a; gate=checklist; pdf=setup-custom.pdf
+audit,marketing,PASS,100,5,2,,13592,paymentId=169e460e-66b3-47d0-90db-c6324d226306; gate=checklist; pdf=technical-audit.pdf
+integration,marketing,PASS,100,5,4,,10020,paymentId=178bbd4e-2e27-48c5-96b2-998758eca119; gate=checklist; pdf=integration-guide.pdf
+workflow-design,marketing,PASS,100,5,2,,9191,paymentId=b5988818-b573-494b-be39-81edbe6dd552; gate=checklist; pdf=workflow-sop-pack.pdf
+support-priority,marketing,PASS,100,5,4,,5689,paymentId=a8f171c9-bece-411a-b806-3639041c64f5; gate=checklist; pdf=support-priority-welcome.pdf
+support-dedicated,marketing,PASS,100,5,4,,5688,paymentId=699fdea9-e781-4ecc-9d76-53f94fa496bc; gate=checklist; pdf=support-dedicated-welcome.pdf
+landing,marketing,PASS,100,6,2,https://omnigrouptech.com/sites/marketing-studio-a1f755605472-muxu38mn,10681,paymentId=a1f75560-5472-4cb0-b438-6378b17716e3; gate=checklist; urlHttp=200; pdf=landing-delivery.pdf
+website-business,marketing,PASS,100,6,2,https://omnigrouptech.com/sites/marketing-studio-149f58eb447c-muxu3skl,11122,paymentId=149f58eb-447c-4659-b633-905f0f011310; gate=checklist; urlHttp=200; pdf=website-business-delivery.pdf
+website-ecommerce,marketing,PASS,100,5,2,https://omnigrouptech.com/sites/marketing-studio-f0cfabd68956-muxu4bva,11345,paymentId=f0cfabd6-8956-44d0-bab1-4c650ffc061f; gate=checklist; urlHttp=200; pdf=website-ecommerce-delivery.pdf
+white-label-setup,marketing,PASS,100,5,4,https://omnigrouptech.com/sites/marketing-studio-e256ec1af678-muxu4v6g,7810,paymentId=e256ec1a-f678-4952-b811-9f1dc5c481c1; gate=checklist; urlHttp=200; pdf=white-label-setup.pdf
+sales-enablement,marketing,PASS,100,5,2,,7517,paymentId=1b20ad2e-b7a8-4798-a515-5b5109490a38; gate=checklist; pdf=sales-enablement.pdf
+vertical-package,marketing,PASS,100,5,4,,9494,paymentId=e2e35af9-ca68-4625-8ac2-81ed8c2cfeb6; gate=checklist; pdf=vertical-solution-pack.pdf
+lead-gen-retainer,marketing,PASS,100,13,5,,6128,paymentId=5e236b34-4f53-4e28-8583-0be9e768c870; gate=checklist; pdf=lead-gen-retainer-welcome.pdf
+ai-support-retainer,marketing,PASS,100,5,6,,5951,paymentId=91cc5815-0b10-485c-b1f8-b8c69dfcbbc3; gate=checklist; pdf=ai-support-retainer-welcome.pdf
+custom-software,marketing,PASS,100,5,2,,6901,paymentId=9e0ae975-0339-47cc-a017-e98ab1445cce; gate=checklist; pdf=software-handoff.pdf
+bundle-portal-presence,marketing,PASS,100,5,5,https://omnigrouptech.com/sites/marketing-studio-d73d257fdbb9-muxu894n,9918,paymentId=d73d257f-dbb9-4c3e-97ce-db013c7d4973; gate=checklist; urlHttp=200; pdf=setup-quick.pdf
+bundle-sales-launch,marketing,PASS,100,6,4,https://omnigrouptech.com/sites/marketing-studio-e853c8d62e44-muxu8spo,10681,paymentId=e853c8d6-2e44-4f58-9520-ac5e4e7fd631; gate=checklist; urlHttp=200; pdf=landing-delivery.pdf
+bundle-ops-clarity,marketing,PASS,100,5,4,,13592,paymentId=45e1212f-dc1c-406b-95b2-cda70756fff9; gate=checklist; pdf=technical-audit.pdf
