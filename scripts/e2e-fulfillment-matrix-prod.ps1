@@ -318,7 +318,7 @@ foreach ($cell in $cells) {
   } catch {
     $err = $_.Exception.Message -replace '[\r\n,]+', ' '
     $isGate = $err -match '402|Payment Required|not available for self-serve|phase|budget'
-    $isTransient = $err -match '429|Too Many Requests|RATE_LIMIT|connection was closed|kept alive was closed|timed out|Unable to connect'
+    $isTransient = $err -match '429|Too Many Requests|RATE_LIMIT|502|Bad Gateway|503|Service Unavailable|connection was closed|kept alive was closed|timed out|Unable to connect'
     if ($SkipUnavailable -and $isGate) {
       $status = 'SKIP'
       $skipped++
