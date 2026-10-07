@@ -73,7 +73,7 @@ Brutal completeness cross-check. **No panic invented. Not “all done.”**
 
 | ID | Gap | Why it matters | Suggested close |
 |----|-----|----------------|-----------------|
-| P1-01 | **`docs/STATUS-KANON.md` + `ADMIN-JEDNA-LISTA.md` still say fulfillment 850/850** (Sep matrix) | Operator “one list” lies vs HARD 1000/1000 — easy to misread project as unfinished or to ignore newer gates | Update LIVE-02 → HARD 20×50 1000/1000 + pointer to FULL-REPO CONDITIONAL GTM; refresh ADMIN one-liner |
+| P1-01 | **`docs/STATUS-KANON.md` + `ADMIN-JEDNA-LISTA.md` still say fulfillment 850/850** (Sep matrix) | ~~OPEN~~ **CLOSED 2026-10-07** — LIVE-02 → HARD 20×50 1000/1000 + GTM CONDITIONAL + lead harvest note; ADMIN/REPO-STATUS/dashboard sync | Refresh STATUS-KANON + admin lists (done this commit) |
 | P1-02 | **`origin/main` is ~3 months / 82 commits behind feat** | Anyone merging/deploying from `main` gets ancient contact-test era code; GitHub default branch risk | Merge/PR feat→main when Marko wants default = prod reality (or document “prod = feat only”) |
 | P1-03 | **No end-to-end prod proof of hot hunt with `LEAD_LIVE_HARVEST_ON_KICKOFF=true`** | Analysis-only path proven; hot filter code unit-tested; **live Apollo spend + hot count path unproven on prod** | After Marko enables flags: one construction smoke expecting analysis pack + gated hunt (still allow 0 hot) |
 | P1-04 | **Checklist still accepts legacy `scope === 'hybrid'`** | Transition leftover in `fulfillment-quality-checklist.ts` — honesty campaign preferred COMPLETE/storefront | Remove hybrid accept once no prod jobs emit it; add unit assert |
@@ -149,7 +149,7 @@ No forgotten `TODO: implement checkout/fulfill` found in those paths.
 | Analysis-then-hunt (not blind dump) | **CLOSED** code + SafeDeploy + analysis-only smoke |
 | Live hot hunt with harvest flag ON | **OPEN** — admin flag (P1-03 / Admin #4) |
 | Stripe LIVE / firma | **OPEN** — admin P2 |
-| Refresh STATUS-KANON 850→1000 | **OPEN** — P1-01 |
+| Refresh STATUS-KANON 850→1000 | **CLOSED** — P1-01 (STATUS-KANON + ADMIN + dashboard) |
 | Merge feat → main | **OPEN** — P1-02 |
 | Browser screenshot gallery | **OPEN** — P2 tooling |
 

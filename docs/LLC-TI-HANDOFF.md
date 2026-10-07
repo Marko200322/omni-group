@@ -132,7 +132,7 @@ Events: `checkout.session.completed` (deliverables + subscription).
 | 4 | **HeyGen/D-ID** | Video avatar u Support sekciji (Atina widget = text AI) |
 | 5 | **Intercom** | Opciono live chat pored Atine |
 | 6 | **Nest/Python u prod** | **NE** — ostavi off |
-| 7 | **850 matrix re-run** | `.\scripts\m4-launch-gate.ps1 -FullPackagesMatrix` |
+| 7 | **1000/1000 HARD matrix** (done 2026-10-06) | Re-run only if catalog/industries change — see [`STATUS-KANON.md`](./STATUS-KANON.md) LIVE-02 |
 | 8 | **2FA admin** | Backlog |
 | 9 | **CDN Cloudflare** | Opciono |
 | 10 | **CI u GitHub Actions** | [`verify-monorepo.ps1`](../scripts/verify-monorepo.ps1) (job **`python`** / **`Python (Doslednost dok + pytest)`** — [`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md); **`apps/omnigroup-web`** osim **`-SkipOmnigroupWeb`**; posle servisa **`npm run smoke:all`**) |

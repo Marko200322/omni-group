@@ -44,7 +44,7 @@ Rad **ovim redosledom** (sledeći korak kad je prethodni završen ili jasno **N/
 
 *(Ovo **nije** checkbox za gate; služi da očekivanja budu jasna — vlasnik zatvara ono što zahteva nalog/host.)*
 
-**Live market/factory (provereno 2026-09-06):** vidi [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) — M6 + Stripe **test** + Instantly SET + fulfillment 850/850; **fali** LLC polja, Stripe **live**, Slack/Lusha/Snov, invoice PDF E2E, cold-send potvrda, n8n live.
+**Live market/factory (provereno 2026-10-07):** vidi [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) + [`STATUS-KANON.md`](./STATUS-KANON.md) + [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) — M6 + Stripe **TEST** + fulfillment **1000/1000 HARD** (`checklistScore=100`); GTM **CONDITIONAL** — **fali** LLC/VAT, Stripe **LIVE**, live harvest flag, Instantly plan upgrade, cold-send.
 
 **CEO A–H istorijski checkboxi** u [`CHECKLIST-CEO-SISTEM.md`](../CHECKLIST-CEO-SISTEM.md) mogu biti zastareli:
 - GitHub branch protection `main` — **DONE** ([`GIT-A-EVIDENCE-LATEST.md`](./GIT-A-EVIDENCE-LATEST.md)).

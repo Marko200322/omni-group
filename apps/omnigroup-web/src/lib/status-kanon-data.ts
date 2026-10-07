@@ -18,17 +18,28 @@ export type KanonSection = {
   items: KanonItem[];
 };
 
-export const STATUS_KANON_UPDATED = '2026-09-24 07:40';
+export const STATUS_KANON_UPDATED = '2026-10-07';
 
 export const KANON_SECTIONS: KanonSection[] = [
   {
     id: 'live',
     title: 'LIVE — potvrđeno',
-    subtitle: 'Ne diraj — radi na produkciji',
+    subtitle: 'Fulfillment HARD 1000/1000 · GTM CONDITIONAL (Stripe TEST) — sync docs/STATUS-KANON.md',
     items: [
       { id: 'LIVE-01', title: 'Site + API · M6 · full · €250', status: 'DONE', link: 'https://omnigrouptech.com' },
-      { id: 'LIVE-02', title: 'Fulfillment 850/850', status: 'DONE' },
-      { id: 'LIVE-03', title: 'Stripe TEST + prices + webhook', status: 'DONE' },
+      {
+        id: 'LIVE-02',
+        title: 'Fulfillment 1000/1000 HARD PASS (20×50, checklistScore=100)',
+        status: 'DONE',
+        note: 'HARD-FINAL + FULL-REPO-PASS-VERDICT — not 850/850',
+        link: '/dev/docs',
+      },
+      {
+        id: 'LIVE-03',
+        title: 'Stripe TEST + prices + webhook (not LIVE)',
+        status: 'DONE',
+        note: 'GTM CONDITIONAL — P2-02 Marko',
+      },
       { id: 'LIVE-04', title: 'Instantly + Resend + Hunter + OpenRouter + Apify', status: 'DONE' },
       { id: 'LIVE-05', title: 'Apollo · NB · ZB · Snov · D-ID · HeyGen · Cartesia', status: 'DONE' },
       { id: 'LIVE-06', title: 'SMTP + invoice PDF path', status: 'DONE' },
@@ -41,6 +52,18 @@ export const KANON_SECTIONS: KanonSection[] = [
       { id: 'LIVE-13', title: 'Redizajn UI', status: 'CANCELLED', note: 'Odbijen 2026-09-17' },
       { id: 'LIVE-14', title: 'Public catalog SSOT (20/20 MATCH)', status: 'DONE', note: '2026-09-24' },
       { id: 'LIVE-15', title: 'Prod schema 038–042', status: 'DONE', note: 'orgs, RBAC, dual currency' },
+      {
+        id: 'LIVE-16',
+        title: 'Lead analysis → hot hunt (live harvest flag OFF)',
+        status: 'DONE',
+        note: 'Needs LEAD_LIVE_HARVEST_ON_KICKOFF for live harvest',
+      },
+      {
+        id: 'LIVE-17',
+        title: 'Gap audit: fulfillment PASS · GTM CONDITIONAL',
+        status: 'DONE',
+        note: 'PROJECT-GAP-AUDIT-20261007',
+      },
     ],
   },
   {

@@ -1,9 +1,12 @@
 # STATUS-KANON — jedna lista za ceo projekat
 
-**Datum:** 2026-09-24 (P1 zatvoren 19:57; katalog + migrate 038–042)  
+**Datum:** 2026-10-07 (fulfillment HARD 1000/1000; GTM CONDITIONAL)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
 **Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.
+
+**Komercijalna istina (2026-10-07):** Fulfillment **PASS** (20×50 HARD, `checklistScore=100`) · GTM **CONDITIONAL** (Stripe još **TEST**; firma/VAT = Marko) · Lead analysis→hot hunt **shipped**; live harvest treba `LEAD_LIVE_HARVEST_ON_KICKOFF`.  
+Dokaz: [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) · [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md) · [`evidence/FULL-REPO-PASS-VERDICT-20261007.md`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md).
 
 **Indeks (ne dupliraj stavke drugde):**
 
@@ -13,6 +16,7 @@
 | [`generated/EMPTY-KEYS.md`](./generated/EMPTY-KEYS.md) | Auto: prazni vs popunjeni ključevi |
 | [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) | Kratki admin pregled → link ovde |
 | [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md) | Snapshot LIVE slojeva |
+| [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) | Brutal gap audit (fulfillment PASS / GTM CONDITIONAL) |
 | [`OMNI-PHASE-1-8-STATUS.md`](./OMNI-PHASE-1-8-STATUS.md) | Problem Hunter tehnički backlog |
 | [`FAZA-4-BACKLOG-ISSUES.md`](./FAZA-4-BACKLOG-ISSUES.md) | F4 product backlog |
 | [`FAZA-6-BACKLOG.md`](./FAZA-6-BACKLOG.md) | K8s / Faza 6 epic |
@@ -26,8 +30,8 @@
 | ID | Šta | Dokaz |
 |----|-----|-------|
 | LIVE-01 | Site + API · M6 · full · €250 | https://omnigrouptech.com |
-| LIVE-02 | Fulfillment **850/850** | `docs/evidence/fulfillment-matrix-prod-m6-20260902.csv` |
-| LIVE-03 | Stripe **TEST** + prices + webhook | prod VPS |
+| LIVE-02 | Fulfillment **1000/1000 HARD PASS** (20 pkg × 50 industries, all `checklistScore=100`) | [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md) · CSV `fulfillment-matrix-prod-20x50-HARD-20261006.csv` · verdict [`FULL-REPO-PASS-VERDICT-20261007.md`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md) |
+| LIVE-03 | Stripe **TEST** + prices + webhook (**ne LIVE**) | prod VPS · GTM CONDITIONAL — vidi P2-02 |
 | LIVE-04 | Instantly + Resend + Hunter + OpenRouter + Apify | SET |
 | LIVE-05 | Apollo · NeverBounce · ZeroBounce · Snov · D-ID · HeyGen · Cartesia | SET |
 | LIVE-06 | SMTP enabled · invoice PDF path | Resend attach + SMTP fallback |
@@ -40,6 +44,8 @@
 | LIVE-13 | Redizajn UI | **CANCELLED** — vidi P3-C01 |
 | LIVE-14 | Public catalog SSOT | `/pricing` `/products` `/services` checkout — `getPublicListPriceEur` · 20/20 MATCH 2026-09-24 |
 | LIVE-15 | Prod schema 038–042 | stripe idempotency · outbound DLQ · orgs · dual currency · RBAC |
+| LIVE-16 | Lead machine: analysis pack → gate → hot-only hunt | shipped + SafeDeploy; live harvest **OFF** dok `LEAD_LIVE_HARVEST_ON_KICKOFF` (Marko) — [`lead-machine-analysis-hunt-smoke-20261007.md`](./evidence/lead-machine-analysis-hunt-smoke-20261007.md) |
+| LIVE-17 | Gap audit + full-repo verdict | [`PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) — fulfillment PASS · GTM CONDITIONAL |
 
 ---
 
@@ -159,23 +165,26 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 
 | Lock | Vrednost |
 |------|----------|
-| Stripe mode | **test** |
+| Stripe mode | **test** (LIVE = P2-02 — **nije** urađeno) |
 | Cold outbound send | **OFF** (`OUTREACH_SEND_ENABLED=false` na prod) |
 | `factoryPhaseAuto` | **false** |
 | `AUTONOMY_AUTO_DEPLOY` | **false** |
 | `PHASE` | **v2** (ne K8s) |
 | Lead rollout | **F3** (F5 ne forsirati) |
+| `LEAD_LIVE_HARVEST_ON_KICKOFF` | **OFF** na prod — analysis shipuje; live hot harvest čeka Marko flag |
 
 ---
 
 ## Brzi redosled rada
 
 ```
-P1 DONE (2026-09-17)  →  P0 (ti: DNS/UI/E2E inbox)  →  P2 (firma + live plaćanja)
-P3 — paralelno, po potrebi, nikad ne blokira prod
+Fulfillment HARD 1000/1000 DONE  →  GTM CONDITIONAL (Marko: firma + Stripe LIVE)
+Lead: analysis→hunt shipped; harvest flag OFF dok Marko ne uključi
+P2 (firma + live plaćanja)  →  P3 paralelno
 ```
 
-**Engineering audit:** Phases 1–9 → `docs/engineering/master-audit.md` (fix faza tek posle odobrenja).
+**Engineering audit:** Phases 1–9 → `docs/engineering/master-audit.md` (fix faza tek posle odobrenja).  
+**Gap audit:** [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md).
 
 ---
 
@@ -186,10 +195,12 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 | CEO stavka | Kanonski status |
 |------------|-----------------|
 | Rollback owner | **DONE** → LIVE-09 |
-| Stripe/PayPal/Wise live | **P2** |
+| Fulfillment matrix | **DONE** → LIVE-02 (1000/1000 HARD, ne 850) |
+| Stripe/PayPal/Wise live | **P2** (Stripe još TEST) |
+| Lead live harvest | Marko flag `LEAD_LIVE_HARVEST_ON_KICKOFF` |
 | GitHub prv push / Resend lokal / agregatori | verovatno **DONE** na prod — proveri pre `[x]` |
 | Staging deploy | **P3-D01** |
 
 ---
 
-*Poslednja izmena: 2026-09-24 — katalog SSOT + P3 env/monitoring/n8n import ready.*
+*Poslednja izmena: 2026-10-07 — LIVE-02 → HARD 1000/1000; GTM CONDITIONAL; lead analysis→hunt; pointer na PROJECT-GAP-AUDIT + HARD-FINAL + FULL-REPO-PASS-VERDICT.*

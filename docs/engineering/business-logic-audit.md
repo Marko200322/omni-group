@@ -74,7 +74,7 @@ Production revenue logic is **centered on Atina Node**: catalog and quotes in **
 | B-13 | Info | `sistem-naplate` vs billing dual naming |
 | B-14 | Medium | AUTO off → M6 ceiling without AUTO MRR gates |
 | B-15 | Low | Founding promo env rules not in kanon |
-| B-16 | Medium | Fulfillment 850/850 evidence vs per-job failures |
+| B-16 | Medium | Fulfillment evidence: HARD **1000/1000** (`checklistScore=100`) supersedes old 850/850 — still watch per-job regressions |
 
 ---
 

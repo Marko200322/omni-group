@@ -1,14 +1,16 @@
 # Factory machine — closeout (verified)
 
 **Kanonski status:** [`STATUS-KANON.md`](./STATUS-KANON.md) · snapshot [`REPO-STATUS-NOW.md`](./REPO-STATUS-NOW.md)  
-**Ažurirano:** 2026-09-17  
+**Gap audit:** [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md)  
+**Ažurirano:** 2026-10-07  
 **Scope:** factory na VPS. Bez pretpostavki — samo provereno.
 
 ## Scope
 - Live `FACTORY_PHASE=**M6**`, `PHASE=v2`, `prodMode=full`, `monthlyBudgetEur=250`, `factoryPhaseAuto=false`
-- Stripe na produ = **TEST** (ne live)
+- Stripe na produ = **TEST** (ne live) — GTM **CONDITIONAL**
 - Outbound send: ne tretirati kao “masovno ON” dok TI ne potvrdi warmup u provider UI
-- LLC + Stripe live = **TI**
+- LLC + Stripe live = **TI** (Marko)
+- Lead: analysis→hot hunt shipped; live harvest = `LEAD_LIVE_HARVEST_ON_KICKOFF`
 
 ---
 
@@ -16,8 +18,8 @@
 
 - [x] VPS web+api+pg+redis+caddy
 - [x] Auth / register / IBAN / Confirm path
-- [x] Catalog 17×50 + fulfillment handlers
-- [x] Fulfillment matrix **850/850 PASS** (M6) — `docs/evidence/fulfillment-matrix-prod-m6-20260902.csv`
+- [x] Catalog 20×50 + fulfillment handlers
+- [x] Fulfillment matrix **1000/1000 HARD PASS** (all `checklistScore=100`) — [`HARD-FINAL`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md) · [`FULL-REPO-PASS-VERDICT`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md) *(stari 850/850 Sep CSV je zastareo)*
 - [x] Resend (nested) + CRM ingress + Telegram + OpenRouter + Hunter
 - [x] Instantly API + campaign ID SET
 - [x] Apollo + NeverBounce + ZeroBounce SET
@@ -107,7 +109,7 @@ Prioritet opciono: Slack ×2, Lusha, Tavily, PayPal/Wise (P3 u [`STATUS-KANON.md
 
 .\scripts\deploy-from-local-secrets.ps1 -SafeDeploy
 .\scripts\machine-closeout-smoke.ps1
-.\scripts\e2e-fulfillment-matrix-prod.ps1 -Resume -ReportCsv "docs\evidence\fulfillment-matrix-prod-m6-20260902.csv"
+.\scripts\e2e-fulfillment-matrix-prod.ps1 -Resume -ReportCsv "docs\evidence\fulfillment-matrix-prod-20x50-HARD-20261006.csv"
 .\scripts\check-stripe-env.ps1
 ```
 

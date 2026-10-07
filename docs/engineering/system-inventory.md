@@ -219,7 +219,7 @@ ORM: raw SQL + repositories in Atina Node (not TypeORM on prod API). Nest uses T
 | Invoices | PDF generation, SMTP + Resend, email templates |
 | Subscriptions | `subscriptions`, Stripe invoice handlers |
 
-**Prod evidence:** fulfillment matrix 850/850; E2E `scripts/e2e-billing-prod.ps1` PASS (see STATUS-KANON).
+**Prod evidence:** fulfillment matrix **1000/1000 HARD PASS** (20×50, `checklistScore=100`) — see STATUS-KANON LIVE-02 + [`../evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](../evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md); GTM CONDITIONAL (Stripe TEST). E2E `scripts/e2e-billing-prod.ps1` PASS.
 
 ---
 
