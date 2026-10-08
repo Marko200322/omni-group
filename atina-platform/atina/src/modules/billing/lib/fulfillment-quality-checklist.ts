@@ -726,6 +726,19 @@ export function runFulfillmentQualityChecklist(
         ? 'Greenfield software project created'
         : 'Custom software requires a built project',
     });
+    const hasScaffoldArchive = result.artifacts.some(
+      (a) =>
+        a.type === 'software_scaffold' ||
+        /\.tar\.gz$/i.test(a.filename) ||
+        /\.zip$/i.test(a.filename),
+    );
+    items.push({
+      id: 'software_scaffold_archive',
+      passed: hasScaffoldArchive,
+      message: hasScaffoldArchive
+        ? 'Downloadable software scaffold archive attached (client can run locally)'
+        : 'Custom software requires downloadable scaffold archive (tar.gz/zip) — PDF pointing at VPS path is not a product',
+    });
     items.push({
       id: 'handoff_pdf',
       passed: hasPdfArtifact(result),

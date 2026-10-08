@@ -985,28 +985,31 @@ function fallbackSoftwareHandoff(input: {
         heading: 'Delivered artifacts',
         body: [
           numbered([
-            `Source tree at: ${input.outputDir}`,
+            'Download software-scaffold.tar.gz from your portal fulfillment artifacts (primary product)',
+            `Extract / open: ${input.outputDir}`,
             'README.md — local run + deploy steps',
             '.env.example — copy to .env before start (no secrets committed)',
             'tests/enhanced.test.js — smoke tests; fulfillment records testsPassed from real run',
             'Handoff PDF + markdown bundle for operators',
           ]),
           '',
-          'Acceptance: testsPassed=true from factory test run; build status completed.',
+          'Acceptance: downloadable archive present; testsPassed=true from factory test run; build status completed.',
+          'Honesty: a PDF that only names a VPS path is not the product — the tar.gz archive is.',
         ].join('\n'),
       },
       {
         heading: 'How to run the scaffold',
         body: [
           numbered([
-            `cd ${input.outputDir}`,
+            'Download software-scaffold.tar.gz from the portal and extract it locally',
+            'cd into the extracted folder (see README inside the archive)',
             'cp .env.example .env  (set JWT_SECRET before shared deploys)',
             'npm test',
             'npm start',
             'Open http://localhost:4100 — curl /health and /api/v1/meta',
           ]),
           '',
-          'Day-0 checklist: ☐ .env filled ☐ npm test green ☐ /health 200 ☐ SPA loads',
+          'Day-0 checklist: ☐ archive downloaded ☐ .env filled ☐ npm test green ☐ /health 200 ☐ SPA loads',
         ].join('\n'),
       },
       {

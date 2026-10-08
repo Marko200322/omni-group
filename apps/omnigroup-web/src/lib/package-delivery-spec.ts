@@ -572,12 +572,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'custom-software',
     description:
-      'Productized starter software: Node API + SPA scaffold with README, .env.example, smoke tests, and handoff PDF (run/deploy) — not a finished custom product or unlimited build hours.',
+      'Productized starter software: downloadable Node API + SPA scaffold archive (tar.gz) with README, .env.example, smoke tests, and handoff PDF — not a finished custom product or unlimited build hours.',
     descriptionSr:
-      'Produktivizovani starter softver: Node API + SPA scaffold sa README, .env.example, smoke testovima i handoff PDF (run/deploy) — nije gotov custom proizvod ni neograničeni razvoj.',
+      'Produktivizovani starter softver: preuzimivi Node API + SPA scaffold arhiv (tar.gz) sa README, .env.example, smoke testovima i handoff PDF — nije gotov custom proizvod ni neograničeni razvoj.',
     includes: [
-      'Starter project in your workspace (enhanced greenfield)',
-      'README with run and deploy instructions',
+      'Downloadable software-scaffold.tar.gz from portal fulfillment artifacts',
+      'README with run and deploy instructions inside the archive',
       '.env.example for local/staging secrets',
       'Smoke tests with testsPassed from real test run',
       'Software handoff PDF (run/deploy documented)',

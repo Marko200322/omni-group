@@ -1,3 +1,7 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { execFileSync } from 'child_process';
 import { config } from '../../../../config';
 import { getDeliverable } from '../deliverable-catalog';
 import { getIndustryCategory } from '../category-pricing';
@@ -7,6 +11,54 @@ import type { StructuredDeliverableDoc } from '../../service/deliverable-documen
 import type { FulfillmentArtifact, FulfillmentContext } from './types';
 
 const store = new DeliverableArtifactStoreService();
+
+/**
+ * Pack the greenfield scaffold into a client-downloadable archive.
+ * Without this, custom-software only ships a PDF pointing at a VPS path the client cannot access.
+ */
+export function persistSoftwareScaffoldArchive(input: {
+  ctx: FulfillmentContext;
+  outputDir: string;
+}): FulfillmentArtifact {
+  const root = path.resolve(input.outputDir);
+  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
+    throw new Error(`Software scaffold outputDir missing or not a directory: ${root}`);
+  }
+  const required = ['package.json', 'README.md', '.env.example'];
+  const missing = required.filter((f) => !fs.existsSync(path.join(root, f)));
+  if (missing.length > 0) {
+    throw new Error(`Software scaffold incomplete (missing ${missing.join(', ')})`);
+  }
+
+  const tmp = path.join(
+    os.tmpdir(),
+    `omni-scaffold-${input.ctx.paymentId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24)}.tar.gz`,
+  );
+  try {
+    execFileSync('tar', ['-czf', tmp, '-C', root, '.'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    const buffer = fs.readFileSync(tmp);
+    if (buffer.byteLength < 800) {
+      throw new Error(`Software scaffold archive too small (${buffer.byteLength} bytes)`);
+    }
+    return store.saveBuffer({
+      userId: input.ctx.userId,
+      paymentId: input.ctx.paymentId,
+      filename: 'software-scaffold.tar.gz',
+      buffer,
+      type: 'software_scaffold',
+      downloadLabel: 'Runnable software scaffold (tar.gz)',
+    });
+  } finally {
+    try {
+      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+    } catch {
+      /* ignore cleanup */
+    }
+  }
+}
 
 /** Machine-checkable document substance metrics (anti-stub gate). */
 export type DocumentQualityMetrics = {

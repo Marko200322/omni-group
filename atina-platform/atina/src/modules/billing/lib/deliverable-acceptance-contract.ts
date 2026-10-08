@@ -96,6 +96,11 @@ const CR = {
   leadGenKickoff: { id: 'lead_gen_kickoff', label: 'Lead gen pipeline kickoff', required: true },
   aiSupportSetup: { id: 'ai_support_setup', label: 'AI avatar + RAG + meetings provisioned', required: true },
   softwareProject: { id: 'software_project', label: 'Greenfield software project', required: true },
+  softwareScaffoldArchive: {
+    id: 'software_scaffold_archive',
+    label: 'Downloadable software scaffold archive (tar.gz/zip)',
+    required: true,
+  },
   handoffPdf: { id: 'handoff_pdf', label: 'Software handoff PDF', required: true },
   testGate: { id: 'software_test_gate', label: 'Build/test gate recorded', required: true },
   bundleSteps: {
@@ -297,7 +302,14 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Custom software',
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'custom-software')!.description,
     billing: 'one_time',
-    criteria: [CR.status, CR.softwareProject, CR.handoffPdf, CR.docSubstance, CR.testGate],
+    criteria: [
+      CR.status,
+      CR.softwareProject,
+      CR.softwareScaffoldArchive,
+      CR.handoffPdf,
+      CR.docSubstance,
+      CR.testGate,
+    ],
   },
   'bundle-portal-presence': {
     deliverableId: 'bundle-portal-presence',

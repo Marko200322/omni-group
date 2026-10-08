@@ -330,10 +330,20 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     return {
       ...base,
       projectId: 'proj-sw',
+      artifacts: [
+        ...base.artifacts,
+        {
+          type: 'software_scaffold',
+          filename: 'software-scaffold.tar.gz',
+          storagePath: '/tmp/software-scaffold.tar.gz',
+          downloadLabel: 'Runnable software scaffold (tar.gz)',
+        },
+      ],
       metadata: {
         ...passingDocQuality(deliverableId),
         testsPassed: true,
         buildStatus: 'completed',
+        scaffoldArchive: 'software-scaffold.tar.gz',
       },
     };
   }

@@ -2,10 +2,12 @@ import { getDeliverable } from '../deliverable-catalog';
 import { DeliverableContentGeneratorService } from '../../service/deliverable-content-generator.service';
 import { DeliverableDocumentGeneratorService } from '../../service/deliverable-document-generator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
+import fs from 'fs';
 import {
   buildDocumentQualityMetadata,
   persistDeliverablePdf,
   persistMarkdownBundle,
+  persistSoftwareScaffoldArchive,
 } from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
@@ -42,12 +44,19 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
       generationHints: ctx.generationHints,
     });
 
-    const outputDir = (pipeline.outputDir as string) ?? 'product-factory output';
+    const outputDir = (pipeline.outputDir as string) ?? '';
+    if (!outputDir.trim()) {
+      throw new Error('Custom software fulfillment missing outputDir from product factory');
+    }
+
+    // Client-downloadable product — not a VPS path buried in a PDF.
+    const scaffoldZip = persistSoftwareScaffoldArchive({ ctx, outputDir });
+
     const handoff = await docs.generateSoftwareHandoff({
       clientName: ctx.clientName,
       projectName: deliverable.name,
       description: brief,
-      outputDir,
+      outputDir: 'software-scaffold.tar.gz (download from your portal fulfillment artifacts)',
       industryCategory: ctx.industryCategory,
       generationHints: ctx.generationHints,
     });
@@ -75,16 +84,29 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
           ? 'completed'
           : 'unknown';
 
+    const substanceFailed = docMeta.documentSubstanceOk === false;
+    const status: 'completed' | 'partial' =
+      substanceFailed || !testsPassed ? 'partial' : 'completed';
+
     return {
       projectId: pipeline.projectId as string,
-      artifacts: [pdf.artifact, md],
-      status: docMeta.documentSubstanceOk === false ? 'partial' : 'completed',
+      artifacts: [scaffoldZip, pdf.artifact, md],
+      status,
       metadata: {
         ...docMeta,
         outputDir,
+        scaffoldArchive: scaffoldZip.filename,
+        scaffoldArchiveBytes: fs.existsSync(scaffoldZip.storagePath)
+          ? fs.statSync(scaffoldZip.storagePath).size
+          : null,
         stack: 'node-api-spa',
         testsPassed,
         buildStatus,
+        ...(substanceFailed
+          ? { reason: 'document_substance_below_threshold' }
+          : !testsPassed
+            ? { reason: 'software_tests_failed' }
+            : {}),
       },
     };
   },

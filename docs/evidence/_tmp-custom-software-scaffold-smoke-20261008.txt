@@ -1,0 +1,5 @@
+paymentId=98c70df6-1731-4d12-8289-f9b5571c78dc
+status=completed
+score=100
+artifacts=software-scaffold.tar.gz, software-handoff.pdf, software_handoff_md.md
+hasScaffold=True
