@@ -1,0 +1,79 @@
+﻿{
+    "id":  "4be3ba83-26b4-4753-ad1f-e80d2d997514",
+    "paymentId":  "80847311-42e5-46e6-a367-6ae38c3a1706",
+    "deliverableId":  "support-priority__healthcare",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T19:56:20.301Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "a36e82d8-31d3-4429-8bc5-e6bcee8e12ea",
+    "industryCategory":  "healthcare",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  2137,
+                            "minSectionBodyChars":  57,
+                            "checklistOrMilestoneHits":  24,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  "201dcf93-ba83-476d-8920-5764088f8c9b",
+                        "crmImportedLeads":  null,
+                        "crmPipelineSeeded":  null,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  24
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "retainer_welcome",
+                          "filename":  "support-priority-welcome.pdf",
+                          "downloadLabel":  "Priority support â Welcome \u0026 Service Scope"
+                      },
+                      {
+                          "type":  "retainer_welcome_md",
+                          "filename":  "retainer_welcome_md.md",
+                          "downloadLabel":  "Priority support â Welcome \u0026 Service Scope (Markdown)"
+                      },
+                      {
+                          "type":  "health_check",
+                          "filename":  "support-priority-health-check.pdf",
+                          "downloadLabel":  "Support health check â Client"
+                      },
+                      {
+                          "type":  "support-priority-health-check-md",
+                          "filename":  "support-priority-health-check-md.md",
+                          "downloadLabel":  "Support health check â Client (Markdown)"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "support-priority-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      },
+                      {
+                          "type":  "support_faq_seed",
+                          "filename":  "support-faq-seed.md",
+                          "downloadLabel":  "Support FAQ seed"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T19:56:18.930Z",
+    "updatedAt":  "2026-10-08T19:56:20.301Z",
+    "completedAt":  "2026-10-08T19:56:20.301Z"
+}

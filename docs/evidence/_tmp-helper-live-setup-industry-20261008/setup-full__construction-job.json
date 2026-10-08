@@ -1,0 +1,79 @@
+﻿{
+    "id":  "1772cac1-95aa-44d8-9e91-8fadbf8ca5f1",
+    "paymentId":  "4a96810a-708d-4501-b21d-fe650281fc22",
+    "deliverableId":  "setup-full__construction",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T20:01:55.482Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "745922e8-f985-46f4-8431-846ad07a6d5c",
+    "industryCategory":  "construction",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  5542,
+                            "minSectionBodyChars":  537,
+                            "checklistOrMilestoneHits":  54,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  null,
+                        "crmImportedLeads":  8,
+                        "crmPipelineSeeded":  true,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "setup_pack",
+                          "filename":  "setup-full.pdf",
+                          "downloadLabel":  "Full Onboarding â Implementation Pack"
+                      },
+                      {
+                          "type":  "setup_pack_md",
+                          "filename":  "setup_pack_md.md",
+                          "downloadLabel":  "Full Onboarding â Implementation Pack (Markdown)"
+                      },
+                      {
+                          "type":  "portal_modules",
+                          "filename":  "portal-modules.json",
+                          "downloadLabel":  "Portal modules bootstrap"
+                      },
+                      {
+                          "type":  "migration_template",
+                          "filename":  "crm-migration-template.csv",
+                          "downloadLabel":  "CRM migration template (CSV)"
+                      },
+                      {
+                          "type":  "training_outline",
+                          "filename":  "training-outline.md",
+                          "downloadLabel":  "Training outline"
+                      },
+                      {
+                          "type":  "training_outline",
+                          "filename":  "training-outline.pdf",
+                          "downloadLabel":  "Training \u0026 onboarding â Client"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T20:01:53.855Z",
+    "updatedAt":  "2026-10-08T20:01:55.482Z",
+    "completedAt":  "2026-10-08T20:01:55.482Z"
+}

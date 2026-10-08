@@ -1,0 +1,69 @@
+﻿{
+    "id":  "3d86b02e-1c42-4407-b950-d11fc1574fd1",
+    "paymentId":  "5248afe6-ecf1-4d11-b313-af523259ba67",
+    "deliverableId":  "setup-custom__finance",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T19:56:38.851Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "3bdfae05-7aa9-4c0a-bd6b-419b40c5bfde",
+    "industryCategory":  "finance",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  5435,
+                            "minSectionBodyChars":  622,
+                            "checklistOrMilestoneHits":  55,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  null,
+                        "crmImportedLeads":  8,
+                        "crmPipelineSeeded":  true,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "setup_pack",
+                          "filename":  "setup-custom.pdf",
+                          "downloadLabel":  "Custom Production Deploy"
+                      },
+                      {
+                          "type":  "setup_pack_md",
+                          "filename":  "setup_pack_md.md",
+                          "downloadLabel":  "Custom Production Deploy (Markdown)"
+                      },
+                      {
+                          "type":  "portal_modules",
+                          "filename":  "portal-modules.json",
+                          "downloadLabel":  "Portal modules bootstrap"
+                      },
+                      {
+                          "type":  "production_deploy_manifest",
+                          "filename":  "production-deploy-manifest.json",
+                          "downloadLabel":  "Production deploy runbook (JSON)"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T19:56:37.298Z",
+    "updatedAt":  "2026-10-08T19:56:38.851Z",
+    "completedAt":  "2026-10-08T19:56:38.851Z"
+}

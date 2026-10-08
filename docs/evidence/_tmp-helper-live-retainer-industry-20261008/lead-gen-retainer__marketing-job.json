@@ -1,0 +1,79 @@
+﻿{
+    "id":  "103d5f45-8926-4c51-98f4-0b567e7c0390",
+    "paymentId":  "1b1bd6c3-d844-4693-b54a-131b76a0ce0d",
+    "deliverableId":  "lead-gen-retainer__marketing",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T20:00:51.754Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "e1d38a80-8c3b-4f79-bb2b-7bb54d52401f",
+    "industryCategory":  "marketing",
+    "documentQuality":  {
+                            "sectionCount":  8,
+                            "totalBodyChars":  2266,
+                            "minSectionBodyChars":  46,
+                            "checklistOrMilestoneHits":  24,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  "a1c0ff7f-ef05-434d-9a03-d9681a84a335",
+                        "crmImportedLeads":  8,
+                        "crmPipelineSeeded":  true,
+                        "leadGenMode":  "channels_ready",
+                        "leadsGenerated":  0,
+                        "sampleLeadsSeeded":  8,
+                        "analysisRulesVersion":  "hot-v1",
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "retainer_welcome",
+                          "filename":  "lead-gen-retainer-welcome.pdf",
+                          "downloadLabel":  "Lead gen retainer â Welcome \u0026 Service Scope"
+                      },
+                      {
+                          "type":  "retainer_welcome_md",
+                          "filename":  "retainer_welcome_md.md",
+                          "downloadLabel":  "Lead gen retainer â Welcome \u0026 Service Scope (Markdown)"
+                      },
+                      {
+                          "type":  "lead_gen_analysis",
+                          "filename":  "lead-gen-analysis-pack.md",
+                          "downloadLabel":  "Lead gen ICP analysis pack"
+                      },
+                      {
+                          "type":  "lead_gen_report",
+                          "filename":  "lead-gen-kickoff-report.md",
+                          "downloadLabel":  "Lead gen kickoff report"
+                      },
+                      {
+                          "type":  "lead_gen_pipeline_workspace",
+                          "filename":  "lead-gen-pipeline-workspace.md",
+                          "downloadLabel":  "Lead gen pipeline workspace"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "lead-gen-retainer-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T20:00:37.710Z",
+    "updatedAt":  "2026-10-08T20:00:51.754Z",
+    "completedAt":  "2026-10-08T20:00:51.754Z"
+}

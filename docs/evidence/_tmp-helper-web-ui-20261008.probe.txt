@@ -1,0 +1,8 @@
+﻿public_catalog_http=200
+sellablePackages=1000
+basePackages=20
+industryGroups=50
+sample0=setup-quick__admin_support problems=7
+products_http=200 len=31651
+products_mentions_1000=True
+api_deliverables_http=200 total=1000 industry__=0

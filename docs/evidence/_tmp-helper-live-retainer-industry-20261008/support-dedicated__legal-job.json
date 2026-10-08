@@ -1,0 +1,79 @@
+﻿{
+    "id":  "9530e1ba-8f0a-4b48-8122-40053b1d4b9e",
+    "paymentId":  "d823ad62-6204-4907-a771-2fbaec24ee89",
+    "deliverableId":  "support-dedicated__legal",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T19:59:09.585Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "f7256443-da08-423d-8c5b-48e1b7954b9a",
+    "industryCategory":  "legal",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  2108,
+                            "minSectionBodyChars":  60,
+                            "checklistOrMilestoneHits":  22,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  "aa371147-fe7f-49af-b06b-38a017fbb2c6",
+                        "crmImportedLeads":  null,
+                        "crmPipelineSeeded":  null,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  8
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "retainer_welcome",
+                          "filename":  "support-dedicated-welcome.pdf",
+                          "downloadLabel":  "Dedicated support â Welcome \u0026 Service Scope"
+                      },
+                      {
+                          "type":  "retainer_welcome_md",
+                          "filename":  "retainer_welcome_md.md",
+                          "downloadLabel":  "Dedicated support â Welcome \u0026 Service Scope (Markdown)"
+                      },
+                      {
+                          "type":  "health_check",
+                          "filename":  "support-dedicated-health-check.pdf",
+                          "downloadLabel":  "Support health check â Client"
+                      },
+                      {
+                          "type":  "support-dedicated-health-check-md",
+                          "filename":  "support-dedicated-health-check-md.md",
+                          "downloadLabel":  "Support health check â Client (Markdown)"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "support-dedicated-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      },
+                      {
+                          "type":  "support_faq_seed",
+                          "filename":  "support-faq-seed.md",
+                          "downloadLabel":  "Support FAQ seed"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T19:59:08.434Z",
+    "updatedAt":  "2026-10-08T19:59:09.585Z",
+    "completedAt":  "2026-10-08T19:59:09.585Z"
+}

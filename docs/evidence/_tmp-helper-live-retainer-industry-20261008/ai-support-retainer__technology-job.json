@@ -1,0 +1,79 @@
+﻿{
+    "id":  "0cae66c0-9984-411b-ba0f-a99319005d24",
+    "paymentId":  "6a99bdae-2469-4ab8-a919-bd5e6aec6df6",
+    "deliverableId":  "ai-support-retainer__technology",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T20:01:19.032Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "0af51e86-f076-4b3e-97de-ad029f890b31",
+    "industryCategory":  "technology",
+    "documentQuality":  {
+                            "sectionCount":  8,
+                            "totalBodyChars":  2034,
+                            "minSectionBodyChars":  42,
+                            "checklistOrMilestoneHits":  22,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  "e492d2fd-0ed4-45d2-9afe-f3883a13b459",
+                        "crmImportedLeads":  null,
+                        "crmPipelineSeeded":  null,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  true,
+                        "ragRecallHits":  1,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "retainer_welcome",
+                          "filename":  "ai-support-retainer-welcome.pdf",
+                          "downloadLabel":  "AI support retainer â Welcome \u0026 Service Scope"
+                      },
+                      {
+                          "type":  "retainer_welcome_md",
+                          "filename":  "retainer_welcome_md.md",
+                          "downloadLabel":  "AI support retainer â Welcome \u0026 Service Scope (Markdown)"
+                      },
+                      {
+                          "type":  "ai_support_setup",
+                          "filename":  "ai-support-setup.json",
+                          "downloadLabel":  "AI support setup guide"
+                      },
+                      {
+                          "type":  "ai_support_knowledge_base",
+                          "filename":  "ai-support-knowledge-base.md",
+                          "downloadLabel":  "AI support knowledge base"
+                      },
+                      {
+                          "type":  "support_faq_seed",
+                          "filename":  "support-faq-seed.md",
+                          "downloadLabel":  "Support FAQ seed"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "ai-support-retainer-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T20:01:17.359Z",
+    "updatedAt":  "2026-10-08T20:01:19.032Z",
+    "completedAt":  "2026-10-08T20:01:19.032Z"
+}

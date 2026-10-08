@@ -1,0 +1,3 @@
+﻿bundle-portal-presence__fitness|True|setup-quick:completed, landing:completed|True|100
+bundle-sales-launch__beauty|True|landing:completed, sales-enablement:completed|True|100
+bundle-ops-clarity__legal|True|audit:completed, workflow-design:completed|True|100

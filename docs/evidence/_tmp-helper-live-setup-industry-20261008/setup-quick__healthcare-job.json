@@ -1,0 +1,64 @@
+﻿{
+    "id":  "d03f64fc-c12d-46f1-862a-e32f1aef9e71",
+    "paymentId":  "ffa51852-f120-477a-8457-7ec6905a0dfc",
+    "deliverableId":  "setup-quick__healthcare",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T19:53:54.061Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "08723089-28e0-4eb3-8f2a-3f63d23bdd36",
+    "industryCategory":  "healthcare",
+    "documentQuality":  {
+                            "sectionCount":  8,
+                            "totalBodyChars":  5626,
+                            "minSectionBodyChars":  336,
+                            "checklistOrMilestoneHits":  54,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  null,
+                        "crmImportedLeads":  null,
+                        "crmPipelineSeeded":  null,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "setup_pack",
+                          "filename":  "setup-quick.pdf",
+                          "downloadLabel":  "Quick Setup â Go-Live Checklist"
+                      },
+                      {
+                          "type":  "setup_pack_md",
+                          "filename":  "setup_pack_md.md",
+                          "downloadLabel":  "Quick Setup â Go-Live Checklist (Markdown)"
+                      },
+                      {
+                          "type":  "portal_modules",
+                          "filename":  "portal-modules.json",
+                          "downloadLabel":  "Portal modules bootstrap"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T19:53:52.189Z",
+    "updatedAt":  "2026-10-08T19:53:54.061Z",
+    "completedAt":  "2026-10-08T19:53:54.061Z"
+}

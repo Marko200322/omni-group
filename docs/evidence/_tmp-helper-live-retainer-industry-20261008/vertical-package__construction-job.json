@@ -1,0 +1,69 @@
+﻿{
+    "id":  "45a613b2-39d4-4dc2-8483-13d42d3d8c4a",
+    "paymentId":  "643f4a8a-3546-4251-9460-ab48bc3bfb44",
+    "deliverableId":  "vertical-package__construction",
+    "planSlug":  null,
+    "purchaseType":  "deliverable",
+    "status":  "completed",
+    "reviewStatus":  "approved",
+    "reviewNotes":  null,
+    "releasedAt":  "2026-10-08T20:01:55.346Z",
+    "error":  null,
+    "publicUrl":  null,
+    "projectId":  "54b9803f-58a8-4bb6-bd48-854f53a2889b",
+    "industryCategory":  "construction",
+    "documentQuality":  {
+                            "sectionCount":  7,
+                            "totalBodyChars":  4198,
+                            "minSectionBodyChars":  486,
+                            "checklistOrMilestoneHits":  43,
+                            "clientNamePresent":  true,
+                            "industryPresent":  true
+                        },
+    "documentSubstanceOk":  true,
+    "checklistScore":  100,
+    "checklistPassed":  true,
+    "checklistFailedIds":  [
+
+                           ],
+    "opsEvidence":  {
+                        "problemsCoveredCount":  10,
+                        "problemsEmbeddedInDoc":  true,
+                        "kickoffTicketId":  "eed8be18-703c-4fe1-902b-e18bbf550078",
+                        "crmImportedLeads":  8,
+                        "crmPipelineSeeded":  true,
+                        "leadGenMode":  null,
+                        "leadsGenerated":  null,
+                        "sampleLeadsSeeded":  null,
+                        "analysisRulesVersion":  null,
+                        "ragSeeded":  null,
+                        "ragRecallHits":  null,
+                        "supportSlaHours":  null
+                    },
+    "artifacts":  [
+                      {
+                          "type":  "vertical_pack",
+                          "filename":  "vertical-solution-pack.pdf",
+                          "downloadLabel":  "Vertical Solution â Construction"
+                      },
+                      {
+                          "type":  "vertical_pack_md",
+                          "filename":  "vertical_pack_md.md",
+                          "downloadLabel":  "Vertical Solution â Construction (Markdown)"
+                      },
+                      {
+                          "type":  "sla_onboarding_pack",
+                          "filename":  "vertical-package-sla-onboarding.md",
+                          "downloadLabel":  "SLA \u0026 onboarding pack"
+                      },
+                      {
+                          "type":  "support_faq_seed",
+                          "filename":  "support-faq-seed.md",
+                          "downloadLabel":  "Support FAQ seed"
+                      }
+                  ],
+    "clientVisible":  true,
+    "createdAt":  "2026-10-08T20:01:53.556Z",
+    "updatedAt":  "2026-10-08T20:01:55.346Z",
+    "completedAt":  "2026-10-08T20:01:55.346Z"
+}
