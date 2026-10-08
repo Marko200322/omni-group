@@ -1,0 +1,33 @@
+{
+    "runnable":  true,
+    "stalledReason":  null,
+    "config":  {
+                   "continuousEnabled":  true,
+                   "autoWhenFunded":  true,
+                   "monthlyBudgetEur":  250,
+                   "industriesPerTick":  2,
+                   "dailyIndustryCap":  40,
+                   "intervalMs":  900000
+               },
+    "leadDb":  {
+                   "enabled":  true,
+                   "phase":  "F5",
+                   "phaseLabel":  "Pun gas (verify obavezan)",
+                   "enrichOnHunt":  true,
+                   "maxPerRun":  10
+               },
+    "state":  {
+                  "cursor":  2,
+                  "dayKey":  "2026-10-08",
+                  "industriesHuntedToday":  2,
+                  "lastTickAt":  "2026-10-08T20:46:54.915Z",
+                  "lastIndustry":  "ai_data",
+                  "lastError":  null,
+                  "lastHotCount":  0,
+                  "lastRawCount":  0,
+                  "ticksCompleted":  2,
+                  "stalledReason":  null
+              },
+    "industryCount":  50,
+    "catalogProblemsFloorOk":  true
+}
