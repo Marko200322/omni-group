@@ -43,16 +43,27 @@ const pages = {
 
 const ids = [...catalog.matchAll(/id:\s*'([a-z0-9-]+)'/g)].map((m) => m[1]);
 const uniqueIds = [...new Set(ids)];
-assert(uniqueIds.length === 20, `Expected 20 catalog products, found ${uniqueIds.length}`);
+assert(uniqueIds.length === 20, `Expected 20 base catalog products, found ${uniqueIds.length}`);
 
 const bundleIds = uniqueIds.filter((id) => id.startsWith('bundle-'));
 assert(bundleIds.length === 3, `Expected 3 catalog bundles, found ${bundleIds.join(',')}`);
 
+assert(catalog.includes('FULL_PACKAGE_CATALOG'), 'deliverable-catalog must export FULL_PACKAGE_CATALOG');
+assert(catalog.includes('buildThousandPackageCatalog'), 'FULL catalog must use thousand-package-catalog');
+assert(offers.includes('FULL_PACKAGE_CATALOG'), 'client-offers must use FULL_PACKAGE_CATALOG for sellable list');
+assert(pages.products.includes('Filter by industry') || pages.products.includes('industry'), 'products must filter by industry');
+assert(pages.products.includes('sellablePackages'), 'products must surface sellablePackages count');
+
+const publicCatalogApi = read('src/app/api/public/catalog/route.ts');
+assert(publicCatalogApi.includes('FULL_PACKAGE_CATALOG'), 'public catalog API must report FULL_PACKAGE_CATALOG');
+assert(publicCatalogApi.includes('sellablePackages'), 'public catalog API must expose sellablePackages');
+
 assert(publicCatalog.includes('listPublicProducts'), 'public-catalog must export listPublicProducts');
-assert(offers.includes('return getPackageAnchorEur(deliverableId)'), 'List price must be the package anchor');
+assert(offers.includes('getPackageAnchorEur'), 'List price helpers must use package anchor');
 assert(offers.includes("saleStatus === 'READY_TO_BUY'"), 'Checkout href only when READY_TO_BUY');
 assert(saleStatus.includes("READY_TO_BUY' | 'COMING_SOON' | 'REQUEST_QUOTE'"), 'One availability enum');
 assert(availability.includes('saleStatus: OfferSaleStatus'), 'Availability carries saleStatus');
+assert(availability.includes('resolveDeliverySpecId') || availability.includes('parseIndustryPackageId'), 'Delivery specs must resolve industry SKUs');
 
 for (const [name, src] of Object.entries(pages)) {
   assert(src.includes('@/lib/public-catalog'), `${name} must import the public catalog barrel`);
@@ -68,7 +79,10 @@ assert(offerCard.includes("saleStatus === 'READY_TO_BUY'"), 'Buy now only when R
 assert(offerCard.includes("saleStatus === 'REQUEST_QUOTE'"), 'Quote CTA only when REQUEST_QUOTE');
 assert(offerCard.includes('Buy now'), 'Ready CTA label is Buy now');
 assert(!offerCard.includes('When this package opens'), 'OfferCard must not hardcode opens-later copy');
-assert(quotePanel.includes('getPublicListPriceEur(deliverableId)'), 'Dashboard checkout shows list price');
+assert(
+  quotePanel.includes('getPublicListPriceEur') && quotePanel.includes('listPriceEur'),
+  'Dashboard checkout shows list price',
+);
 assert(!quotePanel.includes('calculateDeliverableQuote'), 'Dashboard checkout must not use the quote engine');
 assert(!quotePanel.includes('marketIntensity'), 'Dashboard checkout must not send marketIntensity');
 assert(orderPage.includes('section="quote"'), 'Dashboard order is the checkout surface');

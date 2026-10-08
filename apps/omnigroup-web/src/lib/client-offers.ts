@@ -14,11 +14,13 @@ import {
 } from './package-delivery-spec';
 import { getFactoryPhase } from './factory-phase';
 import {
-  DELIVERABLE_CATALOG,
+  BASE_DELIVERABLE_CATALOG,
   DELIVERABLE_CATEGORY_LABELS,
+  FULL_PACKAGE_CATALOG,
+  getDeliverable,
   type DeliverableDefinition,
 } from './deliverable-catalog';
-import { formatEur } from './category-pricing';
+import { formatEur, INDUSTRY_CATEGORIES } from './category-pricing';
 import { formatBillingLabel } from './dynamic-pricing';
 import { buildLoginNextForQuote, buildPricingHref } from './checkout-navigation';
 import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
@@ -30,6 +32,7 @@ import {
 } from './delivery-honesty';
 import { isCatalogBundle } from './catalog-bundle-ids';
 import { getOfferProblems } from './package-problem-specs';
+import { parseIndustryPackageId } from './thousand-package-catalog';
 
 export { isCatalogBundle } from './catalog-bundle-ids';
 
@@ -334,16 +337,29 @@ export function publicOfferWhen(
 }
 
 export function getPublicCatalogStats() {
-  const { available, later } = listClientOffers();
-  const all = [...available, ...later];
-  const services = all.filter((o) => !o.isBundle);
-  const bundles = all.filter((o) => o.isBundle);
+  /** First-class sellable industry packages (~1000), not the 20 base templates. */
+  const all = FULL_PACKAGE_CATALOG;
+  let readyToBuyCount = 0;
+  let comingSoonCount = 0;
+  let bundleCount = 0;
+  for (const d of all) {
+    if (isCatalogBundle(d.id)) {
+      bundleCount += 1;
+      continue;
+    }
+    if (canCheckoutPackage(d.id)) readyToBuyCount += 1;
+    else comingSoonCount += 1;
+  }
+  const expertServiceCount = all.length - bundleCount;
   return {
     catalogSkuCount: all.length,
-    expertServiceCount: services.length,
-    bundleCount: bundles.length,
-    readyToBuyCount: available.length,
-    comingSoonCount: later.length,
+    expertServiceCount,
+    bundleCount,
+    readyToBuyCount,
+    comingSoonCount,
+    industryGroups: INDUSTRY_CATEGORIES.length,
+    basePackages: BASE_DELIVERABLE_CATALOG.length,
+    sellablePackages: all.length,
   };
 }
 
@@ -367,35 +383,39 @@ export function getClientOffer(
   id: string,
   opts?: { category?: string; vertical?: string; industryRow?: PackageIndustryMatrixRow | null },
 ): ClientOffer | null {
-  const d = DELIVERABLE_CATALOG.find((x) => x.id === id);
+  const d = getDeliverable(id);
   if (!d) return null;
-  const copy = CLIENT_OFFER_COPY[id] ?? fallbackCopy(d);
-  const resolved = resolvePackageOffer(id, getFactoryPhase());
+  const baseId = d.baseDeliverableId ?? parseIndustryPackageId(d.id)?.baseId ?? d.id;
+  const copy = CLIENT_OFFER_COPY[baseId] ?? fallbackCopy({ ...d, id: baseId });
+  const resolved = resolvePackageOffer(baseId, getFactoryPhase());
   const row = opts?.industryRow;
   const bonusIncludes =
     row?.competitiveBonusIncludes ??
     (opts?.category
-      ? getIndustryCompetitiveBonusIncludes(opts.category, id, row?.recommendedForIndustry)
+      ? getIndustryCompetitiveBonusIncludes(opts.category, baseId, row?.recommendedForIndustry)
       : []);
   const baseYouGet =
     resolved.includes.length > 0 ? resolved.includes.slice(0, 6) : copy.youGet;
   const mergedYouGet = Array.from(new Set([...bonusIncludes, ...baseYouGet])).slice(0, 7);
-  const summary = row?.primaryProblem?.trim() ? row.primaryProblem : copy.summary;
+  const catalogPrimary = d.problemsSolved?.[0]?.trim();
+  const summary =
+    catalogPrimary ||
+    (row?.primaryProblem?.trim() ? row.primaryProblem : copy.summary);
   const promise =
     row?.recommendedForIndustry && row.businessOutcome
       ? row.businessOutcome.split('—')[0]?.trim() || copy.promise
       : copy.promise;
-  const priceEur = getPublicListPriceEur(id);
-  const availability = getPackageAvailability(id);
+  const priceEur = d.anchorEur > 0 ? d.anchorEur : getPublicListPriceEur(baseId);
+  const availability = getPackageAvailability(baseId);
   const saleStatus = saleStatusFromAvailability(availability);
-  const category = opts?.category;
+  const category = opts?.category ?? d.industrySlug;
   const vertical = opts?.vertical;
-  const contactHref = `/contact?service=${encodeURIComponent(id)}${
+  const contactHref = `/contact?service=${encodeURIComponent(d.id)}${
     category ? `&category=${encodeURIComponent(category)}` : ''
   }`;
   const buyHref =
     saleStatus === 'READY_TO_BUY'
-      ? buildLoginNextForQuote({ service: id, category, vertical })
+      ? buildLoginNextForQuote({ service: d.id, category, vertical })
       : contactHref;
   return {
     id: d.id,
@@ -421,21 +441,23 @@ export function getClientOffer(
     availability,
     saleStatus,
     buyHref,
-    detailsHref: buildPricingHref({ service: id, category, vertical }),
+    detailsHref: buildPricingHref({ service: d.id, category, vertical }),
     contactHref,
-    industryPrimaryProblem: row?.primaryProblem,
+    industryPrimaryProblem: catalogPrimary ?? row?.primaryProblem,
     industryRecommended: row?.recommendedForIndustry,
     industryPitch: row?.industrySolutionPitch,
     solvesProblems:
-      row?.secondaryProblems?.length
-        ? [row.primaryProblem, ...row.secondaryProblems].filter(Boolean).slice(0, 7)
-        : getOfferProblems(d.id),
-    automationLevel: getDeliveryHonesty(d.id)?.automationLevel ?? 'SEMI_AUTOMATED',
-    deliveryLabel: getDeliveryHonesty(d.id)?.label ?? deliveryLevelShort('SEMI_AUTOMATED'),
+      d.problemsSolved?.length
+        ? d.problemsSolved.slice(0, 7)
+        : row?.secondaryProblems?.length
+          ? [row.primaryProblem, ...row.secondaryProblems].filter(Boolean).slice(0, 7)
+          : getOfferProblems(baseId),
+    automationLevel: getDeliveryHonesty(baseId)?.automationLevel ?? 'SEMI_AUTOMATED',
+    deliveryLabel: getDeliveryHonesty(baseId)?.label ?? deliveryLevelShort('SEMI_AUTOMATED'),
     humanIntervention:
-      getDeliveryHonesty(d.id)?.humanIntervention ??
+      getDeliveryHonesty(baseId)?.humanIntervention ??
       'A person may still finish steps that are outside the listed artifacts.',
-    prePurchaseWarning: getDeliveryHonesty(d.id)?.prePurchaseWarning,
+    prePurchaseWarning: getDeliveryHonesty(baseId)?.prePurchaseWarning,
     isBundle: isCatalogBundle(d.id),
   };
 }
@@ -448,25 +470,44 @@ export function listClientOffers(opts?: {
   availableOnly?: boolean;
   /** Hide bundle SKUs — they have their own Pricing panel. */
   excludeBundles?: boolean;
+  /**
+   * When true, iterate FULL_PACKAGE_CATALOG (~1000).
+   * Default: industry filter → industry packages for that slug; no filter → base templates (20).
+   */
+  fullCatalog?: boolean;
 }): { available: ClientOffer[]; later: ClientOffer[] } {
   const available: ClientOffer[] = [];
   const later: ClientOffer[] = [];
-  for (const d of DELIVERABLE_CATALOG) {
+  const industrySlug = opts?.category?.trim().toLowerCase() || '';
+  let source: DeliverableDefinition[];
+  if (opts?.fullCatalog) {
+    source = industrySlug
+      ? FULL_PACKAGE_CATALOG.filter((d) => d.industrySlug === industrySlug)
+      : FULL_PACKAGE_CATALOG;
+  } else if (industrySlug) {
+    source = FULL_PACKAGE_CATALOG.filter((d) => d.industrySlug === industrySlug);
+  } else {
+    source = BASE_DELIVERABLE_CATALOG;
+  }
+  for (const d of source) {
+    const baseId = d.baseDeliverableId ?? parseIndustryPackageId(d.id)?.baseId ?? d.id;
     const offer = getClientOffer(d.id, {
-      category: opts?.category,
+      category: opts?.category || d.industrySlug,
       vertical: opts?.vertical,
-      industryRow: opts?.industryMatrix?.get(d.id) ?? null,
+      industryRow: opts?.industryMatrix?.get(baseId) ?? opts?.industryMatrix?.get(d.id) ?? null,
     });
     if (!offer) continue;
     if (opts?.excludeBundles && offer.isBundle) continue;
     if (canCheckoutPackage(d.id)) available.push(offer);
     else if (!opts?.availableOnly) later.push(offer);
   }
-  // Stable: checkout list order first for available
+  // Stable: checkout list order first for available (base id order for industry SKUs)
   const order = listCheckoutPackages();
   available.sort((a, b) => {
-    const ia = order.indexOf(a.id);
-    const ib = order.indexOf(b.id);
+    const baseA = parseIndustryPackageId(a.id)?.baseId ?? a.id;
+    const baseB = parseIndustryPackageId(b.id)?.baseId ?? b.id;
+    const ia = order.indexOf(baseA);
+    const ib = order.indexOf(baseB);
     return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
   });
   return { available, later };

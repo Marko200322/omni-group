@@ -14,22 +14,32 @@ type Props = {
   onChange: (slug: string) => void;
   className?: string;
   showTierHint?: boolean;
+  /** Label for the empty / unselected option */
+  emptyLabel?: string;
+  label?: string;
 };
 
-export function IndustryCategorySelect({ value, onChange, className, showTierHint = true }: Props) {
+export function IndustryCategorySelect({
+  value,
+  onChange,
+  className,
+  showTierHint = true,
+  emptyLabel = 'Standard (typical SMB)',
+  label = 'Industry category',
+}: Props) {
   const selected = getIndustryCategory(value);
   const tier = resolvePricingTier(value);
 
   return (
     <div className={className}>
       <label className="block text-sm">
-        <span className="text-slate-400">Industry category</span>
+        <span className="text-slate-400">{label}</span>
         <select
           className={CHECKOUT_SELECT_CLASS}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
-          <option value="">Standard (typical SMB)</option>
+          <option value="">{emptyLabel}</option>
           {INDUSTRY_CATEGORIES.map((cat) => (
             <option key={cat.slug} value={cat.slug}>
               {categoryLabel(cat)} — {tierLabel(PRICING_TIER_META[cat.tier])}

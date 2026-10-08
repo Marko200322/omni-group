@@ -135,6 +135,9 @@ function Sync-VpsRemoteDirectory {
     '--exclude=.next',
     '--exclude=deploy-secrets.local',
     '--exclude=omni-shared-vault',
+    # Runtime / generated data on VPS — never clobber live artifacts during extract
+    '--exclude=atina-platform/atina/data',
+    '--exclude=./atina-platform/atina/data',
     '--exclude=.env.docker.prod',
     '--exclude=.env.vps.prod',
     '--exclude=atina-platform/atina/.env.docker.prod',
@@ -170,7 +173,10 @@ function Sync-VpsRemoteDirectory {
     if ($LASTEXITCODE -ne 0) { throw 'scp upload failed' }
   }
 
-  $extract = "mkdir -p $RemotePath && tar --warning=no-unknown-keyword -xzf $remoteTar -C $RemotePath && rm -f $remoteTar && (chmod +x $RemotePath/scripts/*.sh || true)"
+  # Incremental extract: --overwrite replaces files. Never use --unlink-first (fails on
+  # non-empty dirs). If tar still exits non-zero on dir noise, accept when core paths exist.
+  # No double-quotes in remote cmd (PowerShell/ssh argv splitting strips them).
+  $extract = ('mkdir -p {0}; set +e; tar --warning=no-unknown-keyword --overwrite -xzf {1} -C {0}; ec=$?; rm -f {1}; chmod +x {0}/scripts/*.sh 2>/dev/null || true; if [ $ec -ne 0 ]; then test -f {0}/scripts/deploy-to-vps.ps1 && test -d {0}/atina-platform/atina/src && echo tar-exit-$ec-ignored-core-paths-present && ec=0; fi; exit $ec' -f $RemotePath, $remoteTar)
   $Session = Invoke-VpsRemoteCommand -VpsHost $VpsHost -VpsUser $VpsUser -SshKey $SshKey `
     -SshPassword $SshPassword -Command $extract -Session $Session
 

@@ -13,19 +13,19 @@ import { getIndustryCategory } from '@/lib/category-pricing';
 
 export default function ProductsPage() {
   const [industryCategory, setIndustryCategory] = useState('');
-  const { matrix: industryMatrix, packageCount: matrixCount } = useIndustryPackageMatrix(industryCategory);
+  const { matrix: industryMatrix } = useIndustryPackageMatrix(industryCategory);
   const categoryMeta = industryCategory ? getIndustryCategory(industryCategory) : null;
-  const { available, later } = useMemo(
-    () =>
-      listClientOffers({
-        category: industryCategory || undefined,
-        industryMatrix: industryCategory ? industryMatrix : undefined,
-        excludeBundles: true,
-      }),
-    [industryCategory, industryMatrix],
-  );
+  const { available, later } = useMemo(() => {
+    if (!industryCategory) return { available: [], later: [] };
+    return listClientOffers({
+      category: industryCategory,
+      industryMatrix,
+      excludeBundles: true,
+    });
+  }, [industryCategory, industryMatrix]);
   const generatedCount = getGeneratedVerticalsIndex().count;
   const catalogStats = getPublicCatalogStats();
+  const shownCount = available.length + later.length;
 
   return (
     <div className="px-4 py-20">
@@ -36,7 +36,10 @@ export default function ProductsPage() {
             What you can buy
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Only packages we can deliver today are marked Ready to buy. Open <strong className="font-medium text-white">Read more</strong> for full detail.
+            {catalogStats.sellablePackages} industry packages across {catalogStats.industryGroups} industries
+            ({catalogStats.basePackages} capability templates × industry). Filter by industry to browse —
+            only packages we can deliver today are marked Ready to buy. Open{' '}
+            <strong className="font-medium text-white">Read more</strong> for full detail.
             {generatedCount > 0 ? (
               <span className="mt-2 block text-sm text-slate-500">
                 Prefer a niche page?{' '}
@@ -50,11 +53,22 @@ export default function ProductsPage() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-2">
-          <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
-          {categoryMeta && matrixCount > 0 && (
+          <IndustryCategorySelect
+            value={industryCategory}
+            onChange={setIndustryCategory}
+            emptyLabel="Select an industry to browse packages"
+            label="Filter by industry"
+          />
+          {categoryMeta && shownCount > 0 && (
             <p className="text-sm text-slate-400">
-              {matrixCount} product sets for <strong className="text-white">{categoryMeta.name}</strong> — same
-              SKUs, industry problems and extras applied.
+              Showing {shownCount} packages for <strong className="text-white">{categoryMeta.name}</strong>{' '}
+              (of {catalogStats.sellablePackages} sellable industry SKUs).
+            </p>
+          )}
+          {!industryCategory && (
+            <p className="text-sm text-amber-200/90">
+              Choose an industry above to load packages. The full catalog is{' '}
+              {catalogStats.sellablePackages} SKUs — we do not dump them unfiltered.
             </p>
           )}
         </motion.div>
@@ -64,8 +78,9 @@ export default function ProductsPage() {
         <section className="mt-14">
           <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Same {catalogStats.expertServiceCount} expert services and {catalogStats.bundleCount} catalog
-            bundles as Pricing and Services — {catalogStats.catalogSkuCount} SKUs, one price book.{' '}
+            Full catalog: {catalogStats.sellablePackages} industry packages ({catalogStats.expertServiceCount}{' '}
+            services + {catalogStats.bundleCount} industry bundle SKUs) across{' '}
+            {catalogStats.industryGroups} industries — one price book.{' '}
             {catalogStats.readyToBuyCount} SKUs are ready to buy
             {catalogStats.comingSoonCount > 0 ? `; ${catalogStats.comingSoonCount} are coming soon` : ''}.
           </p>
@@ -75,23 +90,25 @@ export default function ProductsPage() {
                 key={offer.id}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
+                transition={{ delay: Math.min(i, 12) * 0.04 }}
               >
                 <OfferCard
                   id={`offer-${offer.id}`}
                   offer={
                     getClientOffer(offer.id, {
                       category: industryCategory || undefined,
-                      industryRow: industryCategory ? industryMatrix.get(offer.id) ?? null : null,
+                      industryRow: industryCategory
+                        ? industryMatrix.get(offer.id.split('__')[0] ?? offer.id) ?? null
+                        : null,
                     }) ?? offer
                   }
                 />
               </motion.div>
             ))}
           </div>
-          {available.length === 0 && (
+          {industryCategory && available.length === 0 && (
             <p className="mt-6 text-amber-200">
-              No packages open right now.{' '}
+              No packages open right now for this industry.{' '}
               <Link href="/contact" className="underline underline-offset-2">
                 Contact us
               </Link>
@@ -113,7 +130,7 @@ export default function ProductsPage() {
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.03 }}
+                  transition={{ delay: Math.min(i, 12) * 0.03 }}
                 >
                   <OfferCard
                     id={`offer-${offer.id}`}

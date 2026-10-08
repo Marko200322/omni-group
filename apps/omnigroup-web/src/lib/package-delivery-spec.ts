@@ -16,6 +16,7 @@ import {
 import type { ProdMode } from './prod-mode';
 import { getProdMode } from './prod-mode';
 import { saleStatusFromFlags, type OfferSaleStatus } from './sale-status';
+import { parseIndustryPackageId } from './thousand-package-catalog';
 
 export type { OfferSaleStatus } from './sale-status';
 
@@ -680,8 +681,14 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
 
 const BY_ID = new Map(PACKAGE_DELIVERY_SPECS.map((s) => [s.deliverableId, s]));
 
+/** Industry SKUs (`base__industry`) resolve to the base capability delivery contract. */
+export function resolveDeliverySpecId(deliverableId: string): string {
+  const key = deliverableId.trim();
+  return parseIndustryPackageId(key)?.baseId ?? key;
+}
+
 export function getPackageDeliverySpec(deliverableId: string): PackageDeliverySpec | null {
-  return BY_ID.get(deliverableId.trim()) ?? null;
+  return BY_ID.get(resolveDeliverySpecId(deliverableId)) ?? null;
 }
 
 /** Effective EUR price for current (or given) factory phase. */

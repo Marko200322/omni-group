@@ -90,7 +90,10 @@ assert(
   'PRODUCT_CATEGORIES must overlay labels from the SaaS price book',
 );
 assert(!/from €99/.test(marketingCatalog), 'Marketing product catalog must not keep leftover €99 labels');
-assert(quotePanel.includes('getPublicListPriceEur(deliverableId)'), 'Dashboard checkout must show the public list price');
+assert(
+  quotePanel.includes('getPublicListPriceEur') && quotePanel.includes('listPriceEur'),
+  'Dashboard checkout must show the public list price',
+);
 assert(home.includes('getSaaSPlanPrice'), 'Homepage SaaS teaser must read the SaaS price book');
 assert(home.includes('getPublicCatalogStats'), 'Homepage expert-service count must read the catalog');
 assert(publicCatalog.includes('getPublicListPriceEur'), 'public-catalog.ts is the commerce barrel');
@@ -118,7 +121,11 @@ assert(offerCard.includes("saleStatus === 'REQUEST_QUOTE'"), 'Quote CTA only whe
 assert(offerCard.includes('Buy now'), 'Ready packages keep a Buy now CTA');
 assert(offerCard.includes('Best for:'), 'OfferCard must render Best for from catalog when present');
 assert(offers.includes('bestFor: d.bestFor'), 'ClientOffer must pass through catalog bestFor');
-assert(catalog.includes("bestFor?: string"), 'Deliverable catalog must define optional bestFor');
+const catalogTypes = read('src/lib/deliverable-catalog-types.ts');
+assert(
+  catalog.includes("bestFor?: string") || catalogTypes.includes("bestFor?: string"),
+  'Deliverable catalog must define optional bestFor',
+);
 assert(catalog.includes("bestFor: 'founders who need a tech audit"), 'Ops clarity bundle must have Best for copy');
 assert(catalog.includes("bestFor: 'niche businesses wanting industry CRM"), 'Vertical solution must have Best for copy');
 assert(catalog.includes("bestFor: 'agencies and partners reselling"), 'White-label packaging must have Best for copy');

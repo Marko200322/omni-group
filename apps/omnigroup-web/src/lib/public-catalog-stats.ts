@@ -15,6 +15,8 @@ export function getPublicCatalogStats() {
     basePackages: BASE_DELIVERABLE_CATALOG.length,
     /** First-class sellable industry packages (~1000) */
     sellablePackages: FULL_PACKAGE_CATALOG.length,
+    /** Alias used by some surfaces — same as sellablePackages */
+    catalogSkuCount: FULL_PACKAGE_CATALOG.length,
     /** Vertical slugs with `hasPage` in generated-verticals-index.json */
     verticalLandings: online,
     /** Total rows in index (includes offline / pipeline entries) */

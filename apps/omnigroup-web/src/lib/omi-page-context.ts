@@ -1,4 +1,4 @@
-import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
+import { getDeliverable } from '@/lib/deliverable-catalog';
 import { resolveIndustryCategory } from '@/lib/industry-sku-map';
 
 export type OmiUiPageContext = {
@@ -10,13 +10,13 @@ export type OmiUiPageContext = {
 function catalogIdFromFragment(raw: string | undefined): string | undefined {
   if (!raw) return undefined;
   const id = raw.replace(/^#/, '').replace(/^offer-/, '').trim();
-  return DELIVERABLE_CATALOG.some((d) => d.id === id) ? id : undefined;
+  return getDeliverable(id) ? id : undefined;
 }
 
 export function buildOmiUiPageContext(pathname: string, hash?: string): OmiUiPageContext {
   const path = pathname.split('?')[0] ?? '/';
   const ctx: OmiUiPageContext = { path };
-  const querySku = path.match(/[?&]sku=([a-z0-9-]+)/i);
+  const querySku = path.match(/[?&]sku=([a-z0-9_-]+)/i);
   const hashSku = catalogIdFromFragment(hash);
   const productId = hashSku ?? (querySku?.[1] && catalogIdFromFragment(querySku[1]));
   if (productId) ctx.productId = productId;

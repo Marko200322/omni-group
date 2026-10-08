@@ -8,13 +8,14 @@ import { motion } from 'framer-motion';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
 import { deliverableLabel } from '@/lib/display-text';
 import { formatEur } from '@/lib/category-pricing';
-import { DELIVERABLE_CATALOG } from '@/lib/deliverable-catalog';
+import { BASE_DELIVERABLE_CATALOG, getDeliverable } from '@/lib/deliverable-catalog';
 import { CHECKOUT_SELECT_CLASS } from '@/lib/checkout-select-class';
 import {
   canCheckoutPackage,
   listCheckoutPackages,
 } from '@/lib/package-delivery-spec';
 import { getClientOffer, getPublicListPriceEur } from '@/lib/client-offers';
+import { parseIndustryPackageId } from '@/lib/thousand-package-catalog';
 import { isLeanProdMode } from '@/lib/prod-mode';
 import { formatBillingLabel } from '@/lib/dynamic-pricing';
 
@@ -54,14 +55,13 @@ const PAYMENT_METHOD_LABEL_STRIPE = 'Card (Stripe)';
 
 export function DeliverableQuotePanel({ disabled }: Props) {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') ?? '';
-  const initialVertical = searchParams.get('vertical') ?? '';
   const initialService = searchParams.get('service') ?? '';
+  const parsedIndustry = parseIndustryPackageId(initialService);
+  const initialCategory =
+    searchParams.get('category') ?? parsedIndustry?.industrySlug ?? '';
+  const initialVertical = searchParams.get('vertical') ?? '';
   const leanDefault = listCheckoutPackages()[0] ?? 'setup-quick';
-  const resolvedInitial =
-    initialService && DELIVERABLE_CATALOG.some((d) => d.id === initialService)
-      ? initialService
-      : leanDefault;
+  const resolvedInitial = initialService && getDeliverable(initialService) ? initialService : leanDefault;
 
   const [industryCategory, setIndustryCategory] = useState(initialCategory);
   const verticalSlug = initialVertical;
@@ -96,16 +96,23 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     };
   }, []);
 
-  const deliverable = DELIVERABLE_CATALOG.find((d) => d.id === deliverableId);
+  const deliverable = getDeliverable(deliverableId);
   const clientOffer = getClientOffer(deliverableId);
   const checkoutAllowed = canCheckoutPackage(deliverableId);
   const checkoutIds = listCheckoutPackages();
   const catalogOrdered = [
-    ...DELIVERABLE_CATALOG.filter((d) => checkoutIds.includes(d.id)),
-    ...DELIVERABLE_CATALOG.filter((d) => !checkoutIds.includes(d.id)),
+    ...BASE_DELIVERABLE_CATALOG.filter((d) => checkoutIds.includes(d.id)),
+    ...BASE_DELIVERABLE_CATALOG.filter((d) => !checkoutIds.includes(d.id)),
   ];
+  // Keep deep-linked industry SKUs selectable even though the dropdown lists base templates.
+  if (deliverable?.isIndustryPackage && !catalogOrdered.some((d) => d.id === deliverable.id)) {
+    catalogOrdered.unshift(deliverable);
+  }
 
-  const listPriceEur = getPublicListPriceEur(deliverableId);
+  const listPriceEur =
+    (deliverable?.anchorEur && deliverable.anchorEur > 0
+      ? deliverable.anchorEur
+      : getPublicListPriceEur(parseIndustryPackageId(deliverableId)?.baseId ?? deliverableId));
 
   useEffect(() => {
     setCheckout(null);
