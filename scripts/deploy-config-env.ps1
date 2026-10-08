@@ -740,6 +740,23 @@ function Apply-DeployConfigProdEnvFiles {
       $(if (Test-DeployConfigBool $Config 'leadLiveHarvestOnKickoff' $false) { 'true' } else { 'false' })
     )
   }
+  # Continuous lead machine (1000-catalog industry rotation) — no stall when funded
+  if ($null -ne $Config.PSObject.Properties['leadMachineContinuous']) {
+    Set-EnvLineInDeployFile $atinaEnv 'LEAD_MACHINE_CONTINUOUS' (
+      $(if (Test-DeployConfigBool $Config 'leadMachineContinuous' $false) { 'true' } else { 'false' })
+    )
+  }
+  if ($null -ne $Config.PSObject.Properties['leadMachineAutoWhenFunded']) {
+    Set-EnvLineInDeployFile $atinaEnv 'LEAD_MACHINE_AUTO_WHEN_FUNDED' (
+      $(if (Test-DeployConfigBool $Config 'leadMachineAutoWhenFunded' $true) { 'true' } else { 'false' })
+    )
+  }
+  $lmTick = Get-DeployConfigTrim $Config 'leadMachineIndustriesPerTick'
+  if ($lmTick) { Set-EnvLineInDeployFile $atinaEnv 'LEAD_MACHINE_INDUSTRIES_PER_TICK' $lmTick }
+  $lmCap = Get-DeployConfigTrim $Config 'leadMachineDailyIndustryCap'
+  if ($lmCap) { Set-EnvLineInDeployFile $atinaEnv 'LEAD_MACHINE_DAILY_INDUSTRY_CAP' $lmCap }
+  $lmInterval = Get-DeployConfigTrim $Config 'leadMachineIntervalMs'
+  if ($lmInterval) { Set-EnvLineInDeployFile $atinaEnv 'LEAD_MACHINE_INTERVAL_MS' $lmInterval }
   if ($null -ne $Config.PSObject.Properties['marketingAdsLiveSync']) {
     Set-EnvLineInDeployFile $atinaEnv 'MARKETING_ADS_LIVE_SYNC' (
       $(if (Test-DeployConfigBool $Config 'marketingAdsLiveSync' $false) { 'true' } else { 'false' })

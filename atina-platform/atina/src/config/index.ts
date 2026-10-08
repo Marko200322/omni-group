@@ -598,6 +598,18 @@ export const config = {
     /** Daily check for monthly lead-gen retainer runs */
     intervalMs: optionalNumber('RETAINER_SCHEDULER_INTERVAL_MS', 86_400_000),
   },
+  /**
+   * Continuous lead machine (1000-package catalog industries).
+   * When funded + lead DB on, rotates industries without stalling on single failures.
+   */
+  leadMachine: {
+    continuousEnabled: optionalBool('LEAD_MACHINE_CONTINUOUS', false),
+    autoWhenFunded: optionalBool('LEAD_MACHINE_AUTO_WHEN_FUNDED', true),
+    monthlyBudgetEur: optionalNumber('OWNER_MONTHLY_BUDGET_EUR', 0),
+    industriesPerTick: optionalNumber('LEAD_MACHINE_INDUSTRIES_PER_TICK', 2),
+    dailyIndustryCap: optionalNumber('LEAD_MACHINE_DAILY_INDUSTRY_CAP', 40),
+    intervalMs: optionalNumber('LEAD_MACHINE_INTERVAL_MS', 900_000),
+  },
   liveCallAvatar: {
     enabled: optionalBool('LIVE_CALL_AVATAR_ENABLED', false),
     allowStub: optionalBool('LIVE_CALL_AVATAR_ALLOW_STUB', true),

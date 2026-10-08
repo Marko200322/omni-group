@@ -107,6 +107,17 @@
   "neverbounceApiKey": "",
   "zerobounceApiKey": "",
   "lushaApiKey": "",
+
+  "_leadMachine_comment": "1000-catalog continuous lead machine. M6 + Apollo/Hunter: enable DB + F5; continuous/autoWhenFunded = no stall when budget > 0.",
+  "leadDatabaseEnabled": true,
+  "leadDatabaseRolloutPhase": "F5",
+  "leadLiveHarvestOnKickoff": true,
+  "leadMachineContinuous": true,
+  "leadMachineAutoWhenFunded": true,
+  "leadMachineIndustriesPerTick": "2",
+  "leadMachineDailyIndustryCap": "40",
+  "leadMachineIntervalMs": "900000",
+
   "tavilyApiKey": "",
   "zoominfoApiKey": "",
   "plausibleDomain": "",

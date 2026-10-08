@@ -9,6 +9,10 @@ import { config } from '../../config';
 import logger from '../../utils/logger';
 import { getRetainerScheduler, stopRetainerScheduler } from './service/retainer-scheduler.service';
 import {
+  getLeadMachineScheduler,
+  stopLeadMachineScheduler,
+} from './service/lead-machine-scheduler.service';
+import {
   BillingInvoicesListQueryDto,
   BillingInvoiceIdParamsDto,
   BillingLimitKeyParamsDto,
@@ -42,10 +46,14 @@ export class BillingModule implements IModule {
       logger.info('Billing: starting retainer scheduler');
       getRetainerScheduler().start();
     }
+    // Continuous lead machine — starts always; ticks no-op until funded/configured.
+    logger.info('Billing: starting lead machine continuous scheduler');
+    getLeadMachineScheduler().start();
   }
 
   async shutdown(): Promise<void> {
     stopRetainerScheduler();
+    stopLeadMachineScheduler();
   }
 
   private setupRoutes(): void {

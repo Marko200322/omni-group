@@ -5,6 +5,7 @@ import { getLeadDatabaseService } from '../../../integrations';
 import { ClientHunterService } from '../service/client-hunter.service';
 import { HuntingStackService } from '../service/hunting-stack.service';
 import { generateJobHuntEmail, EXAMPLE_GERMAN_JOB_POSTING } from '../lib/job-hunt-copy';
+import { getLeadMachineScheduler } from '../../billing/service/lead-machine-scheduler.service';
 
 export class ClientHunterController {
   private readonly service = new ClientHunterService();
@@ -18,6 +19,17 @@ export class ClientHunterController {
 
   leadDatabaseStatus = async (_req: Request, res: Response): Promise<void> => {
     sendSuccess(res, this.leadDb.getStatus());
+  };
+
+  /** Continuous lead machine status (1000-catalog industry rotation). */
+  leadMachineStatus = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, getLeadMachineScheduler().getStatus());
+  };
+
+  /** Admin: run one continuous tick now (fail-soft). */
+  leadMachineTick = async (_req: Request, res: Response): Promise<void> => {
+    const result = await getLeadMachineScheduler().tick();
+    sendSuccess(res, { ...result, status: getLeadMachineScheduler().getStatus() }, 'Lead machine tick completed');
   };
 
   readiness = async (req: Request, res: Response): Promise<void> => {

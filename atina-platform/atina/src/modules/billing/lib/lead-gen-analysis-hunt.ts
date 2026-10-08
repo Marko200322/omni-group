@@ -141,12 +141,30 @@ function titleMatchesToken(title: string, token: string): boolean {
   return t.includes(tok);
 }
 
+/** Pull searchable tokens from catalog problem lines (drop leading labels). */
+export function keywordsFromProblemsSolved(problems: string[] | undefined): string[] {
+  if (!problems?.length) return [];
+  const out: string[] = [];
+  for (const raw of problems) {
+    const line = String(raw ?? '').trim();
+    if (!line) continue;
+    const body = line.includes(':') ? line.slice(line.indexOf(':') + 1).trim() : line;
+    for (const part of body.split(/[,;/|]/g)) {
+      const tok = part.trim().toLowerCase().replace(/\s+/g, ' ');
+      if (tok.length >= 3 && tok.length <= 48) out.push(tok);
+    }
+  }
+  return Array.from(new Set(out)).slice(0, 12);
+}
+
 /** Deterministic ICP + channel readiness — always run on kickoff (Phase A). */
 export function buildLeadGenAnalysisPack(input: {
   pack: VerticalDeliveryPack;
   channelStatuses: OutreachChannelStatus[];
   minIcpScore?: number;
   minEmailConfidence?: 'has_email' | 'verified';
+  /** Optional catalog problems (5–10) — strengthens ICP keywords for the 1000-package era. */
+  problemsSolved?: string[];
 }): LeadGenAnalysisPack {
   const { pack } = input;
   const industries = Array.from(
@@ -156,13 +174,19 @@ export function buildLeadGenAnalysisPack(input: {
         .filter(Boolean),
     ),
   );
+  const problemKeywords = keywordsFromProblemsSolved(input.problemsSolved);
   const keywords = Array.from(
     new Set(
-      [...pack.keywords, ...industries, ...pack.researchFocus.map((r) => r.toLowerCase())]
+      [
+        ...pack.keywords,
+        ...industries,
+        ...pack.researchFocus.map((r) => r.toLowerCase()),
+        ...problemKeywords,
+      ]
         .map((k) => k.trim().toLowerCase())
         .filter((k) => k.length >= 2),
     ),
-  ).slice(0, 16);
+  ).slice(0, 20);
 
   const targetTitles = [
     'CEO',

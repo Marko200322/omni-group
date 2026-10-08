@@ -515,7 +515,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly lead-gen ops pack COMPLETE after payment: deterministic CRM stages, sequence templates, weekly plan, channel board (same industry → same structure), honest CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — else leads_generated=0; Titanis never invents; simulated harvest cannot PASS.',
+      'Monthly lead-gen ops pack COMPLETE after payment: deterministic CRM stages, sequence templates, weekly plan, channel board (same industry → same structure), honest CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4/F5 + LEAD_LIVE_HARVEST_ON_KICKOFF. Continuous industry rotation (1000-catalog): LEAD_MACHINE_CONTINUOUS or LEAD_MACHINE_AUTO_WHEN_FUNDED + budget — fail-soft, no stall; ICP uses package problems; else leads_generated=0; Titanis never invents; simulated harvest cannot PASS.',
     descriptionSr:
       'Mesečni lead-gen ops paket COMPLETE nakon plaćanja: deterministički CRM stage-ovi, sequence šabloni, nedeljni plan, channel board (ista industrija → ista struktura), pošten CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — inače leads_generated=0; Titanis ne izmišlja; simulirani harvest ne može PASS.',
     includes: [

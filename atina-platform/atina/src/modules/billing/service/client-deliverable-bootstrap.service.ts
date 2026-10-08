@@ -45,6 +45,7 @@ import {
   type LeadGenAnalysisPack,
   type LiveHuntOutcome,
 } from '../lib/lead-gen-analysis-hunt';
+import { listResolvedPackageIndustryProblems } from '../lib/package-industry-problems';
 
 export type { ChannelConnectionStatus, LeadGenMode, OutreachChannelStatus };
 
@@ -421,7 +422,16 @@ export class ClientDeliverableBootstrapService {
     const channelStatuses = resolveLeadGenChannelStatuses();
 
     // Phase A — always: ICP analysis before any Apollo/Hunter call.
-    const analysis = buildLeadGenAnalysisPack({ pack, channelStatuses });
+    // Prefer catalog problems for industry SKUs (1000-package era).
+    const problemsSolved = listResolvedPackageIndustryProblems(
+      'lead-gen-retainer',
+      pack.category || pack.verticalSlug,
+    );
+    const analysis = buildLeadGenAnalysisPack({
+      pack,
+      channelStatuses,
+      problemsSolved: problemsSolved.length ? problemsSolved : undefined,
+    });
 
     const workspaces = await this.titanis.list(input.userId);
     let workspaceId = (workspaces[0] as { id?: string } | undefined)?.id;

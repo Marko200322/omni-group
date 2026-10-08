@@ -87,13 +87,24 @@ export class LeadDatabaseService {
     for (const rawId of caps.providerChain) {
       const id = rawId.trim().toLowerCase() as LeadProviderId;
       if (!this.isProviderConfigured(id)) continue;
-      try {
-        const rows = await this.searchWithProvider(id, { ...query, limit });
-        if (rows.length) {
-          return this.applyVerification(rows, caps.verifyOnHunt, caps.requireVerifiedEmail);
+      // One retry on transient failure — never stall the whole machine on a single throw.
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          const rows = await this.searchWithProvider(id, { ...query, limit });
+          if (rows.length) {
+            return this.applyVerification(rows, caps.verifyOnHunt, caps.requireVerifiedEmail);
+          }
+          break; // empty but healthy → try next provider
+        } catch (err) {
+          logger.warn('Lead database provider failed', {
+            provider: id,
+            attempt,
+            error: String(err),
+          });
+          if (attempt < 2) {
+            await new Promise((r) => setTimeout(r, 250 * attempt));
+          }
         }
-      } catch (err) {
-        logger.warn('Lead database provider failed', { provider: id, error: String(err) });
       }
     }
     return [];

@@ -35,6 +35,8 @@ export class ClientHunterModule implements IModule {
     this.router.get('/hot-clients', authenticate, validateQuery(HotClientsListQueryDto), validateBody(StrictEmptyBodyDto), this.controller.hotClients);
     this.router.get('/status', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.status);
     this.router.get('/lead-databases/status', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.leadDatabaseStatus);
+    this.router.get('/lead-machine/status', authenticate, requireAdmin, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.leadMachineStatus);
+    this.router.post('/lead-machine/tick', authenticate, requireAdmin, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.leadMachineTick);
     this.router.get('/', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(StrictEmptyBodyDto), this.controller.list);
     this.router.post('/', authenticate, validateQuery(StrictEmptyQueryDto), validateBody(CreateClientHunterDto), this.controller.create);
     this.router.post(
