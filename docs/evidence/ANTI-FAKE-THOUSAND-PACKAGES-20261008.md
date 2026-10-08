@@ -11,9 +11,9 @@ Brutal honesty audit of the “~1000 first-class industry packages with 5–10 p
 | Healthcare vs construction (same base) not identical | **PASS** — different client pains |
 | `checklistScore` present (non-empty) on job API | **PASS** — all **100**, `checklistPassed=true` |
 | Theater: catalog rename + generic PDF only | **NOT that failure mode** — real handlers, live URLs, industry-locked substance |
-| Theater: GTM research/outreach hooks sold as “problems” | **FAIL on live sample** → **FIXED in generators** (redeploy required) |
+| Theater: GTM research/outreach hooks sold as “problems” | **FAIL on live sample** → **FIXED** + **prod clean post-deploy** |
 
-**Overall:** structural anti-fake **PASS**; problem-list purity was **dirty on prod** (hooks as problems). Code fix landed in this change; **prod artifacts still show the old lists until SafeDeploy**.
+**Overall:** structural anti-fake **PASS**; problem-list purity **PASS on prod** after SafeDeploy (`bb49d0b` + `120acbf`).
 
 ## What was tested (not theater)
 
@@ -113,9 +113,8 @@ Catalog stats after fix: `catalogCount=1000`, `minProblems=10`, `belowFloor=0`, 
 
 ## What this does **not** prove
 
-- All **1000** SKUs live-fulfilled (sample 12 only)
+- All **1000** SKUs live-fulfilled (sample 12 pre-deploy + 1 post-deploy spot-check)
 - Stripe LIVE (still TEST / manual)
-- That prod already serves the cleaned problem lists (**redeploy required**)
 - That every secondary line is industry-unique (shared base secondaries remain)
 
 ## Commands / repro
@@ -133,11 +132,38 @@ npx jest --runInBand src/tests/unit/modules/billing/package-industry-problems.te
 
 ## Follow-up
 
-1. `.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy` so cleaned problems hit prod artifacts
-2. Re-sample `landing__healthcare` + `landing__construction` — confirm SMB-market / Turnkey lines gone
+1. ~~`.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy` so cleaned problems hit prod artifacts~~ → **DONE** (EXIT 0)
+2. ~~Re-sample `landing__construction` — confirm SMB-market / Turnkey lines gone~~ → **DONE** (SPOT_CHECK **PASS**)
 3. Optional: full 1000-SKU batch matrix against industry ids (not only base×metadata)
+
+## Post-deploy prod clean (2026-10-08)
+
+| Item | Result |
+|------|--------|
+| Commits on `origin/feat/phase10-outreach-send-enabled` | `bb49d0b` (anti-fake problem lists), `120acbf` (min_problems gate harden) |
+| SafeDeploy | **EXIT 0** (~343s); `atina-api` healthy; `web` recreated. Log: [`_tmp-safedeploy-anti-fake-problems-20261008.txt`](./_tmp-safedeploy-anti-fake-problems-20261008.txt) |
+| Live SKU | `landing__construction` · paymentId `c6fe7fc5-…` · checklistScore **100** · industry `construction` |
+| MD Problems section | **10** client pains; **no** SMB-market / Turnkey / platform-resale / research-outreach fluff |
+| MD spot-check | **PASS** |
+
+Problems excerpt (post-deploy):
+
+1. Construction niche has weak online presence — leads bounce before contact  
+2. Budget overruns  
+3. Lost change orders  
+4. Slow closeout  
+5. Scope creep via verbal change orders  
+6. Punch list delays closeout  
+7. No conversion-focused page  
+8. Generic copy not niche-specific  
+9. Missing contact capture  
+10. No Open Graph / favicon basics  
+
+Artifacts: [`_anti-fake-postdeploy-20261008/`](./_anti-fake-postdeploy-20261008/).
+
+**Prod is clean** for problem-list purity after this deploy.
 
 ## Bottom line
 
 Thousand-package fulfillment is **not** fake-PASS rename theater: scores are real, problems sections exist, industries diverge.  
-It **was** padding problem lists with sales research fluff — that is fake marketing inside a real pack. Generators fixed; evidence committed; prod still dirty until redeploy.
+It **was** padding problem lists with sales research fluff — generators fixed in `bb49d0b`, gate hardened in `120acbf`, SafeDeploy EXIT 0, live `landing__construction` MD spot-check **PASS**.

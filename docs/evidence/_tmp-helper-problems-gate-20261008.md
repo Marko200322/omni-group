@@ -40,3 +40,16 @@ Cases:
 ## Honesty
 
 No fake PASS. Catalog SKU depth ≠ fulfillment artifact proof.
+
+## Prod deploy (gate ON)
+
+| Field | Value |
+|-------|-------|
+| SHA | `120acbf235179bc06b36358eaa11f20cbeef765f` (`120acbf`) |
+| Branch | `feat/phase10-outreach-send-enabled` (pushed) |
+| Command | `.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy` |
+| Result | **EXIT 0** |
+| atina-api | **healthy** (`Up … (healthy)`; `/health` → `status=ok`, `db=up`, `redis=up`) |
+| Log | [`_tmp-safedeploy-problems-gate-20261008.txt`](./_tmp-safedeploy-problems-gate-20261008.txt) |
+
+**Gate live on prod:** VPS source + container dist both require `problemsEmbeddedInDoc === true` for `min_problems_covered` (verified via SSH grep on `/opt/omni-group/.../fulfillment-quality-checklist.ts` and `/app/dist/.../fulfillment-quality-checklist.js`). Live fulfills now use this hard gate.
