@@ -9,10 +9,7 @@ import {
 } from './deliverable-handlers/artifact-helpers';
 import { expectedBundleStepIds } from './deliverable-handlers/bundle-steps';
 import { resolveBaseDeliverableId } from './industry-package-id';
-import {
-  MIN_PROBLEMS_COVERED,
-  listResolvedPackageIndustryProblems,
-} from './package-industry-problems';
+import { MIN_PROBLEMS_COVERED } from './package-industry-problems';
 import { isPlaceholderBrand } from '../service/deliverable-content-generator.service';
 import type { FulfillmentResult } from './deliverable-handlers/types';
 
@@ -297,32 +294,35 @@ export function runFulfillmentQualityChecklist(
         : `Expected completed status, got ${result.status}`,
   });
 
-  // Gate: every sellable package must list/cover ≥5 concrete problems (industry packages included).
+  // Gate: every sellable package must list/cover ≥5 concrete problems in fulfillment
+  // metadata AND embed them in MD/PDF artifacts. Catalog depth alone must NOT pass
+  // (industry packages included — fail-closed).
   {
     const metaProblems = Array.isArray(result.metadata?.problemsCovered)
-      ? (result.metadata!.problemsCovered as string[])
+      ? (result.metadata!.problemsCovered as unknown[]).filter(
+          (p): p is string => typeof p === 'string' && p.trim().length >= 8,
+        )
       : [];
-    const metaCount = Number(
-      result.metadata?.problemsCoveredCount ?? result.metadata?.problemsListed ?? metaProblems.length,
-    );
-    const industry =
-      (typeof result.metadata?.industryCategory === 'string'
-        ? result.metadata.industryCategory
-        : null) || deliverable?.industrySlug || null;
-    const catalogProblems =
-      deliverable?.problemsSolved ??
-      listResolvedPackageIndustryProblems(deliverableId, industry);
-    const problemsListed = Math.max(metaCount, catalogProblems.length, metaProblems.length);
-    const embedded =
-      result.metadata?.problemsEmbeddedInDoc === true ||
-      metaProblems.length >= MIN_PROBLEMS_COVERED;
-    const passed = problemsListed >= MIN_PROBLEMS_COVERED && (embedded || metaProblems.length >= MIN_PROBLEMS_COVERED);
+    const declaredRaw = result.metadata?.problemsCoveredCount ?? result.metadata?.problemsListed;
+    const declaredCount = Number(declaredRaw);
+    // Count from fulfillment metadata only — never inflate via catalog problemsSolved.
+    // Declared count without a real array is treated as 0 (anti theater).
+    const problemsCoveredCount =
+      metaProblems.length > 0
+        ? Number.isFinite(declaredCount)
+          ? Math.min(declaredCount, metaProblems.length)
+          : metaProblems.length
+        : 0;
+    const countOk = problemsCoveredCount >= MIN_PROBLEMS_COVERED;
+    // Embedding must be proven via artifact-helpers (MD/PDF section), not by array length alone.
+    const embedded = result.metadata?.problemsEmbeddedInDoc === true;
+    const passed = countOk && embedded;
     items.push({
       id: 'min_problems_covered',
       passed,
       message: passed
-        ? `Problems listed/covered: ${problemsListed} (min ${MIN_PROBLEMS_COVERED})`
-        : `Package must list and embed ≥${MIN_PROBLEMS_COVERED} problems (got listed=${problemsListed}, embedded=${embedded})`,
+        ? `Problems listed/covered: ${problemsCoveredCount} embedded in MD/PDF (min ${MIN_PROBLEMS_COVERED})`
+        : `Package must list and embed ≥${MIN_PROBLEMS_COVERED} problems in MD/PDF artifacts (got problemsCoveredCount=${problemsCoveredCount}, problemsEmbeddedInDoc=${embedded})`,
     });
   }
 

@@ -62,6 +62,22 @@ describe('thousand-package-catalog', () => {
     expect(gate?.passed).toBe(false);
   });
 
+  it('fails checklist when catalog has ≥5 but problemsEmbeddedInDoc is false', () => {
+    const pkg = getDeliverable('landing__healthcare');
+    expect(pkg?.problemsSolved?.length).toBeGreaterThanOrEqual(5);
+    const checklist = runFulfillmentQualityChecklist('landing__healthcare', {
+      status: 'completed',
+      artifacts: [{ type: 'pdf', filename: 'x.pdf', downloadLabel: 'PDF', storagePath: '/x' }],
+      metadata: {
+        problemsCovered: pkg!.problemsSolved!,
+        problemsCoveredCount: pkg!.problemsSolved!.length,
+        problemsEmbeddedInDoc: false,
+        industryCategory: 'healthcare',
+      },
+    });
+    expect(checklist.items.find((i) => i.id === 'min_problems_covered')?.passed).toBe(false);
+  });
+
   it('sample of 20 industry packages each have 5–10 named problems', () => {
     const catalog = listFullPackageCatalog();
     const sample = [

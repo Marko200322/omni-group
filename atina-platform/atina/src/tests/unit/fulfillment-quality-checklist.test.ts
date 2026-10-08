@@ -403,6 +403,96 @@ describe('fulfillment quality checklist — catalog contract', () => {
   }
 });
 
+describe('fulfillment quality checklist — min_problems_covered fail-closed', () => {
+  it('fails when problemsCoveredCount < 5 even if catalog has ≥5', () => {
+    const r = runFulfillmentQualityChecklist('landing__healthcare', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'landing.pdf', storagePath: '/p' },
+        { type: 'md', filename: 'landing.md', storagePath: '/m' },
+      ],
+      metadata: {
+        industryCategory: 'healthcare',
+        problemsCovered: ['only one problem statement here'],
+        problemsCoveredCount: 1,
+        problemsEmbeddedInDoc: true,
+      },
+    });
+    expect(r.passed).toBe(false);
+    const gate = r.items.find((i) => i.id === 'min_problems_covered');
+    expect(gate?.passed).toBe(false);
+    expect(gate?.message).toMatch(/problemsCoveredCount=1/);
+  });
+
+  it('fails when problems section missing from MD/PDF metadata (problemsEmbeddedInDoc≠true)', () => {
+    const problems = listResolvedPackageIndustryProblems('audit__legal', 'legal');
+    expect(problems.length).toBeGreaterThanOrEqual(5);
+    const r = runFulfillmentQualityChecklist('audit__legal', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'audit.pdf', storagePath: '/p' },
+        { type: 'md', filename: 'audit.md', storagePath: '/m' },
+      ],
+      metadata: {
+        industryCategory: 'legal',
+        problemsCovered: problems,
+        problemsCoveredCount: problems.length,
+        problemsEmbeddedInDoc: false,
+      },
+    });
+    expect(r.passed).toBe(false);
+    const gate = r.items.find((i) => i.id === 'min_problems_covered');
+    expect(gate?.passed).toBe(false);
+    expect(gate?.message).toMatch(/problemsEmbeddedInDoc=false/);
+  });
+
+  it('fails when catalog depth alone is present without fulfillment problems metadata', () => {
+    // Industry SKU has ≥5 catalog problemsSolved — must NOT soft-pass the gate.
+    const r = runFulfillmentQualityChecklist('landing__healthcare', {
+      status: 'completed',
+      artifacts: [{ type: 'pdf', filename: 'x.pdf', storagePath: '/x' }],
+      metadata: {
+        industryCategory: 'healthcare',
+        problemsEmbeddedInDoc: true,
+      },
+    });
+    const gate = r.items.find((i) => i.id === 'min_problems_covered');
+    expect(gate?.passed).toBe(false);
+    expect(gate?.message).toMatch(/problemsCoveredCount=0/);
+  });
+
+  it('fails when declared count is inflated without a real problemsCovered array', () => {
+    const r = runFulfillmentQualityChecklist('audit', {
+      status: 'completed',
+      artifacts: [{ type: 'pdf', filename: 'x.pdf', storagePath: '/x' }],
+      metadata: {
+        problemsCoveredCount: 8,
+        problemsEmbeddedInDoc: true,
+      },
+    });
+    const gate = r.items.find((i) => i.id === 'min_problems_covered');
+    expect(gate?.passed).toBe(false);
+  });
+
+  it('passes only when count ≥5 AND problemsEmbeddedInDoc=true', () => {
+    const problems = listResolvedPackageIndustryProblems('audit', 'professional');
+    const r = runFulfillmentQualityChecklist('audit', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'audit.pdf', storagePath: '/p' },
+        { type: 'md', filename: 'audit.md', storagePath: '/m' },
+      ],
+      metadata: {
+        ...passingDocQuality('audit'),
+        problemsCovered: problems,
+        problemsCoveredCount: problems.length,
+        problemsEmbeddedInDoc: true,
+      },
+    });
+    expect(r.items.find((i) => i.id === 'min_problems_covered')?.passed).toBe(true);
+  });
+});
+
 describe('fulfillment quality checklist — failures block release', () => {
   it('fails when status is not completed', () => {
     const r = runFulfillmentQualityChecklist('audit', {
