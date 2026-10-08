@@ -93,7 +93,10 @@ Batch matrix for all 1000 can reuse existing fulfillment matrix tooling against 
 ## SafeDeploy
 
 Command: `.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy`  
-Log: `docs/evidence/_tmp-safedeploy-thousand-packages-20261008.txt` (after deploy)
+**Result: EXIT 0** (~387s)  
+Log: [`_tmp-safedeploy-thousand-packages-20261008.txt`](./_tmp-safedeploy-thousand-packages-20261008.txt)
+
+Commit: `68cde36` — Expose 1000 first-class industry packages with 5-10 problems each.
 
 ## PASS path
 
