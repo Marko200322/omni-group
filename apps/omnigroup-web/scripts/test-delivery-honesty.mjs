@@ -49,5 +49,12 @@ assert(honesty.includes('leads_generated') || honesty.includes('Titanis'), 'Lead
 assert(honesty.includes('not an automated SLA clock'), 'Support retainers must not claim an SLA engine');
 assert(offerCard.includes('prePurchaseWarning'), 'OfferCard must render the pre-purchase warning');
 assert(!offers.includes('support queue with 24h SLA'), 'Priority support copy must not claim an SLA clock');
+assert(honesty.includes('DOCUMENT · consulting PDF pack'), 'Document-primary SKUs must use DOCUMENT label');
+assert(honesty.includes('DOCUMENT + config · not live connected'), 'Integration must be DOCUMENT + config');
+assert(honesty.includes('DOCUMENT · consulting dual-PDF pack'), 'Ops clarity must be DOCUMENT dual-PDF');
+assert(honesty.includes('PRODUCT/OPS portal entitlements'), 'setup-quick must keep PRODUCT/OPS language');
+assert(offers.includes('DOCUMENT / consulting deliverable'), 'Client offers must label document-primary SKUs');
+assert(offers.includes('CRM view'), 'setup-quick offer must mention CRM view');
+assert(catalog.includes('DOCUMENT / consulting deliverable'), 'Catalog must label document-primary SKUs');
 
 console.log('test-delivery-honesty: ok');

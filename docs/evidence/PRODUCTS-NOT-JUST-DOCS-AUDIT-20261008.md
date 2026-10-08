@@ -310,4 +310,44 @@ bundle.handler         → A+B / A+C / C
 
 ---
 
+---
+
+## 4) P1 follow-up — setup-quick thickness + catalog honesty (2026-10-08, same day)
+
+### setup-quick — thicker PRODUCT/OPS pack
+
+| Before | After |
+|--------|--------|
+| Entitlements: notifications + billing only | Entitlements: **notifications + billing + CRM view + tasks** |
+| Welcome notification | Welcome notification + **≥3 actionable onboarding tasks** in Tasks queue |
+| Gate: core entitlements | Gate: core + **CRM** + **onboardingTasksSeeded** (notifications+billing alone = FAIL) |
+| Automations | Still **NOT CONNECTED** (not granted; honesty kept) |
+| CRM DEMO seed | Still **Full onboarding only** (excluded from Quick) |
+
+### Catalog honesty lock (DOCUMENT vs PRODUCT)
+
+Document-primary SKUs now explicitly labeled **DOCUMENT / consulting deliverable** (not live connected product) in catalog + package-delivery-spec + client-offers + delivery-honesty badges:
+
+`audit`, `workflow-design`, `sales-enablement`, `integration` (docs + config), `bundle-ops-clarity`
+
+PRODUCT/OPS language kept for: `setup-quick`, websites/ecommerce, lead-gen, portal+landing bundle.
+
+### Tests
+
+- `setup-handler.acceptance.test.ts` — CRM/tasks + thickness fail path
+- `fulfillment-quality-checklist.test.ts` — fails thin notifications+billing; passes CRM+tasks
+- `catalog-document-honesty.test.ts` — DOCUMENT vs PRODUCT/OPS strings
+- `apps/omnigroup-web/scripts/test-delivery-honesty.mjs` — DOCUMENT labels
+
+### Deploy + smoke
+
+| Step | Result |
+|------|--------|
+| SafeDeploy | _(filled after deploy)_ |
+| setup-quick smoke (one industry) | _(filled after smoke)_ |
+
+*No Stripe LIVE. No fake leads.*
+
+---
+
 *Audit date: 2026-10-08. No Stripe LIVE secrets recorded. No invented live ads.*

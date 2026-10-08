@@ -58,17 +58,23 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-quick',
     description:
-      'Real portal entitlements: notifications + billing access (user_modules + org), welcome notice, setup PDF — automated in 24–48h.',
+      'PRODUCT/OPS: real portal entitlements (notifications + billing + CRM view + tasks), welcome onboarding tasks, setup PDF — automated in 24–48h. Automations NOT CONNECTED.',
     descriptionSr:
-      'Prava portal ovlašćenja: obaveštenja + billing pristup (user_modules + org), welcome notifikacija, setup PDF — 24–48h.',
+      'PROIZVOD/OPS: prava portal ovlašćenja (obaveštenja + billing + CRM pregled + tasks), welcome onboarding taskovi, setup PDF — 24–48h. Automatizacije NOT CONNECTED.',
     includes: [
       'Downloadable setup PDF + markdown pack',
-      'Portal entitlements: notifications + billing (not task-only)',
+      'Portal entitlements: notifications + billing + CRM view + tasks (not task-only theater)',
       'Welcome notification in portal inbox',
+      'Actionable welcome onboarding tasks in Tasks queue',
       'Project created in your workspace',
       'Onboarding checklist in PDF',
     ],
-    excludes: ['Custom domain on your DNS', 'Dedicated VPS for the client'],
+    excludes: [
+      'Custom domain on your DNS',
+      'Dedicated VPS for the client',
+      'CRM DEMO pipeline seed (see Full onboarding)',
+      'External automations CONNECTED',
+    ],
     anchorByPhase: { M0: 349, M1: 399, M3: 419, M4: 419, M6: 549 },
     phaseUnlocks: [
       {
@@ -158,11 +164,20 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'audit',
     description:
-      'AI technical audit PDF: executive summary, security, stack, 90-day roadmap, and ROI — tailored to industry.',
+      'DOCUMENT / consulting deliverable: AI technical audit PDF (executive summary, security, stack, 90-day roadmap, ROI) — not a live connected product.',
     descriptionSr:
-      'AI tehnički audit PDF: rezime, bezbednost, stack, 90-dnevni plan i ROI — po industriji.',
-    includes: ['PDF report (6+ sections)', 'Markdown source bundle', 'Industry-specific recommendations'],
-    excludes: ['On-site inspection', 'Penetration testing', 'Legal compliance sign-off'],
+      'DOKUMENT / consulting isporuka: AI tehnički audit PDF (rezime, bezbednost, stack, 90-dnevni plan, ROI) — nije live povezan proizvod.',
+    includes: [
+      'PDF report (6+ sections) — consulting document pack',
+      'Markdown source bundle',
+      'Industry-specific recommendations',
+    ],
+    excludes: [
+      'On-site inspection',
+      'Penetration testing',
+      'Legal compliance sign-off',
+      'Live connected product / portal module activation',
+    ],
     anchorByPhase: { M0: 449, M2: 539, M4: 539, M6: 790 },
     phaseUnlocks: [
       {
@@ -192,11 +207,11 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'integration',
     description:
-      'Integration guide PDF plus usable integration-config.json (env map, webhook endpoints, retry policy) and an onboarding checklist — for your developer to wire APIs. Tools are not pre-connected.',
+      'DOCUMENT / consulting deliverable (docs + config): integration guide PDF plus integration-config.json (env map, webhooks, retry) — tools are not pre-connected; not a live connected product.',
     descriptionSr:
-      'Integration vodič PDF + upotrebljiv integration-config.json (env mapa, webhook endpointi, retry politika) i onboarding checklist — za vašeg developera. Alati nisu unapred povezani.',
+      'DOKUMENT / consulting isporuka (docs + config): integration vodič PDF + integration-config.json (env mapa, webhookovi, retry) — alati nisu unapred povezani; nije live povezan proizvod.',
     includes: [
-      'Integration guide PDF',
+      'Integration guide PDF (document pack)',
       'integration-config.json (env map, webhook endpoints, retry policy)',
       'Onboarding checklist when you add API keys (PDF section + Markdown)',
       'Auth notes for third-party connectors',
@@ -206,6 +221,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Live connection to client Stripe/ERP/CRM (CONFIGURATION REQUIRED — external credentials)',
       'OAuth app registration on third-party tools (CONFIGURATION REQUIRED — external)',
       'Claiming tools are already connected without your API keys',
+      'Live connected product',
     ],
     anchorByPhase: { M2: 990, M4: 1490, M6: 1990 },
     minCheckoutPhase: 'M2',
@@ -214,16 +230,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'workflow-design',
-    description: 'Workflow & SOP pack PDF: process map, automation steps, roles, KPIs, rollout plan.',
-    descriptionSr: 'Workflow i SOP PDF: mapa procesa, koraci automatizacije, uloge, KPI, plan uvođenja.',
+    description:
+      'DOCUMENT / consulting deliverable: workflow & SOP PDF (process map, automation steps, roles, KPIs, rollout) — not a live connected product.',
+    descriptionSr:
+      'DOKUMENT / consulting isporuka: workflow i SOP PDF (mapa procesa, koraci automatizacije, uloge, KPI, rollout) — nije live povezan proizvod.',
     includes: [
-      'Workflow design PDF',
+      'Workflow design PDF — consulting document pack',
       'SOP sections per process step',
       'Module mapping',
       'Roles and KPIs section',
       'Rollout plan section',
     ],
-    excludes: ['Building automations in client tools (add Setup or Integration)'],
+    excludes: [
+      'Building automations in client tools (add Setup or Integration)',
+      'Live connected product / automation CONNECTED',
+    ],
     anchorByPhase: { M0: 590, M2: 690, M4: 790, M6: 990 },
     phaseUnlocks: [
       {
@@ -452,16 +473,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   },
   {
     deliverableId: 'sales-enablement',
-    description: 'Sales enablement PDF: demo script, outreach hooks, FAQ, closing checklist.',
-    descriptionSr: 'Sales enablement PDF: demo skripta, outreach hook-ovi, FAQ, closing checklist.',
+    description:
+      'DOCUMENT / consulting deliverable: sales enablement PDF (demo script, outreach hooks, FAQ, closing checklist) — not a live connected product.',
+    descriptionSr:
+      'DOKUMENT / consulting isporuka: sales enablement PDF (demo skripta, outreach hook-ovi, FAQ, closing checklist) — nije live povezan proizvod.',
     includes: [
-      'Sales enablement PDF',
+      'Sales enablement PDF — consulting document pack',
       'Industry-specific hooks',
       'FAQ from catalog',
       'Demo script section',
       'Closing checklist section',
     ],
-    excludes: ['Live sales calls', 'CRM setup for sales team'],
+    excludes: ['Live sales calls', 'CRM setup for sales team', 'Live connected product'],
     anchorByPhase: { M2: 690, M4: 890, M6: 1190 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
@@ -592,16 +615,20 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-portal-presence',
     description:
-      'Combined: quick client portal (login, billing, setup PDF) plus live niche landing — cheaper than buying setup + landing separately.',
+      'PRODUCT/OPS: quick client portal (login, billing, CRM view, welcome tasks, setup PDF) plus live niche landing — cheaper than buying setup + landing separately.',
     descriptionSr:
-      'Kombinovano: brzi portal (login, billing, setup PDF) + live landing za nišu — jeftinije nego setup + landing odvojeno.',
+      'PROIZVOD/OPS: brzi portal (login, billing, CRM pregled, welcome taskovi, setup PDF) + live landing za nišu — jeftinije nego setup + landing odvojeno.',
     includes: [
-      'Everything in Quick setup',
+      'Everything in Quick setup (incl. CRM view + onboarding tasks)',
       'Everything in Landing + copy',
       'Single project timeline in portal',
       'Industry-tailored landing copy',
     ],
-    excludes: ['Custom domain DNS', 'Full CRM onboarding (see Full onboarding)'],
+    excludes: [
+      'Custom domain DNS',
+      'Full CRM onboarding / DEMO seed (see Full onboarding)',
+      'External automations CONNECTED',
+    ],
     anchorByPhase: { M3: 899, M4: 899, M6: 1090 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
@@ -628,16 +655,20 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-ops-clarity',
     description:
-      'Technical audit PDF plus workflow/SOP design — priorities and processes in one delivery.',
+      'DOCUMENT / consulting deliverable: technical audit PDF plus workflow/SOP design — docs pack, not a live connected product.',
     descriptionSr:
-      'Tehnički audit PDF + workflow/SOP dizajn — prioriteti i procesi u jednoj isporuci.',
+      'DOKUMENT / consulting isporuka: tehnički audit PDF + workflow/SOP dizajn — paket dokumenata, nije live povezan proizvod.',
     includes: [
-      'Full audit PDF + markdown',
-      'Workflow & SOP PDF',
+      'Full audit PDF + markdown — consulting document pack',
+      'Workflow & SOP PDF — consulting document pack',
       '90-day roadmap cross-linked in audit',
       'Industry-specific recommendations in both docs',
     ],
-    excludes: ['On-site visit', 'Building automations in your tools'],
+    excludes: [
+      'On-site visit',
+      'Building automations in your tools',
+      'Live connected product / portal module activation',
+    ],
     anchorByPhase: { M3: 990, M4: 990, M6: 1190 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,

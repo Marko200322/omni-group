@@ -66,6 +66,9 @@ export type PortalEntitlementResult = {
   notificationSeeded: boolean;
   entitlementSource: 'user_modules+org';
   portalReady: boolean;
+  /** setup-quick: actionable onboarding tasks in the portal queue (not vanity flags). */
+  onboardingTaskIds?: string[];
+  onboardingTasksSeeded?: boolean;
 };
 
 export type LeadGenBootstrapResult = {
@@ -307,17 +310,24 @@ export class ClientDeliverableBootstrapService {
           title: `Portal ready — ${input.clientName}`,
           message: [
             'Your client portal entitlements are active.',
-            'Billing access and notifications are enabled for your workspace.',
+            userModulesGranted.includes('crm')
+              ? 'Billing, notifications, and CRM view access are enabled for your workspace.'
+              : 'Billing access and notifications are enabled for your workspace.',
+            userModulesGranted.includes('tasks')
+              ? 'Open Tasks for your welcome onboarding checklist.'
+              : '',
             input.industryCategory ? `Industry: ${input.industryCategory}.` : '',
+            'External automations remain NOT CONNECTED unless a fuller setup package grants and wires them.',
           ]
             .filter(Boolean)
             .join(' '),
           channel: 'in_app',
-          actionUrl: '/dashboard/billing',
+          actionUrl: userModulesGranted.includes('crm') ? '/dashboard/crm' : '/dashboard/billing',
           metadata: {
             modules: userModulesGranted,
             source: 'fulfillment-bootstrap',
             industryCategory: input.industryCategory ?? null,
+            automationsConnected: false,
           },
         });
         notificationSeeded = true;
@@ -1000,18 +1010,94 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
     }
   }
 
+  /**
+   * Quick setup thickness: core entitlements + CRM/tasks view access + actionable
+   * welcome tasks. Does NOT grant automation or claim CONNECTED connectors.
+   */
   async bootstrapQuickPortal(input: {
     userId: string;
     clientName: string;
     industryCategory?: string | null;
   }): Promise<PortalEntitlementResult> {
-    return this.grantPortalEntitlements({
+    const entitlements = await this.grantPortalEntitlements({
       userId: input.userId,
-      moduleSlugs: ['notifications', 'billing'],
+      moduleSlugs: ['notifications', 'billing', 'crm', 'tasks'],
       clientName: input.clientName,
       industryCategory: input.industryCategory,
       seedWelcomeNotification: true,
     });
+    const onboardingTaskIds = await this.seedQuickSetupOnboardingTasks({
+      userId: input.userId,
+      clientName: input.clientName,
+      industryCategory: input.industryCategory,
+      modulesGranted: entitlements.userModulesGranted,
+    });
+    return {
+      ...entitlements,
+      onboardingTaskIds,
+      onboardingTasksSeeded: onboardingTaskIds.length >= 3,
+    };
+  }
+
+  /** Actionable week-1 tasks for setup-quick — client-visible, not module-flag theater. */
+  async seedQuickSetupOnboardingTasks(input: {
+    userId: string;
+    clientName: string;
+    industryCategory?: string | null;
+    modulesGranted: string[];
+  }): Promise<string[]> {
+    const industry = input.industryCategory?.trim() || 'general';
+    const hasCrm = input.modulesGranted.includes('crm');
+    const taskDefs = [
+      {
+        name: 'Welcome — open your workspace project',
+        description: `Confirm the setup project for ${input.clientName} is visible in your portal and bookmark the setup PDF.`,
+        payload: { action: 'open_project', week: 1 },
+      },
+      {
+        name: 'Welcome — review billing & invoices',
+        description: 'Open Billing to confirm org access, invoices, and payment history for this workspace.',
+        payload: { action: 'review_billing', week: 1 },
+      },
+      {
+        name: hasCrm
+          ? 'Welcome — open CRM and add your first real contact'
+          : 'Welcome — prepare CRM contact list offline',
+        description: hasCrm
+          ? `CRM view access is entitled. Add at least one real contact for ${industry} (do not invent harvest leads). Demo/pipeline seed is not included in Quick setup — Full onboarding adds labeled DEMO samples.`
+          : 'CRM module was not granted in this workspace; prepare a contact list offline or upgrade to Full onboarding.',
+        payload: { action: 'crm_first_contact', week: 1, crmEntitled: hasCrm },
+      },
+      {
+        name: 'Welcome — complete Day-1 checklist from setup PDF',
+        description:
+          'Work the Day-1 / Week-1 checklist in your setup pack. External automations stay NOT CONNECTED on Quick setup.',
+        payload: { action: 'complete_pdf_checklist', week: 1, automationsConnected: false },
+      },
+    ];
+    const created: string[] = [];
+    for (const t of taskDefs) {
+      try {
+        const task = await this.tasks.createTask(input.userId, {
+          type: 'setup_quick_onboarding',
+          name: t.name,
+          description: t.description,
+          payload: {
+            ...t.payload,
+            deliverableId: 'setup-quick',
+            automated: true,
+            clientVisible: true,
+            actionable: true,
+            industryCategory: industry,
+          },
+        });
+        const id = (task as { id?: string })?.id;
+        if (id) created.push(id);
+      } catch {
+        /* plan limits — non-fatal; entitlements already granted */
+      }
+    }
+    return created;
   }
 
   async bootstrapAutomatedSupport(input: {

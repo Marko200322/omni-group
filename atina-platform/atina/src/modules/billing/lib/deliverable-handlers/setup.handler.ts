@@ -33,16 +33,27 @@ function hasPdf(artifacts: FulfillmentArtifact[]): boolean {
   return artifacts.some((a) => a.filename.toLowerCase().endsWith('.pdf'));
 }
 
-function portalEntitlementsOk(entitlements: PortalEntitlementResult | null): boolean {
+function portalEntitlementsOk(
+  entitlements: PortalEntitlementResult | null,
+  tier: 'quick' | 'full' | 'custom' = 'quick',
+): boolean {
   if (!entitlements) return false;
-  return (
+  const base =
     entitlements.entitlementSource === 'user_modules+org' &&
     entitlements.billingAccess === true &&
     entitlements.notificationSeeded === true &&
     entitlements.userModulesGranted.includes('notifications') &&
     entitlements.userModulesGranted.includes('billing') &&
-    entitlements.portalReady === true
-  );
+    entitlements.portalReady === true;
+  if (!base) return false;
+  if (tier === 'quick') {
+    // Thickness: CRM view access + actionable welcome tasks (never fake automation CONNECTED).
+    return (
+      entitlements.userModulesGranted.includes('crm') &&
+      entitlements.onboardingTasksSeeded === true
+    );
+  }
+  return true;
 }
 
 function migrationTrainingSubstantial(ctx: FulfillmentContext, artifacts: FulfillmentArtifact[]): boolean {
@@ -90,7 +101,7 @@ function setupStatus(input: {
   ctx: FulfillmentContext;
 }): 'completed' | 'partial' {
   if (!input.projectId?.trim() || !hasPdf(input.artifacts)) return 'partial';
-  if (!portalEntitlementsOk(input.entitlements)) return 'partial';
+  if (!portalEntitlementsOk(input.entitlements, input.tier)) return 'partial';
 
   if (input.tier === 'quick') {
     return 'completed';
@@ -263,7 +274,7 @@ export const setupFulfillmentHandler: DeliverableFulfillmentHandler = {
         portalReady,
         ...(docMeta.documentSubstanceOk === false
           ? { reason: 'document_substance_below_threshold' }
-          : !portalEntitlementsOk(entitlements)
+          : !portalEntitlementsOk(entitlements, tier)
             ? { reason: 'portal_entitlements_incomplete' }
             : tier === 'custom' && deployPrep?.skipped === true
               ? { reason: 'deploy_prep_skipped_runbook_delivered', deployPrepSkipped: true }

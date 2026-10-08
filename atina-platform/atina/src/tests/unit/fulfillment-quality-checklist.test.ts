@@ -80,14 +80,15 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
           { type: 'md', filename: 'deliverable.md', downloadLabel: 'Markdown', storagePath: '/m' },
         ],
         metadata: {
-          modulesActivated: ['notifications', 'billing'],
+          modulesActivated: ['notifications', 'billing', 'crm', 'tasks'],
           portalReady: true,
           portalEntitlements: {
             entitlementSource: 'user_modules+org',
-            userModulesGranted: ['notifications', 'billing'],
+            userModulesGranted: ['notifications', 'billing', 'crm', 'tasks'],
             billingAccess: true,
             notificationSeeded: true,
             portalReady: true,
+            onboardingTasksSeeded: true,
           },
           ...stepsMeta,
           ...siteMeta(),
@@ -157,7 +158,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (deliverableId.startsWith('setup-')) {
     const modules =
       deliverableId === 'setup-quick'
-        ? ['notifications', 'billing']
+        ? ['notifications', 'billing', 'crm', 'tasks']
         : ['notifications', 'billing', 'crm', 'automation'];
     return {
       ...base,
@@ -183,6 +184,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
           billingAccess: true,
           notificationSeeded: true,
           portalReady: true,
+          ...(deliverableId === 'setup-quick' ? { onboardingTasksSeeded: true } : {}),
         },
         crmBootstrap: { importedLeads: 8, labeledDemo: true, sampleKind: 'demo_industry_template' },
         automationHonesty: {
@@ -541,6 +543,51 @@ describe('fulfillment quality checklist — failures block release', () => {
     });
     expect(r.passed).toBe(false);
     expect(r.items.some((i) => i.id === 'portal_modules' && !i.passed)).toBe(true);
+  });
+
+  it('fails setup-quick when only notifications+billing without CRM/onboarding tasks', () => {
+    const r = runFulfillmentQualityChecklist('setup-quick', {
+      status: 'completed',
+      projectId: 'proj-1',
+      artifacts: [{ type: 'pdf', filename: 'setup.pdf', storagePath: '/x' }],
+      metadata: {
+        ...passingDocQuality('setup-quick'),
+        modulesActivated: ['notifications', 'billing'],
+        portalReady: true,
+        portalEntitlements: {
+          entitlementSource: 'user_modules+org',
+          userModulesGranted: ['notifications', 'billing'],
+          billingAccess: true,
+          notificationSeeded: true,
+          portalReady: true,
+          onboardingTasksSeeded: false,
+        },
+      },
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'portal_modules' && !i.passed)).toBe(true);
+  });
+
+  it('passes setup-quick with CRM + onboarding tasks thickness', () => {
+    const r = runFulfillmentQualityChecklist('setup-quick', {
+      status: 'completed',
+      projectId: 'proj-1',
+      artifacts: [{ type: 'pdf', filename: 'setup.pdf', storagePath: '/x' }],
+      metadata: {
+        ...passingDocQuality('setup-quick'),
+        modulesActivated: ['notifications', 'billing', 'crm', 'tasks'],
+        portalReady: true,
+        portalEntitlements: {
+          entitlementSource: 'user_modules+org',
+          userModulesGranted: ['notifications', 'billing', 'crm', 'tasks'],
+          billingAccess: true,
+          notificationSeeded: true,
+          portalReady: true,
+          onboardingTasksSeeded: true,
+        },
+      },
+    });
+    expect(r.items.find((i) => i.id === 'portal_modules')?.passed).toBe(true);
   });
 
   it('fails setup-custom when skipped deploy claims SSL done', () => {

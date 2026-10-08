@@ -83,13 +83,15 @@ function ctx(deliverableId: string): FulfillmentContext {
 }
 
 const portalEntitlements = {
-  modulesActivated: ['notifications', 'billing'],
-  userModulesGranted: ['notifications', 'billing'],
+  modulesActivated: ['notifications', 'billing', 'crm', 'tasks'],
+  userModulesGranted: ['notifications', 'billing', 'crm', 'tasks'],
   billingAccess: true,
   orgRole: 'owner',
   notificationSeeded: true,
   entitlementSource: 'user_modules+org' as const,
   portalReady: true,
+  onboardingTaskIds: ['task-1', 'task-2', 'task-3', 'task-4'],
+  onboardingTasksSeeded: true,
 };
 
 const fullEntitlements = {
@@ -141,10 +143,19 @@ describe('setup handler — acceptance contract artifacts', () => {
     expect(result.projectId).toBe('proj-setup-1');
     expect(result.artifacts.some((a) => a.filename.endsWith('.pdf'))).toBe(true);
     expect(result.artifacts.some((a) => a.type === 'portal_modules')).toBe(true);
-    expect(result.metadata?.modulesActivated).toEqual(['notifications', 'billing']);
+    expect(result.metadata?.modulesActivated).toEqual(['notifications', 'billing', 'crm', 'tasks']);
     expect(result.metadata?.portalReady).toBe(true);
     expect((result.metadata?.portalEntitlements as { entitlementSource?: string })?.entitlementSource).toBe(
       'user_modules+org',
+    );
+    expect((result.metadata?.portalEntitlements as { onboardingTasksSeeded?: boolean })?.onboardingTasksSeeded).toBe(
+      true,
+    );
+    expect((result.metadata?.portalEntitlements as { userModulesGranted?: string[] })?.userModulesGranted).toContain(
+      'crm',
+    );
+    expect((result.metadata?.portalEntitlements as { userModulesGranted?: string[] })?.userModulesGranted).not.toContain(
+      'automation',
     );
     expect(result.metadata?.documentSubstanceOk).toBe(true);
 
@@ -242,10 +253,28 @@ describe('setup handler — acceptance contract artifacts', () => {
       notificationSeeded: false,
       entitlementSource: 'user_modules+org',
       portalReady: false,
+      onboardingTasksSeeded: false,
     });
     const result = await setupFulfillmentHandler.fulfill(ctx('setup-quick'));
     expect(result.status).toBe('partial');
     expect(result.metadata?.portalReady).toBe(false);
+    expect(runFulfillmentQualityChecklist('setup-quick', result).passed).toBe(false);
+  });
+
+  it('marks setup-quick partial when CRM/onboarding thickness missing', async () => {
+    bootstrapQuickPortal.mockResolvedValueOnce({
+      modulesActivated: ['notifications', 'billing'],
+      userModulesGranted: ['notifications', 'billing'],
+      billingAccess: true,
+      orgRole: 'owner',
+      notificationSeeded: true,
+      entitlementSource: 'user_modules+org',
+      portalReady: true,
+      onboardingTasksSeeded: false,
+    });
+    const result = await setupFulfillmentHandler.fulfill(ctx('setup-quick'));
+    expect(result.status).toBe('partial');
+    expect(result.metadata?.reason).toBe('portal_entitlements_incomplete');
     expect(runFulfillmentQualityChecklist('setup-quick', result).passed).toBe(false);
   });
 

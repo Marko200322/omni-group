@@ -53,36 +53,36 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'setup-quick': {
     promise: 'Your client portal, ready to use.',
     summary:
-      'We grant real portal entitlements for billing and notifications, seed a welcome notice, and send a clear setup guide.',
+      'PRODUCT/OPS: real portal entitlements (billing, notifications, CRM view, tasks), actionable welcome onboarding tasks, and a setup PDF. Automations stay NOT CONNECTED.',
     readMore:
-      'After payment confirmation you get a project, a downloadable setup PDF, user_modules entitlements for notifications + billing, org billing access, and a welcome notification in the inbox. Delivery is automated in about 1–2 days. Custom domain DNS and a dedicated VPS are not included.',
+      'After payment confirmation you get a workspace project, downloadable setup PDF, user_modules for notifications + billing + CRM view + tasks, org billing access, a welcome inbox notice, and actionable onboarding tasks in Tasks. External automations are NOT CONNECTED. CRM DEMO pipeline seed is Full onboarding. Custom domain DNS and a dedicated VPS are not included.',
     when: 'Usually 1–2 days after payment',
     youGet: [
       'Client portal access (login)',
-      'Billing & notifications entitlements',
-      'Welcome notification + setup PDF',
+      'Billing, notifications, CRM view & tasks',
+      'Welcome onboarding tasks + setup PDF',
     ],
-    notIncluded: ['Your own custom domain', 'Dedicated VPS'],
+    notIncluded: ['Your own custom domain', 'Dedicated VPS', 'Automations CONNECTED', 'CRM DEMO seed'],
   },
   audit: {
     promise: 'A clear technical report for your business.',
     summary:
-      'You receive a PDF audit: what works, what’s risky, a 90-day plan, and a simple ROI view — matched to your industry.',
+      'DOCUMENT / consulting deliverable: a PDF audit (what works, what’s risky, 90-day plan, ROI) — not a live connected product.',
     readMore:
-      'The report covers executive summary, security notes, stack assessment, roadmap, and ROI. You also get a markdown source bundle. This is a document deliverable, not on-site work or legal certification.',
+      'The report covers executive summary, security notes, stack assessment, roadmap, and ROI. You also get a markdown source bundle. This is a consulting document pack, not on-site work, legal certification, or a live portal product.',
     when: 'Usually within 48 hours',
     youGet: ['Full PDF audit report', 'Industry recommendations', '90-day roadmap + ROI'],
-    notIncluded: ['On-site visit', 'Penetration test', 'Legal compliance stamp'],
+    notIncluded: ['On-site visit', 'Penetration test', 'Live connected product'],
   },
   'workflow-design': {
     promise: 'Your processes mapped into a ready plan.',
     summary:
-      'We design how work should flow — steps, roles, KPIs — and put it in a PDF you can follow or hand to your team.',
+      'DOCUMENT / consulting deliverable: process map, roles, KPIs in a PDF you can follow — not a live connected product.',
     readMore:
-      'Includes process map, automation steps, roles, KPIs, and a rollout plan. Building live automations inside your tools is a separate package (Setup or Integration).',
+      'Includes process map, automation steps, roles, KPIs, and a rollout plan. Building live automations inside your tools is a separate package (Setup or Integration). This is a consulting document pack, not a live connected product.',
     when: 'Usually within 2–3 days',
     youGet: ['Workflow & SOP PDF', 'Automation step map', 'Roles and KPIs'],
-    notIncluded: ['Building automations in your tools'],
+    notIncluded: ['Building automations in your tools', 'Live connected product'],
   },
   'support-priority': {
     promise: 'Priority help every month.',
@@ -136,12 +136,13 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   },
   integration: {
     promise: 'Integration guide your developer can follow.',
-    summary: 'PDF + config JSON with webhooks and auth notes — ready for your engineer.',
+    summary:
+      'DOCUMENT / consulting deliverable (docs + config): PDF + config JSON with webhooks — not a live connected product.',
     readMore:
-      'We do not live-connect your Stripe/ERP/CRM or register OAuth apps on third-party tools in this package.',
+      'We do not live-connect your Stripe/ERP/CRM or register OAuth apps on third-party tools in this package. Tools stay DOCUMENTED_NOT_LIVE until your developer wires credentials.',
     when: 'Usually 2–4 days after payment',
     youGet: ['Integration guide PDF', 'Config JSON download', 'Webhook map'],
-    notIncluded: ['Live third-party wiring'],
+    notIncluded: ['Live third-party wiring', 'Live connected product'],
   },
   'support-dedicated': {
     promise: 'Dedicated monthly support with a faster response target.',
@@ -179,11 +180,13 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   },
   'sales-enablement': {
     promise: 'Sales scripts and FAQ your team can use.',
-    summary: 'Demo script, outreach hooks, FAQ, and closing checklist in one PDF.',
-    readMore: 'Does not include live sales calls or CRM setup for your sales team.',
+    summary:
+      'DOCUMENT / consulting deliverable: demo script, outreach hooks, FAQ, and closing checklist PDF — not a live connected product.',
+    readMore:
+      'Does not include live sales calls or CRM setup for your sales team. This is a consulting document pack, not a live connected product.',
     when: 'Usually 2–3 days after payment',
     youGet: ['Sales enablement PDF', 'Industry hooks', 'FAQ + closing checklist'],
-    notIncluded: ['Live sales calls'],
+    notIncluded: ['Live sales calls', 'Live connected product'],
   },
   'vertical-package': {
     promise: 'Monthly industry pack: CRM + automations.',
@@ -219,12 +222,12 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'bundle-portal-presence': {
     promise: 'Portal and landing live — one purchase.',
     summary:
-      'We turn on your client portal and publish a niche landing page so you can onboard and capture leads without two vendors.',
+      'PRODUCT/OPS: client portal (billing, notifications, CRM view, welcome tasks) plus a live niche landing — one checkout.',
     readMore:
-      'Includes everything in Quick setup and Landing + copy, one timeline in the portal, and industry-tailored copy. Custom domain and full CRM onboarding are separate packages.',
+      'Includes everything in Quick setup (CRM view + onboarding tasks) and Landing + copy, one timeline in the portal, and industry-tailored copy. Custom domain, Full CRM DEMO seed, and automations CONNECTED are separate.',
     when: 'Usually 3–5 days after payment',
-    youGet: ['Client portal live', 'Live landing URL', 'Setup + landing PDFs', 'Industry landing copy'],
-    notIncluded: ['Custom domain DNS', 'Full CRM onboarding'],
+    youGet: ['Client portal + CRM view', 'Live landing URL', 'Welcome tasks + setup PDF', 'Industry landing copy'],
+    notIncluded: ['Custom domain DNS', 'Full CRM DEMO seed', 'Automations CONNECTED'],
   },
   'bundle-sales-launch': {
     promise: 'Page live + sales kit for your niche.',
@@ -239,12 +242,12 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'bundle-ops-clarity': {
     promise: 'Audit + workflow plan in one delivery.',
     summary:
-      'Technical audit and workflow/SOP design together — what to fix and how work should flow in your industry.',
+      'DOCUMENT / consulting deliverable: technical audit and workflow/SOP PDFs — docs pack, not a live connected product.',
     readMore:
-      'Two PDF packs with cross-linked priorities. We do not build automations inside your tools in this bundle.',
+      'Two PDF packs with cross-linked priorities. We do not build automations inside your tools or activate live portal products in this bundle.',
     when: 'Usually within 4–5 days',
     youGet: ['Audit PDF', 'Workflow/SOP PDF', '90-day priorities', 'Industry recommendations'],
-    notIncluded: ['On-site visit', 'Automation build in your stack'],
+    notIncluded: ['On-site visit', 'Automation build in your stack', 'Live connected product'],
   },
   'custom-software': {
     promise: 'Software starter kit — scaffold + tests, not a finished custom product.',

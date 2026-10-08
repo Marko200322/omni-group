@@ -22,10 +22,11 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'setup-quick',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for real portal entitlements (notifications + billing), welcome notice, and setup PDF.',
+    humanIntervention:
+      'None for PRODUCT/OPS portal entitlements (notifications + billing + CRM view + tasks), welcome onboarding tasks, and setup PDF. Automations stay NOT CONNECTED.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'COMPLETE · real portal entitlements',
+    publicNameNote: 'CRM DEMO seed and live connectors are Full onboarding / Integration — not Quick setup.',
+    label: 'COMPLETE · PRODUCT/OPS portal entitlements',
   },
   {
     deliverableId: 'setup-full',
@@ -50,8 +51,8 @@ const ROWS: DeliveryHonesty[] = [
     automationLevel: 'AUTOMATED',
     humanIntervention: 'None for the listed audit PDF pack.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Automated after payment',
+    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
+    label: 'DOCUMENT · consulting PDF pack',
   },
   {
     deliverableId: 'integration',
@@ -59,16 +60,17 @@ const ROWS: DeliveryHonesty[] = [
     humanIntervention:
       'Guide PDF and config map are generated. Live third-party wiring is CONFIGURATION REQUIRED (external credentials).',
     nameMatchesScope: true,
-    publicNameNote: 'Name is “Custom integration”; scope is a documented integration pack, not a live connect.',
-    label: 'Docs automated · live wiring CONFIGURATION REQUIRED',
+    publicNameNote:
+      'DOCUMENT / consulting deliverable (docs + config). Name is “Custom integration”; not a live connected product.',
+    label: 'DOCUMENT + config · not live connected',
   },
   {
     deliverableId: 'workflow-design',
     automationLevel: 'AUTOMATED',
     humanIntervention: 'None for the listed SOP / workflow PDF.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Automated after payment',
+    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
+    label: 'DOCUMENT · consulting PDF pack',
   },
   {
     deliverableId: 'support-priority',
@@ -132,8 +134,8 @@ const ROWS: DeliveryHonesty[] = [
     automationLevel: 'AUTOMATED',
     humanIntervention: 'None for the listed sales PDF pack.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Automated after payment',
+    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
+    label: 'DOCUMENT · consulting PDF pack',
   },
   {
     deliverableId: 'vertical-package',
@@ -177,26 +179,27 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'bundle-portal-presence',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the combined portal and landing artifacts listed.',
+    humanIntervention:
+      'None for PRODUCT/OPS portal entitlements (incl. CRM view + welcome tasks) plus live niche landing.',
     nameMatchesScope: true,
     publicNameNote: '',
-    label: 'Automated after payment',
+    label: 'COMPLETE · PRODUCT/OPS portal + live landing',
   },
   {
     deliverableId: 'bundle-sales-launch',
     automationLevel: 'AUTOMATED',
     humanIntervention: 'None for hosted landing plus sales PDF. Live sales calls are out of scope.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Pack + page automated · no live sales calls',
+    publicNameNote: 'Landing is PRODUCT; sales enablement half is DOCUMENT / consulting.',
+    label: 'PRODUCT landing + DOCUMENT sales pack',
   },
   {
     deliverableId: 'bundle-ops-clarity',
     automationLevel: 'AUTOMATED',
     humanIntervention: 'None for the listed audit and workflow PDF packs.',
     nameMatchesScope: true,
-    publicNameNote: '',
-    label: 'Automated after payment',
+    publicNameNote: 'DOCUMENT / consulting deliverable — dual PDF pack, not a live connected product.',
+    label: 'DOCUMENT · consulting dual-PDF pack',
   },
 ];
 

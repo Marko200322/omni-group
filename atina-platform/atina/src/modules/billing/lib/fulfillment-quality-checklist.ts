@@ -130,7 +130,7 @@ function modulesOk(result: FulfillmentResult): boolean {
   return false;
 }
 
-function portalEntitlementsOk(result: FulfillmentResult): boolean {
+function portalEntitlementsOk(result: FulfillmentResult, requireQuickThickness = false): boolean {
   const mods = Array.isArray(result.metadata?.modulesActivated)
     ? (result.metadata.modulesActivated as string[])
     : [];
@@ -141,6 +141,7 @@ function portalEntitlementsOk(result: FulfillmentResult): boolean {
         billingAccess?: boolean;
         notificationSeeded?: boolean;
         portalReady?: boolean;
+        onboardingTasksSeeded?: boolean;
       }
     | undefined;
   const granted = entitlements?.userModulesGranted ?? [];
@@ -150,13 +151,19 @@ function portalEntitlementsOk(result: FulfillmentResult): boolean {
   if (!hasCore) return false;
   // portalReady flag alone is never enough.
   if (!entitlements) return false;
-  return (
+  const base =
     entitlements.entitlementSource === 'user_modules+org' &&
     entitlements.billingAccess === true &&
     entitlements.notificationSeeded === true &&
     granted.includes('notifications') &&
-    granted.includes('billing')
-  );
+    granted.includes('billing');
+  if (!base) return false;
+  if (requireQuickThickness) {
+    const hasCrm = mods.includes('crm') || granted.includes('crm');
+    if (!hasCrm) return false;
+    if (entitlements.onboardingTasksSeeded !== true) return false;
+  }
+  return true;
 }
 
 function productionManifestOk(result: FulfillmentResult): boolean {
@@ -411,7 +418,7 @@ export function runFulfillmentQualityChecklist(
       message: result.projectId ? 'Setup project scaffold verified' : 'Setup requires verified project scaffold',
     });
     if (deliverableId === 'setup-quick' || deliverableId === 'bundle-portal-presence') {
-      const ok = portalEntitlementsOk(result);
+      const ok = portalEntitlementsOk(result, true);
       const mods = Array.isArray(result.metadata?.modulesActivated)
         ? (result.metadata.modulesActivated as string[])
         : [];
@@ -419,8 +426,8 @@ export function runFulfillmentQualityChecklist(
         id: 'portal_modules',
         passed: ok,
         message: ok
-          ? `Portal entitlements granted (user_modules+org): ${mods.join(', ') || 'notifications, billing'}`
-          : 'Portal entitlements require user_modules (notifications+billing), billing access, and welcome notification — portalReady flag alone is insufficient',
+          ? `Portal entitlements granted (user_modules+org): ${mods.join(', ') || 'notifications, billing, crm'} + onboarding tasks`
+          : 'Portal entitlements require user_modules (notifications+billing+crm), billing access, welcome notification, and seeded onboarding tasks — portalReady / notifications+billing alone is insufficient',
       });
     }
     if (deliverableId === 'setup-full') {
