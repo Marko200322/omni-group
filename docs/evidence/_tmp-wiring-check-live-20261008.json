@@ -1,0 +1,19 @@
+{
+    "publicCatalog1000":  true,
+    "apiDeliverables1000":  true,
+    "industrySku1000":  true,
+    "uniqueBases20":  true,
+    "landingHealthcareProblems10":  true,
+    "landingHealthcareIndustry":  true,
+    "landingHealthcareFlag":  true,
+    "webLoginOk":  true,
+    "probedPaymentId":  "6a99bdae-2469-4ab8-a919-bd5e6aec6df6",
+    "jobFetchOk":  true,
+    "jobDeliverable":  "ai-support-retainer__technology",
+    "jobScore":  100,
+    "jobOpsEvidence":  true,
+    "jobProblemsCovered":  10,
+    "jobErr":  null,
+    "containerHasCheckoutLock":  true,
+    "verdict":  "WIRING_OK"
+}
