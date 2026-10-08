@@ -91,7 +91,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     readMore:
       'Includes welcome PDF, support queue with a 24h response target, and portal modules for notifications. Unlimited development hours and weekend emergency coverage are not included. The target is not an automated SLA clock.',
     when: 'Starts after first payment · renews monthly',
-    youGet: ['24h response target', 'Support in your portal', 'Welcome guide PDF'],
+    youGet: ['24h response-target queue', 'Kickoff ticket in portal', 'Health-check PDF', 'Welcome guide PDF'],
     notIncluded: ['Unlimited build hours', 'Weekend emergency coverage', 'Automated SLA clock'],
   },
   landing: {
@@ -150,7 +150,7 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     readMore:
       'A person replies against an 8-hour target. There is no automated SLA clock, business-hours calendar, or breach dashboard yet. Slack on your workspace is notify-via-webhook, not a private channel we create for you.',
     when: 'Starts after first payment · renews monthly',
-    youGet: ['8h response-target queue', 'Video meetings module', 'Monthly health-check'],
+    youGet: ['8h response-target queue', 'Kickoff ticket in portal', 'Monthly health-check PDF', 'Video meetings module'],
     notIncluded: ['Private Slack on your workspace'],
   },
   'website-ecommerce': {

@@ -351,6 +351,86 @@ export async function persistDeliverablePdf(input: {
   };
 }
 
+/** First + monthly support health check — a real PDF, not a task title. */
+export function buildSupportHealthCheckDoc(input: {
+  clientName: string;
+  deliverableId: string;
+  industryCategory?: string | null;
+  slaHours: number;
+  kickoffTicketId?: string | null;
+  periodLabel: string;
+}): StructuredDeliverableDoc {
+  const industry = input.industryCategory?.trim() || 'general';
+  const ticket = input.kickoffTicketId?.trim() || 'open the Tasks inbox and confirm the kickoff row';
+  return {
+    title: `Support health check — ${input.clientName}`,
+    subtitle: `${input.deliverableId} · ${input.periodLabel} · response target ${input.slaHours}h`,
+    sections: [
+      {
+        heading: 'Queue status',
+        body: [
+          `Client: ${input.clientName}. Industry: ${industry}. Package: ${input.deliverableId}.`,
+          `Response target: ${input.slaHours} business hours. Kickoff ticket: ${ticket}.`,
+          'Open tickets live in the portal Tasks inbox. This PDF is the snapshot for the period — replies still happen on the ticket, not inside the PDF.',
+        ].join(' '),
+      },
+      {
+        heading: 'What was checked',
+        body: [
+          'Portal support queue is the service. FAQ seed is the answer corpus until you add client-specific answers.',
+          'Billing access for this retainer should still show as active. Notifications module should still be entitled.',
+          'No LinkedIn, Google Ads, or Apollo channel is marked CONNECTED by this health check.',
+          'Video avatar stays CONFIGURATION REQUIRED until HeyGen or D-ID keys exist.',
+        ].join(' '),
+      },
+      {
+        heading: 'Next 30 days',
+        body: [
+          '1. Reply to open kickoff and change-request tickets inside the response target.',
+          '2. Add one client-specific FAQ if the seed answers are too generic.',
+          '3. Confirm the welcome pack and this health-check PDF are both in Deliveries.',
+          '4. Dedicated tier only: Slack fires when the platform webhook is configured. That is a notify, not a private Slack channel on your workspace.',
+        ].join('\n'),
+      },
+      {
+        heading: 'Honesty',
+        body: [
+          'Not included: uptime monitoring on servers you own, weekend emergency coverage, unlimited engineering hours, or an automated SLA breach clock.',
+          'The retainer scheduler writes the next health-check PDF about 30 days after the previous one.',
+          `Period label: ${input.periodLabel}.`,
+        ].join(' '),
+      },
+    ],
+  };
+}
+
+export async function persistSupportHealthCheck(input: {
+  ctx: FulfillmentContext;
+  slaHours: number;
+  kickoffTicketId?: string | null;
+  periodLabel?: string;
+  filenameStem?: string;
+}): Promise<FulfillmentArtifact[]> {
+  const period = input.periodLabel ?? new Date().toISOString().slice(0, 10);
+  const doc = buildSupportHealthCheckDoc({
+    clientName: input.ctx.clientName,
+    deliverableId: input.ctx.deliverableId,
+    industryCategory: input.ctx.industryCategory,
+    slaHours: input.slaHours,
+    kickoffTicketId: input.kickoffTicketId,
+    periodLabel: period,
+  });
+  const stem = input.filenameStem ?? `${input.ctx.deliverableId}-health-check`;
+  const pdf = await persistDeliverablePdf({
+    ctx: input.ctx,
+    doc,
+    artifactType: 'health_check',
+    filename: `${stem}.pdf`,
+  });
+  const md = await persistMarkdownBundle({ ctx: input.ctx, doc, artifactType: `${stem}-md` });
+  return [pdf.artifact, md];
+}
+
 export async function persistMarkdownBundle(input: {
   ctx: FulfillmentContext;
   doc: StructuredDeliverableDoc;

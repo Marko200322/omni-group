@@ -3,7 +3,7 @@ import { ClientDeliverableBootstrapService } from '../../service/client-delivera
 import { AutonomyOrchestratorService } from '../../../autonomy-loop/service/autonomy-orchestrator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
 import { getDeliverable } from '../deliverable-catalog';
-import { persistDeliverablePdf, persistMarkdownBundle } from './artifact-helpers';
+import { persistDeliverablePdf, persistMarkdownBundle, persistSupportHealthCheck } from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 import logger from '../../../../utils/logger';
 
@@ -78,6 +78,11 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       modulesActivated = supportAutomation.modulesActivated;
       kickoffTicketId = supportAutomation.kickoffTicketId;
       artifacts.push(
+        ...(await persistSupportHealthCheck({
+          ctx,
+          slaHours: supportAutomation.slaHours,
+          kickoffTicketId,
+        })),
         bootstrap.saveSlaOnboardingPack({
           userId: ctx.userId,
           paymentId: ctx.paymentId,
@@ -187,6 +192,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
     let aiSupportSetup: {
       modulesActivated: string[];
       ragSeeded: boolean;
+      ragRecallHits?: number;
       avatarProvider?: string;
       avatarConfigured?: boolean;
       configurationRequired?: string[];
@@ -205,6 +211,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       aiSupportSetup = {
         modulesActivated: aiSetup.modulesActivated,
         ragSeeded: aiSetup.ragSeeded,
+        ragRecallHits: aiSetup.ragRecallHits,
         avatarProvider: aiSetup.avatarProvision?.provider,
         avatarConfigured: aiSetup.avatarProvision?.configured,
         configurationRequired: aiSetup.configurationRequired,
@@ -251,10 +258,25 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       }
     }
 
+    const resolvedTicketId = kickoffTicketId ?? supportAutomation?.kickoffTicketId;
+    let status: 'completed' | 'partial' = 'completed';
+    if (
+      (ctx.deliverableId === 'support-priority' ||
+        ctx.deliverableId === 'support-dedicated' ||
+        ctx.deliverableId === 'ai-support-retainer') &&
+      !resolvedTicketId
+    ) {
+      status = 'partial';
+    }
+    if (ctx.deliverableId === 'ai-support-retainer') {
+      const hits = Number(aiSupportSetup?.ragRecallHits ?? 0);
+      if (!aiSupportSetup?.ragSeeded || hits < 1) status = 'partial';
+    }
+
     return {
       projectId,
       artifacts,
-      status: 'completed',
+      status,
       metadata: {
         modulesActivated,
         crmBootstrap,
@@ -265,8 +287,20 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
           ctx.deliverableId === 'lead-gen-retainer' ? new Date().toISOString() : undefined,
         supportAutomation,
         aiSupportSetup: aiSupportSetup ?? undefined,
-        kickoffTicketId: kickoffTicketId ?? supportAutomation?.kickoffTicketId ?? null,
+        kickoffTicketId: resolvedTicketId ?? null,
+        clientName: ctx.clientName,
+        lastMonthlyHealthCheckAt:
+          ctx.deliverableId === 'support-priority' || ctx.deliverableId === 'support-dedicated'
+            ? new Date().toISOString()
+            : undefined,
         retainerWorkspace: true,
+        ...(status === 'partial'
+          ? {
+              reason: !resolvedTicketId
+                ? 'kickoff_ticket_missing'
+                : 'support_kb_recall_failed',
+            }
+          : {}),
       },
     };
   },

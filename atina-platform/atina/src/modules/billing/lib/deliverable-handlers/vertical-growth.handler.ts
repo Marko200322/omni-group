@@ -108,16 +108,19 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       });
     }
 
+    const ticketOk = Boolean(kickoffTicketId);
     return {
       projectId: pipeline.projectId as string,
       artifacts: [pdf.artifact, md, slaPack, faqPack],
-      status: docMeta.documentSubstanceOk === false ? 'partial' : 'completed',
+      status: docMeta.documentSubstanceOk === false || !ticketOk ? 'partial' : 'completed',
       metadata: {
         ...docMeta,
         crmBootstrap: crm,
         modulesActivated: modules,
         kickoffTicketId: kickoffTicketId ?? null,
+        clientName: ctx.clientName,
         retainerWorkspace: true,
+        ...(!ticketOk ? { reason: 'kickoff_ticket_missing' } : {}),
       },
     };
   },

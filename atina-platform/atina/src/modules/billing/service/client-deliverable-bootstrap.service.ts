@@ -195,6 +195,15 @@ function splitName(full: string): { first: string; last: string } {
   return { first: parts[0] ?? 'Client', last: parts.slice(1).join(' ') || 'Account' };
 }
 
+/** AiMemoryService.recall returns rows, or { local, remote } when the aggregator answers. */
+function countSupportKbRecallHits(recalled: unknown): number {
+  if (Array.isArray(recalled)) return recalled.length;
+  if (recalled && typeof recalled === 'object' && Array.isArray((recalled as { local?: unknown }).local)) {
+    return (recalled as { local: unknown[] }).local.length;
+  }
+  return 0;
+}
+
 
 export class ClientDeliverableBootstrapService {
   private crm = new CrmService();
@@ -1383,6 +1392,7 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
   }): Promise<{
     modulesActivated: string[];
     ragSeeded: boolean;
+    ragRecallHits: number;
     setupArtifact: FulfillmentArtifact;
     faqArtifact: FulfillmentArtifact;
     knowledgeBaseArtifact: FulfillmentArtifact;
@@ -1391,9 +1401,12 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
     kickoffTicketId?: string;
   }> {
     const pack = resolvePack(input.industryCategory);
+    // ai-memory must be entitled before remember(); otherwise non-admin clients
+    // fail the plan check, the catch sets ragSeeded=false, and the pack still looked "done".
+    const moduleSlugs = [...new Set([...input.moduleSlugs, 'ai-memory'])];
     const modulesActivated = await this.activateModules({
       userId: input.userId,
-      moduleSlugs: input.moduleSlugs,
+      moduleSlugs,
       clientName: input.clientName,
       industryCategory: input.industryCategory,
     });
@@ -1430,11 +1443,13 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
     ];
 
     let ragSeeded = false;
+    let ragRecallHits = 0;
+    const memoryKey = input.paymentId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 8) || 'supportkb';
     try {
       const memory = new AiMemoryService();
       await memory.remember(input.userId, {
         namespace: 'support-kb',
-        key: input.paymentId.slice(0, 8),
+        key: memoryKey,
         value: {
           clientName: input.clientName,
           industryCategory: input.industryCategory ?? 'general',
@@ -1445,15 +1460,23 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
           meetingPath: '/dashboard/support',
         },
       });
-      // Second memory entry = FAQ corpus for retrieval-style usage.
       await memory.remember(input.userId, {
         namespace: 'support-kb-faq',
-        key: input.paymentId.slice(0, 8),
+        key: memoryKey,
         value: { faqs: faqEntries, updatedAt: new Date().toISOString() },
       });
-      ragSeeded = true;
-    } catch {
+      const recalled = await memory.recall(input.userId, {
+        namespace: 'support-kb',
+        key: memoryKey,
+      });
+      ragRecallHits = countSupportKbRecallHits(recalled);
+      ragSeeded = ragRecallHits >= 1;
+    } catch (err) {
       ragSeeded = false;
+      ragRecallHits = 0;
+      logger.warn('AI support KB remember/recall failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
 
     const webBase = config.app.webUrl.replace(/\/$/, '');
@@ -1474,6 +1497,7 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
       modules: effectiveModules,
       ragNamespace: 'support-kb',
       ragSeeded,
+      ragRecallHits,
       voiceProvider: 'elevenlabs',
       avatarProvider: avatarProvision.provider,
       avatarConfigured: avatarReady,
@@ -1505,6 +1529,7 @@ ${faqs.map(([q, a], i) => `## ${i + 1}. ${q}\n${a}`).join('\n\n')}
 
 Industry: ${pack.displayName}
 RAG seeded: ${ragSeeded}
+RAG recall hits: ${ragRecallHits}
 Avatar: ${avatarReady ? 'CONNECTED' : 'CONFIGURATION REQUIRED / NOT CONNECTED'}
 
 ## Value proposition
@@ -1582,6 +1607,7 @@ ${faqEntries.map((f, i) => `### ${i + 1}. ${f.q}\n${f.a}`).join('\n\n')}
     return {
       modulesActivated: effectiveModules,
       ragSeeded,
+      ragRecallHits,
       setupArtifact,
       faqArtifact,
       knowledgeBaseArtifact,

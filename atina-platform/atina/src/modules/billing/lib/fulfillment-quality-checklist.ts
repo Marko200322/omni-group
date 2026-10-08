@@ -108,6 +108,11 @@ function crmBootstrapOk(result: FulfillmentResult): boolean {
   return true;
 }
 
+function kickoffTicketOk(result: FulfillmentResult): boolean {
+  const id = result.metadata?.kickoffTicketId;
+  return typeof id === 'string' && id.trim().length > 0;
+}
+
 function modulesOk(result: FulfillmentResult): boolean {
   const automation = result.metadata?.automationHonesty as
     | { automationConnected?: boolean; status?: string }
@@ -608,11 +613,30 @@ export function runFulfillmentQualityChecklist(
         ? 'Support FAQ seed delivered'
         : 'Support retainer requires downloadable FAQ seed',
     });
+    const hasHealth = result.artifacts.some(
+      (a) => a.type === 'health_check' || a.filename.toLowerCase().includes('health-check'),
+    );
+    items.push({
+      id: 'health_check_artifact',
+      passed: hasHealth,
+      message: hasHealth
+        ? 'Health-check PDF delivered (kickoff snapshot; scheduler refreshes monthly)'
+        : 'Support retainer requires a downloadable health-check PDF — a task title is not the check',
+    });
+    const ticketOk = kickoffTicketOk(result);
+    items.push({
+      id: 'kickoff_ticket',
+      passed: ticketOk,
+      message: ticketOk
+        ? `Kickoff ticket persisted (${String(result.metadata?.kickoffTicketId)})`
+        : 'Support retainer requires a persisted kickoff ticket id — PDF + SLA hours alone is not a queue',
+    });
   }
 
   if (deliverableId === 'ai-support-retainer') {
     const ai = result.metadata?.aiSupportSetup as {
       ragSeeded?: boolean;
+      ragRecallHits?: number;
       modulesActivated?: string[];
       avatarConfigured?: boolean;
       configurationRequired?: string[];
@@ -626,16 +650,23 @@ export function runFulfillmentQualityChecklist(
         a.filename.includes('ai-support-knowledge') ||
         a.type === 'support_faq_seed',
     );
+    const recallHits = Number(ai?.ragRecallHits ?? 0);
+    const ragLive = ai?.ragSeeded === true && recallHits >= 1;
     items.push({
       id: 'ai_support_setup',
-      passed: Boolean(
-        hasArtifact &&
-          hasKb &&
-          ((ai?.modulesActivated?.length ?? 0) > 0 || modulesOk(result) || ai?.ragSeeded),
-      ),
-      message: hasArtifact && hasKb
-        ? `AI support ops pack (RAG/KB/FAQ) provisioned; avatarConfigured=${Boolean(ai?.avatarConfigured)}`
-        : 'AI support retainer requires setup + knowledge base/FAQ (avatar keys optional)',
+      passed: Boolean(hasArtifact && hasKb && ragLive),
+      message:
+        hasArtifact && hasKb && ragLive
+          ? `AI support KB recalled (${recallHits} hit(s)); avatarConfigured=${Boolean(ai?.avatarConfigured)}`
+          : 'AI support retainer requires setup + KB plus a successful support-kb recall (write-only memory is not RAG)',
+    });
+    const ticketOk = kickoffTicketOk(result);
+    items.push({
+      id: 'kickoff_ticket',
+      passed: ticketOk,
+      message: ticketOk
+        ? `Kickoff ticket persisted (${String(result.metadata?.kickoffTicketId)})`
+        : 'AI support retainer requires a persisted kickoff ticket — KB markdown alone is not a queue',
     });
     // Avatar missing keys must be honest — not a silent fail.
     const avatarHonest =
@@ -784,6 +815,16 @@ export function runFulfillmentQualityChecklist(
         id: 'crm_bootstrap',
         passed: crmBootstrapOk(result),
         message: crmBootstrapOk(result) ? 'CRM pipeline seeded' : 'Vertical/lead-gen requires CRM bootstrap',
+      });
+    }
+    if (deliverableId === 'vertical-package') {
+      const ticketOk = kickoffTicketOk(result);
+      items.push({
+        id: 'kickoff_ticket',
+        passed: ticketOk,
+        message: ticketOk
+          ? `Kickoff ticket persisted (${String(result.metadata?.kickoffTicketId)})`
+          : 'Vertical package requires a persisted kickoff ticket in the portal queue',
       });
     }
   }

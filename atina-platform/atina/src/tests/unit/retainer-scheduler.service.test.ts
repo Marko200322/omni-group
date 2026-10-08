@@ -29,13 +29,16 @@ describe('RetainerSchedulerService', () => {
   });
 
   it('skips when last monthly run is recent', async () => {
-    listCompletedRetainers.mockResolvedValue([
-      {
-        payment_id: 'pay-1',
-        user_id: 'user-1',
-        result: { metadata: { lastMonthlyLeadGenAt: new Date().toISOString() } },
-      },
-    ]);
+    listCompletedRetainers.mockImplementation(async (id: string) => {
+      if (id !== 'lead-gen-retainer') return [];
+      return [
+        {
+          payment_id: 'pay-1',
+          user_id: 'user-1',
+          result: { metadata: { lastMonthlyLeadGenAt: new Date().toISOString() } },
+        },
+      ];
+    });
     const svc = new RetainerSchedulerService();
     const out = await svc.tick();
     expect(out.processed).toBe(0);
@@ -43,13 +46,16 @@ describe('RetainerSchedulerService', () => {
   });
 
   it('runs lead-gen when due', async () => {
-    listCompletedRetainers.mockResolvedValue([
-      {
-        payment_id: 'pay-2',
-        user_id: 'user-2',
-        result: { metadata: { industryCategory: 'marketing' } },
-      },
-    ]);
+    listCompletedRetainers.mockImplementation(async (id: string) => {
+      if (id !== 'lead-gen-retainer') return [];
+      return [
+        {
+          payment_id: 'pay-2',
+          user_id: 'user-2',
+          result: { metadata: { industryCategory: 'marketing' } },
+        },
+      ];
+    });
     const svc = new RetainerSchedulerService();
     const out = await svc.tick();
     expect(out.processed).toBe(1);

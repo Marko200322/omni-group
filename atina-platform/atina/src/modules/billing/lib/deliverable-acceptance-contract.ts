@@ -72,6 +72,16 @@ const CR = {
     label: 'Support FAQ seed artifact',
     required: true,
   },
+  healthCheck: {
+    id: 'health_check_artifact',
+    label: 'Downloadable health-check PDF (kickoff + monthly refresh)',
+    required: true,
+  },
+  kickoffTicket: {
+    id: 'kickoff_ticket',
+    label: 'Persisted kickoff ticket in the portal queue',
+    required: true,
+  },
   aiAvatarHonesty: {
     id: 'ai_avatar_honesty',
     label: 'Avatar CONNECTED or CONFIGURATION REQUIRED (honest)',
@@ -180,14 +190,32 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Priority support',
     description: DELIVERABLE_CATALOG[6].description,
     billing: 'monthly',
-    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack, CR.supportFaq],
+    criteria: [
+      CR.status,
+      CR.pdf,
+      CR.supportAutomation,
+      CR.retainerProject,
+      CR.slaPack,
+      CR.supportFaq,
+      CR.healthCheck,
+      CR.kickoffTicket,
+    ],
   },
   'support-dedicated': {
     deliverableId: 'support-dedicated',
     name: 'Dedicated support',
     description: DELIVERABLE_CATALOG[7].description,
     billing: 'monthly',
-    criteria: [CR.status, CR.pdf, CR.supportAutomation, CR.retainerProject, CR.slaPack, CR.supportFaq],
+    criteria: [
+      CR.status,
+      CR.pdf,
+      CR.supportAutomation,
+      CR.retainerProject,
+      CR.slaPack,
+      CR.supportFaq,
+      CR.healthCheck,
+      CR.kickoffTicket,
+    ],
   },
   landing: {
     deliverableId: 'landing',
@@ -263,6 +291,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.modulesBootstrap,
       CR.retainerProject,
       CR.slaPack,
+      CR.kickoffTicket,
     ],
   },
   'lead-gen-retainer': {
@@ -295,6 +324,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.retainerProject,
       CR.slaPack,
       CR.aiAvatarHonesty,
+      CR.kickoffTicket,
     ],
   },
   'custom-software': {

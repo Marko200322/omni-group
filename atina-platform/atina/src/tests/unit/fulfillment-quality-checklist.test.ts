@@ -291,10 +291,12 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         modulesActivated: ['support-avatar', 'video-meetings', 'ai-rag'],
         aiSupportSetup: {
           ragSeeded: true,
+          ragRecallHits: 1,
           modulesActivated: ['support-avatar'],
           avatarConfigured: false,
           configurationRequired: ['HEYGEN_API_KEY or DID_API_KEY for video avatar sessions'],
         },
+        kickoffTicketId: 'ticket-ai-1',
       },
     };
   }
@@ -307,10 +309,17 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         ...base.artifacts,
         slaArtifact(`${deliverableId}-sla-onboarding.pdf`),
         { type: 'support_faq_seed', filename: 'support-faq-seed.md', downloadLabel: 'FAQ', storagePath: '/faq' },
+        {
+          type: 'health_check',
+          filename: `${deliverableId}-health-check.pdf`,
+          downloadLabel: 'Health check',
+          storagePath: '/hc',
+        },
       ],
       metadata: {
         supportAutomation: { slaHours: deliverableId === 'support-dedicated' ? 8 : 24 },
         modulesActivated: ['notifications', 'support-avatar'],
+        kickoffTicketId: 'ticket-support-1',
       },
     };
   }
@@ -324,6 +333,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         ...passingDocQuality(deliverableId),
         crmBootstrap: { importedLeads: 8 },
         modulesActivated: ['crm', 'automation'],
+        kickoffTicketId: 'ticket-vertical-1',
       },
     };
   }
