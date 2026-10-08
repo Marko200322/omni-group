@@ -223,6 +223,7 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'no_omni_chrome',
   'bundle_steps_complete',
   'dual_pdf_artifacts',
+  'min_problems_covered',
 ]);
 
 export function auditOmnitrixPackage(pkg: OmnitrixPackage): OmnitrixAuditRow {

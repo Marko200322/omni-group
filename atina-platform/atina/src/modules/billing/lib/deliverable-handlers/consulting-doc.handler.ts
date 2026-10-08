@@ -17,8 +17,9 @@ async function deliverDocPack(
   doc: Awaited<ReturnType<DeliverableDocumentGeneratorService['generateAuditReport']>>,
 ): Promise<FulfillmentResult> {
   const pdf = await persistDeliverablePdf({ ctx, doc, artifactType: type, filename });
-  const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${type}_md` });
-  const meta = buildDocumentQualityMetadata(doc, ctx, {
+  const enriched = pdf.doc;
+  const md = await persistMarkdownBundle({ ctx, doc: enriched, artifactType: `${type}_md` });
+  const meta = buildDocumentQualityMetadata(enriched, ctx, {
     pdfBytes: pdf.pdfBytes,
     pdfPageCount: pdf.pdfPageCount,
   });

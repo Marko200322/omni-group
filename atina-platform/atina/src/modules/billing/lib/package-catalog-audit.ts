@@ -1,7 +1,12 @@
 /**
  * Internal catalog quality audit — no invented market data.
  */
-import { listDeliverables, type DeliverableDefinition } from './deliverable-catalog';
+import {
+  listBaseDeliverables,
+  listFullPackageCatalog,
+  type DeliverableDefinition,
+} from './deliverable-catalog';
+import { resolveBaseDeliverableId } from './industry-package-id';
 import {
   getPackageAnchorEur,
   getPackageDeliverySpec,
@@ -47,9 +52,11 @@ function inferFlags(d: DeliverableDefinition, price: number): string[] {
 
 export function buildCatalogAuditReport(): CatalogAuditRow[] {
   const phase = getFactoryPhase();
-  return listDeliverables().map((d) => {
-    const spec = getPackageDeliverySpec(d.id);
-    const price = getPackageAnchorEur(d.id, phase);
+  // Audit base fulfillment templates; full sellable catalog is ~1000 industry SKUs.
+  return listBaseDeliverables().map((d) => {
+    const baseId = resolveBaseDeliverableId(d.id);
+    const spec = getPackageDeliverySpec(baseId);
+    const price = getPackageAnchorEur(baseId, phase);
     const flags = inferFlags(d, price);
     return {
       deliverableId: d.id,
@@ -59,10 +66,10 @@ export function buildCatalogAuditReport(): CatalogAuditRow[] {
       currentPriceEur: price,
       pricingConfidence: spec?.anchorByPhase?.M6 ? 'HIGH' : price > 0 ? 'MEDIUM' : 'LOW',
       validationStatus: inferValidation(spec),
-      maintenanceTiers: getMaintenanceTiersForPackage(d.id, d.billing),
+      maintenanceTiers: getMaintenanceTiersForPackage(baseId, d.billing),
       primaryProblems: [
-        PACKAGE_PROBLEM_SPECS[d.id]?.primaryProblemTemplate.replace(/\{industry\}/gi, 'Industry') ?? '',
-        ...(PACKAGE_PROBLEM_SPECS[d.id]?.secondaryProblems.slice(0, 2) ?? []),
+        PACKAGE_PROBLEM_SPECS[baseId]?.primaryProblemTemplate.replace(/\{industry\}/gi, 'Industry') ?? '',
+        ...(PACKAGE_PROBLEM_SPECS[baseId]?.secondaryProblems.slice(0, 2) ?? []),
       ].filter(Boolean),
       flags,
     };
@@ -71,9 +78,12 @@ export function buildCatalogAuditReport(): CatalogAuditRow[] {
 
 export function getCatalogAuditSummary() {
   const rows = buildCatalogAuditReport();
+  const fullCount = listFullPackageCatalog().length;
   return {
     phase: getFactoryPhase(),
     packageCount: PACKAGE_DELIVERY_SPECS.length,
+    basePackageCount: rows.length,
+    fullPackageCatalogCount: fullCount,
     rows,
     underpriced: rows.filter((r) => r.flags.includes('POSSIBLE_UNDERPRICED')).map((r) => r.deliverableId),
     overpriced: rows.filter((r) => r.flags.includes('POSSIBLE_OVERPRICED')).map((r) => r.deliverableId),

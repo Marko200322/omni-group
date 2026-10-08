@@ -1,3 +1,4 @@
+import { buildProblemsCoveredMetadata } from '../package-industry-problems';
 import type { FulfillmentResult } from './types';
 
 export type BundleStepResult = {
@@ -94,6 +95,12 @@ export function mergeBundleResults(
   metadata.bundleParts = parts.length;
   metadata.expectedSteps = expectedIds;
   metadata.bundleSteps = stepResults;
+
+  // Bundle SKU problems (not child SKU problems) — required for min_problems_covered gate.
+  const industry =
+    typeof metadata.industryCategory === 'string' ? metadata.industryCategory : null;
+  Object.assign(metadata, buildProblemsCoveredMetadata(bundleId, industry));
+  metadata.problemsEmbeddedInDoc = parts.some((p) => p.metadata?.problemsEmbeddedInDoc === true);
 
   const allExpectedDone =
     stepResults.length === expectedIds.length &&

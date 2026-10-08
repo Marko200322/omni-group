@@ -1,11 +1,42 @@
-﻿/** Client-side mirror of Atina deliverable catalog (keep in sync). */
-import { getPackageAnchorEur, getPackageDeliverySpec } from './package-delivery-spec';
-import { buildThousandPackageCatalog, parseIndustryPackageId } from './thousand-package-catalog';
-import type { DeliverableBilling, DeliverableDefinition, ResourceProfile } from './deliverable-catalog-types';
+/**
+ * Base fulfillment capability templates (20).
+ * Sellable catalog expands these into industry-specific packages — see thousand-package-catalog.ts.
+ * Note: keep this file free of package-delivery-spec imports (avoids factory-phase require cycles at init).
+ */
 
-export type { DeliverableBilling, DeliverableDefinition, ResourceProfile };
+export type DeliverableBilling = 'one_time' | 'monthly' | 'yearly';
 
-const DELIVERABLE_CATALOG_RAW: DeliverableDefinition[] = [
+export type ResourceProfile = {
+  aiTokensK: number;
+  scraperRuns: number;
+  infraHours: number;
+  supportHours: number;
+  storageGbMonth: number;
+  deployComplexity: number;
+};
+
+export type DeliverableDefinition = {
+  id: string;
+  name: string;
+  nameSr: string;
+  description: string;
+  bestFor?: string;
+  billing: DeliverableBilling;
+  category: 'implementation' | 'consulting' | 'retainer' | 'growth' | 'vertical';
+  anchorEur: number;
+  resources: ResourceProfile;
+  modules?: string[];
+  /** Present on industry packages — fulfillment engine id. */
+  baseDeliverableId?: string;
+  /** Present on industry packages — locked industry slug. */
+  industrySlug?: string;
+  /** 5–10 named client problems this package solves. */
+  problemsSolved?: string[];
+  /** True for generated industry SKUs (first-class catalog products). */
+  isIndustryPackage?: boolean;
+};
+
+export const BASE_DELIVERABLE_CATALOG: DeliverableDefinition[] = [
   { id: 'setup-quick', name: 'Quick setup', nameSr: 'Brzo podešavanje', description: 'PRODUCT/OPS: portal entitlements (notifications + billing + CRM view + tasks), welcome onboarding tasks, setup PDF — automations NOT CONNECTED.', billing: 'one_time', category: 'implementation', anchorEur: 449, resources: { aiTokensK: 8, scraperRuns: 0, infraHours: 3, supportHours: 2, storageGbMonth: 0, deployComplexity: 2 } },
   { id: 'setup-full', name: 'Full onboarding', nameSr: 'Pun onboarding', description: 'Labeled CRM demo/industry samples, automation module (not live connectors), migration CSV, training, 30-day support.', billing: 'one_time', category: 'implementation', anchorEur: 1290, resources: { aiTokensK: 45, scraperRuns: 2, infraHours: 12, supportHours: 8, storageGbMonth: 2, deployComplexity: 3 } },
   { id: 'setup-custom', name: 'Custom deploy', nameSr: 'Custom deploy', description: 'Client-executable production deploy runbook (DNS/SSL/backup/monitoring PENDING) + CRM seed — not remote go-live.', bestFor: 'ops teams that run production setup from a documented pack', billing: 'one_time', category: 'implementation', anchorEur: 3490, resources: { aiTokensK: 20, scraperRuns: 0, infraHours: 24, supportHours: 12, storageGbMonth: 10, deployComplexity: 5 } },
@@ -22,57 +53,26 @@ const DELIVERABLE_CATALOG_RAW: DeliverableDefinition[] = [
   { id: 'vertical-package', name: 'Vertical solution', nameSr: 'Vertikalni paket rešenja', description: 'CRM + automations + AI support tailored to your industry.', bestFor: 'niche businesses wanting industry CRM and automations monthly', billing: 'monthly', category: 'vertical', anchorEur: 299, resources: { aiTokensK: 80, scraperRuns: 8, infraHours: 4, supportHours: 2, storageGbMonth: 3, deployComplexity: 3 }, modules: ['crm', 'automation', 'support-avatar', 'billing'] },
   { id: 'lead-gen-retainer', name: 'Lead gen retainer', nameSr: 'Lead gen retainer', description: 'COMPLETE ops pack: CRM pipeline, sequences, weekly plan, channel status. Ads/Apollo/LinkedIn: CONFIGURATION REQUIRED / NOT CONNECTED until keys — Titanis leads_generated=0; simulated harvest cannot PASS.', billing: 'monthly', category: 'vertical', anchorEur: 499, resources: { aiTokensK: 60, scraperRuns: 20, infraHours: 2, supportHours: 1, storageGbMonth: 1, deployComplexity: 2 }, modules: ['client-hunter', 'titanis', 'outreach', 'scraper'] },
   { id: 'ai-support-retainer', name: 'AI support retainer', nameSr: 'AI podrška retainer', description: 'COMPLETE AI ops pack: RAG + ticket queue + FAQ. HeyGen/D-ID avatar: CONFIGURATION REQUIRED / NOT CONNECTED until user keys.', billing: 'monthly', category: 'vertical', anchorEur: 349, resources: { aiTokensK: 120, scraperRuns: 0, infraHours: 2, supportHours: 2, storageGbMonth: 2, deployComplexity: 2 }, modules: ['support-avatar', 'video-meetings', 'ai-rag'] },
-  { id: 'custom-software', name: 'Software starter kit', nameSr: 'Softver starter kit', description: 'Productized Node API + SPA starter (README, env example, smoke tests, handoff) — not unlimited custom build.', bestFor: 'teams that need a Node/SPA starter codebase, not a finished product', billing: 'one_time', category: 'implementation', anchorEur: 4900, resources: { aiTokensK: 120, scraperRuns: 5, infraHours: 40, supportHours: 16, storageGbMonth: 5, deployComplexity: 5 } },
+  { id: 'custom-software', name: 'Software starter kit', nameSr: 'Softver starter kit', description: 'Downloadable Node API + SPA scaffold archive (tar.gz) + handoff — not unlimited custom build.', bestFor: 'teams that need a Node/SPA starter codebase, not a finished product', billing: 'one_time', category: 'implementation', anchorEur: 4900, resources: { aiTokensK: 120, scraperRuns: 5, infraHours: 40, supportHours: 16, storageGbMonth: 5, deployComplexity: 5 } },
   { id: 'bundle-portal-presence', name: 'Portal + presence bundle', nameSr: 'Portal + online prisustvo', description: 'Quick client portal plus live niche landing — one checkout.', bestFor: 'teams that want a client portal and niche landing in one purchase', billing: 'one_time', category: 'growth', anchorEur: 899, resources: { aiTokensK: 48, scraperRuns: 2, infraHours: 8, supportHours: 5, storageGbMonth: 0, deployComplexity: 3 } },
   { id: 'bundle-sales-launch', name: 'Sales launch bundle', nameSr: 'Sales launch paket', description: 'Live landing plus sales enablement PDF and niche hooks.', bestFor: 'go-to-market teams that need a live page plus sales kit together', billing: 'one_time', category: 'growth', anchorEur: 1290, resources: { aiTokensK: 90, scraperRuns: 3, infraHours: 10, supportHours: 6, storageGbMonth: 0, deployComplexity: 3 } },
   { id: 'bundle-ops-clarity', name: 'Ops clarity bundle', nameSr: 'Operativna jasnoća', description: 'DOCUMENT / consulting deliverable: technical audit plus workflow/SOP design PDFs — not a live connected product.', bestFor: 'founders who need a tech audit and workflow plan before building', billing: 'one_time', category: 'consulting', anchorEur: 990, resources: { aiTokensK: 60, scraperRuns: 2, infraHours: 10, supportHours: 8, storageGbMonth: 0, deployComplexity: 2 } },
 ];
 
-function withPhaseAwareCatalog(d: DeliverableDefinition): DeliverableDefinition {
-  const baseId = parseIndustryPackageId(d.id)?.baseId ?? d.id;
-  const spec = getPackageDeliverySpec(baseId);
-  const anchor = getPackageAnchorEur(baseId);
-  let item = d;
-  if (spec && !d.isIndustryPackage) item = { ...item, description: spec.description };
-  if (anchor > 0 && !d.isIndustryPackage) item = { ...item, anchorEur: anchor };
-  return item;
+const BASE_BY_ID = new Map(BASE_DELIVERABLE_CATALOG.map((d) => [d.id, d]));
+
+/** Alias — honesty/anchors applied in deliverable-catalog when safe. */
+export const BASE_DELIVERABLE_CATALOG_HONEST: DeliverableDefinition[] = BASE_DELIVERABLE_CATALOG;
+
+export function getBaseDeliverable(id: string): DeliverableDefinition | null {
+  return BASE_BY_ID.get(id.trim()) ?? null;
 }
 
-/** Base fulfillment templates (20) — legacy IDs still resolve. */
-export const BASE_DELIVERABLE_CATALOG: DeliverableDefinition[] =
-  DELIVERABLE_CATALOG_RAW.map(withPhaseAwareCatalog);
-
-/** Full sellable catalog: ~1000 industry-specific packages. */
-export const FULL_PACKAGE_CATALOG: DeliverableDefinition[] = buildThousandPackageCatalog(
-  BASE_DELIVERABLE_CATALOG,
-).map(withPhaseAwareCatalog);
-
-/**
- * @deprecated Prefer FULL_PACKAGE_CATALOG for sellable list.
- * Kept as base templates for checkout shortcuts / legacy links.
- */
-export const DELIVERABLE_CATALOG: DeliverableDefinition[] = BASE_DELIVERABLE_CATALOG;
-
-const BY_ID = new Map<string, DeliverableDefinition>();
-for (const d of FULL_PACKAGE_CATALOG) BY_ID.set(d.id, d);
-for (const d of BASE_DELIVERABLE_CATALOG) BY_ID.set(d.id, d);
-
-export function getDeliverable(id: string) {
-  return BY_ID.get(id.trim()) ?? null;
+export function listBaseDeliverables(
+  category?: DeliverableDefinition['category'],
+): DeliverableDefinition[] {
+  if (!category) return [...BASE_DELIVERABLE_CATALOG];
+  return BASE_DELIVERABLE_CATALOG.filter((d) => d.category === category);
 }
 
-export function listFullPackageCatalog(): DeliverableDefinition[] {
-  return [...FULL_PACKAGE_CATALOG];
-}
-
-export function listBaseDeliverables(): DeliverableDefinition[] {
-  return [...BASE_DELIVERABLE_CATALOG];
-}
-
-export const DELIVERABLE_CATEGORY_LABELS: Record<DeliverableDefinition['category'], string> = {
-  implementation: 'Implementation',
-  consulting: 'Consulting',
-  retainer: 'Monthly retainer',
-  growth: 'Growth & marketing',
-  vertical: 'Vertical solutions',
-};
+export const BASE_DELIVERABLE_COUNT = BASE_DELIVERABLE_CATALOG.length;

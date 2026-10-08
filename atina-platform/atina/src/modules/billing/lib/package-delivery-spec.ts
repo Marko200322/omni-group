@@ -669,7 +669,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
 const BY_ID = new Map(PACKAGE_DELIVERY_SPECS.map((s) => [s.deliverableId, s]));
 
 export function getPackageDeliverySpec(deliverableId: string): PackageDeliverySpec | null {
-  return BY_ID.get(deliverableId.trim()) ?? null;
+  const raw = deliverableId.trim();
+  if (BY_ID.has(raw)) return BY_ID.get(raw) ?? null;
+  // Industry packages: `landing__healthcare` → base delivery spec
+  const sep = raw.indexOf('__');
+  if (sep > 0) return BY_ID.get(raw.slice(0, sep)) ?? null;
+  return null;
 }
 
 export function getPackageAnchorEur(deliverableId: string, phase: FactoryPhase = getFactoryPhase()): number {

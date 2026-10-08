@@ -30,8 +30,9 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: 'vertical_pack',
       filename: 'vertical-solution-pack.pdf',
     });
-    const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'vertical_pack_md' });
-    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({ ctx, doc: enriched, artifactType: 'vertical_pack_md' });
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
       pdfBytes: pdf.pdfBytes,
       pdfPageCount: pdf.pdfPageCount,
     });
@@ -41,8 +42,8 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
       paymentId: ctx.paymentId,
       deliverableId: ctx.deliverableId,
       slug: `vertical-${ctx.paymentId.replace(/-/g, '').slice(0, 16)}`,
-      name: doc.title,
-      description: doc.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
+      name: enriched.title,
+      description: enriched.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
       clientName: ctx.clientName,
       clientEmail: ctx.clientEmail ?? null,
       industryCategory: ctx.industryCategory ?? null,
@@ -147,8 +148,13 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: ctx.deliverableId,
       filename: `${ctx.deliverableId}.pdf`,
     });
-    const md = await persistMarkdownBundle({ ctx, doc, artifactType: `${ctx.deliverableId}_md` });
-    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({
+      ctx,
+      doc: enriched,
+      artifactType: `${ctx.deliverableId}_md`,
+    });
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
       pdfBytes: pdf.pdfBytes,
       pdfPageCount: pdf.pdfPageCount,
     });

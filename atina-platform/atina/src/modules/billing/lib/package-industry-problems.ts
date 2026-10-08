@@ -4,10 +4,33 @@
  * Keep claims honest: only problems the delivery/checklist can actually address.
  */
 import { getCategoryDeliveryProfile } from '../../autonomy-loop/lib/vertical-delivery-profiles';
+import {
+  BASE_DELIVERABLE_CATALOG_HONEST,
+  getBaseDeliverable,
+  type DeliverableBilling,
+} from './base-deliverable-catalog';
 import { getIndustryCategory } from './category-pricing';
-import { DELIVERABLE_CATALOG, getDeliverable, type DeliverableBilling } from './deliverable-catalog';
+import { resolveIndustryDocumentSubstance } from './industry-document-substance';
+import {
+  industrySlugFromDeliverableId,
+  resolveBaseDeliverableId,
+} from './industry-package-id';
 import { getMaintenanceTiersForPackage, type MaintenanceTier } from './package-maintenance-tiers';
 import { getIndustryCompetitiveBonusIncludes } from './industry-competitive-includes';
+
+/** Hard floor for package×industry problem coverage (OmniTrix + fulfillment gate). */
+export const MIN_PROBLEMS_COVERED = 5;
+/** Cap so claims stay honest and scannable. */
+export const MAX_PROBLEMS_COVERED = 10;
+
+const INTERNAL_GATE_NOISE =
+  /research complete|artifacts generated|dynamic pricing|smoke test|owner sign-off|outreach draft reviewed/i;
+
+function isClientFacingProblem(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 8) return false;
+  return !INTERNAL_GATE_NOISE.test(t);
+}
 
 export type PackageProblemSpec = {
   primaryProblemTemplate: string;
@@ -300,44 +323,102 @@ function applyIndustryLabel(template: string, label: string): string {
   return template.replace(/\{industry\}/gi, label).replace(/\{niche\}/gi, label);
 }
 
-function mergeIndustryProblems(base: string[], profile: ReturnType<typeof getCategoryDeliveryProfile>): string[] {
+/**
+ * Enrich package secondary problems with industry client pains.
+ * Keeps package base problems; prepends industry salesPains / research / hooks.
+ * Never injects internal quality-gate strings as "client problems".
+ */
+function mergeIndustryProblems(
+  base: string[],
+  profile: ReturnType<typeof getCategoryDeliveryProfile>,
+  industryCategory: string,
+): string[] {
+  const substance = resolveIndustryDocumentSubstance(industryCategory);
   const industrySpecific = [
-    ...profile.researchFocus.slice(0, 2),
+    ...substance.salesPains.slice(0, 3),
+    ...profile.researchFocus.slice(0, 1),
     profile.outreachHooks[0],
-    profile.qualityGates[0],
-  ].filter(Boolean);
-  return [...new Set([...industrySpecific, ...base])].slice(0, 9);
+  ].filter((p): p is string => typeof p === 'string' && isClientFacingProblem(p));
+
+  const out: string[] = [];
+  for (const p of [...industrySpecific, ...base]) {
+    if (!isClientFacingProblem(p)) continue;
+    if (out.some((x) => x.toLowerCase() === p.toLowerCase())) continue;
+    out.push(p);
+    if (out.length >= MAX_PROBLEMS_COVERED - 1) break; // room for primary
+  }
+  return out;
 }
 
-/** Ensures all catalog SKUs have a problem → solution spec. */
+/** Ensures all base capability templates have a problem → solution spec. */
 export function assertAllPackagesHaveProblemSpecs(): string[] {
-  return DELIVERABLE_CATALOG.filter((d) => !PACKAGE_PROBLEM_SPECS[d.id]).map((d) => d.id);
+  return BASE_DELIVERABLE_CATALOG_HONEST.filter((d) => !PACKAGE_PROBLEM_SPECS[d.id]).map((d) => d.id);
 }
 
 /** OmniTrix: each package must declare 5–10 problems (primary + secondary). */
-export function assertPackageProblemDepth(min = 5, max = 10): Array<{ id: string; count: number }> {
+export function assertPackageProblemDepth(
+  min = MIN_PROBLEMS_COVERED,
+  max = MAX_PROBLEMS_COVERED,
+): Array<{ id: string; count: number }> {
   return Object.entries(PACKAGE_PROBLEM_SPECS)
     .map(([id, s]) => ({ id, count: 1 + s.secondaryProblems.length }))
     .filter((r) => r.count < min || r.count > max);
+}
+
+/** Resolved primary + secondary problems for a package×industry (5–10). */
+export function listResolvedPackageIndustryProblems(
+  deliverableId: string,
+  industryCategory?: string | null,
+): string[] {
+  const baseId = resolveBaseDeliverableId(deliverableId);
+  const lockedIndustry = industrySlugFromDeliverableId(deliverableId);
+  const industry = (lockedIndustry || industryCategory || 'professional').trim();
+  const ctx = getPackageIndustryContext(baseId, industry);
+  if (!ctx) return [];
+  return [ctx.primaryProblem, ...ctx.secondaryProblems]
+    .filter(isClientFacingProblem)
+    .slice(0, MAX_PROBLEMS_COVERED);
+}
+
+/** Metadata block for fulfillment checklist `min_problems_covered`. */
+export function buildProblemsCoveredMetadata(
+  deliverableId: string,
+  industryCategory?: string | null,
+): {
+  problemsCovered: string[];
+  problemsCoveredCount: number;
+  minProblemsCovered: number;
+} {
+  const problemsCovered = listResolvedPackageIndustryProblems(deliverableId, industryCategory);
+  return {
+    problemsCovered,
+    problemsCoveredCount: problemsCovered.length,
+    minProblemsCovered: MIN_PROBLEMS_COVERED,
+  };
 }
 
 export function getPackageIndustryContext(
   deliverableId: string,
   industryCategory: string,
 ): PackageIndustryContext | null {
-  const deliverable = getDeliverable(deliverableId);
-  const spec = PACKAGE_PROBLEM_SPECS[deliverableId];
-  if (!deliverable || !spec) return null;
+  const baseId = resolveBaseDeliverableId(deliverableId);
+  const lockedIndustry = industrySlugFromDeliverableId(deliverableId);
+  const industry = (lockedIndustry || industryCategory || '').trim();
+  const deliverable = getBaseDeliverable(baseId);
+  const spec = PACKAGE_PROBLEM_SPECS[baseId];
+  if (!deliverable || !spec || !industry) return null;
 
-  const cat = getIndustryCategory(industryCategory);
-  const label = cat?.name ?? industryCategory.replace(/_/g, ' ');
-  const profile = getCategoryDeliveryProfile(industryCategory);
-  const recommended = profile.primaryDeliverables.includes(deliverableId);
+  const cat = getIndustryCategory(industry);
+  const label = cat?.name ?? industry.replace(/_/g, ' ');
+  const profile = getCategoryDeliveryProfile(industry);
+  const recommended = profile.primaryDeliverables.includes(baseId);
 
+  const substance = resolveIndustryDocumentSubstance(industry);
   const industryPainPoints = [
-    ...profile.researchFocus.slice(0, 2),
+    ...substance.salesPains.slice(0, 3),
+    ...profile.researchFocus.slice(0, 1),
     ...profile.outreachHooks.slice(0, 1),
-  ].filter(Boolean);
+  ].filter((p): p is string => typeof p === 'string' && isClientFacingProblem(p));
 
   const billing = deliverable.billing;
   const maintenanceIncludedInPrice = billing === 'monthly' || billing === 'yearly';
@@ -345,12 +426,12 @@ export function getPackageIndustryContext(
   const industrySolutionPitch = applyIndustryLabel(profile.valuePropTemplate, label);
 
   return {
-    deliverableId,
-    industryCategory,
+    deliverableId: baseId,
+    industryCategory: industry,
     industryLabel: label,
     billing,
     primaryProblem: applyIndustryLabel(spec.primaryProblemTemplate, label),
-    secondaryProblems: mergeIndustryProblems(spec.secondaryProblems, profile),
+    secondaryProblems: mergeIndustryProblems(spec.secondaryProblems, profile, industry),
     businessOutcome: recommended
       ? `${spec.businessOutcome} — built for ${label} workflows`
       : spec.businessOutcome,
@@ -360,10 +441,10 @@ export function getPackageIndustryContext(
     maintenanceIncludedInPrice,
     optionalMaintenanceTiers: maintenanceIncludedInPrice
       ? null
-      : getMaintenanceTiersForPackage(deliverableId, billing),
+      : getMaintenanceTiersForPackage(baseId, billing),
     competitiveBonusIncludes: getIndustryCompetitiveBonusIncludes(
-      industryCategory,
-      deliverableId,
+      industry,
+      baseId,
       recommended,
     ),
   };

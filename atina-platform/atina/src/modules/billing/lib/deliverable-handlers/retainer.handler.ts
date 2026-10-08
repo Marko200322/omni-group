@@ -3,7 +3,12 @@ import { ClientDeliverableBootstrapService } from '../../service/client-delivera
 import { AutonomyOrchestratorService } from '../../../autonomy-loop/service/autonomy-orchestrator.service';
 import { ProductFactoryService } from '../../../product-factory/service/product-factory.service';
 import { getDeliverable } from '../deliverable-catalog';
-import { persistDeliverablePdf, persistMarkdownBundle, persistSupportHealthCheck } from './artifact-helpers';
+import {
+  buildDocumentQualityMetadata,
+  persistDeliverablePdf,
+  persistMarkdownBundle,
+  persistSupportHealthCheck,
+} from './artifact-helpers';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 import logger from '../../../../utils/logger';
 
@@ -46,12 +51,17 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: 'retainer_welcome',
       filename: `${ctx.deliverableId}-welcome.pdf`,
     });
-    const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'retainer_welcome_md' });
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({ ctx, doc: enriched, artifactType: 'retainer_welcome_md' });
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
+      pdfBytes: pdf.pdfBytes,
+      pdfPageCount: pdf.pdfPageCount,
+    });
 
     const projectId = await createRetainerProject(
       ctx,
-      doc.title,
-      doc.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
+      enriched.title,
+      enriched.sections.map((s) => `${s.heading}: ${s.body.slice(0, 100)}`).join('\n'),
     );
 
     const modules = deliverable.modules ?? [];
@@ -278,6 +288,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifacts,
       status,
       metadata: {
+        ...docMeta,
         modulesActivated,
         crmBootstrap,
         billing: deliverable.billing,

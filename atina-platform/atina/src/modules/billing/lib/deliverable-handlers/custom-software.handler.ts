@@ -66,8 +66,13 @@ export const customSoftwareFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: 'software_handoff',
       filename: 'software-handoff.pdf',
     });
-    const md = await persistMarkdownBundle({ ctx, doc: handoff, artifactType: 'software_handoff_md' });
-    const docMeta = buildDocumentQualityMetadata(handoff, ctx, {
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({
+      ctx,
+      doc: enriched,
+      artifactType: 'software_handoff_md',
+    });
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
       pdfBytes: pdf.pdfBytes,
       pdfPageCount: pdf.pdfPageCount,
     });

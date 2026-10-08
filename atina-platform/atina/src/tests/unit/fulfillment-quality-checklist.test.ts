@@ -3,6 +3,7 @@ import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfil
 import { DOC_SUBSTANCE_THRESHOLDS } from '../../modules/billing/lib/deliverable-handlers/artifact-helpers';
 import { expectedBundleStepIds } from '../../modules/billing/lib/deliverable-handlers/bundle-steps';
 import type { FulfillmentResult } from '../../modules/billing/lib/deliverable-handlers/types';
+import { listResolvedPackageIndustryProblems } from '../../modules/billing/lib/package-industry-problems';
 
 function passingDocQuality(deliverableId: string) {
   const threshold = DOC_SUBSTANCE_THRESHOLDS[deliverableId] ?? {
@@ -13,6 +14,7 @@ function passingDocQuality(deliverableId: string) {
     minPdfBytes: 10000,
     minPdfPages: 2,
   };
+  const problemsCovered = listResolvedPackageIndustryProblems(deliverableId, 'professional');
   return {
     documentSubstanceOk: true,
     documentQuality: {
@@ -26,6 +28,11 @@ function passingDocQuality(deliverableId: string) {
     pdfBytes: threshold.minPdfBytes ?? 12000,
     pdfPageCount: threshold.minPdfPages ?? 2,
     pdfSubstanceOk: true,
+    industryCategory: 'professional',
+    problemsCovered,
+    problemsCoveredCount: problemsCovered.length,
+    problemsEmbeddedInDoc: true,
+    minProblemsCovered: 5,
   };
 }
 
@@ -92,6 +99,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
           },
           ...stepsMeta,
           ...siteMeta(),
+          ...passingDocQuality(deliverableId),
         },
       };
     }
@@ -253,6 +261,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         slaArtifact('lead-gen-sla-onboarding.pdf'),
       ],
       metadata: {
+        ...passingDocQuality(deliverableId),
         leadGenStats: {
           leadsGenerated: 0,
           sampleLeadsSeeded: 12,
@@ -288,6 +297,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         slaArtifact('ai-support-sla-onboarding.pdf'),
       ],
       metadata: {
+        ...passingDocQuality(deliverableId),
         modulesActivated: ['support-avatar', 'video-meetings', 'ai-rag'],
         aiSupportSetup: {
           ragSeeded: true,
@@ -317,6 +327,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         },
       ],
       metadata: {
+        ...passingDocQuality(deliverableId),
         supportAutomation: { slaHours: deliverableId === 'support-dedicated' ? 8 : 24 },
         modulesActivated: ['notifications', 'support-avatar'],
         kickoffTicketId: 'ticket-support-1',

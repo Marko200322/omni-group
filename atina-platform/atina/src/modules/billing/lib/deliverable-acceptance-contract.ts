@@ -4,6 +4,7 @@
  */
 
 import { DELIVERABLE_CATALOG, type DeliverableDefinition } from './deliverable-catalog';
+import { resolveBaseDeliverableId } from './industry-package-id';
 
 export type AcceptanceCriterion = {
   id: string;
@@ -374,7 +375,8 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
 };
 
 export function getAcceptanceContract(deliverableId: string): DeliverableAcceptanceContract | null {
-  return CONTRACTS[deliverableId.trim()] ?? null;
+  const key = resolveBaseDeliverableId(deliverableId);
+  return CONTRACTS[key] ?? null;
 }
 
 export function listAcceptanceContracts(): DeliverableAcceptanceContract[] {

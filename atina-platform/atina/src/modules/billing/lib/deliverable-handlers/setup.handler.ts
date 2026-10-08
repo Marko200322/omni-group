@@ -138,14 +138,15 @@ export const setupFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: 'setup_pack',
       filename: `setup-${tier}.pdf`,
     });
-    const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'setup_pack_md' });
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({ ctx, doc: enriched, artifactType: 'setup_pack_md' });
     const artifacts: FulfillmentArtifact[] = [pdf.artifact, md];
-    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
       pdfBytes: pdf.pdfBytes,
       pdfPageCount: pdf.pdfPageCount,
     });
 
-    const brief = doc.sections.map((s) => `${s.heading}: ${s.body.slice(0, 120)}`).join('\n');
+    const brief = enriched.sections.map((s) => `${s.heading}: ${s.body.slice(0, 120)}`).join('\n');
     const pipeline = await factory.runAutomatedClientOrder({
       userId: ctx.userId,
       paymentId: ctx.paymentId,

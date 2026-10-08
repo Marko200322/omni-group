@@ -9,6 +9,7 @@ import {
   runFulfillmentQualityChecklist,
   type FulfillmentChecklistResult,
 } from '../lib/fulfillment-quality-checklist';
+import { industrySlugFromDeliverableId } from '../lib/industry-package-id';
 import {
   DeliverableFulfillmentRepository,
   type FulfillmentJobRow,
@@ -224,8 +225,11 @@ export class DeliverableFulfillmentService {
       const attemptNumber = this.resolveAttemptNumber(job, opts?.attemptNumber);
       const retryNotes = opts?.retryNotes ?? job.review_notes;
 
-      const industryCategory = normalizeFulfillmentIndustry(input.industryCategory);
-      if (input.industryCategory != null && industryCategory == null) {
+      // Industry packages (`landing__healthcare`) lock industry into the SKU itself.
+      const lockedIndustry = industrySlugFromDeliverableId(deliverableId);
+      const industryCategory =
+        lockedIndustry ?? normalizeFulfillmentIndustry(input.industryCategory);
+      if (!lockedIndustry && input.industryCategory != null && industryCategory == null) {
         logger.warn('Fulfillment received blank industryCategory — treating as unset', {
           paymentId: input.paymentId,
           deliverableId,

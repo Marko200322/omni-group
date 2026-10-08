@@ -8,6 +8,11 @@ import {
   type PdfQualityMetrics,
 } from './deliverable-handlers/artifact-helpers';
 import { expectedBundleStepIds } from './deliverable-handlers/bundle-steps';
+import { resolveBaseDeliverableId } from './industry-package-id';
+import {
+  MIN_PROBLEMS_COVERED,
+  listResolvedPackageIndustryProblems,
+} from './package-industry-problems';
 import { isPlaceholderBrand } from '../service/deliverable-content-generator.service';
 import type { FulfillmentResult } from './deliverable-handlers/types';
 
@@ -278,8 +283,9 @@ export function runFulfillmentQualityChecklist(
   deliverableId: string,
   result: FulfillmentResult,
 ): FulfillmentChecklistResult {
-  const deliverable = getDeliverable(deliverableId);
-  const contract = getAcceptanceContract(deliverableId);
+  const baseId = resolveBaseDeliverableId(deliverableId);
+  const deliverable = getDeliverable(deliverableId) ?? getDeliverable(baseId);
+  const contract = getAcceptanceContract(baseId);
   const items: ChecklistItemResult[] = [];
 
   items.push({
@@ -291,7 +297,36 @@ export function runFulfillmentQualityChecklist(
         : `Expected completed status, got ${result.status}`,
   });
 
-  if (LIVE_URL_IDS.has(deliverableId)) {
+  // Gate: every sellable package must list/cover ≥5 concrete problems (industry packages included).
+  {
+    const metaProblems = Array.isArray(result.metadata?.problemsCovered)
+      ? (result.metadata!.problemsCovered as string[])
+      : [];
+    const metaCount = Number(
+      result.metadata?.problemsCoveredCount ?? result.metadata?.problemsListed ?? metaProblems.length,
+    );
+    const industry =
+      (typeof result.metadata?.industryCategory === 'string'
+        ? result.metadata.industryCategory
+        : null) || deliverable?.industrySlug || null;
+    const catalogProblems =
+      deliverable?.problemsSolved ??
+      listResolvedPackageIndustryProblems(deliverableId, industry);
+    const problemsListed = Math.max(metaCount, catalogProblems.length, metaProblems.length);
+    const embedded =
+      result.metadata?.problemsEmbeddedInDoc === true ||
+      metaProblems.length >= MIN_PROBLEMS_COVERED;
+    const passed = problemsListed >= MIN_PROBLEMS_COVERED && (embedded || metaProblems.length >= MIN_PROBLEMS_COVERED);
+    items.push({
+      id: 'min_problems_covered',
+      passed,
+      message: passed
+        ? `Problems listed/covered: ${problemsListed} (min ${MIN_PROBLEMS_COVERED})`
+        : `Package must list and embed ≥${MIN_PROBLEMS_COVERED} problems (got listed=${problemsListed}, embedded=${embedded})`,
+    });
+  }
+
+  if (LIVE_URL_IDS.has(baseId)) {
     items.push({
       id: 'public_url',
       passed: Boolean(result.publicUrl?.trim()),
@@ -299,7 +334,7 @@ export function runFulfillmentQualityChecklist(
         ? `Live site URL: ${result.publicUrl}`
         : 'Website deliverable requires a published public URL',
     });
-    if (deliverableId === 'website-ecommerce') {
+    if (baseId === 'website-ecommerce') {
       const catalog = result.metadata?.ecommerceCatalog;
       const count = Array.isArray(catalog) ? catalog.length : 0;
       items.push({
@@ -339,7 +374,7 @@ export function runFulfillmentQualityChecklist(
           : 'website-ecommerce must disclose Stripe Connect/LIVE as CONFIGURATION REQUIRED (not claim live Connect)',
       });
     }
-    if (deliverableId === 'website-business') {
+    if (baseId === 'website-business') {
       items.push({
         id: 'business_site_project',
         passed: Boolean(result.projectId?.trim()),
@@ -357,7 +392,7 @@ export function runFulfillmentQualityChecklist(
             : 'Business website requires at least 5 pages in metadata',
       });
     }
-    if (deliverableId === 'landing') {
+    if (baseId === 'landing') {
       items.push({
         id: 'landing_live',
         passed: Boolean(result.publicUrl?.trim()),
@@ -380,7 +415,7 @@ export function runFulfillmentQualityChecklist(
     }
   }
 
-  if (LIVE_URL_IDS.has(deliverableId)) {
+  if (LIVE_URL_IDS.has(baseId)) {
     const live = liveProbeMeta(result);
     const hasUrl = Boolean(result.publicUrl?.trim());
     items.push({
@@ -405,7 +440,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'white-label-setup') {
+  if (baseId === 'white-label-setup') {
     const hasLive = Boolean(result.publicUrl?.trim());
     items.push({
       id: 'white_label_live',
@@ -416,13 +451,13 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (SETUP_IDS.has(deliverableId)) {
+  if (SETUP_IDS.has(baseId)) {
     items.push({
       id: 'setup_project',
       passed: Boolean(result.projectId?.trim()),
       message: result.projectId ? 'Setup project scaffold verified' : 'Setup requires verified project scaffold',
     });
-    if (deliverableId === 'setup-quick' || deliverableId === 'bundle-portal-presence') {
+    if (baseId === 'setup-quick' || baseId === 'bundle-portal-presence') {
       const ok = portalEntitlementsOk(result, true);
       const mods = Array.isArray(result.metadata?.modulesActivated)
         ? (result.metadata.modulesActivated as string[])
@@ -435,7 +470,7 @@ export function runFulfillmentQualityChecklist(
           : 'Portal entitlements require user_modules (notifications+billing+crm), billing access, welcome notification, and seeded onboarding tasks — portalReady / notifications+billing alone is insufficient',
       });
     }
-    if (deliverableId === 'setup-full') {
+    if (baseId === 'setup-full') {
       items.push({
         id: 'migration_template',
         passed: result.artifacts.some((a) => a.type === 'migration_template' || a.filename.includes('migration')),
@@ -454,7 +489,7 @@ export function runFulfillmentQualityChecklist(
           : 'Full onboarding requires CRM bootstrap with imported demo/industry leads (not modules-only)',
       });
     }
-    if (deliverableId === 'setup-custom') {
+    if (baseId === 'setup-custom') {
       const manifestOk = productionManifestOk(result);
       items.push({
         id: 'production_manifest',
@@ -473,7 +508,7 @@ export function runFulfillmentQualityChecklist(
     }
   }
 
-  if (deliverableId === 'lead-gen-retainer') {
+  if (baseId === 'lead-gen-retainer') {
     const stats = result.metadata?.leadGenStats as {
       leadsGenerated?: number;
       sampleLeadsSeeded?: number;
@@ -564,11 +599,11 @@ export function runFulfillmentQualityChecklist(
   }
 
   if (
-    deliverableId === 'support-priority' ||
-    deliverableId === 'support-dedicated' ||
-    deliverableId === 'lead-gen-retainer' ||
-    deliverableId === 'ai-support-retainer' ||
-    deliverableId === 'vertical-package'
+    baseId === 'support-priority' ||
+    baseId === 'support-dedicated' ||
+    baseId === 'lead-gen-retainer' ||
+    baseId === 'ai-support-retainer' ||
+    baseId === 'vertical-package'
   ) {
     items.push({
       id: 'retainer_project',
@@ -592,7 +627,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'support-priority' || deliverableId === 'support-dedicated') {
+  if (baseId === 'support-priority' || baseId === 'support-dedicated') {
     const support = result.metadata?.supportAutomation as
       | { slaHours?: number; modulesActivated?: string[] }
       | undefined;
@@ -633,7 +668,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'ai-support-retainer') {
+  if (baseId === 'ai-support-retainer') {
     const ai = result.metadata?.aiSupportSetup as {
       ragSeeded?: boolean;
       ragRecallHits?: number;
@@ -683,7 +718,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (PDF_CATALOG_IDS.has(deliverableId)) {
+  if (PDF_CATALOG_IDS.has(baseId)) {
     items.push({
       id: 'pdf_artifact',
       passed: hasPdfArtifact(result),
@@ -693,7 +728,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (DOC_SUBSTANCE_IDS.has(deliverableId)) {
+  if (DOC_SUBSTANCE_IDS.has(baseId)) {
     const threshold = substanceThresholdFor(deliverableId);
     const substance = docSubstanceOk(deliverableId, result);
     const mdOk = hasMarkdownArtifact(result);
@@ -716,7 +751,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  const expectedBundleSteps = expectedBundleStepIds(deliverableId);
+  const expectedBundleSteps = expectedBundleStepIds(baseId);
   if (expectedBundleSteps.length > 0) {
     const steps = result.metadata?.bundleSteps as
       | Array<{ deliverableId?: string; status?: string }>
@@ -740,7 +775,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'bundle-ops-clarity') {
+  if (baseId === 'bundle-ops-clarity') {
     const pdfs = result.artifacts.filter((a) => a.filename.toLowerCase().endsWith('.pdf'));
     const hasAudit = pdfs.some((a) => /audit/i.test(a.filename) || a.type.includes('audit'));
     const hasWorkflow = pdfs.some(
@@ -756,7 +791,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'custom-software') {
+  if (baseId === 'custom-software') {
     items.push({
       id: 'software_project',
       passed: Boolean(result.projectId?.trim()),
@@ -794,7 +829,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'integration') {
+  if (baseId === 'integration') {
     items.push({
       id: 'integration_config',
       passed: result.artifacts.some((a) => a.type.includes('integration') || a.filename.includes('integration')),
@@ -802,7 +837,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (MODULE_BOOTSTRAP_IDS.has(deliverableId)) {
+  if (MODULE_BOOTSTRAP_IDS.has(baseId)) {
     items.push({
       id: 'modules_metadata',
       passed: modulesOk(result),
@@ -810,14 +845,14 @@ export function runFulfillmentQualityChecklist(
         ? 'Industry modules or CRM bootstrap recorded'
         : 'Package requires module activation or CRM bootstrap',
     });
-    if (deliverableId === 'vertical-package' || deliverableId === 'lead-gen-retainer') {
+    if (baseId === 'vertical-package' || baseId === 'lead-gen-retainer') {
       items.push({
         id: 'crm_bootstrap',
         passed: crmBootstrapOk(result),
         message: crmBootstrapOk(result) ? 'CRM pipeline seeded' : 'Vertical/lead-gen requires CRM bootstrap',
       });
     }
-    if (deliverableId === 'vertical-package') {
+    if (baseId === 'vertical-package') {
       const ticketOk = kickoffTicketOk(result);
       items.push({
         id: 'kickoff_ticket',

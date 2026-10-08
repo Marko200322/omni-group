@@ -222,8 +222,13 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifactType: 'site_delivery_pack',
       filename: `${ctx.deliverableId}-delivery.pdf`,
     });
-    const md = await persistMarkdownBundle({ ctx, doc, artifactType: 'site_delivery_pack_md' });
-    const docMeta = buildDocumentQualityMetadata(doc, ctx, {
+    const enriched = pdf.doc;
+    const md = await persistMarkdownBundle({
+      ctx,
+      doc: enriched,
+      artifactType: 'site_delivery_pack_md',
+    });
+    const docMeta = buildDocumentQualityMetadata(enriched, ctx, {
       pdfBytes: pdf.pdfBytes,
       pdfPageCount: pdf.pdfPageCount,
     });

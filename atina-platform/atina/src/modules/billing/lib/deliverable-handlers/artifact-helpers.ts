@@ -5,6 +5,12 @@ import { execFileSync } from 'child_process';
 import { config } from '../../../../config';
 import { getDeliverable } from '../deliverable-catalog';
 import { getIndustryCategory } from '../category-pricing';
+import { resolveBaseDeliverableId } from '../industry-package-id';
+import {
+  buildProblemsCoveredMetadata,
+  listResolvedPackageIndustryProblems,
+  MIN_PROBLEMS_COVERED,
+} from '../package-industry-problems';
 import { DeliverableArtifactStoreService } from '../../service/deliverable-artifact-store.service';
 import { generateDeliverablePdf } from '../../service/deliverable-document-pdf.service';
 import type { StructuredDeliverableDoc } from '../../service/deliverable-document-generator.service';
@@ -271,7 +277,8 @@ export function pdfSubstancePasses(
 }
 
 export function substanceThresholdFor(deliverableId: string): DocumentSubstanceThreshold | null {
-  return DOC_SUBSTANCE_THRESHOLDS[deliverableId.trim()] ?? null;
+  const baseId = resolveBaseDeliverableId(deliverableId);
+  return DOC_SUBSTANCE_THRESHOLDS[baseId] ?? null;
 }
 
 /** Default floor used when accepting AI-parsed docs (reject stub-length replies). */
@@ -281,6 +288,37 @@ export const AI_DOC_ACCEPTANCE_FLOOR: DocumentSubstanceThreshold = {
   minSectionChars: 80,
   minChecklistHits: 1,
 };
+
+/** Ensure PDF/MD packs list 5–10 package×industry problems (not generic fluff). */
+export function injectProblemsCoveredSection(
+  doc: StructuredDeliverableDoc,
+  deliverableId: string,
+  industryCategory?: string | null,
+): StructuredDeliverableDoc {
+  const problems = listResolvedPackageIndustryProblems(deliverableId, industryCategory);
+  if (problems.length < MIN_PROBLEMS_COVERED) return doc;
+  const already = doc.sections.some((s) =>
+    /problems this package addresses|industry problems covered/i.test(s.heading),
+  );
+  if (already) return doc;
+  const industry = industryCategory?.trim() || 'general';
+  return {
+    ...doc,
+    sections: [
+      {
+        heading: 'Problems this package addresses',
+        body: [
+          `Package ${deliverableId} × industry ${industry} — ${problems.length} concrete problems (target ${MIN_PROBLEMS_COVERED}–10):`,
+          '',
+          ...problems.map((p, i) => `${i + 1}. ${p}`),
+          '',
+          'These map to checkout OmniTrix claims and must appear in the delivered pack — not marketing-only copy.',
+        ].join('\n'),
+      },
+      ...doc.sections,
+    ],
+  };
+}
 
 export function buildDocumentQualityMetadata(
   doc: StructuredDeliverableDoc,
@@ -300,6 +338,14 @@ export function buildDocumentQualityMetadata(
     docOk === null && pdfOk === null
       ? null
       : (docOk !== false) && (pdfOk !== false);
+  const problemsMeta = buildProblemsCoveredMetadata(ctx.deliverableId, industryCategory);
+  const problemsEmbedded =
+    problemsMeta.problemsCoveredCount >= MIN_PROBLEMS_COVERED &&
+    doc.sections.some(
+      (s) =>
+        /problems this package addresses|industry problems covered/i.test(s.heading) ||
+        problemsMeta.problemsCovered.slice(0, 3).every((p) => s.body.includes(p.slice(0, 24))),
+    );
   return {
     documentTitle: doc.title,
     industryCategory,
@@ -312,6 +358,8 @@ export function buildDocumentQualityMetadata(
         }
       : {}),
     documentSubstanceOk: substanceOk,
+    ...problemsMeta,
+    problemsEmbeddedInDoc: problemsEmbedded,
   };
 }
 
@@ -326,15 +374,20 @@ export async function persistDeliverablePdf(input: {
   doc: StructuredDeliverableDoc;
   artifactType: string;
   filename: string;
-}): Promise<PersistedDeliverablePdf> {
+}): Promise<PersistedDeliverablePdf & { doc: StructuredDeliverableDoc }> {
   const deliverable = getDeliverable(input.ctx.deliverableId);
+  const doc = injectProblemsCoveredSection(
+    input.doc,
+    input.ctx.deliverableId,
+    input.ctx.industryCategory,
+  );
   const rendered = await generateDeliverablePdf({
     brandName: 'Omni Group',
-    title: input.doc.title,
-    subtitle: input.doc.subtitle,
+    title: doc.title,
+    subtitle: doc.subtitle,
     clientName: input.ctx.clientName,
     deliverableName: deliverable?.name ?? input.ctx.deliverableId,
-    sections: input.doc.sections,
+    sections: doc.sections,
   });
   const artifact = store.saveBuffer({
     userId: input.ctx.userId,
@@ -342,12 +395,13 @@ export async function persistDeliverablePdf(input: {
     filename: input.filename,
     buffer: rendered.buffer,
     type: input.artifactType,
-    downloadLabel: input.doc.title,
+    downloadLabel: doc.title,
   });
   return {
     artifact,
     pdfBytes: rendered.byteLength,
     pdfPageCount: rendered.pageCount,
+    doc,
   };
 }
 
