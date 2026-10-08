@@ -26,10 +26,16 @@ export const MAX_PROBLEMS_COVERED = 10;
 const INTERNAL_GATE_NOISE =
   /research complete|artifacts generated|dynamic pricing|smoke test|owner sign-off|outreach draft reviewed/i;
 
+/** Research lenses / outreach hooks must NOT be sold as client "problems". */
+const NON_PROBLEM_THEATER =
+  /\bSMB market\b|turnkey delivery|no platform resale|local lead generation|digital adoption pain points|compliance and onboarding|AI agent for your niche|LLM adoption\b/i;
+
 function isClientFacingProblem(text: string): boolean {
   const t = text.trim();
   if (t.length < 8) return false;
-  return !INTERNAL_GATE_NOISE.test(t);
+  if (INTERNAL_GATE_NOISE.test(t)) return false;
+  if (NON_PROBLEM_THEATER.test(t)) return false;
+  return true;
 }
 
 export type PackageProblemSpec = {
@@ -325,19 +331,19 @@ function applyIndustryLabel(template: string, label: string): string {
 
 /**
  * Enrich package secondary problems with industry client pains.
- * Keeps package base problems; prepends industry salesPains / research / hooks.
- * Never injects internal quality-gate strings as "client problems".
+ * Keeps package base problems; prepends industry salesPains (+ operational risks).
+ * Never injects research lenses, outreach hooks, or quality-gate strings as "client problems".
  */
 function mergeIndustryProblems(
   base: string[],
-  profile: ReturnType<typeof getCategoryDeliveryProfile>,
+  _profile: ReturnType<typeof getCategoryDeliveryProfile>,
   industryCategory: string,
 ): string[] {
   const substance = resolveIndustryDocumentSubstance(industryCategory);
+  // Client pains only — researchFocus / outreachHooks are GTM internals, not problems-solved claims.
   const industrySpecific = [
-    ...substance.salesPains.slice(0, 3),
-    ...profile.researchFocus.slice(0, 1),
-    profile.outreachHooks[0],
+    ...substance.salesPains.slice(0, 4),
+    ...substance.operationalRisks.slice(0, 2),
   ].filter((p): p is string => typeof p === 'string' && isClientFacingProblem(p));
 
   const out: string[] = [];
@@ -415,9 +421,8 @@ export function getPackageIndustryContext(
 
   const substance = resolveIndustryDocumentSubstance(industry);
   const industryPainPoints = [
-    ...substance.salesPains.slice(0, 3),
-    ...profile.researchFocus.slice(0, 1),
-    ...profile.outreachHooks.slice(0, 1),
+    ...substance.salesPains.slice(0, 4),
+    ...substance.operationalRisks.slice(0, 2),
   ].filter((p): p is string => typeof p === 'string' && isClientFacingProblem(p));
 
   const billing = deliverable.billing;

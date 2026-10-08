@@ -481,7 +481,12 @@ export async function persistSupportHealthCheck(input: {
     artifactType: 'health_check',
     filename: `${stem}.pdf`,
   });
-  const md = await persistMarkdownBundle({ ctx: input.ctx, doc, artifactType: `${stem}-md` });
+  // Always persist the problems-injected doc (pdf.doc), never the bare template.
+  const md = await persistMarkdownBundle({
+    ctx: input.ctx,
+    doc: pdf.doc,
+    artifactType: `${stem}-md`,
+  });
   return [pdf.artifact, md];
 }
 
@@ -490,17 +495,23 @@ export async function persistMarkdownBundle(input: {
   doc: StructuredDeliverableDoc;
   artifactType: string;
 }): Promise<FulfillmentArtifact> {
+  // Fail-closed: inject problems section even if caller forgot enriched pdf.doc.
+  const doc = injectProblemsCoveredSection(
+    input.doc,
+    input.ctx.deliverableId,
+    input.ctx.industryCategory,
+  );
   const md = [
-    `# ${input.doc.title}`,
-    input.doc.subtitle ? `\n_${input.doc.subtitle}_\n` : '',
-    ...input.doc.sections.flatMap((s) => [`\n## ${s.heading}\n`, s.body]),
+    `# ${doc.title}`,
+    doc.subtitle ? `\n_${doc.subtitle}_\n` : '',
+    ...doc.sections.flatMap((s) => [`\n## ${s.heading}\n`, s.body]),
   ].join('\n');
   return persistTextArtifact({
     ctx: input.ctx,
     filename: `${input.artifactType}.md`,
     content: md,
     type: input.artifactType,
-    downloadLabel: `${input.doc.title} (Markdown)`,
+    downloadLabel: `${doc.title} (Markdown)`,
   });
 }
 

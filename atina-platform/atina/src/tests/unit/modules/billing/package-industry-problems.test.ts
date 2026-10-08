@@ -49,4 +49,17 @@ describe('package-industry-problems', () => {
     expect(recommended.length).toBeGreaterThan(0);
     expect(recommended.some((p) => p.deliverableId === 'integration')).toBe(true);
   });
+
+  it('keeps healthcare vs construction problems distinct and free of GTM theater hooks', () => {
+    const hc = listResolvedPackageIndustryProblems('landing__healthcare');
+    const cn = listResolvedPackageIndustryProblems('landing__construction');
+    expect(hc.length).toBeGreaterThanOrEqual(5);
+    expect(cn.length).toBeGreaterThanOrEqual(5);
+    expect(hc).not.toEqual(cn);
+    expect(hc.some((p) => /front-desk|PHI|patient|referral/i.test(p))).toBe(true);
+    expect(cn.some((p) => /change order|punch list|budget overrun|closeout/i.test(p))).toBe(true);
+    const theater = /SMB market|Turnkey delivery|no platform resale|local lead generation/i;
+    expect(hc.some((p) => theater.test(p))).toBe(false);
+    expect(cn.some((p) => theater.test(p))).toBe(false);
+  });
 });
