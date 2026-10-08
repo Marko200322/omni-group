@@ -414,10 +414,17 @@ export function persistPortalModulesArtifact(input: {
     entitlementSource?: string;
     portalReady?: boolean;
     orgRole?: string | null;
+    onboardingTasksSeeded?: boolean;
+    onboardingTaskIds?: string[];
   };
 }): FulfillmentArtifact {
   const entitlements = input.portalEntitlements;
   const granted = entitlements?.userModulesGranted ?? input.modulesActivated;
+  const quickThickness =
+    input.ctx.deliverableId === 'setup-quick' || input.ctx.deliverableId === 'bundle-portal-presence';
+  const expected = quickThickness
+    ? ['notifications', 'billing', 'crm', 'tasks']
+    : ['notifications', 'billing'];
   const portalReady =
     entitlements?.portalReady === true ||
     (granted.includes('notifications') &&
@@ -434,7 +441,7 @@ export function persistPortalModulesArtifact(input: {
       deliverableId: input.ctx.deliverableId,
       generatedAt: new Date().toISOString(),
       modulesActivated: input.modulesActivated,
-      expected: ['notifications', 'billing'],
+      expected,
       portalReady,
       portalEntitlements: {
         entitlementSource: entitlements?.entitlementSource ?? 'user_modules+org',
@@ -442,9 +449,12 @@ export function persistPortalModulesArtifact(input: {
         billingAccess: entitlements?.billingAccess ?? false,
         notificationSeeded: entitlements?.notificationSeeded ?? false,
         orgRole: entitlements?.orgRole ?? null,
+        onboardingTasksSeeded: entitlements?.onboardingTasksSeeded ?? false,
+        onboardingTaskIds: entitlements?.onboardingTaskIds ?? [],
       },
-      notes:
-        'Real entitlements: user_modules rows + org billing access + welcome notification. Task rows alone are not sufficient.',
+      notes: quickThickness
+        ? 'Real entitlements: user_modules (notifications+billing+CRM view+tasks) + org billing + welcome notification + actionable onboarding tasks. Automations NOT CONNECTED. Task rows alone are not sufficient.'
+        : 'Real entitlements: user_modules rows + org billing access + welcome notification. Task rows alone are not sufficient.',
     },
   });
 }

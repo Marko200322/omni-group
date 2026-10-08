@@ -343,8 +343,12 @@ PRODUCT/OPS language kept for: `setup-quick`, websites/ecommerce, lead-gen, port
 
 | Step | Result |
 |------|--------|
-| SafeDeploy | _(filled after deploy)_ |
-| setup-quick smoke (one industry) | _(filled after smoke)_ |
+| SafeDeploy | **EXIT 0** (~343s). Log: `docs/evidence/_tmp-safedeploy-setup-quick-thick-20261008.txt` |
+| setup-quick smoke | industry=`marketing`, paymentId=`934d1ee3-3bed-46d4-9d71-50abbc49e399`, status=completed, **score=100**, checklistPassed=true |
+| portal-modules.json | modulesActivated=`notifications, billing, crm, tasks`; billingAccess=true; notificationSeeded=true |
+| Commit | `d3ee672` (pushed `feat/phase10-outreach-send-enabled`) |
+
+Evidence: `docs/evidence/_tmp-setup-quick-thick-smoke-20261008.txt`, `_tmp-setup-quick-thick-portal-modules-20261008.json`.
 
 *No Stripe LIVE. No fake leads.*
 

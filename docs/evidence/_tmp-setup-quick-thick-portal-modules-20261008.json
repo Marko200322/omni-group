@@ -1,0 +1,30 @@
+﻿{
+  "clientName": "E2E Prod Co",
+  "deliverableId": "setup-quick",
+  "generatedAt": "2026-10-08T18:09:57.933Z",
+  "modulesActivated": [
+    "notifications",
+    "billing",
+    "crm",
+    "tasks"
+  ],
+  "expected": [
+    "notifications",
+    "billing"
+  ],
+  "portalReady": true,
+  "portalEntitlements": {
+    "entitlementSource": "user_modules+org",
+    "userModulesGranted": [
+      "notifications",
+      "billing",
+      "crm",
+      "tasks"
+    ],
+    "billingAccess": true,
+    "notificationSeeded": true,
+    "orgRole": "owner"
+  },
+  "notes": "Real entitlements: user_modules rows + org billing access + welcome notification. Task rows alone are not sufficient."
+}
+
