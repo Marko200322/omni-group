@@ -13,6 +13,7 @@ import {
   type BillingCurrency,
 } from '../../billing/lib/saas-price-book';
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
+import { industrySlugFromDeliverableId } from '../../billing/lib/industry-package-id';
 import { canCheckoutPackage, getPackageAnchorEur } from '../../billing/lib/package-delivery-spec';
 import { resolveOptionalMaintenanceTier } from '../../billing/lib/package-maintenance-tiers';
 import { buildDeliverableStripeSessionParams } from '../lib/deliverable-stripe-checkout';
@@ -1575,7 +1576,13 @@ export class PaymentsService {
     const amount = listPriceEur;
     const currency = config.payments.manual.currency || 'EUR';
     const reference = buildTransferReference(userId);
-    const categoryLabel = categoryCheckoutLabel(input.industryCategory);
+    // Industry SKUs (`base__industry`) lock industry into the id — prefer that over body.
+    const lockedIndustry =
+      industrySlugFromDeliverableId(deliverable.id) ??
+      industrySlugFromDeliverableId(input.deliverableId);
+    const industryCategory = lockedIndustry ?? input.industryCategory ?? null;
+    // Name already includes industry for industry packages — avoid "Healthcare (Healthcare)".
+    const categoryLabel = lockedIndustry ? '' : categoryCheckoutLabel(industryCategory);
 
     const { rows } = await this.db.insertManualPendingPayment({
       userId,
@@ -1585,7 +1592,7 @@ export class PaymentsService {
       metadataJson: JSON.stringify({
         purchaseType: 'deliverable',
         deliverableId: deliverable.id,
-        industryCategory: input.industryCategory ?? null,
+        industryCategory,
         billing: deliverable.billing,
         reference,
         listPriceEur,
@@ -1680,7 +1687,11 @@ export class PaymentsService {
     if (listPriceEur <= 0) throw new PaymentError('Unknown deliverable price');
     const amount = listPriceEur;
     const currency = 'EUR';
-    const categoryLabel = categoryCheckoutLabel(input.industryCategory);
+    const lockedIndustry =
+      industrySlugFromDeliverableId(deliverable.id) ??
+      industrySlugFromDeliverableId(input.deliverableId);
+    const industryCategory = lockedIndustry ?? input.industryCategory ?? null;
+    const categoryLabel = lockedIndustry ? '' : categoryCheckoutLabel(industryCategory);
 
     const { rows } = await this.db.insertStripePendingPayment({
       userId,
@@ -1690,7 +1701,7 @@ export class PaymentsService {
       metadataJson: JSON.stringify({
         purchaseType: 'deliverable',
         deliverableId: deliverable.id,
-        industryCategory: input.industryCategory ?? null,
+        industryCategory,
         billing: deliverable.billing,
         listPriceEur,
         maintenanceTierId: maintenanceTier?.id ?? null,
@@ -1708,7 +1719,7 @@ export class PaymentsService {
       maintenanceTier,
       paymentId,
       userId,
-      industryCategory: input.industryCategory,
+      industryCategory: industryCategory ?? undefined,
     });
 
     const session = await requireStripe().checkout.sessions.create({
@@ -1726,7 +1737,7 @@ export class PaymentsService {
         paymentId,
         userId,
         deliverableId: deliverable.id,
-        industryCategory: input.industryCategory ?? '',
+        industryCategory: industryCategory ?? '',
         maintenanceTierId: maintenanceTier?.id ?? '',
         checkoutMode: checkoutParams.mode,
       },

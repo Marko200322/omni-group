@@ -120,6 +120,55 @@ describe('fulfillment admin API metadata shape', () => {
     expect(view.checklistScore).toBe(92);
     expect(view.checklistPassed).toBe(true);
     expect(view.publicUrl).toBe('/sites/fitness-studio-abc');
+    expect(view.checklistFailedIds).toEqual([]);
+  });
+
+  it('exposes opsEvidence for retainer/vertical LIVE proof (tickets/CRM/RAG/problems)', () => {
+    const view = toFulfillmentJobView(
+      baseRow({
+        deliverable_id: 'ai-support-retainer__technology',
+        result: {
+          metadata: {
+            industryCategory: 'technology',
+            problemsCovered: ['a', 'b', 'c', 'd', 'e'],
+            problemsCoveredCount: 5,
+            problemsEmbeddedInDoc: true,
+            kickoffTicketId: 'ticket-abc',
+            crmBootstrap: { importedLeads: 3, pipelineSeeded: true },
+            leadGenStats: {
+              mode: 'kickoff_pack_only',
+              leadsGenerated: 0,
+              sampleLeadsSeeded: 3,
+              analysis: { rulesVersion: 'hot-v1' },
+            },
+            aiSupportSetup: { ragSeeded: true, ragRecallHits: 2 },
+            supportAutomation: { slaHours: 24 },
+          },
+          fulfillmentMeta: {
+            checklist: {
+              score: 100,
+              passed: true,
+              items: [
+                { id: 'min_problems_covered', passed: true },
+                { id: 'kickoff_ticket', passed: true },
+              ],
+            },
+          },
+        },
+      }),
+    );
+    expect(view.opsEvidence.problemsCoveredCount).toBe(5);
+    expect(view.opsEvidence.problemsEmbeddedInDoc).toBe(true);
+    expect(view.opsEvidence.kickoffTicketId).toBe('ticket-abc');
+    expect(view.opsEvidence.crmImportedLeads).toBe(3);
+    expect(view.opsEvidence.crmPipelineSeeded).toBe(true);
+    expect(view.opsEvidence.leadGenMode).toBe('kickoff_pack_only');
+    expect(view.opsEvidence.leadsGenerated).toBe(0);
+    expect(view.opsEvidence.analysisRulesVersion).toBe('hot-v1');
+    expect(view.opsEvidence.ragSeeded).toBe(true);
+    expect(view.opsEvidence.ragRecallHits).toBe(2);
+    expect(view.opsEvidence.supportSlaHours).toBe(24);
+    expect(view.checklistFailedIds).toEqual([]);
   });
 
   it('returns null checklist fields when fulfillmentMeta is absent', () => {
@@ -154,6 +203,46 @@ describe('fulfillment admin API metadata shape', () => {
     );
     expect(view.checklistScore).toBeNull();
     expect(view.checklistPassed).toBe(true);
+  });
+
+  it('exposes bundleSteps from result.metadata for LIVE child-step proof', () => {
+    const view = toFulfillmentJobView(
+      baseRow({
+        deliverable_id: 'bundle-portal-presence__fitness',
+        result: {
+          metadata: {
+            industryCategory: 'fitness',
+            bundleSteps: [
+              { deliverableId: 'setup-quick', status: 'completed', artifactCount: 3 },
+              {
+                deliverableId: 'landing',
+                status: 'completed',
+                artifactCount: 2,
+                publicUrl: '/sites/fitness-studio-x',
+              },
+            ],
+          },
+          fulfillmentMeta: {
+            checklist: { score: 100, passed: true, items: [{ id: 'bundle_steps_complete', passed: true }] },
+          },
+        },
+      }),
+    );
+    expect(view.bundleSteps).toEqual([
+      { deliverableId: 'setup-quick', status: 'completed', artifactCount: 3 },
+      {
+        deliverableId: 'landing',
+        status: 'completed',
+        artifactCount: 2,
+        publicUrl: '/sites/fitness-studio-x',
+      },
+    ]);
+    expect(view.checklistScore).toBe(100);
+  });
+
+  it('returns null bundleSteps when metadata omits them', () => {
+    const view = toFulfillmentJobView(baseRow({ result: { artifacts: [] } }));
+    expect(view.bundleSteps).toBeNull();
   });
 });
 

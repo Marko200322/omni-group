@@ -20,6 +20,22 @@ export type DocumentQualitySummary = {
   bundleDocs?: number;
 };
 
+/** Ops/retainer substance — exposed so LIVE probes can prove tickets/CRM/RAG (not docs theater). */
+export type FulfillmentOpsEvidence = {
+  problemsCoveredCount: number | null;
+  problemsEmbeddedInDoc: boolean | null;
+  kickoffTicketId: string | null;
+  crmImportedLeads: number | null;
+  crmPipelineSeeded: boolean | null;
+  leadGenMode: string | null;
+  leadsGenerated: number | null;
+  sampleLeadsSeeded: number | null;
+  analysisRulesVersion: string | null;
+  ragSeeded: boolean | null;
+  ragRecallHits: number | null;
+  supportSlaHours: number | null;
+};
+
 export type FulfillmentJobView = {
   id: string;
   paymentId: string;
@@ -44,6 +60,21 @@ export type FulfillmentJobView = {
    */
   checklistScore: number | null;
   checklistPassed: boolean | null;
+  /** Checklist item ids that failed (excl. catalog_description) — empty when all passed. */
+  checklistFailedIds: string[];
+  /** Ops substance from result.metadata for retainer/vertical LIVE proof. */
+  opsEvidence: FulfillmentOpsEvidence;
+  /**
+   * Bundle child step bookkeeping from result.metadata.bundleSteps —
+   * exposed so LIVE probes can prove children completed (not score-only theater).
+   */
+  bundleSteps: Array<{
+    deliverableId: string;
+    status: string;
+    artifactCount: number;
+    publicUrl?: string | null;
+    error?: string;
+  }> | null;
   artifacts: FulfillmentArtifactView[];
   clientVisible: boolean;
   createdAt: string;
@@ -86,17 +117,51 @@ function readDocumentSubstanceOk(result: Record<string, unknown>): boolean | nul
   return null;
 }
 
+function readBundleSteps(
+  result: Record<string, unknown>,
+): FulfillmentJobView['bundleSteps'] {
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  const raw = meta.bundleSteps;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  const steps: NonNullable<FulfillmentJobView['bundleSteps']> = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const o = item as Record<string, unknown>;
+    const deliverableId = typeof o.deliverableId === 'string' ? o.deliverableId.trim() : '';
+    const status = typeof o.status === 'string' ? o.status.trim() : '';
+    if (!deliverableId || !status) continue;
+    const artifactCount =
+      typeof o.artifactCount === 'number' && Number.isFinite(o.artifactCount)
+        ? o.artifactCount
+        : 0;
+    const step: NonNullable<FulfillmentJobView['bundleSteps']>[number] = {
+      deliverableId,
+      status,
+      artifactCount,
+    };
+    if (typeof o.publicUrl === 'string' || o.publicUrl === null) {
+      step.publicUrl = o.publicUrl as string | null;
+    }
+    if (typeof o.error === 'string' && o.error.trim()) {
+      step.error = o.error.trim();
+    }
+    steps.push(step);
+  }
+  return steps.length ? steps : null;
+}
+
 function readChecklistSummary(result: Record<string, unknown>): {
   checklistScore: number | null;
   checklistPassed: boolean | null;
+  checklistFailedIds: string[];
 } {
   const meta = result.fulfillmentMeta;
   if (!meta || typeof meta !== 'object') {
-    return { checklistScore: null, checklistPassed: null };
+    return { checklistScore: null, checklistPassed: null, checklistFailedIds: [] };
   }
   const checklist = (meta as Record<string, unknown>).checklist;
   if (!checklist || typeof checklist !== 'object') {
-    return { checklistScore: null, checklistPassed: null };
+    return { checklistScore: null, checklistPassed: null, checklistFailedIds: [] };
   }
   const c = checklist as Record<string, unknown>;
   const scoreRaw = c.score;
@@ -107,7 +172,51 @@ function readChecklistSummary(result: Record<string, unknown>): {
         ? Number(scoreRaw)
         : null;
   const checklistPassed = typeof c.passed === 'boolean' ? c.passed : null;
-  return { checklistScore, checklistPassed };
+  const items = Array.isArray(c.items) ? c.items : [];
+  const checklistFailedIds = items
+    .filter((it) => {
+      if (!it || typeof it !== 'object') return false;
+      const o = it as Record<string, unknown>;
+      return o.passed === false && o.id !== 'catalog_description' && typeof o.id === 'string';
+    })
+    .map((it) => String((it as Record<string, unknown>).id));
+  return { checklistScore, checklistPassed, checklistFailedIds };
+}
+
+function readOpsEvidence(result: Record<string, unknown>): FulfillmentOpsEvidence {
+  const meta = (result.metadata ?? {}) as Record<string, unknown>;
+  const problemsCovered = Array.isArray(meta.problemsCovered) ? meta.problemsCovered : [];
+  const declared = Number(meta.problemsCoveredCount ?? meta.problemsListed);
+  const problemsCoveredCount = Number.isFinite(declared)
+    ? declared
+    : problemsCovered.length > 0
+      ? problemsCovered.length
+      : null;
+  const crm = meta.crmBootstrap as Record<string, unknown> | undefined;
+  const lead = meta.leadGenStats as Record<string, unknown> | undefined;
+  const analysis = lead?.analysis as Record<string, unknown> | undefined;
+  const ai = meta.aiSupportSetup as Record<string, unknown> | undefined;
+  const support = meta.supportAutomation as Record<string, unknown> | undefined;
+  const asNum = (v: unknown): number | null =>
+    typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+  const asBool = (v: unknown): boolean | null => (typeof v === 'boolean' ? v : null);
+  const asStr = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  return {
+    problemsCoveredCount,
+    problemsEmbeddedInDoc: asBool(meta.problemsEmbeddedInDoc),
+    kickoffTicketId: asStr(meta.kickoffTicketId),
+    crmImportedLeads: asNum(crm?.importedLeads),
+    crmPipelineSeeded:
+      asBool(crm?.pipelineSeeded) ??
+      (crm && (asNum(crm.importedLeads) ?? 0) > 0 ? true : crm ? true : null),
+    leadGenMode: asStr(lead?.mode),
+    leadsGenerated: asNum(lead?.leadsGenerated),
+    sampleLeadsSeeded: asNum(lead?.sampleLeadsSeeded),
+    analysisRulesVersion: asStr(analysis?.rulesVersion),
+    ragSeeded: asBool(ai?.ragSeeded),
+    ragRecallHits: asNum(ai?.ragRecallHits),
+    supportSlaHours: asNum(support?.slaHours),
+  };
 }
 
 /** Pure mapper — exported for unit tests of admin API metadata shape. */
@@ -127,7 +236,7 @@ export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView
     });
   }
 
-  const { checklistScore, checklistPassed } = readChecklistSummary(result);
+  const { checklistScore, checklistPassed, checklistFailedIds } = readChecklistSummary(result);
 
   return {
     id: row.id,
@@ -147,6 +256,9 @@ export function toFulfillmentJobView(row: FulfillmentJobRow): FulfillmentJobView
     documentSubstanceOk: readDocumentSubstanceOk(result),
     checklistScore,
     checklistPassed,
+    checklistFailedIds,
+    opsEvidence: readOpsEvidence(result),
+    bundleSteps: readBundleSteps(result),
     artifacts,
     clientVisible: row.review_status === 'approved' || row.review_status == null,
     createdAt: row.created_at.toISOString(),
