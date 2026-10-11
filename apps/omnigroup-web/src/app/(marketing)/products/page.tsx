@@ -6,6 +6,8 @@ import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { IndustryBrowseGrid } from '@/components/marketing/IndustryBrowseGrid';
+import { PublicCatalogOverview } from '@/components/marketing/PublicCatalogOverview';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getGeneratedVerticalsIndex } from '@/lib/generated-verticals';
 import { useIndustryPackageMatrix } from '@/hooks/useIndustryPackageMatrix';
@@ -31,20 +33,19 @@ export default function ProductsPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Catalog</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Delivery catalog</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            What you can buy
+            Industry packages you can buy
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            {catalogStats.sellablePackages} industry packages across {catalogStats.industryGroups} industries
-            ({catalogStats.basePackages} capability templates × industry). Filter by industry to browse —
-            only packages we can deliver today are marked Ready to buy. Open{' '}
-            <strong className="font-medium text-white">Read more</strong> for full detail.
+            Fixed-scope delivery for your niche: same capabilities across every industry, tailored problems and
+            extras. Only packages we can deliver today are marked Ready to buy — open{' '}
+            <strong className="font-medium text-white">Read more</strong> for full scope and exclusions.
             {generatedCount > 0 ? (
               <span className="mt-2 block text-sm text-slate-500">
-                Prefer a niche page?{' '}
+                Prefer a niche landing?{' '}
                 <Link href="/solutions" className="text-violet-300 underline-offset-2 hover:underline">
-                  Browse {generatedCount} industry landings
+                  Browse {generatedCount} industry pages
                 </Link>
                 .
               </span>
@@ -52,37 +53,44 @@ export default function ProductsPage() {
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-2">
-          <IndustryCategorySelect
-            value={industryCategory}
-            onChange={setIndustryCategory}
-            emptyLabel="Select an industry to browse packages"
-            label="Filter by industry"
-          />
-          {categoryMeta && shownCount > 0 && (
-            <p className="text-sm text-slate-400">
-              Showing {shownCount} packages for <strong className="text-white">{categoryMeta.name}</strong>{' '}
-              (of {catalogStats.sellablePackages} sellable industry SKUs).
-            </p>
-          )}
-          {!industryCategory && (
-            <p className="text-sm text-amber-200/90">
-              Choose an industry above to load packages. The full catalog is{' '}
-              {catalogStats.sellablePackages} SKUs — we do not dump them unfiltered.
-            </p>
-          )}
+        <div className="mt-8">
+          <PublicCatalogOverview ctaHref="/pricing" ctaLabel="Compare prices" />
+        </div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-10 space-y-6">
+          <div className="max-w-md space-y-2">
+            <IndustryCategorySelect
+              value={industryCategory}
+              onChange={setIndustryCategory}
+              emptyLabel="Select an industry to browse packages"
+              label="Filter by industry"
+            />
+            {categoryMeta && shownCount > 0 && (
+              <p className="text-sm text-slate-400">
+                Showing {shownCount} packages for <strong className="text-white">{categoryMeta.name}</strong>{' '}
+                (of {catalogStats.sellablePackages.toLocaleString('en-US')} sellable industry packages).
+              </p>
+            )}
+            {!industryCategory && (
+              <p className="text-sm text-slate-400">
+                Select an industry below to load its packages. We keep the directory filtered so the catalog stays
+                readable.
+              </p>
+            )}
+          </div>
+          <IndustryBrowseGrid value={industryCategory} onChange={setIndustryCategory} />
         </motion.div>
 
         <LaunchBundlesPanel />
 
         <section className="mt-14">
-          <h2 className="font-display text-2xl font-bold text-white">Ready to buy</h2>
+          <h2 className="font-display text-2xl font-bold text-white">
+            {industryCategory ? 'Ready to buy' : 'Select an industry'}
+          </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Full catalog: {catalogStats.sellablePackages} industry packages ({catalogStats.expertServiceCount}{' '}
-            services + {catalogStats.bundleCount} industry bundle SKUs) across{' '}
-            {catalogStats.industryGroups} industries — one price book.{' '}
-            {catalogStats.readyToBuyCount} SKUs are ready to buy
-            {catalogStats.comingSoonCount > 0 ? `; ${catalogStats.comingSoonCount} are coming soon` : ''}.
+            {industryCategory
+              ? `Packages for ${categoryMeta?.name ?? 'this industry'} — scope, delivery level, and exclusions on each card.`
+              : `Choose one of ${catalogStats.industryGroups} industries to see its ${catalogStats.basePackages} capabilities.`}
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {available.map((offer, i) => (

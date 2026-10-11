@@ -5,6 +5,46 @@ import { expectedBundleStepIds } from '../../modules/billing/lib/deliverable-han
 import type { FulfillmentResult } from '../../modules/billing/lib/deliverable-handlers/types';
 import { listResolvedPackageIndustryProblems } from '../../modules/billing/lib/package-industry-problems';
 
+function commercialInvoiceMeta() {
+  return {
+    invoiceLinked: true,
+    invoiceId: 'inv-test-1',
+    invoiceNumber: 'INV-202610-0001',
+    commercialInvoice: {
+      invoiceId: 'inv-test-1',
+      invoiceNumber: 'INV-202610-0001',
+      status: 'paid',
+      documentKind: 'payment_receipt',
+      billingPortalPath: '/dashboard/billing',
+    },
+  };
+}
+
+function serviceCompanionMeta(ticketId = 'ticket-svc-1') {
+  return {
+    serviceCompanion: true,
+    commercialCompanion: true,
+    kickoffTicketId: ticketId,
+    modulesActivated: ['notifications', 'billing', 'tasks'],
+    portalEntitlements: {
+      entitlementSource: 'user_modules+org',
+      userModulesGranted: ['notifications', 'billing', 'tasks'],
+      billingAccess: true,
+      notificationSeeded: true,
+      portalReady: true,
+    },
+  };
+}
+
+function commercialCompanionArtifact() {
+  return {
+    type: 'commercial_companion',
+    filename: 'commercial-delivery-pack.md',
+    downloadLabel: 'Commercial delivery pack',
+    storagePath: '/commercial',
+  };
+}
+
 function passingDocQuality(deliverableId: string) {
   const threshold = DOC_SUBSTANCE_THRESHOLDS[deliverableId] ?? {
     minSections: 5,
@@ -33,6 +73,7 @@ function passingDocQuality(deliverableId: string) {
     problemsCoveredCount: problemsCovered.length,
     problemsEmbeddedInDoc: true,
     minProblemsCovered: 5,
+    ...commercialInvoiceMeta(),
   };
 }
 
@@ -106,14 +147,17 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     if (deliverableId === 'bundle-ops-clarity') {
       return {
         ...base,
+        projectId: 'proj-ops-clarity',
         artifacts: [
           { type: 'audit_report', filename: 'technical-audit.pdf', downloadLabel: 'Audit', storagePath: '/a' },
           { type: 'audit_report_md', filename: 'audit_report_md.md', downloadLabel: 'Audit MD', storagePath: '/am' },
           { type: 'workflow_design', filename: 'workflow-sop-pack.pdf', downloadLabel: 'Workflow', storagePath: '/w' },
           { type: 'workflow_design_md', filename: 'workflow_design_md.md', downloadLabel: 'Workflow MD', storagePath: '/wm' },
+          commercialCompanionArtifact(),
         ],
         metadata: {
           ...passingDocQuality('bundle-ops-clarity'),
+          ...serviceCompanionMeta('ticket-ops-1'),
           ...stepsMeta,
         },
       };
@@ -216,6 +260,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (deliverableId === 'integration') {
     return {
       ...base,
+      projectId: 'proj-integration',
       artifacts: [
         ...base.artifacts,
         { type: 'integration_config', filename: 'integration-config.json', downloadLabel: 'JSON', storagePath: '/i' },
@@ -225,9 +270,11 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
           downloadLabel: 'Checklist',
           storagePath: '/ic',
         },
+        commercialCompanionArtifact(),
       ],
       metadata: {
         ...passingDocQuality(deliverableId),
+        ...serviceCompanionMeta('ticket-integration-1'),
         integrationConfig: {
           webhookSecret: '***redacted***',
           hasEnvMap: true,
@@ -262,6 +309,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       ],
       metadata: {
         ...passingDocQuality(deliverableId),
+        kickoffTicketId: 'ticket-leadgen-1',
         leadGenStats: {
           leadsGenerated: 0,
           sampleLeadsSeeded: 12,
@@ -371,14 +419,35 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     };
   }
 
+  if (
+    deliverableId === 'audit' ||
+    deliverableId === 'workflow-design' ||
+    deliverableId === 'sales-enablement'
+  ) {
+    return {
+      ...base,
+      projectId: `proj-${deliverableId}`,
+      artifacts: [...base.artifacts, commercialCompanionArtifact()],
+      metadata: {
+        ...passingDocQuality(deliverableId),
+        ...serviceCompanionMeta(`ticket-${deliverableId}`),
+        ...(deliverableId === 'sales-enablement' ? { salesPackReady: true } : {}),
+      },
+    };
+  }
+
   if (DOC_SUBSTANCE_THRESHOLDS[deliverableId]) {
     return {
       ...base,
+      projectId: base.projectId ?? `proj-${deliverableId}`,
       metadata: { ...passingDocQuality(deliverableId) },
     };
   }
 
-  return base;
+  return {
+    ...base,
+    projectId: base.projectId ?? `proj-${deliverableId}`,
+  };
 }
 
 describe('fulfillment quality checklist — catalog contract', () => {
@@ -490,6 +559,28 @@ describe('fulfillment quality checklist — min_problems_covered fail-closed', (
       },
     });
     expect(r.items.find((i) => i.id === 'min_problems_covered')?.passed).toBe(true);
+  });
+});
+
+describe('fulfillment quality checklist — product+service+invoice (not docs alone)', () => {
+  it('fails audit when only PDF/MD without service companion or invoice', () => {
+    const docOnly = passingDocQuality('audit') as Record<string, unknown>;
+    delete docOnly.invoiceLinked;
+    delete docOnly.commercialInvoice;
+    delete docOnly.invoiceId;
+    delete docOnly.invoiceNumber;
+    const r = runFulfillmentQualityChecklist('audit', {
+      status: 'completed',
+      artifacts: [
+        { type: 'pdf', filename: 'technical-audit.pdf', storagePath: '/t' },
+        { type: 'md', filename: 'audit.md', storagePath: '/m' },
+      ],
+      metadata: docOnly,
+    });
+    expect(r.passed).toBe(false);
+    expect(r.items.some((i) => i.id === 'commercial_invoice_linked' && !i.passed)).toBe(true);
+    expect(r.items.some((i) => i.id === 'service_companion' && !i.passed)).toBe(true);
+    expect(r.items.some((i) => i.id === 'product_or_service_present' && !i.passed)).toBe(true);
   });
 });
 

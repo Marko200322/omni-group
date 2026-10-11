@@ -1,0 +1,27 @@
+{
+  "discountPct": 18,
+  "maxSlots": 50,
+  "rationale": "Marko: list felt too cheap vs EU agency bands. Raise M6 list toward mid-honest competitor floor; keep −18% intro for first 50 only, then full list. setup-custom held (runbook honesty).",
+  "packages": [
+    { "id": "setup-quick", "fullEur": 690 },
+    { "id": "setup-full", "fullEur": 1590 },
+    { "id": "setup-custom", "fullEur": 1290 },
+    { "id": "audit", "fullEur": 890 },
+    { "id": "integration", "fullEur": 890 },
+    { "id": "workflow-design", "fullEur": 890 },
+    { "id": "support-priority", "fullEur": 299 },
+    { "id": "support-dedicated", "fullEur": 790 },
+    { "id": "landing", "fullEur": 1290 },
+    { "id": "website-business", "fullEur": 2290 },
+    { "id": "website-ecommerce", "fullEur": 2790 },
+    { "id": "white-label-setup", "fullEur": 1590 },
+    { "id": "sales-enablement", "fullEur": 890 },
+    { "id": "vertical-package", "fullEur": 349 },
+    { "id": "lead-gen-retainer", "fullEur": 449 },
+    { "id": "ai-support-retainer", "fullEur": 349 },
+    { "id": "custom-software", "fullEur": 1490 },
+    { "id": "bundle-portal-presence", "fullEur": 1590 },
+    { "id": "bundle-sales-launch", "fullEur": 1790 },
+    { "id": "bundle-ops-clarity", "fullEur": 1490 }
+  ]
+}

@@ -88,10 +88,11 @@ if (-not $SkipHuntPipeline) {
 
 if (-not $SkipNestAstra) {
   try {
+    # Multi-stack GET /health (smoke-stack); deeper Atina release gate remains: npm run smoke:all
     & (Join-Path $scriptsDir 'smoke-stack.ps1') -SkipNode:$false -AtinaNodeBase $api -AstraBase 'http://127.0.0.1:8080' -NestBase 'http://127.0.0.1:3001'
-    Record 'smoke-stack (Astra+Nest+Atina health)' $true
+    Record 'smoke-stack (Astra+Nest+Atina health; pair smoke:all)' $true
   } catch {
-    Record 'smoke-stack' $false $_.Exception.Message
+    Record 'smoke-stack (pair smoke:all)' $false $_.Exception.Message
   }
 }
 

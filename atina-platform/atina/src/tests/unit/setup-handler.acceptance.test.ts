@@ -54,6 +54,7 @@ import {
 } from '../../modules/billing/lib/deliverable-handlers/artifact-helpers';
 import { getAcceptanceContract } from '../../modules/billing/lib/deliverable-acceptance-contract';
 import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfillment-quality-checklist';
+import { withCommercialDeliveryProof } from './helpers/commercial-delivery-proof';
 import type { FulfillmentArtifact, FulfillmentContext } from '../../modules/billing/lib/deliverable-handlers/types';
 
 function asArtifact(input: {
@@ -135,7 +136,7 @@ describe('setup handler — acceptance contract artifacts', () => {
   });
 
   it('setup-quick covers status, pdf, project, portal entitlements', async () => {
-    const result = await setupFulfillmentHandler.fulfill(ctx('setup-quick'));
+    const result = withCommercialDeliveryProof(await setupFulfillmentHandler.fulfill(ctx('setup-quick')));
     const contract = getAcceptanceContract('setup-quick')!;
     const checklist = runFulfillmentQualityChecklist('setup-quick', result);
 
@@ -167,7 +168,7 @@ describe('setup handler — acceptance contract artifacts', () => {
   });
 
   it('setup-full covers CRM demo labels, migration CSV, training, honest automation', async () => {
-    const result = await setupFulfillmentHandler.fulfill(ctx('setup-full'));
+    const result = withCommercialDeliveryProof(await setupFulfillmentHandler.fulfill(ctx('setup-full')));
     const contract = getAcceptanceContract('setup-full')!;
     const checklist = runFulfillmentQualityChecklist('setup-full', result);
 
@@ -201,7 +202,7 @@ describe('setup handler — acceptance contract artifacts', () => {
   });
 
   it('setup-custom completes with honest runbook when deploy prep skipped', async () => {
-    const result = await setupFulfillmentHandler.fulfill(ctx('setup-custom'));
+    const result = withCommercialDeliveryProof(await setupFulfillmentHandler.fulfill(ctx('setup-custom')));
     const contract = getAcceptanceContract('setup-custom')!;
     const checklist = runFulfillmentQualityChecklist('setup-custom', result);
 

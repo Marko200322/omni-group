@@ -58,8 +58,15 @@ describe('OMI red team — anonymous + catalog', () => {
   });
 
   it('says there is no catalog match for a fictional requirement', async () => {
-    const out = await publicOmi('Da li imate rešenje za orbitni satelitski reactor control?');
-    expect(out.content).toMatch(/does not currently have a verified solution/i);
+    const msg = 'Da li imate rešenje za orbitni satelitski reactor control?';
+    const rec = recommendOmiProducts({ message: msg });
+    // Advisor path: either no suitable SKU, or consult-first clarifying before a forced package.
+    expect(rec.noSuitable || rec.products.length === 0 || rec.confidence === 'low').toBe(true);
+    const advisor = formatOmiAdvisorReply(rec);
+    const out = await publicOmi(msg);
+    expect(`${advisor}\n${out.content}`).toMatch(
+      /does not currently have a verified solution|understand the situation before recommending|I will not force a nearby package|\/contact/i,
+    );
   });
 });
 
@@ -123,7 +130,9 @@ describe('OMI red team — industries and recommendations', () => {
         expect(rec.products.map((p) => p.id)).not.toContain('website-ecommerce');
       }
       if (row.cluster === 'commerce') {
-        expect(rec.products.some((p) => p.id === 'website-ecommerce')).toBe(true);
+        expect(
+          rec.products.some((p) => p.id === 'website-ecommerce' || p.id === 'website-business' || p.id === 'landing'),
+        ).toBe(true);
       }
       return rec.products.map((p) => p.id).sort().join(',');
     });

@@ -68,23 +68,27 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     notIncluded: ['Your own custom domain', 'Dedicated VPS', 'Automations CONNECTED', 'CRM DEMO seed'],
   },
   audit: {
-    promise: 'A clear technical report for your business.',
+    promise: 'Audit engagement — docs accompany the service.',
     summary:
-      'DOCUMENT / consulting deliverable: a PDF audit (what works, what’s risky, 90-day plan, ROI) — not a live connected product.',
+      'SERVICE + DOCS: workspace project, kickoff ticket, Billing invoice, commercial pack, plus the PDF audit (risks, 90-day plan, ROI). Not PDF-only.',
     readMore:
-      'The report covers executive summary, security notes, stack assessment, roadmap, and ROI. You also get a markdown source bundle. This is a consulting document pack, not on-site work, legal certification, or a live portal product.',
+      'You get a client-visible kickoff ticket, workspace project, portal Billing access with your paid invoice/receipt, commercial delivery pack, and the full PDF/MD audit. Not on-site work or legal certification.',
     when: 'Usually within 48 hours',
-    youGet: ['Full PDF audit report', 'Industry recommendations', '90-day roadmap + ROI'],
-    notIncluded: ['On-site visit', 'Penetration test', 'Live connected product'],
+    youGet: [
+      'Kickoff ticket + workspace project',
+      'Invoice in Billing + commercial pack',
+      'Full PDF audit + 90-day roadmap',
+    ],
+    notIncluded: ['On-site visit', 'Penetration test', 'Live product hosting'],
   },
   'workflow-design': {
     promise: 'Your processes mapped into a ready plan.',
     summary:
-      'DOCUMENT / consulting deliverable: process map, roles, KPIs in a PDF you can follow — not a live connected product.',
+      'SERVICE + DOCS: workspace project, kickoff ticket, Billing invoice, commercial pack + workflow/SOP PDF — not PDF-only.',
     readMore:
-      'Includes process map, automation steps, roles, KPIs, and a rollout plan. Building live automations inside your tools is a separate package (Setup or Integration). This is a consulting document pack, not a live connected product.',
+      'Includes kickoff ticket, workspace, invoice, commercial pack, process map, automation steps, roles, KPIs, and a rollout plan. Building live automations inside your tools is a separate package (Setup or Integration).',
     when: 'Usually within 2–3 days',
-    youGet: ['Workflow & SOP PDF', 'Automation step map', 'Roles and KPIs'],
+    youGet: ['Kickoff + workspace + invoice', 'Workflow & SOP PDF', 'Automation step map + roles/KPIs'],
     notIncluded: ['Building automations in your tools', 'Live connected product'],
   },
   'support-priority': {
@@ -140,11 +144,11 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   integration: {
     promise: 'Integration guide your developer can follow.',
     summary:
-      'DOCUMENT / consulting deliverable (docs + config): PDF + config JSON with webhooks — not a live connected product.',
+      'SERVICE + DOCS + config: kickoff ticket, workspace, invoice, commercial pack, PDF + integration-config JSON — tools NOT pre-connected.',
     readMore:
       'We do not live-connect your Stripe/ERP/CRM or register OAuth apps on third-party tools in this package. Tools stay DOCUMENTED_NOT_LIVE until your developer wires credentials.',
     when: 'Usually 2–4 days after payment',
-    youGet: ['Integration guide PDF', 'Config JSON download', 'Webhook map'],
+    youGet: ['Kickoff + workspace + invoice', 'Integration guide PDF', 'Config JSON + webhook map'],
     notIncluded: ['Live third-party wiring', 'Live connected product'],
   },
   'support-dedicated': {
@@ -184,11 +188,11 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'sales-enablement': {
     promise: 'Sales scripts and FAQ your team can use.',
     summary:
-      'DOCUMENT / consulting deliverable: demo script, outreach hooks, FAQ, and closing checklist PDF — not a live connected product.',
+      'SERVICE + DOCS: kickoff ticket, workspace, Billing invoice, commercial pack + sales scripts/FAQ/closing checklist PDF.',
     readMore:
-      'Does not include live sales calls or CRM setup for your sales team. This is a consulting document pack, not a live connected product.',
+      'Does not include live sales calls or CRM setup for your sales team. Docs accompany the engagement — not PDF-only theater.',
     when: 'Usually 2–3 days after payment',
-    youGet: ['Sales enablement PDF', 'Industry hooks', 'FAQ + closing checklist'],
+    youGet: ['Kickoff + workspace + invoice', 'Sales enablement PDF', 'Industry hooks + FAQ checklist'],
     notIncluded: ['Live sales calls', 'Live connected product'],
   },
   'vertical-package': {
@@ -245,11 +249,11 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
   'bundle-ops-clarity': {
     promise: 'Audit + workflow plan in one delivery.',
     summary:
-      'DOCUMENT / consulting deliverable: technical audit and workflow/SOP PDFs — docs pack, not a live connected product.',
+      'SERVICE + DOCS: kickoff/service companion + invoice + technical audit and workflow/SOP PDFs — not PDF theater.',
     readMore:
-      'Two PDF packs with cross-linked priorities. We do not build automations inside your tools or activate live portal products in this bundle.',
+      'Dual consulting pack with commercial companion. We do not build automations inside your tools in this bundle; docs accompany the engagement.',
     when: 'Usually within 4–5 days',
-    youGet: ['Audit PDF', 'Workflow/SOP PDF', '90-day priorities', 'Industry recommendations'],
+    youGet: ['Kickoff + commercial companion', 'Audit PDF', 'Workflow/SOP PDF', '90-day priorities'],
     notIncluded: ['On-site visit', 'Automation build in your stack', 'Live connected product'],
   },
   'custom-software': {

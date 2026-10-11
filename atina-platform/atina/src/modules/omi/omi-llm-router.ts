@@ -28,7 +28,7 @@ const EXPERT_SIGNAL =
   /\b(architecture|multi-?tenant|compliance|gdpr|hipaa|soc\s?2|sla|rfp|procurement|migration|legacy (erp|crm)|bespoke|enterprise (rollout|deployment)|custom integration|multi-?system|orchestrat|data residency)\b/i;
 
 const SECRET_LEAK =
-  /\b(sk-(?:live|test|proj)-[A-Za-z0-9_-]{8,}|OPENROUTER_API_KEY(?:\s*[:=]\s*\S+)?|AI_KEY\s*[:=]\s*\S+|Bearer\s+[A-Za-z0-9._-]{20,}|api[_-]?key\s*[:=]\s*['\"]?[A-Za-z0-9._-]{16,})/gi;
+  /\b(sk-(?:live|test|proj)-[A-Za-z0-9_-]{8,}|OPENROUTER_API_KEY(?:\s*[:=]\s*\S+)?|AI_KEY\s*[:=]\s*\S+|Bearer\s+[A-Za-z0-9._-]{20,}|api[_-]?key\s*[:=]\s*['"]?[A-Za-z0-9._-]{16,})/gi;
 
 function normalize(text: string): string {
   return text.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');

@@ -124,7 +124,24 @@ const CR = {
     label: 'Audit + workflow PDFs both delivered',
     required: true,
   },
+  invoiceLinked: {
+    id: 'commercial_invoice_linked',
+    label: 'Paid invoice / payment receipt linked (Billing)',
+    required: true,
+  },
+  productOrService: {
+    id: 'product_or_service_present',
+    label: 'Non-document product or service proof (docs accompany, never replace)',
+    required: true,
+  },
+  serviceCompanion: {
+    id: 'service_companion',
+    label: 'Service companion: project + kickoff ticket + commercial delivery pack',
+    required: true,
+  },
 };
+
+const COMMERCIAL_BASE = [CR.status, CR.invoiceLinked, CR.productOrService] as const;
 
 const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   'setup-quick': {
@@ -132,7 +149,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Quick setup',
     description: DELIVERABLE_CATALOG[0].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance, CR.setupProject, CR.portalModules],
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.setupProject, CR.portalModules],
   },
   'setup-full': {
     deliverableId: 'setup-full',
@@ -140,7 +157,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[1].description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.docSubstance,
       CR.setupProject,
@@ -156,7 +173,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[2].description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.docSubstance,
       CR.setupProject,
@@ -170,21 +187,21 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Technical audit',
     description: DELIVERABLE_CATALOG[3].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance],
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.serviceCompanion],
   },
   integration: {
     deliverableId: 'integration',
     name: 'Custom integration',
     description: DELIVERABLE_CATALOG[4].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance, CR.integrationConfig],
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.integrationConfig, CR.serviceCompanion],
   },
   'workflow-design': {
     deliverableId: 'workflow-design',
     name: 'Workflow design',
     description: DELIVERABLE_CATALOG[5].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance],
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.serviceCompanion],
   },
   'support-priority': {
     deliverableId: 'support-priority',
@@ -192,7 +209,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[6].description,
     billing: 'monthly',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.supportAutomation,
       CR.retainerProject,
@@ -208,7 +225,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[7].description,
     billing: 'monthly',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.supportAutomation,
       CR.retainerProject,
@@ -223,7 +240,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Landing + copy',
     description: DELIVERABLE_CATALOG[8].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.publicUrl, CR.liveProbe, CR.noOmniChrome, CR.pdf],
+    criteria: [...COMMERCIAL_BASE, CR.publicUrl, CR.liveProbe, CR.noOmniChrome, CR.pdf],
   },
   'website-business': {
     deliverableId: 'website-business',
@@ -231,7 +248,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[9].description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.publicUrl,
       CR.liveProbe,
       CR.noOmniChrome,
@@ -246,7 +263,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[10].description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.publicUrl,
       CR.liveProbe,
       CR.noOmniChrome,
@@ -263,7 +280,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[11].description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.docSubstance,
       CR.publicUrl,
@@ -277,7 +294,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Sales enablement',
     description: DELIVERABLE_CATALOG[12].description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance],
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.serviceCompanion],
   },
   'vertical-package': {
     deliverableId: 'vertical-package',
@@ -285,7 +302,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[13].description,
     billing: 'monthly',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.docSubstance,
       CR.crmBootstrap,
@@ -301,7 +318,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[14].description,
     billing: 'monthly',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.leadGenKickoff,
       CR.crmBootstrap,
@@ -318,7 +335,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG[15].description,
     billing: 'monthly',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.aiSupportSetup,
       CR.modulesBootstrap,
@@ -334,7 +351,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'custom-software')!.description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.softwareProject,
       CR.softwareScaffoldArchive,
       CR.handoffPdf,
@@ -348,7 +365,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-portal-presence')!.description,
     billing: 'one_time',
     criteria: [
-      CR.status,
+      ...COMMERCIAL_BASE,
       CR.pdf,
       CR.setupProject,
       CR.portalModules,
@@ -363,14 +380,28 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
     name: 'Sales launch bundle',
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-sales-launch')!.description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.publicUrl, CR.liveProbe, CR.noOmniChrome, CR.bundleSteps],
+    criteria: [
+      ...COMMERCIAL_BASE,
+      CR.pdf,
+      CR.publicUrl,
+      CR.liveProbe,
+      CR.noOmniChrome,
+      CR.bundleSteps,
+    ],
   },
   'bundle-ops-clarity': {
     deliverableId: 'bundle-ops-clarity',
     name: 'Ops clarity bundle',
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'bundle-ops-clarity')!.description,
     billing: 'one_time',
-    criteria: [CR.status, CR.pdf, CR.docSubstance, CR.dualPdf, CR.bundleSteps],
+    criteria: [
+      ...COMMERCIAL_BASE,
+      CR.pdf,
+      CR.docSubstance,
+      CR.dualPdf,
+      CR.bundleSteps,
+      CR.serviceCompanion,
+    ],
   },
 };
 

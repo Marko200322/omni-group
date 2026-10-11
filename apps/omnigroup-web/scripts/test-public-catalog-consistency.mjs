@@ -55,7 +55,14 @@ assert(offers.includes('getPublicCatalogStats'), 'client-offers must export getP
 assert(offers.includes('expertServiceCount'), 'Catalog stats must split expert services from bundles');
 assert(offers.includes('bundleCount'), 'Catalog stats must count bundle SKUs separately');
 assert(offers.includes('excludeBundles'), 'Offer lists must be able to hide bundles from the grid');
-assert(home.includes('Services + bundles'), 'Homepage must not call the 20 SKUs only expert services');
+assert(
+  home.includes('Industry packages') && home.includes('sellablePackages'),
+  'Homepage must surface full industry package count (not only 20 base SKUs)',
+);
+assert(
+  home.includes('capabilities') && home.includes('industries'),
+  'Homepage must state capabilities × industries catalog math',
+);
 assert(pricing.includes('excludeBundles: true'), 'Pricing grid must not double-count bundles');
 assert(products.includes('excludeBundles: true'), 'Packages grid must not double-count bundles');
 assert(services.includes('excludeBundles: true'), 'Services grid must not double-count bundles');
@@ -131,7 +138,11 @@ assert(catalog.includes("bestFor: 'niche businesses wanting industry CRM"), 'Ver
 assert(catalog.includes("bestFor: 'agencies and partners reselling"), 'White-label packaging must have Best for copy');
 assert(!/ready \?[\s\S]*Buy now[\s\S]*:[\s\S]*Buy now/.test(offerCard), 'COMING_SOON must not render Buy now');
 assert(payments.includes('getPackageAnchorEur'), 'Atina checkout must import the shared list-price function');
-assert(payments.includes('const amount = listPriceEur'), 'Atina deliverable checkout must charge the list price');
+assert(payments.includes('listPriceEur'), 'Atina deliverable checkout must retain the package list price');
+assert(
+  payments.includes('applyDeliverableIntroPrice') && payments.includes('priced.chargeEur'),
+  'Atina deliverable checkout must charge intro (−18% first 50) or full list via priced.chargeEur',
+);
 assert(
   !/createDeliverable(?:Manual|Stripe)Checkout[\s\S]{0,1800}calculateDeliverableQuote/.test(payments),
   'Atina deliverable checkout must not call the quote calculator',

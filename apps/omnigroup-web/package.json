@@ -17,6 +17,7 @@
     "test:honesty": "node scripts/test-delivery-honesty.mjs",
     "test:omnitrix": "node scripts/test-omnitrix.mjs",
     "test:ultrimatrix": "node scripts/test-ultrimatrix-live.mjs",
+    "test:ultimatrix": "node ../../scripts/test-ultimatrix.mjs",
     "test:legal": "node scripts/test-legal-consistency.mjs",
     "test:saas": "node scripts/test-saas-cycle.mjs",
     "test:contact-validation": "node scripts/test-contact-validation.mjs",

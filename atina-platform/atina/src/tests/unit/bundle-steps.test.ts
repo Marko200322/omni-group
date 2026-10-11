@@ -5,12 +5,13 @@ import {
   type BundleStepResult,
 } from '../../modules/billing/lib/deliverable-handlers/bundle-steps';
 import type { FulfillmentResult } from '../../modules/billing/lib/deliverable-handlers/types';
+import { withCommercialDeliveryProof } from './helpers/commercial-delivery-proof';
 
-function docQuality(chars = 2500) {
+function docQuality(chars = 5000) {
   return {
     documentTitle: 'Doc',
     documentQuality: {
-      sectionCount: 6,
+      sectionCount: 10,
       totalBodyChars: chars,
       minSectionBodyChars: 200,
       checklistOrMilestoneHits: 3,
@@ -18,6 +19,9 @@ function docQuality(chars = 2500) {
       industryPresent: true,
     },
     documentSubstanceOk: true,
+    pdfBytes: 15000,
+    pdfPageCount: 3,
+    pdfSubstanceOk: true,
   };
 }
 
@@ -39,14 +43,15 @@ describe('bundle step coverage', () => {
       ],
       metadata: {
         setupTier: 'quick',
-        modulesActivated: ['notifications', 'billing'],
+        modulesActivated: ['notifications', 'billing', 'crm', 'tasks'],
         portalReady: true,
         portalEntitlements: {
           entitlementSource: 'user_modules+org',
-          userModulesGranted: ['notifications', 'billing'],
+          userModulesGranted: ['notifications', 'billing', 'crm', 'tasks'],
           billingAccess: true,
           notificationSeeded: true,
           portalReady: true,
+          onboardingTasksSeeded: true,
         },
         ...docQuality(),
       },
@@ -57,7 +62,7 @@ describe('bundle step coverage', () => {
       publicUrl: '/sites/acme',
       artifacts: [{ type: 'pdf', filename: 'landing-delivery.pdf', storagePath: '/l' }],
       metadata: {
-        liveProbe: { ok: true, status: 200, bytes: 2000, detectedTitle: 'Acme' },
+        liveProbe: { ok: true, status: 200, bytes: 2000, detectedTitle: 'Acme', omniChrome: false },
         brandTitle: 'Acme',
         siteTitle: 'Acme',
       },
@@ -76,9 +81,11 @@ describe('bundle step coverage', () => {
     expect(merged.status).toBe('completed');
     expect(merged.projectId).toBe('setup-proj');
     expect(merged.publicUrl).toBe('/sites/acme');
-    expect(merged.metadata?.modulesActivated).toEqual(['notifications', 'billing']);
+    expect(merged.metadata?.modulesActivated).toEqual(['notifications', 'billing', 'crm', 'tasks']);
     expect(merged.artifacts).toHaveLength(3);
-    expect(runFulfillmentQualityChecklist('bundle-portal-presence', merged).passed).toBe(true);
+    expect(
+      runFulfillmentQualityChecklist('bundle-portal-presence', withCommercialDeliveryProof(merged)).passed,
+    ).toBe(true);
   });
 
   it('sales-launch is partial when landing fails but still keeps sales artifacts', () => {
@@ -132,7 +139,9 @@ describe('bundle step coverage', () => {
     const merged = mergeBundleResults('bundle-ops-clarity', expected, [audit, workflow], stepResults);
     expect(merged.status).toBe('completed');
     expect(merged.artifacts.filter((a) => a.filename.endsWith('.pdf'))).toHaveLength(2);
-    expect(runFulfillmentQualityChecklist('bundle-ops-clarity', merged).passed).toBe(true);
+    expect(
+      runFulfillmentQualityChecklist('bundle-ops-clarity', withCommercialDeliveryProof(merged)).passed,
+    ).toBe(true);
   });
 
   it('quality checklist fails when bundleSteps are incomplete', () => {

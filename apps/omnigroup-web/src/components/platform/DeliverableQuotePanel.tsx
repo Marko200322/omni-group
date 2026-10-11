@@ -15,6 +15,11 @@ import {
   listCheckoutPackages,
 } from '@/lib/package-delivery-spec';
 import { getClientOffer, getPublicListPriceEur } from '@/lib/client-offers';
+import {
+  fetchDeliverableIntroPromoStatus,
+  introDisplayPriceEur,
+  type DeliverableIntroPromoPublic,
+} from '@/lib/deliverable-intro-promo-public';
 import { parseIndustryPackageId } from '@/lib/thousand-package-catalog';
 import { isLeanProdMode } from '@/lib/prod-mode';
 import { formatBillingLabel } from '@/lib/dynamic-pricing';
@@ -73,6 +78,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
   const [stripePreferred, setStripePreferred] = useState(false);
   const [packageContext, setPackageContext] = useState<PackageIndustryContext | null>(null);
   const [maintenanceTierId, setMaintenanceTierId] = useState<string>('');
+  const [introPromo, setIntroPromo] = useState<DeliverableIntroPromoPublic | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,6 +102,17 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const promo = await fetchDeliverableIntroPromoStatus();
+      if (!cancelled) setIntroPromo(promo);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const deliverable = getDeliverable(deliverableId);
   const clientOffer = getClientOffer(deliverableId);
   const checkoutAllowed = canCheckoutPackage(deliverableId);
@@ -113,6 +130,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
     (deliverable?.anchorEur && deliverable.anchorEur > 0
       ? deliverable.anchorEur
       : getPublicListPriceEur(parseIndustryPackageId(deliverableId)?.baseId ?? deliverableId));
+  const chargePriceEur = introDisplayPriceEur(listPriceEur, introPromo);
 
   useEffect(() => {
     setCheckout(null);
@@ -358,9 +376,32 @@ export function DeliverableQuotePanel({ disabled }: Props) {
       </div>
 
       <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-3 text-sm">
-        <span className="text-slate-400">List price: </span>
-        <span className="text-xl font-bold text-white">{formatEur(listPriceEur)}</span>
-        <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
+        {introPromo?.active && chargePriceEur < listPriceEur ? (
+          <>
+            <span className="text-xs font-semibold uppercase tracking-wide text-amber-200/90">
+              First {introPromo.maxSlots} clients only
+            </span>
+            <span className="mt-1 block">
+              <span className="text-slate-400">You pay now: </span>
+              <span className="text-xl font-bold text-white">{formatEur(chargePriceEur)}</span>
+              <span className="ml-2 text-sm text-slate-500 line-through">{formatEur(listPriceEur)}</span>
+            </span>
+            <span className="mt-1 block text-xs text-emerald-200/90">
+              After the first {introPromo.maxSlots} paying clients, price returns to regular{' '}
+              <span className="font-semibold text-white">{formatEur(listPriceEur)}</span>
+              {formatBillingLabel(deliverable.billing) ? ` ${formatBillingLabel(deliverable.billing)}` : ''}.{' '}
+              {introPromo.remaining} of {introPromo.maxSlots} intro slots left (−{introPromo.discountPct}%).
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-slate-400">Regular list price: </span>
+            <span className="text-xl font-bold text-white">{formatEur(listPriceEur)}</span>
+          </>
+        )}
+        {!(introPromo?.active && chargePriceEur < listPriceEur) ? (
+          <span className="text-slate-500"> {formatBillingLabel(deliverable.billing)}</span>
+        ) : null}
         <span className="mt-1 block text-xs text-slate-500">
           {clientOffer?.when ?? 'After payment confirmation'}
         </span>

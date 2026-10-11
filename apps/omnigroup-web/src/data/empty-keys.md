@@ -1,10 +1,10 @@
 # EMPTY / SET keys (auto-generated)
 
-**Generated:** 2026-09-17 20:48
+**Generated:** 2026-10-11 16:29
 **Command:** ``.\scripts\audit-empty-keys.ps1``
 **Rule:** vrednosti se **nikad** ne ispisuju - samo SET / EMPTY.
 
-**Summary:** 34 EMPTY Â· 65 SET
+**Summary:** 32 EMPTY Â· 67 SET
 
 Kanonska lista: [`STATUS-KANON.md`](../STATUS-KANON.md)
 
@@ -13,7 +13,6 @@ Kanonska lista: [`STATUS-KANON.md`](../STATUS-KANON.md)
 | Key | Source |
 |-----|--------|
 | `CLAY_API_KEY` | KLJUCEVI |
-| `CONTACT_SLACK_WEBHOOK_URL` | KLJUCEVI |
 | `CREWAI_API_KEY` | KLJUCEVI |
 | `CREWAI_BASE_URL` | KLJUCEVI |
 | `DEVIN_API_KEY` | KLJUCEVI |
@@ -38,7 +37,6 @@ Kanonska lista: [`STATUS-KANON.md`](../STATUS-KANON.md)
 | `REPLIT_AGENT_API_KEY` | KLJUCEVI |
 | `SALESFORGE_API_KEY` | KLJUCEVI |
 | `SIERRA_API_KEY` | KLJUCEVI |
-| `SLACK_WEBHOOK_URL` | KLJUCEVI |
 | `VIC_AI_API_KEY` | KLJUCEVI |
 | `WISE_API_KEY` | KLJUCEVI |
 | `WISE_PROFILE_ID` | KLJUCEVI |
@@ -67,6 +65,7 @@ Kanonska lista: [`STATUS-KANON.md`](../STATUS-KANON.md)
 | `CONTACT_CRM_INGRESS_PASSWORD` | KLJUCEVI |
 | `CONTACT_EMAIL_FROM` | KLJUCEVI |
 | `CONTACT_EMAIL_TO` | KLJUCEVI |
+| `CONTACT_SLACK_WEBHOOK_URL` | KLJUCEVI |
 | `CURSOR_API_KEY` | KLJUCEVI |
 | `CURSOR_REPO_PATH` | KLJUCEVI |
 | `DID_API_KEY` | KLJUCEVI |
@@ -98,6 +97,7 @@ Kanonska lista: [`STATUS-KANON.md`](../STATUS-KANON.md)
 | `SCRAPER_KEY` | KLJUCEVI |
 | `SCRAPER_URL` | KLJUCEVI |
 | `SESSION_SECRET` | KLJUCEVI |
+| `SLACK_WEBHOOK_URL` | KLJUCEVI |
 | `SMTP_HOST` | KLJUCEVI |
 | `SMTP_PASSWORD` | KLJUCEVI |
 | `SMTP_PORT` | KLJUCEVI |

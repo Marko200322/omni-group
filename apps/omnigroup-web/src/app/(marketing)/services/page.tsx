@@ -6,6 +6,8 @@ import { useMemo, useState } from 'react';
 import { OfferCard } from '@/components/marketing/OfferCard';
 import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { IndustryCategorySelect } from '@/components/marketing/IndustryCategorySelect';
+import { IndustryBrowseGrid } from '@/components/marketing/IndustryBrowseGrid';
+import { PublicCatalogOverview } from '@/components/marketing/PublicCatalogOverview';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 
 export default function ServicesPage() {
@@ -27,14 +29,26 @@ export default function ServicesPage() {
             Setup, support, and growth
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            Expert services sit on top of the SaaS plans. Same {catalogStats.expertServiceCount} services and{' '}
-            {catalogStats.bundleCount} catalog bundles as Pricing and Packages —{' '}
-            {catalogStats.catalogSkuCount} SKUs, one price book. Use Read more for the full delivery detail.
+            Fixed-scope delivery on top of the SaaS plans — same catalog as Pricing and Products (
+            {catalogStats.basePackages} capabilities × {catalogStats.industryGroups} industries). Filter by industry
+            for niche packages; use Read more for full delivery detail.
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md">
-          <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
+        <div className="mt-8">
+          <PublicCatalogOverview compact ctaHref="/products" ctaLabel="Browse by industry" />
+        </div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 space-y-6">
+          <div className="max-w-md">
+            <IndustryCategorySelect
+              value={industryCategory}
+              onChange={setIndustryCategory}
+              emptyLabel="All industries — show base capabilities"
+              label="Filter by industry"
+            />
+          </div>
+          <IndustryBrowseGrid value={industryCategory} onChange={setIndustryCategory} />
         </motion.div>
 
         <LaunchBundlesPanel />

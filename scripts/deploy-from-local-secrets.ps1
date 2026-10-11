@@ -91,6 +91,31 @@ Write-BudgetPlanSummary $monthlyBudgetEur
 if ($FreshWipe) { Write-Host '  Wipe:   FRESH WIPE (brise postojeci stack pre upload-a)' -ForegroundColor Yellow }
 Write-Host ''
 
+# P2 safety: never push Stripe LIVE without firma fields (Marko finish path).
+$stripeSecretGate = if ($config.stripeSecretKey) { [string]$config.stripeSecretKey.Trim() } else { '' }
+if ($stripeSecretGate.StartsWith('sk_live_')) {
+  $firmaGates = @(
+    @{ Name = 'companyLegalName'; Val = if ($config.companyLegalName) { [string]$config.companyLegalName.Trim() } else { '' } },
+    @{ Name = 'companyTaxId'; Val = if ($config.companyTaxId) { [string]$config.companyTaxId.Trim() } else { '' } },
+    @{ Name = 'companyAddress'; Val = if ($config.companyAddress) { [string]$config.companyAddress.Trim() } else { '' } }
+  )
+  $pub = if ($config.stripePublishableKey) { [string]$config.stripePublishableKey.Trim() } else { '' }
+  $wh = if ($config.stripeWebhookSecret) { [string]$config.stripeWebhookSecret.Trim() } else { '' }
+  $missing = @()
+  foreach ($g in $firmaGates) {
+    if ([string]::IsNullOrWhiteSpace($g.Val)) { $missing += $g.Name }
+  }
+  if (-not $pub.StartsWith('pk_live_')) { $missing += 'stripePublishableKey (pk_live_)' }
+  if (-not $wh.StartsWith('whsec_')) { $missing += 'stripeWebhookSecret (whsec_)' }
+  if ($missing.Count -gt 0) {
+    Write-Host 'BLOCKED: sk_live_ set but P2 incomplete:' -ForegroundColor Red
+    foreach ($m in $missing) { Write-Host "  - $m" -ForegroundColor Red }
+    Write-Host 'Popuni firmu + LIVE keys, pa .\scripts\marko-p2-finish.ps1  (docs/MARKO-P2-FINISH.md)' -ForegroundColor Yellow
+    exit 1
+  }
+  Write-Host '  P2 gate: sk_live_ + firma + pk_live_ + whsec_ OK' -ForegroundColor Green
+}
+
 if ($Bootstrap) {
   Write-Host '== VPS bootstrap (Docker + ufw) ==' -ForegroundColor Cyan
   $bootstrapScript = Join-Path $scriptsDir 'vps-bootstrap.sh'

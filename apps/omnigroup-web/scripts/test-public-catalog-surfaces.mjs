@@ -52,7 +52,11 @@ assert(catalog.includes('FULL_PACKAGE_CATALOG'), 'deliverable-catalog must expor
 assert(catalog.includes('buildThousandPackageCatalog'), 'FULL catalog must use thousand-package-catalog');
 assert(offers.includes('FULL_PACKAGE_CATALOG'), 'client-offers must use FULL_PACKAGE_CATALOG for sellable list');
 assert(pages.products.includes('Filter by industry') || pages.products.includes('industry'), 'products must filter by industry');
-assert(pages.products.includes('sellablePackages'), 'products must surface sellablePackages count');
+assert(pages.products.includes('sellablePackages') || pages.products.includes('PublicCatalogOverview'), 'products must surface catalog scale');
+assert(pages.pricing.includes('PublicCatalogOverview'), 'pricing must show catalog overview (20×50)');
+assert(pages.pricing.includes('IndustryBrowseGrid'), 'pricing must expose industry browse grid');
+assert(pages.products.includes('IndustryBrowseGrid'), 'products must expose industry browse grid');
+assert(pages.pricing.includes('PricingClarityFaq'), 'pricing must include clarity FAQ');
 
 const publicCatalogApi = read('src/app/api/public/catalog/route.ts');
 assert(publicCatalogApi.includes('FULL_PACKAGE_CATALOG'), 'public catalog API must report FULL_PACKAGE_CATALOG');
@@ -100,7 +104,11 @@ assert(
   'SERVICE_CATEGORIES must not keep stale hardcoded catalog prices',
 );
 
-assert(payments.includes('const amount = listPriceEur'), 'Atina checkout charges the list price');
+assert(payments.includes('listPriceEur'), 'Atina checkout retains the package list price');
+assert(
+  payments.includes('applyDeliverableIntroPrice') && payments.includes('priced.chargeEur'),
+  'Atina checkout charges intro (−18% first 50) or full list via priced.chargeEur',
+);
 const stripeBff = read('src/app/api/atina/payments/stripe/deliverable-checkout/route.ts');
 const manualBff = read('src/app/api/atina/payments/manual/deliverable-checkout/route.ts');
 assert(!stripeBff.includes('marketIntensity'), 'Stripe BFF must not forward quote intensity');

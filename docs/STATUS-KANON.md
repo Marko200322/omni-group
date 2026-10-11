@@ -1,12 +1,13 @@
 # STATUS-KANON — jedna lista za ceo projekat
 
-**Datum:** 2026-10-07 (fulfillment HARD 1000/1000; GTM CONDITIONAL)  
+**Datum:** 2026-10-09 (Ultimatrix hashed PASS; fulfillment HARD 1000/1000; GTM CONDITIONAL)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
-**Održavanje:** posle svake sesije ažuriraj ovaj fajl + pokreni `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.
+**Održavanje:** posle svake sesije ažuriraj ovaj fajl + `node scripts/test-ultimatrix.mjs` + `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.  
+**Agent rule:** `.cursor/rules/ultimatrix-evidence.mdc` — nema PASS bez `docs/evidence/ultimatrix-LATEST.txt` + sha256.
 
-**Komercijalna istina (2026-10-07):** Fulfillment **PASS** (20×50 HARD, `checklistScore=100`) · GTM **CONDITIONAL** (Stripe još **TEST**; firma/VAT = Marko) · Lead analysis→hot hunt **shipped**; live harvest treba `LEAD_LIVE_HARVEST_ON_KICKOFF`.  
-Dokaz: [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) · [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md) · [`evidence/FULL-REPO-PASS-VERDICT-20261007.md`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md).
+**Komercijalna istina (2026-10-09):** Ultimatrix **PASS** · GTM **CONDITIONAL** (Stripe **TEST**) · Intro **−18%** first 50 → full list · M6 “more for less” prices live ([`GROK47-PRICING-APPLIED-20261009.md`](./evidence/GROK47-PRICING-APPLIED-20261009.md)) · SERVICE + DOCS on `/pricing`.  
+Dokaz: [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · [`evidence/DONE-EXCEPT-MARKO-P2-20261009.md`](./evidence/DONE-EXCEPT-MARKO-P2-20261009.md) · [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md).
 
 **Indeks (ne dupliraj stavke drugde):**
 
@@ -46,6 +47,9 @@ Dokaz: [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-2
 | LIVE-15 | Prod schema 038–042 | stripe idempotency · outbound DLQ · orgs · dual currency · RBAC |
 | LIVE-16 | Lead machine: analysis pack → gate → hot-only hunt | shipped + SafeDeploy; live harvest **OFF** dok `LEAD_LIVE_HARVEST_ON_KICKOFF` (Marko) — [`lead-machine-analysis-hunt-smoke-20261007.md`](./evidence/lead-machine-analysis-hunt-smoke-20261007.md) |
 | LIVE-17 | Gap audit + full-repo verdict | [`PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) — fulfillment PASS · GTM CONDITIONAL |
+| LIVE-18 | **Ultimatrix** monorepo gate (hashed PASS) | `node scripts/test-ultimatrix.mjs` → [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · agent proof [`evidence/ULTIMATRIX-AGENT-PROOF-20261009.md`](./evidence/ULTIMATRIX-AGENT-PROOF-20261009.md) · rule `.cursor/rules/ultimatrix-evidence.mdc` |
+| LIVE-19 | Intro −15% /50 + commercial companion + support AI solver on VPS | promo API active 50/50 · `COMPANION_OK` / `SUPPORT_AI_OK` / `INTRO_OK` · [`DONE-EXCEPT-MARKO-P2-20261009.md`](./evidence/DONE-EXCEPT-MARKO-P2-20261009.md) |
+| LIVE-20 | Public package honesty **SERVICE + DOCS** (not PDF-pack theater) | SafeDeploy **EXIT 0** [`_tmp-safedeploy-honesty-labels-20261009.txt`](./evidence/_tmp-safedeploy-honesty-labels-20261009.txt) · live `/pricing` has `audit engagement`, zero `consulting PDF pack` |
 
 ---
 
@@ -58,7 +62,7 @@ Dokaz: [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-2
 | P0-03 | Instantly warmup + env flag | DONE | Agent | cold outbound | `warmupComplete=true` na prod; Instantly nalog **expired** (402) — upgrade plan pre stvarnog cold send-a |
 | P0-04 | **Slack** webhook — kontakt form | DONE | Agent | notify | SET + deploy 2026-09-20 · webhook test OK |
 | P0-05 | **Slack** webhook — ops (uplate/fulfillment) | DONE | Agent | notify | SET + deploy 2026-09-20 · webhook test OK |
-| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | DONE | Agent | invoice E2E dokaz | Gmail IMAP: `INV-202609-0879.pdf` + fulfillment 2026-09-17 |
+| P0-06 | **Mystery shopper** + 1 Confirm → PDF u inboxu | DONE | Agent | invoice E2E dokaz | 2026-10-09: `e2e-billing-prod` PASS fulfillment+3 artifacts ([`_tmp-mystery-shopper-e2e-20261009.txt`](./evidence/_tmp-mystery-shopper-e2e-20261009.txt)); stari Gmail IMAP `INV-202609-0879.pdf` |
 | P0-07 | **Legal counsel** sign-off | TI | Ti | formalni go-live | stranice već u kodu |
 
 **P0 progress:** 6 / 7 DONE (preostaje P0-07 legal)
@@ -88,14 +92,16 @@ Dokaz: [`evidence/PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-2
 
 | ID | Stavka | Status | Owner | Napomena |
 |----|--------|--------|-------|----------|
-| P2-01 | LLC / firma — `companyLegalName`, TaxId, Address | DEFERRED | Ti | deploy.config prazno |
-| P2-02 | Stripe **LIVE** + kartica smoke | DEFERRED | Ti | test SET |
+| P2-01 | LLC / firma — `companyLegalName`, TaxId, Address | DEFERRED | Ti | deploy.config — vidi [`MARKO-P2-FINISH.md`](./MARKO-P2-FINISH.md) |
+| P2-02 | Stripe **LIVE** + kartica smoke | DEFERRED | Ti | test SET; LIVE path + SafeDeploy gate spremni |
 | P2-03 | PayPal API | DEFERRED | Ti | ključevi prazni |
 | P2-04 | Wise API | DEFERRED | Ti | ključevi prazni |
 | P2-05 | Kriptoman API | DEFERRED | Ti | ključevi prazni |
 | P2-06 | `FINANCE_URL` aggregator | N/A | — | namerno prazan |
 
-**Redosled P2:** P2-01 → P2-02 → P2-03..05
+**Redosled P2:** P2-01 → P2-02 → P2-03..05  
+**Marko tool:** `.\scripts\marko-p2-finish.ps1` → exit 0 → `.\scripts\deploy-from-local-secrets.ps1 -SafeDeploy`  
+**Zaštita:** SafeDeploy **blokira** `sk_live_` bez firme + `pk_live_` + `whsec_`.
 
 ---
 
@@ -161,12 +167,12 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 
 ---
 
-## Safety locks (namerno OFF)
+## Safety locks
 
 | Lock | Vrednost |
 |------|----------|
 | Stripe mode | **test** (LIVE = P2-02 — **nije** urađeno) |
-| Cold outbound send | **OFF** (`OUTREACH_SEND_ENABLED=false` na prod) |
+| Cold outbound send | Prod readiness **sendEnabled=true** + warmup complete (2026-10-09). Instantly vendor plan may still 402 (P0-03 / P3-A04). |
 | `factoryPhaseAuto` | **false** |
 | `AUTONOMY_AUTO_DEPLOY` | **false** |
 | `PHASE` | **v2** (ne K8s) |
@@ -203,4 +209,4 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 
 ---
 
-*Poslednja izmena: 2026-10-07 — LIVE-02 → HARD 1000/1000; GTM CONDITIONAL; lead analysis→hunt; pointer na PROJECT-GAP-AUDIT + HARD-FINAL + FULL-REPO-PASS-VERDICT.*
+*Poslednja izmena: 2026-10-09 — LIVE-18 Ultimatrix hashed PASS; LIVE-19 intro/companion/support AI; LIVE-20 SERVICE + DOCS honesty SafeDeploy EXIT 0. Stripe ostaje TEST (P2).*

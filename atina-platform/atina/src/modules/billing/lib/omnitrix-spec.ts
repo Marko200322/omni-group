@@ -186,8 +186,11 @@ export function listOmnitrixPackages(phase: FactoryPhase = getFactoryPhase()): O
 }
 
 /** Checklist evaluator ids that currently exist in fulfillment-quality-checklist. */
-const KNOWN_CHECKLIST_IDS = new Set([
+export const KNOWN_CHECKLIST_IDS = new Set([
   'status_completed',
+  'commercial_invoice_linked',
+  'product_or_service_present',
+  'service_companion',
   'public_url',
   'ecommerce_catalog',
   'ecommerce_shop_page',
@@ -195,6 +198,8 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'ecommerce_honesty',
   'business_site_project',
   'page_count',
+  'landing_live',
+  'site_content_quality',
   'white_label_live',
   'pdf_artifact',
   'doc_substance',
@@ -211,11 +216,15 @@ const KNOWN_CHECKLIST_IDS = new Set([
   'channel_status_honesty',
   'no_simulated_harvest',
   'support_faq',
+  'health_check_artifact',
+  'kickoff_ticket',
   'ai_avatar_honesty',
   'modules_metadata',
   'lead_gen_kickoff',
+  'lead_gen_analysis_before_hunt',
   'ai_support_setup',
   'software_project',
+  'software_scaffold_archive',
   'handoff_pdf',
   'software_test_gate',
   'catalog_description',

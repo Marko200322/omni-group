@@ -5,6 +5,10 @@ import {
   persistDeliverablePdf,
   persistMarkdownBundle,
 } from './artifact-helpers';
+import {
+  attachServiceAndCommercialCompanion,
+  mergeServiceCompanion,
+} from './commercial-companion';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
 const docs = new DeliverableDocumentGeneratorService();
@@ -24,7 +28,7 @@ async function deliverDocPack(
     pdfPageCount: pdf.pdfPageCount,
   });
   const substanceFailed = meta.documentSubstanceOk === false;
-  return {
+  const base: FulfillmentResult = {
     artifacts: [pdf.artifact, md],
     status: substanceFailed ? 'partial' : 'completed',
     metadata: {
@@ -32,6 +36,9 @@ async function deliverDocPack(
       ...(substanceFailed ? { reason: 'document_substance_below_threshold' } : {}),
     },
   };
+  // Documents accompany product + service — never ship PDF-only consulting packs.
+  const companion = await attachServiceAndCommercialCompanion(ctx, base);
+  return mergeServiceCompanion(base, companion);
 }
 
 export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {

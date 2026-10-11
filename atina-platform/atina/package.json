@@ -16,6 +16,8 @@
     "test:ci": "npm run build && npm run lint && jest --runInBand --coverage --forceExit --testPathIgnorePatterns=integration",
     "test:gate": "npm run build && npm run lint && jest --runInBand --forceExit --testPathIgnorePatterns=integration",
     "test:unit": "jest --runInBand src/tests/unit",
+    "test:ultimatrix": "jest --runInBand src/tests/unit/omnitrix-spec.test.ts src/tests/unit/ultimatrix-spec.test.ts src/tests/unit/fulfillment-quality-checklist.test.ts src/tests/unit/deliverable-intro-promo.test.ts src/tests/unit/support-ticket-agent.service.test.ts --forceExit",
+    "test:ultimatrix:full": "node ../../scripts/test-ultimatrix.mjs",
     "test:integration": "jest --runInBand src/tests/integration",
     "test:integration:local": "npm run migrate && npm run test:integration",
     "smoke:health": "powershell -NoProfile -ExecutionPolicy Bypass -File \"./scripts/smoke-health.ps1\"",

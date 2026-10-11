@@ -2,6 +2,7 @@ import {
   resolveLeadGenChannelStatuses,
 } from '../../modules/billing/service/client-deliverable-bootstrap.service';
 import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfillment-quality-checklist';
+import { withCommercialDeliveryProof } from './helpers/commercial-delivery-proof';
 
 describe('lead-gen channel honesty', () => {
   const keys = [
@@ -84,7 +85,9 @@ describe('lead-gen channel honesty', () => {
   });
 
   it('quality checklist accepts kickoff pack with 0 live leads when channels NOT CONNECTED', () => {
-    const checklist = runFulfillmentQualityChecklist('lead-gen-retainer', {
+    const checklist = runFulfillmentQualityChecklist(
+      'lead-gen-retainer',
+      withCommercialDeliveryProof({
       status: 'completed',
       projectId: 'proj-1',
       artifacts: [
@@ -111,7 +114,8 @@ describe('lead-gen channel honesty', () => {
           hunt: { gate: { shouldHunt: false, reason: 'analysis_not_hunt_ready' }, rawFetched: 0, hotCount: 0 },
         },
       },
-    });
+    }),
+    );
     expect(checklist.items.find((i) => i.id === 'lead_gen_kickoff')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'lead_gen_analysis_before_hunt')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'channel_status_honesty')?.passed).toBe(true);

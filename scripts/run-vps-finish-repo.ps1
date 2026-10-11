@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Pokrece finish-repo-test-vps.sh na VPS (test:ci, hunt, smoke-stack).
+  Pokrece finish-repo-test-vps.sh na VPS (test:ci, hunt, smoke-stack; Atina deeper gate: npm run smoke:all).
 .EXAMPLE
   .\scripts\run-vps-finish-repo.ps1 -FollowLog
 #>

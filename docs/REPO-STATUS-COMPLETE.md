@@ -83,7 +83,7 @@ atina-system (Nest) · Python src/ (Forge, Astra) · scripts/ (deploy, gates)
 | `.\scripts\audit-prod-autonomous.ps1` | Prod smoke + DNS + kontakt |
 | `cd atina-platform/atina && npm run test:ci` | Unit + coverage (prior PASS) |
 | `cd apps/omnigroup-web && npm run build` | Web build (PASS posle prelaunch) |
-| `.\scripts\verify-monorepo.ps1` | Pun CI mirror |
+| `.\scripts\verify-monorepo.ps1` | Pun CI mirror — job **`python`** / **`Python (Doslednost dok + pytest)`** ([`GIT-BRANCH-PROTECTION.md`](./GIT-BRANCH-PROTECTION.md)); includes `apps/omnigroup-web` unless `-SkipOmnigroupWeb`; after stacks: Atina **`npm run smoke:all`** |
 
 VPS finish log: `/var/log/omni-finish-repo-test.log` — smoke PASS; `test:ci` exit 1 u jednom run-u (vidi `REPO-TEST-FINISH.md`).
 

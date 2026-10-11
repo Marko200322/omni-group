@@ -29,8 +29,9 @@ Billing paketi · maintenance · invoice history · Problem Hunter · migracija 
 
 ## P2 — NA KRAJU (GTM CONDITIONAL)
 
-Firma / VAT · Stripe **LIVE** (+ kartica smoke) · PayPal · Wise · Kriptoman — vidi [`STATUS-KANON.md#p2`](./STATUS-KANON.md#p2--na-kraju-posle-p0--p1).  
-**Stripe LIVE nije urađen** — prod je još TEST.
+**Jedna stranica za tebe:** [`MARKO-P2-FINISH.md`](./MARKO-P2-FINISH.md) · checker `.\scripts\marko-p2-finish.ps1`  
+Firma / VAT → Stripe **LIVE** → SafeDeploy → kartica smoke. PayPal/Wise/Kriptoman opciono posle.  
+**Stripe LIVE nije urađen** — prod je još TEST; sistem je osposobljen da završiš u jednom prolazu.
 
 **Lead:** analysis→hot hunt shipped; live harvest = uključi `LEAD_LIVE_HARVEST_ON_KICKOFF` (+ `LEAD_DATABASE_ENABLED`).
 

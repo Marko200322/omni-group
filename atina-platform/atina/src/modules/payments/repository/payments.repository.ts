@@ -202,6 +202,38 @@ export class PaymentsRepository {
     );
   }
 
+  /**
+   * Distinct paying clients for deliverable packages (not matrix flood / admin).
+   * Optional startIso limits the window so first-50 intro can reset at commercial launch.
+   */
+  countCompletedDeliverableCustomers(startIso?: string | null) {
+    const start = typeof startIso === 'string' && startIso.trim() ? startIso.trim() : null;
+    if (start) {
+      return query<{ n: string }>(
+        `SELECT COUNT(DISTINCT p.user_id)::text AS n
+         FROM payments p
+         JOIN users u ON u.id = p.user_id
+         WHERE p.status = 'completed'
+           AND p.amount > 0
+           AND p.metadata->>'purchaseType' = 'deliverable'
+           AND p.created_at >= $1::timestamptz
+           AND u.email NOT ILIKE 'admin@%'
+           AND COALESCE(u.role, '') <> 'admin'`,
+        [start],
+      );
+    }
+    return query<{ n: string }>(
+      `SELECT COUNT(DISTINCT p.user_id)::text AS n
+       FROM payments p
+       JOIN users u ON u.id = p.user_id
+       WHERE p.status = 'completed'
+         AND p.amount > 0
+         AND p.metadata->>'purchaseType' = 'deliverable'
+         AND u.email NOT ILIKE 'admin@%'
+         AND COALESCE(u.role, '') <> 'admin'`,
+    );
+  }
+
   updateProviderPaymentId(paymentId: string, providerPaymentId: string) {
     return query(
       `UPDATE payments SET provider_payment_id = $2, updated_at = NOW() WHERE id = $1`,

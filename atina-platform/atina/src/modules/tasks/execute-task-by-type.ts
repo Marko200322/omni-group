@@ -1,5 +1,6 @@
 import logger from '../../utils/logger';
 import { runDominusSwarmBatch } from '../dominus-swarm/dominus-swarm.runner';
+import { SupportTicketAgentService } from '../support/service/support-ticket-agent.service';
 import {
   executeExportData,
   executeGenerateReport,
@@ -34,6 +35,11 @@ export async function executeTaskByType(
       return executeCrmPipeline(payload);
     case 'dominus_swarm_batch':
       return runDominusSwarmBatch(payload as Parameters<typeof runDominusSwarmBatch>[0]);
+    case 'support_ticket':
+    case 'support_automation':
+    case 'ai_support_ops':
+      // Fresh agent per job so AI client/config is read at solve time (not module load).
+      return new SupportTicketAgentService().solveFromJobPayload(type, payload);
     default:
       logger.warn(`Unknown task type: ${type}`);
       return { executed: true, type };

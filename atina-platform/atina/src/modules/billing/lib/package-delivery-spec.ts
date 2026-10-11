@@ -63,7 +63,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'CRM DEMO pipeline seed (see Full onboarding)',
       'External automations CONNECTED',
     ],
-    anchorByPhase: { M0: 349, M1: 399, M3: 419, M4: 419, M6: 549 },
+    anchorByPhase: { M0: 349, M1: 399, M3: 419, M4: 419, M6: 690 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -113,7 +113,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Daily human support without retainer',
       'Claiming external automations are connected',
     ],
-    anchorByPhase: { M1: 890, M3: 1095, M4: 1095, M6: 1690 },
+    anchorByPhase: { M1: 890, M3: 1095, M4: 1095, M6: 1590 },
     minCheckoutPhase: 'M1',
     phaseUnlocks: [
       {
@@ -144,7 +144,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       '24/7 SLA operations',
       'Backup/monitoring live on client infra without your execution',
     ],
-    anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
+    // Grok 4.7: runbook without scheduled handoff call → €1,290 (not remote go-live).
+    anchorByPhase: { M3: 1190, M4: 1190, M6: 1290 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,
@@ -152,21 +153,23 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'audit',
     description:
-      'DOCUMENT / consulting deliverable: AI technical audit PDF (executive summary, security, stack, 90-day roadmap, ROI) — not a live connected product.',
+      'SERVICE + DOCS: workspace, kickoff ticket, Billing invoice, commercial pack + AI-assisted audit PDF (not a pentest; not PDF-only).',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: AI tehnički audit PDF (rezime, bezbednost, stack, 90-dnevni plan, ROI) — nije live povezan proizvod.',
+      'USLUGA + DOCS: workspace, kickoff ticket, faktura u Billing, commercial pack + AI audit PDF (nije pentest; nije samo PDF).',
     includes: [
-      'PDF report (6+ sections) — consulting document pack',
-      'Markdown source bundle',
+      'Kickoff ticket + workspace project',
+      'Invoice / receipt in Billing',
+      'Commercial delivery pack',
+      'PDF report (6+ sections) + markdown',
       'Industry-specific recommendations',
     ],
     excludes: [
       'On-site inspection',
       'Penetration testing',
       'Legal compliance sign-off',
-      'Live connected product / portal module activation',
+      'Live product hosting',
     ],
-    anchorByPhase: { M0: 449, M2: 539, M4: 539, M6: 790 },
+    anchorByPhase: { M0: 449, M2: 539, M4: 539, M6: 890 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -195,23 +198,24 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'integration',
     description:
-      'DOCUMENT / consulting deliverable (docs + config): integration guide PDF plus integration-config.json (env map, webhooks, retry) — tools are not pre-connected; not a live connected product.',
+      'SERVICE + DOCS + config: kickoff/workspace + integration-config.json (DOCUMENTED_NOT_LIVE) + guide PDF — tools not pre-wired.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka (docs + config): integration vodič PDF + integration-config.json (env mapa, webhookovi, retry) — alati nisu unapred povezani; nije live povezan proizvod.',
+      'USLUGA + DOCS + config: kickoff/workspace + integration-config.json (DOCUMENTED_NOT_LIVE) + vodič PDF — alati nisu unapred povezani.',
     includes: [
-      'Integration guide PDF (document pack)',
-      'integration-config.json (env map, webhook endpoints, retry policy)',
-      'Onboarding checklist when you add API keys (PDF section + Markdown)',
-      'Auth notes for third-party connectors',
+      'Kickoff ticket + workspace + invoice',
+      'Integration guide PDF',
+      'integration-config.json (env map, webhooks, retry — not live)',
+      'Onboarding checklist for when you add API keys',
       'Sample event payloads for developers',
     ],
     excludes: [
       'Live connection to client Stripe/ERP/CRM (CONFIGURATION REQUIRED — external credentials)',
       'OAuth app registration on third-party tools (CONFIGURATION REQUIRED — external)',
       'Claiming tools are already connected without your API keys',
-      'Live connected product',
+      'Live wired integration',
     ],
-    anchorByPhase: { M2: 990, M4: 1490, M6: 1990 },
+    // Grok 4.7: docs+JSON price; €1,790+ only when a connector is actually live.
+    anchorByPhase: { M2: 690, M4: 690, M6: 890 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -219,21 +223,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'workflow-design',
     description:
-      'DOCUMENT / consulting deliverable: workflow & SOP PDF (process map, automation steps, roles, KPIs, rollout) — not a live connected product.',
+      'SERVICE + DOCS: kickoff ticket, workspace, invoice + workflow/SOP PDF pack — documents accompany the engagement.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: workflow i SOP PDF (mapa procesa, koraci automatizacije, uloge, KPI, rollout) — nije live povezan proizvod.',
+      'USLUGA + DOCS: kickoff ticket, workspace, faktura + workflow/SOP PDF — dokument prati uslugu.',
     includes: [
-      'Workflow design PDF — consulting document pack',
+      'Kickoff ticket + workspace + invoice',
+      'Workflow design PDF + markdown',
       'SOP sections per process step',
-      'Module mapping',
       'Roles and KPIs section',
       'Rollout plan section',
     ],
     excludes: [
       'Building automations in client tools (add Setup or Integration)',
-      'Live connected product / automation CONNECTED',
+      'Live automation CONNECTED',
     ],
-    anchorByPhase: { M0: 590, M2: 690, M4: 790, M6: 990 },
+    anchorByPhase: { M0: 590, M2: 690, M4: 690, M6: 890 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
@@ -247,18 +251,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-priority',
     description:
-      'Monthly retainer: welcome PDF, SLA/onboarding pack, support queue with a 24h response target, kickoff ticket, portal modules — human replies by our team.',
+      'Monthly: ticket queue (24h), AI auto-triage/solve on tickets (RAG), kickoff ticket, FAQ, health-check — solves problems, not report-only.',
     descriptionSr:
-      'Mesečni retainer: welcome PDF, SLA/onboarding paket, support queue SLA 24h, kickoff tiket, moduli na portalu — odgovori našeg tima.',
+      'Mesečno: ticket queue (24h), AI auto-triage/rešavanje tiketa (RAG), kickoff, FAQ, health-check — rešava probleme, nije samo izveštaj.',
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
       'FAQ seed (industry Q&A)',
       'Support queue with 24h response target + persisted kickoff ticket',
+      'AI problem-solver first response on support tickets (RAG + concrete steps)',
       'Health-check PDF at kickoff (retainer scheduler refreshes it monthly)',
       'Workspace project visible in portal',
       'Notifications, AI support assistant, and ticket inbox',
-      'Maintenance & support included in monthly subscription price',
     ],
     excludes: [
       'Unlimited dev hours',
@@ -266,7 +270,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Separate maintenance invoice (already included)',
       'Live LinkedIn/Google Ads campaign management',
     ],
-    anchorByPhase: { M0: 199, M2: 249, M4: 289, M6: 399 },
+    // Grok 4.7 competitive care band
+    anchorByPhase: { M0: 199, M2: 249, M4: 249, M6: 299 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -300,25 +305,24 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-dedicated',
     description:
-      'Dedicated retainer: 8h response target, SLA pack, kickoff ticket, video-meetings module, monthly health-check task, Slack notify when configured.',
+      'Dedicated: 8h queue, AI auto-triage/solve + human escalation, kickoff, health-check, video-meetings. Slack only when webhook configured.',
     descriptionSr:
-      'Dedicated retainer: SLA 8h, SLA paket, kickoff tiket, video-meetings modul, mesečni health-check, Slack obaveštenje.',
+      'Dedicated: queue 8h, AI auto-triage/rešavanje + ljudska eskalacija, kickoff, health-check, video-meetings.',
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
       'FAQ seed (industry Q&A)',
       'Support queue with 8h response target + persisted kickoff ticket',
+      'AI problem-solver first response + human escalation path',
       'Health-check PDF at kickoff and monthly refresh',
       'Workspace project visible in portal',
       'Video meetings module',
-      'Monthly health-check task',
-      'Maintenance, monitoring & support included in monthly price',
     ],
     excludes: [
       'Private Slack channel setup on client workspace (we notify via webhook)',
       'Live LinkedIn/Google Ads campaign management',
     ],
-    anchorByPhase: { M2: 449, M4: 690, M6: 1190 },
+    anchorByPhase: { M2: 449, M4: 549, M6: 790 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -340,7 +344,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Stock photography licensing',
       'Unlimited revision rounds / brand-voice rewrite',
     ],
-    anchorByPhase: { M0: 690, M2: 690, M4: 729, M6: 1290 },
+    anchorByPhase: { M0: 690, M2: 690, M4: 990, M6: 1290 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -384,7 +388,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Copywriting beyond AI/vertical first draft',
       'Custom photography / illustration',
     ],
-    anchorByPhase: { M0: 1290, M3: 1690, M4: 1690, M6: 2990 },
+    anchorByPhase: { M0: 1290, M3: 1490, M4: 1490, M6: 2290 },
     phaseUnlocks: [
       {
         fromPhase: 'M0',
@@ -434,7 +438,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Payment processing fees',
       'Ads / remarketing pixel account IDs (EXTERNAL CONFIGURATION REQUIRED)',
     ],
-    anchorByPhase: { M3: 3490, M4: 3490, M6: 4900 },
+    // Grok 4.7: bank-transfer storefront price (cards = CONFIGURATION REQUIRED)
+    anchorByPhase: { M3: 1990, M4: 1990, M6: 2790 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,
@@ -456,7 +461,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Partner legal agreements (CONFIGURATION REQUIRED — external counsel)',
       'Custom domain DNS (not automated — partner owns DNS)',
     ],
-    anchorByPhase: { M2: 1290, M4: 1790, M6: 2490 },
+    anchorByPhase: { M2: 1290, M4: 1290, M6: 1590 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -464,18 +469,18 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'sales-enablement',
     description:
-      'DOCUMENT / consulting deliverable: sales enablement PDF (demo script, outreach hooks, FAQ, closing checklist) — not a live connected product.',
+      'SERVICE + DOCS: kickoff ticket, workspace, invoice + sales scripts/FAQ/closing checklist PDF.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: sales enablement PDF (demo skripta, outreach hook-ovi, FAQ, closing checklist) — nije live povezan proizvod.',
+      'USLUGA + DOCS: kickoff ticket, workspace, faktura + sales skripte/FAQ/closing checklist PDF.',
     includes: [
-      'Sales enablement PDF — consulting document pack',
+      'Kickoff ticket + workspace + invoice',
+      'Sales enablement PDF + markdown',
       'Industry-specific hooks',
       'FAQ from catalog',
-      'Demo script section',
-      'Closing checklist section',
+      'Demo script + closing checklist',
     ],
-    excludes: ['Live sales calls', 'CRM setup for sales team', 'Live connected product'],
-    anchorByPhase: { M2: 690, M4: 890, M6: 1190 },
+    excludes: ['Live sales calls', 'CRM setup for sales team'],
+    anchorByPhase: { M2: 690, M4: 690, M6: 890 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
     fullCheckout: true,
@@ -500,7 +505,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Outbound lead hunting in lean mode',
       'Live LinkedIn/Google Ads API (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* + live sync for CONNECTED)',
     ],
-    anchorByPhase: { M2: 349, M4: 549, M6: 790 },
+    // Grok 4.7: seeded modules, not field-service SaaS
+    anchorByPhase: { M2: 249, M4: 249, M6: 349 },
     minCheckoutPhase: 'M2',
     phaseUnlocks: [
       {
@@ -535,7 +541,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Invented Titanis lead counts / simulated harvest / Math.random theater as fulfillment PASS',
       'Works fully in lean prod (scraper/outbound off)',
     ],
-    anchorByPhase: { M4: 690, M6: 990 },
+    // Grok 4.7: ops pack price until harvest proven (€1,490/mo later)
+    anchorByPhase: { M4: 349, M6: 449 },
     minCheckoutPhase: 'M4',
     phaseUnlocks: [
       {
@@ -555,22 +562,22 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'ai-support-retainer',
     description:
-      'Monthly AI support ops pack COMPLETE after payment: setup PDF, RAG knowledge seed, SLA/onboarding pack, workspace project. HeyGen/D-ID video avatar: CONFIGURATION REQUIRED / NOT CONNECTED until user keys.',
+      'Monthly AI ops: RAG + ticket queue + AI problem-solver on tickets + FAQ. HeyGen/D-ID avatar: CONFIGURATION REQUIRED until keys.',
     descriptionSr:
-      'Mesečni AI support ops paket COMPLETE nakon plaćanja: setup PDF, RAG seed, SLA/onboarding paket, workspace projekat. HeyGen/D-ID video avatar: CONFIGURATION REQUIRED / NOT CONNECTED dok nema ključeva.',
+      'Mesečni AI ops: RAG + ticket queue + AI solver na tiketima + FAQ. HeyGen/D-ID avatar: CONFIGURATION REQUIRED.',
     includes: [
       'Welcome PDF',
       'AI knowledge base starter + FAQ seed',
       'SLA & onboarding pack + kickoff ticket + ticket queue',
+      'AI problem-solver first response on support tickets',
       'Workspace project visible in portal',
       'AI assistant, video meetings, and support inbox modules',
-      'Support assistant setup pack (honest avatarConfigured / CONFIGURATION REQUIRED / NOT CONNECTED)',
-      'AI support maintenance & knowledge updates included monthly',
+      'Honest avatarConfigured / CONFIGURATION REQUIRED / NOT CONNECTED',
     ],
     excludes: [
       'Ultra-realistic video avatar without HeyGen/D-ID keys (CONFIGURATION REQUIRED — external)',
     ],
-    anchorByPhase: { M3: 349, M4: 490, M5: 590, M6: 690 },
+    anchorByPhase: { M3: 279, M4: 279, M5: 279, M6: 349 },
     minCheckoutPhase: 'M3',
     phaseUnlocks: [
       {
@@ -597,7 +604,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'API routes + static SPA shell + SQL schema starter',
     ],
     excludes: ['Unlimited feature development', 'Production launch on client infra', 'App store deployment'],
-    anchorByPhase: { M3: 4900, M4: 4900, M6: 7900 },
+    // Grok 4.7: starter archive price — not MVP (€10k+)
+    anchorByPhase: { M3: 1190, M4: 1190, M6: 1490 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,
@@ -619,7 +627,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Full CRM onboarding / DEMO seed (see Full onboarding)',
       'External automations CONNECTED',
     ],
-    anchorByPhase: { M3: 899, M4: 899, M6: 1090 },
+    // Grok 4.7: ~20% off setup-quick + landing
+    anchorByPhase: { M3: 1190, M4: 1190, M6: 1590 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,
@@ -627,17 +636,17 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-sales-launch',
     description:
-      'Live landing plus sales enablement PDF (demo script, FAQ, hooks) — launch sales and marketing together.',
+      'Live landing plus sales enablement (service companion + PDF) — launch sales and marketing together.',
     descriptionSr:
-      'Live landing + sales enablement PDF (demo script, FAQ, hookovi) — prodaja i marketing odjednom.',
+      'Live landing + sales enablement (service companion + PDF) — prodaja i marketing odjednom.',
     includes: [
       'Live public landing URL',
-      'Sales enablement PDF + markdown',
+      'Sales enablement PDF + markdown + kickoff/service companion',
       'Niche outreach hooks in PDF',
       'Contact section on landing',
     ],
     excludes: ['Custom domain', 'Live sales calls', 'CRM setup'],
-    anchorByPhase: { M3: 1290, M4: 1290, M6: 1590 },
+    anchorByPhase: { M3: 1290, M4: 1390, M6: 1790 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,
@@ -645,21 +654,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-ops-clarity',
     description:
-      'DOCUMENT / consulting deliverable: technical audit PDF plus workflow/SOP design — docs pack, not a live connected product.',
+      'SERVICE + DOCS: audit + workflow PDFs with kickoff/service companion + invoice — dual consulting pack.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: tehnički audit PDF + workflow/SOP dizajn — paket dokumenata, nije live povezan proizvod.',
+      'USLUGA + DOCS: audit + workflow PDF uz kickoff/service companion + fakturu.',
     includes: [
-      'Full audit PDF + markdown — consulting document pack',
-      'Workflow & SOP PDF — consulting document pack',
+      'Full audit PDF + markdown',
+      'Workflow & SOP PDF',
+      'Kickoff/service companion + commercial pack + invoice',
       '90-day roadmap cross-linked in audit',
-      'Industry-specific recommendations in both docs',
     ],
     excludes: [
       'On-site visit',
       'Building automations in your tools',
-      'Live connected product / portal module activation',
+      'Live product hosting',
     ],
-    anchorByPhase: { M3: 990, M4: 990, M6: 1190 },
+    anchorByPhase: { M3: 1090, M4: 1090, M6: 1490 },
     minCheckoutPhase: 'M3',
     leanCheckout: true,
     fullCheckout: true,

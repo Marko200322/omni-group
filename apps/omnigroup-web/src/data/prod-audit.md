@@ -1,8 +1,8 @@
 # PROD-AUDIT (auto-generated)
 
-**Generated:** 2026-09-23 06:44  
+**Generated:** 2026-10-11 15:51  
 **Command:** `.\scripts\audit-prod-autonomous.ps1`  
-**Summary:** 13 PASS Â· 0 FAIL Â· 2 TI/DEFERRED
+**Summary:** 5 PASS Â· 4 FAIL Â· 2 TI/DEFERRED
 
 Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 
@@ -13,15 +13,11 @@ Kanonska lista: [STATUS-KANON.md](../STATUS-KANON.md)
 | P0-02 | Resend domain verify | **PASS** | status=verified |
 | P0-04 | Slack kontakt webhook | **PASS** | Key SET in KLJUCEVI (deploy to sync prod) |
 | P0-05 | Slack ops webhook | **PASS** | Key SET in KLJUCEVI |
-| LIVE-01 | Web /api/health | **PASS** | https://omnigrouptech.com |
-| LIVE-01 | API /health | **PASS** | api.omnigrouptech.com |
-| AUTH | Admin login | **PASS** | admin@atina.io |
-| P1-05 | Problem Hunter BFF | **PASS** | sources=3 |
-| P0-03 | Instantly/warmup flag | **PASS** | warmupComplete=true on prod |
-| P3-A04 | Outbound send | **PASS** | send ON + warmup complete (marketing go-live) |
-| P3-E06 | catalog-quality BFF | **PASS** | Admin endpoint OK |
-| CONTACT | POST /api/contact | **PASS** | message=sent_via_resend |
-| P0-06 | Mystery shopper PDF inbox | **PASS** | Gmail IMAP: 1 invoice PDF(s) â€ |
+| LIVE-01 | Web /api/health | **FAIL** | The operation has timed out. |
+| LIVE-01 | API /health | **FAIL** | Unable to connect to the remote server |
+| AUTH | Admin login | **FAIL** | Unable to connect to the remote server |
+| CONTACT | POST /api/contact | **FAIL** | Unable to connect to the remote server |
+| P0-06 | Mystery shopper PDF inbox | **TI** | No invoice PDF in inbox (7d) â€” run mystery shopper E2E |
 | P0-07 | Legal counsel sign-off | **TI** | Formalni advokat - stranice u kodu |
 | P2 | Firma + Stripe LIVE + PayPal/Wise/Kriptoman | **DEFERRED** | Namerno na kraju (P2) |
 

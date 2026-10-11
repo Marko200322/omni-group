@@ -9,6 +9,10 @@ import { RegulatedFoundingPartnerPanel } from '@/components/marketing/RegulatedF
 import { LaunchBundlesPanel } from '@/components/marketing/LaunchBundlesPanel';
 import { SaaSPlanPricing } from '@/components/marketing/SaaSPlanPricing';
 import { FoundingClientPromoBanner } from '@/components/marketing/FoundingClientPromoBanner';
+import { DeliverableIntroPromoBanner } from '@/components/marketing/DeliverableIntroPromoBanner';
+import { PublicCatalogOverview } from '@/components/marketing/PublicCatalogOverview';
+import { IndustryBrowseGrid } from '@/components/marketing/IndustryBrowseGrid';
+import { PricingClarityFaq } from '@/components/marketing/PricingClarityFaq';
 import { isRegulatedIndustryCategory } from '@/lib/regulated-founding-partner';
 import { getClientOffer, getPublicCatalogStats, listClientOffers } from '@/lib/public-catalog';
 import { getIndustryCategory } from '@/lib/category-pricing';
@@ -62,13 +66,13 @@ export default function PricingPage() {
     <div className="px-4 py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Simple global pricing</p>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">Transparent pricing</p>
           <h1 className="mt-2 font-display text-4xl font-bold text-gradient md:text-5xl">
-            Run your business from one platform
+            Platform subscription + fixed-scope delivery
           </h1>
           <p className="mt-4 text-lg text-slate-400">
-            CRM, workflows, delivery, billing, documents, and AI support in one subscription. Choose USD or EUR,
-            then add expert delivery only when you need it.
+            One workspace for CRM, workflows, delivery, billing, documents, and AI support. Add expert packages only
+            when you need them — every card states scope, timeline, what ships, and what is not included.
           </p>
         </motion.div>
 
@@ -76,53 +80,61 @@ export default function PricingPage() {
         <SaaSPlanPricing currency={currency} onCurrencyChange={setCurrency} />
 
         <section className="mt-20 border-t border-white/10 pt-16">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Expert services</p>
-          <h2 className="mt-2 font-display text-3xl font-bold text-white">Optional implementation and delivery</h2>
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Expert delivery catalog</p>
+          <h2 className="mt-2 font-display text-3xl font-bold text-white">
+            {catalogStats.basePackages} capabilities × {catalogStats.industryGroups} industries
+          </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">
-            The subscription is the product. The catalog is {catalogStats.expertServiceCount} expert services
-            plus {catalogStats.bundleCount} launch bundles — {catalogStats.catalogSkuCount} SKUs, one price
-            book. Bundles are listed once below; they are not a second catalog.{' '}
-            {catalogStats.readyToBuyCount} SKUs are ready to buy now
-            {catalogStats.comingSoonCount > 0
-              ? `, ${catalogStats.comingSoonCount} are coming soon`
-              : ''}
-            .
+            Optional fixed-scope packages on one price book. Bundles appear once below — not a second catalog.
+            Without an industry filter you see the {catalogStats.basePackages} base capabilities; with a filter you
+            see that industry&apos;s full set.
           </p>
+          <div className="mt-6">
+            <PublicCatalogOverview compact ctaHref="/products" ctaLabel="Open full industry directory" />
+          </div>
+          <DeliverableIntroPromoBanner />
         </section>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 max-w-md space-y-3">
-          <IndustryCategorySelect value={industryCategory} onChange={setIndustryCategory} />
-          {categoryMeta && (
-            <p className="text-sm text-slate-400">
-              Catalog for <strong className="text-white">{categoryMeta.name}</strong>
-              {matrixCount > 0 ? (
-                <span className="text-slate-500">
-                  {' '}
-                  — {matrixCount} packages tailored (problems, extras, competitive price)
-                </span>
-              ) : null}
-            </p>
-          )}
-          <button
-            type="button"
-            className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-            onClick={() => setShowAdjust((v) => !v)}
-          >
-            {showAdjust ? 'Hide note' : 'How pricing works'}
-          </button>
-          {showAdjust && (
-            <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
-              SaaS subscription prices are fixed by currency and do not change by industry. Expert-service prices can
-              adjust for scope and regulated-industry requirements. Payment methods shown after sign-in depend on what
-              is enabled for your account.
-              {' '}
-              Want something custom?{' '}
-              <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
-                Contact us
-              </Link>
-              .
-            </p>
-          )}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-10 space-y-6">
+          <div className="max-w-md space-y-3">
+            <IndustryCategorySelect
+              value={industryCategory}
+              onChange={setIndustryCategory}
+              emptyLabel="All industries — show base capabilities"
+              label="Filter packages by industry"
+            />
+            {categoryMeta && (
+              <p className="text-sm text-slate-400">
+                Showing packages for <strong className="text-white">{categoryMeta.name}</strong>
+                {matrixCount > 0 ? (
+                  <span className="text-slate-500">
+                    {' '}
+                    — {matrixCount} tailored (problems, extras, competitive price)
+                  </span>
+                ) : null}
+              </p>
+            )}
+            <button
+              type="button"
+              className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+              onClick={() => setShowAdjust((v) => !v)}
+            >
+              {showAdjust ? 'Hide note' : 'How pricing works'}
+            </button>
+            {showAdjust && (
+              <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
+                SaaS subscription prices are fixed by currency and do not change by industry. Expert-service prices can
+                adjust for scope and regulated-industry requirements. Cards show regular list; intro discount (if
+                active) applies at checkout for the first package clients only. Payment methods after sign-in depend on
+                what is enabled for your account. Want something custom?{' '}
+                <Link href="/contact" className="text-violet-300 underline-offset-2 hover:underline">
+                  Contact us
+                </Link>
+                .
+              </p>
+            )}
+          </div>
+          <IndustryBrowseGrid value={industryCategory} onChange={setIndustryCategory} />
         </motion.div>
 
         <LaunchBundlesPanel />
@@ -214,6 +226,8 @@ export default function PricingPage() {
             Request enterprise quote
           </Link>
         </section>
+
+        <PricingClarityFaq />
 
         <p className="mt-14 text-center text-sm text-slate-500">
           Already a client?{' '}

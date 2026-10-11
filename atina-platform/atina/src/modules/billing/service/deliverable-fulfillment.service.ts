@@ -14,6 +14,7 @@ import {
   DeliverableFulfillmentRepository,
   type FulfillmentJobRow,
 } from '../repository/deliverable-fulfillment.repository';
+import { BillingRepository } from '../repository/billing.repository';
 import { PaymentNotificationsService } from '../../payments/service/payment-notifications.service';
 import { adminOpsNotifier } from '../../admin/service/admin-ops-notifier.service';
 import { TasksService } from '../../tasks/service/tasks.service';
@@ -49,9 +50,84 @@ function industryFromResultMetadata(result: Record<string, unknown> | null | und
 
 export class DeliverableFulfillmentService {
   private readonly repo = new DeliverableFulfillmentRepository();
+  private readonly billingRepo = new BillingRepository();
   private readonly notifications = new PaymentNotificationsService();
   private readonly tasks = new TasksService();
   private readonly fulfillmentMemory = new FulfillmentMemoryService();
+
+  /** Link paid invoice/receipt onto fulfillment metadata so clients always see commercial proof. */
+  private async attachCommercialInvoice(
+    ctx: FulfillmentContext,
+    result: FulfillmentResult,
+  ): Promise<FulfillmentResult> {
+    try {
+      const { rows } = await this.billingRepo.getInvoiceByPaymentId(ctx.paymentId);
+      const inv = rows[0] as
+        | {
+            id?: string;
+            invoice_number?: string;
+            status?: string;
+            total_amount?: number | string;
+            currency?: string;
+            billing_details?: Record<string, unknown> | string | null;
+          }
+        | undefined;
+      if (!inv?.id) {
+        return {
+          ...result,
+          metadata: {
+            ...(result.metadata ?? {}),
+            commercialInvoice: null,
+            invoiceLinked: false,
+          },
+        };
+      }
+      const details =
+        typeof inv.billing_details === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(inv.billing_details) as Record<string, unknown>;
+              } catch {
+                return {};
+              }
+            })()
+          : (inv.billing_details ?? {});
+      const documentKind =
+        typeof details.documentKind === 'string' ? details.documentKind : 'payment_receipt';
+      const commercialInvoice = {
+        invoiceId: inv.id,
+        invoiceNumber: inv.invoice_number ?? null,
+        status: inv.status ?? 'paid',
+        totalAmount: inv.total_amount != null ? Number(inv.total_amount) : null,
+        currency: inv.currency ?? null,
+        documentKind,
+        billingPortalPath: '/dashboard/billing',
+      };
+      return {
+        ...result,
+        metadata: {
+          ...(result.metadata ?? {}),
+          commercialInvoice,
+          invoiceId: commercialInvoice.invoiceId,
+          invoiceNumber: commercialInvoice.invoiceNumber,
+          invoiceLinked: true,
+        },
+      };
+    } catch (err) {
+      logger.warn('Commercial invoice attach failed', {
+        paymentId: ctx.paymentId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return {
+        ...result,
+        metadata: {
+          ...(result.metadata ?? {}),
+          commercialInvoice: null,
+          invoiceLinked: false,
+        },
+      };
+    }
+  }
 
   isEnabled(): boolean {
     return config.deliverableFulfillment.enabled;
@@ -150,7 +226,7 @@ export class DeliverableFulfillmentService {
       );
 
       const runCtx: FulfillmentContext = { ...ctx, generationHints: hints };
-      lastResult = await handler.fulfill(runCtx);
+      lastResult = await this.attachCommercialInvoice(ctx, await handler.fulfill(runCtx));
 
       if (!config.deliverableFulfillment.autoChecklistEnabled) {
         return { result: lastResult, checklist: null, attemptNumber: currentAttempt };
@@ -553,6 +629,13 @@ export class DeliverableFulfillmentService {
         contentType: 'application/pdf',
       }));
 
+    const inv = result.metadata?.commercialInvoice as
+      | { invoiceNumber?: string | null; billingPortalPath?: string }
+      | undefined;
+    const invoiceHint = inv?.invoiceNumber
+      ? `Invoice ${inv.invoiceNumber} is in Billing (${inv.billingPortalPath ?? '/dashboard/billing'}).`
+      : 'Your paid invoice / payment receipt is available under Billing in the client portal.';
+
     await this.notifications.sendDeliverableReadyToClient({
       toEmail: ctx.clientEmail,
       toName: ctx.clientName,
@@ -560,7 +643,10 @@ export class DeliverableFulfillmentService {
       deliverableId: ctx.deliverableId,
       publicUrl: result.publicUrl ?? undefined,
       paymentId: ctx.paymentId,
-      artifactLabels: result.artifacts.map((a) => a.downloadLabel ?? a.filename),
+      artifactLabels: [
+        ...result.artifacts.map((a) => a.downloadLabel ?? a.filename),
+        invoiceHint,
+      ],
       attachments: pdfAttachments.length ? pdfAttachments : undefined,
     });
   }

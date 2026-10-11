@@ -1,0 +1,30 @@
+---
+description: Ultimatrix is the project finish gate — every PASS needs real evidence; Stripe/firma are Marko-only at the end.
+alwaysApply: true
+---
+
+# Ultimatrix evidence (no fake PASS)
+
+## Owner rule
+- **P2 at the end (Marko only):** firma / VAT / legal entity fields, Stripe **LIVE**, PayPal/Wise/Kriptoman.
+- Everything else must be agent-closed with proof. Do not reopen P2 as a coding task.
+
+## Before claiming DONE / PASS / “sve radi”
+1. Run from repo root: `node scripts/test-ultimatrix.mjs` (exit **0** required).
+2. Cite the evidence files written that run:
+   - `docs/evidence/ultimatrix-FULL-YYYYMMDD.txt`
+   - `docs/evidence/ultimatrix-FULL-YYYYMMDD.json`
+3. Each suite line must show `PASS … exit=0`. Exit code alone without those files = **not proven**.
+4. For live/prod claims, also cite a live probe (intro promo JSON, deployed module paths, or SafeDeploy log) — never invent EXIT 0.
+
+## What Ultimatrix proves
+- Packages: product/service + invoice + companion (not PDF theater)
+- Support AI solver wired (`support_ticket` / `support_automation` / `ai_support_ops`)
+- Intro −15% first 50 → full list price
+- Atina ↔ web M6 price sync
+- Web honesty + public catalog consistency
+
+## Forbidden
+- Declaring matrix/fulfillment/Ultimatrix PASS from memory or chat summary
+- Treating Stripe TEST as LIVE
+- Filling `companyLegalName` / TaxId or switching Stripe keys without Marko

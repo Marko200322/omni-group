@@ -1,8 +1,8 @@
 import { DELIVERABLE_CATALOG, getDeliverable } from '../../modules/billing/lib/deliverable-catalog';
 import { getPackageDeliverySpec } from '../../modules/billing/lib/package-delivery-spec';
 
-/** SKUs that must sell as DOCUMENT / consulting — never as live connected products. */
-const DOCUMENT_PRIMARY_IDS = [
+/** SKUs that must sell as SERVICE + DOCS — never PDF-only theater. */
+const SERVICE_DOCS_IDS = [
   'audit',
   'workflow-design',
   'sales-enablement',
@@ -14,15 +14,15 @@ const DOCUMENT_PRIMARY_IDS = [
 const PRODUCT_OPS_IDS = ['setup-quick', 'landing', 'website-ecommerce', 'lead-gen-retainer'] as const;
 
 describe('catalog document vs product honesty', () => {
-  it.each(DOCUMENT_PRIMARY_IDS)('%s is labeled DOCUMENT / consulting, not live product', (id) => {
+  it.each(SERVICE_DOCS_IDS)('%s is labeled SERVICE + DOCS, not PDF-only', (id) => {
     const spec = getPackageDeliverySpec(id);
     const catalog = getDeliverable(id) ?? DELIVERABLE_CATALOG.find((d) => d.id === id);
     expect(spec).toBeTruthy();
     expect(catalog).toBeTruthy();
     const blob = `${spec!.description}\n${catalog!.description}\n${spec!.includes.join('\n')}`;
-    expect(blob).toMatch(/DOCUMENT\s*\/\s*consulting/i);
-    expect(blob.toLowerCase()).toMatch(/not a live connected product|nije live povezan/);
-    expect(spec!.excludes.some((e) => /live connected product/i.test(e))).toBe(true);
+    expect(blob).toMatch(/SERVICE\s*\+\s*DOCS/i);
+    expect(blob.toLowerCase()).toMatch(/invoice|kickoff|workspace|commercial/);
+    expect(blob.toLowerCase()).not.toMatch(/pdf-only theater|document \/ consulting deliverable/);
   });
 
   it.each(PRODUCT_OPS_IDS)('%s keeps PRODUCT/OPS language (not document-primary)', (id) => {

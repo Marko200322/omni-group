@@ -81,13 +81,14 @@ Earlier evidence also: ecommerce storefront `https://omnigrouptech.com/sites/ai-
 | **Docs** | enterprise setup PDF |
 | **Verdict** | **Runbook product**, not remote deploy. Honest PENDING. Theater only if sales say „we deployed your VPS“. |
 
-### 4. audit — **C**
+### 4. audit — **C** (+ B service companion + invoice)
 
 | | |
 |--|--|
-| **Handler** | `consulting-doc.handler.ts` |
-| **Artifacts** | `technical-audit.pdf` + MD only |
-| **Verdict** | Document-primary by design. OK as consulting SKU. |
+| **Handler** | `consulting-doc.handler.ts` + `commercial-companion.ts` |
+| **Artifacts** | `technical-audit.pdf` + MD + `commercial-delivery-pack.md` |
+| **Non-doc** | Workspace project + kickoff ticket + portal Billing/Tasks + linked invoice |
+| **Verdict** | Documents accompany service — PDF-alone fail-closed (2026-10-08). |
 
 ### 5. integration — **C** (+ config artifact)
 

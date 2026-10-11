@@ -137,6 +137,11 @@ export class BillingService {
     return rows[0];
   }
 
+  async getInvoiceByPaymentId(paymentId: string) {
+    const { rows } = await this.repo.getInvoiceByPaymentId(paymentId);
+    return rows[0] ?? null;
+  }
+
   async checkPlanLimit(userId: string, limitKey: string): Promise<boolean> {
     const { rows } = await this.repo.getUserPlanLimits(userId);
     if (!rows[0]) return false;

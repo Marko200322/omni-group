@@ -53,6 +53,16 @@ if ($auto) {
   Write-Host '  factoryPhaseAuto=true - env profile expected M6 (runtime effective still gated)' -ForegroundColor DarkGray
 }
 
+# Prefer deploy.config monthlyBudgetEur (prod M6 is €250); keep param override when caller passes -MonthlyBudgetEur.
+if ($PSBoundParameters.ContainsKey('MonthlyBudgetEur') -eq $false) {
+  if ($cfg -and $null -ne $cfg.monthlyBudgetEur -and "$($cfg.monthlyBudgetEur)".Trim() -ne '') {
+    $MonthlyBudgetEur = [int]$cfg.monthlyBudgetEur
+  } elseif ($envCheckPhase -eq 'M6') {
+    $MonthlyBudgetEur = 250
+  }
+}
+Write-Host "  MonthlyBudgetEur=$MonthlyBudgetEur (phase check=$envCheckPhase)" -ForegroundColor DarkGray
+
 $result = Test-FactoryPhaseEnvFiles $repoRoot $envCheckPhase $MonthlyBudgetEur $deployCfg $cfg
 Write-Host "Phase $($result.phase): env checks pass=$($result.pass) fail=$($result.fail)" -ForegroundColor $(if ($result.fail -eq 0) { 'Green' } else { 'Red' })
 

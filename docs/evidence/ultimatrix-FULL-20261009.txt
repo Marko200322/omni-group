@@ -1,0 +1,14 @@
+ok=true
+failed=0
+startedAt=2026-10-09T13:25:38.109Z
+endedAt=2026-10-09T13:26:12.667Z
+evidenceJson=C:\dev\omni group\docs\evidence\ultimatrix-FULL-20261009.json
+PASS atina-jest-ultimatrix-suites exit=0 sha256=4cfe7707e92a7e80ffc6fb3d212a5cd6c80267ff4c4f2b555ee8b780f7ce3d3e bytes=804
+PASS web-delivery-honesty exit=0 sha256=f1f07961ac4a12d528b3061cf5ba25c58ca8d4e91a8a904e07ffe931c0f7d928 bytes=105
+PASS web-public-catalog exit=0 sha256=bc5dabd26b8e442314cd9dbf5633cc83584d0985811cef18cddd76a017a72a8b bytes=232
+
+Suites: omnitrix + ultimatrix + fulfillment checklist + intro promo + support AI agent
+Web: honesty + public catalog consistency/surfaces
+Gate: product/service + invoice + support solver + intro first-50 then full + atina↔web M6 price sync
+Marko deferred: firma + Stripe LIVE + PayPal/Wise/Kriptoman
+Agent rule: no PASS without this file + matching JSON sha256 lines

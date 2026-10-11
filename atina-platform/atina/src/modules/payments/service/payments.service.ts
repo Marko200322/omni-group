@@ -24,6 +24,12 @@ import {
   type FoundingCouponInventory,
   type FoundingPromoStatus,
 } from '../lib/founding-promo';
+import {
+  applyDeliverableIntroPrice,
+  buildDeliverableIntroPromoStatus,
+  readDeliverableIntroPromoSettings,
+  type DeliverableIntroPromoStatus,
+} from '../lib/deliverable-intro-promo';
 import { resolvePlanDeliverableId } from '../../billing/lib/plan-deliverable-map';
 import { type PaymentProviderId } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
@@ -344,6 +350,20 @@ export class PaymentsService {
     const settings = this.foundingSettings();
     const inventory = settings.enabled ? await this.foundingCouponInventory() : null;
     return buildFoundingPromoStatus(settings, inventory);
+  }
+
+  async getDeliverableIntroPromoStatus(): Promise<DeliverableIntroPromoStatus> {
+    const settings = readDeliverableIntroPromoSettings();
+    const { rows } = await this.db.countCompletedDeliverableCustomers(settings.startIso);
+    const redeemed = parseInt(rows[0]?.n ?? '0', 10) || 0;
+    return buildDeliverableIntroPromoStatus(settings, redeemed);
+  }
+
+  private async resolveDeliverableCheckoutPrice(listPriceEur: number) {
+    const settings = readDeliverableIntroPromoSettings();
+    const { rows } = await this.db.countCompletedDeliverableCustomers(settings.startIso);
+    const redeemed = parseInt(rows[0]?.n ?? '0', 10) || 0;
+    return applyDeliverableIntroPrice(listPriceEur, settings, redeemed);
   }
 
   // ========================
@@ -1573,7 +1593,8 @@ export class PaymentsService {
 
     const listPriceEur = getPackageAnchorEur(deliverable.id);
     if (listPriceEur <= 0) throw new PaymentError('Unknown deliverable price');
-    const amount = listPriceEur;
+    const priced = await this.resolveDeliverableCheckoutPrice(listPriceEur);
+    const amount = priced.chargeEur;
     const currency = config.payments.manual.currency || 'EUR';
     const reference = buildTransferReference(userId);
     // Industry SKUs (`base__industry`) lock industry into the id — prefer that over body.
@@ -1595,7 +1616,11 @@ export class PaymentsService {
         industryCategory,
         billing: deliverable.billing,
         reference,
-        listPriceEur,
+        listPriceEur: priced.listPriceEur,
+        chargeEur: priced.chargeEur,
+        introPromo: priced.introApplied ? '1' : '0',
+        introDiscountPct: priced.discountPct,
+        introPromoLabel: priced.promoLabel,
         maintenanceTierId: maintenanceTier?.id ?? null,
         maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
         maintenanceLabel: maintenanceTier?.label ?? null,
@@ -1642,9 +1667,15 @@ export class PaymentsService {
       amount,
       currency: currency.toUpperCase(),
       instructions,
+      listPriceEur: priced.listPriceEur,
+      introPromo: priced.introApplied,
+      introDiscountPct: priced.discountPct,
+      introPromoLabel: priced.promoLabel,
       quote: {
         deliverableName: deliverable.name,
         clientPriceEur: amount,
+        listPriceEur: priced.listPriceEur,
+        introPromo: priced.introApplied,
       },
     };
   }
@@ -1685,7 +1716,8 @@ export class PaymentsService {
 
     const listPriceEur = getPackageAnchorEur(deliverable.id);
     if (listPriceEur <= 0) throw new PaymentError('Unknown deliverable price');
-    const amount = listPriceEur;
+    const priced = await this.resolveDeliverableCheckoutPrice(listPriceEur);
+    const amount = priced.chargeEur;
     const currency = 'EUR';
     const lockedIndustry =
       industrySlugFromDeliverableId(deliverable.id) ??
@@ -1703,7 +1735,11 @@ export class PaymentsService {
         deliverableId: deliverable.id,
         industryCategory,
         billing: deliverable.billing,
-        listPriceEur,
+        listPriceEur: priced.listPriceEur,
+        chargeEur: priced.chargeEur,
+        introPromo: priced.introApplied ? '1' : '0',
+        introDiscountPct: priced.discountPct,
+        introPromoLabel: priced.promoLabel,
         maintenanceTierId: maintenanceTier?.id ?? null,
         maintenanceMonthlyEur: maintenanceTier?.monthlyEur ?? null,
         maintenanceLabel: maintenanceTier?.label ?? null,
@@ -1740,12 +1776,22 @@ export class PaymentsService {
         industryCategory: industryCategory ?? '',
         maintenanceTierId: maintenanceTier?.id ?? '',
         checkoutMode: checkoutParams.mode,
+        introPromo: priced.introApplied ? '1' : '0',
+        listPriceEur: String(priced.listPriceEur),
+        chargeEur: String(priced.chargeEur),
       },
     });
 
     await this.db.updateProviderPaymentId(paymentId, session.id);
 
-    logger.info('Stripe deliverable checkout created', { paymentId, deliverableId: deliverable.id, sessionId: session.id });
+    logger.info('Stripe deliverable checkout created', {
+      paymentId,
+      deliverableId: deliverable.id,
+      sessionId: session.id,
+      introPromo: priced.introApplied,
+      listPriceEur: priced.listPriceEur,
+      chargeEur: priced.chargeEur,
+    });
 
     return {
       paymentId,
@@ -1753,6 +1799,10 @@ export class PaymentsService {
       url: session.url,
       amount,
       currency,
+      listPriceEur: priced.listPriceEur,
+      introPromo: priced.introApplied,
+      introDiscountPct: priced.discountPct,
+      introPromoLabel: priced.promoLabel,
     };
   }
 

@@ -135,6 +135,9 @@ export function OfferCard({ offer, id, compact }: Props) {
       <p className="mt-4">
         <span className="text-3xl font-bold text-gradient">{formatEur(offer.priceEur)}</span>
         <span className="text-sm text-slate-500">{priceSuffix}</span>
+        <span className="mt-1 block text-xs text-slate-500">
+          Regular list price. First 50 package clients get −18% at checkout while slots last — then this full price.
+        </span>
       </p>
 
       <div className="mt-4 flex flex-col gap-2">

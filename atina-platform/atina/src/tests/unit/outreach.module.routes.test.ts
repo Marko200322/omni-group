@@ -49,6 +49,14 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     };
     next();
   },
+  requireAdmin: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    (req as express.Request & { user?: { userId: string; role: string; email: string } }).user = {
+      userId: 'u1',
+      role: 'admin',
+      email: 'u@test.com',
+    };
+    next();
+  },
 }));
 
 describe('OutreachModule HTTP routes', () => {

@@ -7,6 +7,10 @@ import {
   persistDeliverablePdf,
   persistMarkdownBundle,
 } from './artifact-helpers';
+import {
+  attachServiceAndCommercialCompanion,
+  mergeServiceCompanion,
+} from './commercial-companion';
 import { websiteFulfillmentHandler } from './website.handler';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 import logger from '../../../../utils/logger';
@@ -186,7 +190,7 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
       (siteResult?.status === 'completed' && Boolean(siteResult.publicUrl?.trim()));
     const substanceOk = docMeta.documentSubstanceOk !== false;
 
-    return {
+    let result: FulfillmentResult = {
       publicUrl: siteResult?.publicUrl ?? null,
       projectId: siteResult?.projectId,
       artifacts: [pdf.artifact, md, ...(siteResult?.artifacts ?? [])],
@@ -206,5 +210,13 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
             }),
       },
     };
+
+    // Sales enablement: documents accompany a real service engagement + billing visibility.
+    if (ctx.deliverableId === 'sales-enablement' && substanceOk) {
+      const companion = await attachServiceAndCommercialCompanion(ctx, result);
+      result = mergeServiceCompanion(result, companion);
+    }
+
+    return result;
   },
 };

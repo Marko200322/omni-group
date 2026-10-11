@@ -83,6 +83,19 @@ export class TasksRepository {
     return query<TaskRow>('SELECT * FROM tasks WHERE id = $1 AND user_id = $2', [taskId, userId]);
   }
 
+  getTaskById(taskId: string) {
+    return query<TaskRow>('SELECT * FROM tasks WHERE id = $1', [taskId]);
+  }
+
+  patchTaskPayload(taskId: string, payload: Record<string, unknown>) {
+    return query(
+      `UPDATE tasks
+       SET payload = $2::jsonb, updated_at = NOW()
+       WHERE id = $1`,
+      [taskId, JSON.stringify(payload)],
+    );
+  }
+
   cancelTask(taskId: string, userId: string) {
     return query(
       `UPDATE tasks SET status = 'canceled', updated_at = NOW()

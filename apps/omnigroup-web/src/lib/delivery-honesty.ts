@@ -49,28 +49,30 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'audit',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the listed audit PDF pack.',
+    humanIntervention:
+      'None for the listed engagement: workspace project, kickoff ticket, Billing invoice, commercial pack + audit PDF. PDF alone cannot PASS.',
     nameMatchesScope: true,
-    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
-    label: 'DOCUMENT · consulting PDF pack',
+    publicNameNote: 'SERVICE + DOCS — docs accompany the engagement; not PDF-only theater.',
+    label: 'SERVICE + DOCS · audit engagement',
   },
   {
     deliverableId: 'integration',
     automationLevel: 'SEMI_AUTOMATED',
     humanIntervention:
-      'Guide PDF and config map are generated. Live third-party wiring is CONFIGURATION REQUIRED (external credentials).',
+      'Kickoff + workspace + config map + guide PDF ship. Live third-party wiring is CONFIGURATION REQUIRED (external credentials).',
     nameMatchesScope: true,
     publicNameNote:
-      'DOCUMENT / consulting deliverable (docs + config). Name is “Custom integration”; not a live connected product.',
-    label: 'DOCUMENT + config · not live connected',
+      'SERVICE + DOCS + config. Name is “Custom integration”; tools are not pre-connected.',
+    label: 'SERVICE + DOCS + config · not live connected',
   },
   {
     deliverableId: 'workflow-design',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the listed SOP / workflow PDF.',
+    humanIntervention:
+      'None for the listed engagement: workspace, kickoff ticket, invoice, commercial pack + SOP/workflow PDF.',
     nameMatchesScope: true,
-    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
-    label: 'DOCUMENT · consulting PDF pack',
+    publicNameNote: 'SERVICE + DOCS — docs accompany the engagement; not PDF-only theater.',
+    label: 'SERVICE + DOCS · workflow engagement',
   },
   {
     deliverableId: 'support-priority',
@@ -132,10 +134,11 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'sales-enablement',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the listed sales PDF pack.',
+    humanIntervention:
+      'None for the listed engagement: kickoff ticket, workspace, invoice, commercial pack + sales PDF.',
     nameMatchesScope: true,
-    publicNameNote: 'DOCUMENT / consulting deliverable — not a live connected product.',
-    label: 'DOCUMENT · consulting PDF pack',
+    publicNameNote: 'SERVICE + DOCS — docs accompany the engagement; not PDF-only theater.',
+    label: 'SERVICE + DOCS · sales enablement',
   },
   {
     deliverableId: 'vertical-package',
@@ -188,18 +191,19 @@ const ROWS: DeliveryHonesty[] = [
   {
     deliverableId: 'bundle-sales-launch',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for hosted landing plus sales PDF. Live sales calls are out of scope.',
+    humanIntervention: 'None for hosted landing plus sales enablement engagement (kickoff + PDF). Live sales calls are out of scope.',
     nameMatchesScope: true,
-    publicNameNote: 'Landing is PRODUCT; sales enablement half is DOCUMENT / consulting.',
-    label: 'PRODUCT landing + DOCUMENT sales pack',
+    publicNameNote: 'Landing is PRODUCT; sales half is SERVICE + DOCS.',
+    label: 'PRODUCT landing + SERVICE/DOCS sales pack',
   },
   {
     deliverableId: 'bundle-ops-clarity',
     automationLevel: 'AUTOMATED',
-    humanIntervention: 'None for the listed audit and workflow PDF packs.',
+    humanIntervention:
+      'None for dual consulting engagement: service companion + invoice + audit/workflow PDFs. PDF alone cannot PASS.',
     nameMatchesScope: true,
-    publicNameNote: 'DOCUMENT / consulting deliverable — dual PDF pack, not a live connected product.',
-    label: 'DOCUMENT · consulting dual-PDF pack',
+    publicNameNote: 'SERVICE + DOCS — dual consulting pack with kickoff/companion, not PDF theater.',
+    label: 'SERVICE + DOCS · ops clarity dual pack',
   },
 ];
 

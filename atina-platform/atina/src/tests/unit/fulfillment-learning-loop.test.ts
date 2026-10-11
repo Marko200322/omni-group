@@ -3,6 +3,7 @@ import {
   formatChecklistFailures,
 } from '../../modules/billing/lib/fulfillment-quality-checklist';
 import type { FulfillmentResult } from '../../modules/billing/lib/deliverable-handlers/types';
+import { withCommercialDeliveryProof } from './helpers/commercial-delivery-proof';
 
 describe('fulfillment quality checklist', () => {
   it('passes website-business with public URL and project', () => {
@@ -10,11 +11,25 @@ describe('fulfillment quality checklist', () => {
       status: 'completed',
       publicUrl: '/sites/acme',
       projectId: 'proj-1',
-      artifacts: [{ type: 'site_pack', filename: 'site.pdf', storagePath: '/tmp/site.pdf' }],
+      artifacts: [
+        { type: 'site_pack', filename: 'site.pdf', storagePath: '/tmp/site.pdf' },
+        { type: 'md', filename: 'site.md', storagePath: '/tmp/site.md' },
+      ],
       metadata: {
         pageCount: 6,
         brandTitle: 'Acme Studio',
         siteTitle: 'Acme Studio',
+        documentSubstanceOk: true,
+        documentQuality: {
+          sectionCount: 8,
+          totalBodyChars: 3400,
+          minSectionBodyChars: 140,
+          checklistOrMilestoneHits: 2,
+          clientNamePresent: true,
+          industryPresent: true,
+        },
+        pdfBytes: 10000,
+        pdfPageCount: 2,
         liveProbe: {
           ok: true,
           status: 200,
@@ -24,7 +39,10 @@ describe('fulfillment quality checklist', () => {
         },
       },
     };
-    const checklist = runFulfillmentQualityChecklist('website-business', result);
+    const checklist = runFulfillmentQualityChecklist(
+      'website-business',
+      withCommercialDeliveryProof(result),
+    );
     expect(checklist.passed).toBe(true);
     expect(checklist.score).toBeGreaterThanOrEqual(80);
   });
@@ -49,16 +67,18 @@ describe('fulfillment quality checklist', () => {
       metadata: {
         documentSubstanceOk: true,
         documentQuality: {
-          sectionCount: 6,
-          totalBodyChars: 2200,
-          minSectionBodyChars: 160,
+          sectionCount: 8,
+          totalBodyChars: 4500,
+          minSectionBodyChars: 180,
           checklistOrMilestoneHits: 2,
           clientNamePresent: true,
           industryPresent: true,
         },
+        pdfBytes: 12000,
+        pdfPageCount: 3,
       },
     };
-    const checklist = runFulfillmentQualityChecklist('audit', result);
+    const checklist = runFulfillmentQualityChecklist('audit', withCommercialDeliveryProof(result));
     expect(checklist.passed).toBe(true);
   });
 
@@ -74,19 +94,21 @@ describe('fulfillment quality checklist', () => {
       ],
       metadata: {
         crmBootstrap: { importedLeads: 8 },
-        modulesActivated: ['crm'],
+        modulesActivated: ['notifications', 'billing', 'crm', 'tasks'],
         documentSubstanceOk: true,
         documentQuality: {
           sectionCount: 5,
-          totalBodyChars: 1600,
+          totalBodyChars: 2000,
           minSectionBodyChars: 120,
-          checklistOrMilestoneHits: 2,
+          checklistOrMilestoneHits: 1,
           clientNamePresent: true,
           industryPresent: true,
         },
+        pdfBytes: 8000,
+        pdfPageCount: 2,
       },
     };
-    const checklist = runFulfillmentQualityChecklist('setup-full', result);
+    const checklist = runFulfillmentQualityChecklist('setup-full', withCommercialDeliveryProof(result));
     expect(checklist.passed).toBe(true);
   });
 

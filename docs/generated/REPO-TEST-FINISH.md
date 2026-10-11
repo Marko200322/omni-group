@@ -7,7 +7,7 @@ Branch: `feat/phase10-outreach-send-enabled` (VPS finish uses `docker-compose.ne
 | Gate | Laptop | VPS Docker |
 |------|--------|------------|
 | `npm run test:ci` (3538 tests + coverage floors) | **PASS** exit 0 | **PASS** 369/369 exit 0 |
-| `verify-monorepo-vps` (3735+ incl. integration) | — | **PASS** (prior run) |
+| `verify-monorepo-vps` (3735+ incl. integration; mirrors `verify-monorepo.ps1` — job **`python`** / **`Python (Doslednost dok + pytest)`**, `apps/omnigroup-web` / `-SkipOmnigroupWeb`, Atina **`npm run smoke:all`**) | — | **PASS** (prior run) |
 
 Fixes: `optionalNumber` → `parseFloat` (Stripe fee rates); `config-env.test.ts` updated; coverage floors aligned to measured ~85/64/86/84.
 
@@ -19,7 +19,7 @@ Fixes: `optionalNumber` → `parseFloat` (Stripe fee rates); `config-env.test.ts
 | test:hunt-pipeline | PASS (laptop + VPS prod `.env`) |
 | smoke:hunting:quick | PASS |
 | smoke:evolution / product-factory / category-rollout | PASS |
-| smoke-stack Astra :8080 + Nest :13001 + prod Atina health | **PASS** (via `docker-compose.nest-vps-verify.yml`; older finish log may show :6380 clash — superseded) |
+| smoke-stack Astra :8080 + Nest :13001 + prod Atina health (paired with Atina **`npm run smoke:all`** for deeper gate) | **PASS** (via `docker-compose.nest-vps-verify.yml`; older finish log may show :6380 clash — superseded) |
 
 ## Očekivano / namerno
 

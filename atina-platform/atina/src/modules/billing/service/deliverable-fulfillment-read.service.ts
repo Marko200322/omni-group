@@ -34,6 +34,11 @@ export type FulfillmentOpsEvidence = {
   ragSeeded: boolean | null;
   ragRecallHits: number | null;
   supportSlaHours: number | null;
+  /** Paid invoice / receipt linked to the payment (Billing portal). */
+  invoiceId: string | null;
+  invoiceNumber: string | null;
+  invoiceLinked: boolean | null;
+  serviceCompanion: boolean | null;
 };
 
 export type FulfillmentJobView = {
@@ -201,6 +206,7 @@ function readOpsEvidence(result: Record<string, unknown>): FulfillmentOpsEvidenc
     typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
   const asBool = (v: unknown): boolean | null => (typeof v === 'boolean' ? v : null);
   const asStr = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
+  const inv = meta.commercialInvoice as Record<string, unknown> | undefined;
   return {
     problemsCoveredCount,
     problemsEmbeddedInDoc: asBool(meta.problemsEmbeddedInDoc),
@@ -216,6 +222,10 @@ function readOpsEvidence(result: Record<string, unknown>): FulfillmentOpsEvidenc
     ragSeeded: asBool(ai?.ragSeeded),
     ragRecallHits: asNum(ai?.ragRecallHits),
     supportSlaHours: asNum(support?.slaHours),
+    invoiceId: asStr(inv?.invoiceId) ?? asStr(meta.invoiceId),
+    invoiceNumber: asStr(inv?.invoiceNumber) ?? asStr(meta.invoiceNumber),
+    invoiceLinked: asBool(meta.invoiceLinked) ?? (asStr(inv?.invoiceId) != null ? true : null),
+    serviceCompanion: asBool(meta.serviceCompanion),
   };
 }
 

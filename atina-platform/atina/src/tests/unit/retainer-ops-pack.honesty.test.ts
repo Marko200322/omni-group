@@ -1,6 +1,7 @@
 import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfillment-quality-checklist';
 import { getAcceptanceContract } from '../../modules/billing/lib/deliverable-acceptance-contract';
 import { getPackageDeliverySpec } from '../../modules/billing/lib/package-delivery-spec';
+import { withCommercialDeliveryProof } from './helpers/commercial-delivery-proof';
 
 describe('retainer / support / lead-gen ops pack honesty', () => {
   it('acceptance contracts require anti-theater criteria', () => {
@@ -42,7 +43,9 @@ describe('retainer / support / lead-gen ops pack honesty', () => {
 
   it('support retainers pass with FAQ + SLA + project', () => {
     for (const id of ['support-priority', 'support-dedicated'] as const) {
-      const checklist = runFulfillmentQualityChecklist(id, {
+      const checklist = runFulfillmentQualityChecklist(
+        id,
+        withCommercialDeliveryProof({
         status: 'completed',
         projectId: 'proj-s',
         artifacts: [
@@ -56,7 +59,8 @@ describe('retainer / support / lead-gen ops pack honesty', () => {
           modulesActivated: ['notifications', 'support-avatar'],
           kickoffTicketId: 'ticket-1',
         },
-      });
+      }),
+      );
       expect(checklist.items.find((i) => i.id === 'support_faq')?.passed).toBe(true);
       expect(checklist.items.find((i) => i.id === 'sla_pack')?.passed).toBe(true);
       expect(checklist.passed).toBe(true);
@@ -64,7 +68,9 @@ describe('retainer / support / lead-gen ops pack honesty', () => {
   });
 
   it('ai-support passes with KB + CONFIGURATION REQUIRED when avatar off', () => {
-    const checklist = runFulfillmentQualityChecklist('ai-support-retainer', {
+    const checklist = runFulfillmentQualityChecklist(
+      'ai-support-retainer',
+      withCommercialDeliveryProof({
       status: 'completed',
       projectId: 'proj-ai',
       artifacts: [
@@ -85,7 +91,8 @@ describe('retainer / support / lead-gen ops pack honesty', () => {
         },
         kickoffTicketId: 'ticket-ai',
       },
-    });
+    }),
+    );
     expect(checklist.items.find((i) => i.id === 'ai_support_setup')?.passed).toBe(true);
     expect(checklist.items.find((i) => i.id === 'ai_avatar_honesty')?.passed).toBe(true);
     expect(checklist.passed).toBe(true);

@@ -49,12 +49,13 @@ assert(honesty.includes('leads_generated') || honesty.includes('Titanis'), 'Lead
 assert(honesty.includes('not an automated SLA clock'), 'Support retainers must not claim an SLA engine');
 assert(offerCard.includes('prePurchaseWarning'), 'OfferCard must render the pre-purchase warning');
 assert(!offers.includes('support queue with 24h SLA'), 'Priority support copy must not claim an SLA clock');
-assert(honesty.includes('DOCUMENT · consulting PDF pack'), 'Document-primary SKUs must use DOCUMENT label');
-assert(honesty.includes('DOCUMENT + config · not live connected'), 'Integration must be DOCUMENT + config');
-assert(honesty.includes('DOCUMENT · consulting dual-PDF pack'), 'Ops clarity must be DOCUMENT dual-PDF');
+assert(honesty.includes('SERVICE + DOCS · audit engagement'), 'Audit must use SERVICE + DOCS label');
+assert(honesty.includes('SERVICE + DOCS + config · not live connected'), 'Integration must be SERVICE + DOCS + config');
+assert(honesty.includes('SERVICE + DOCS · ops clarity dual pack'), 'Ops clarity must be SERVICE + DOCS dual pack');
 assert(honesty.includes('PRODUCT/OPS portal entitlements'), 'setup-quick must keep PRODUCT/OPS language');
-assert(offers.includes('DOCUMENT / consulting deliverable'), 'Client offers must label document-primary SKUs');
+assert(offers.includes('SERVICE + DOCS'), 'Client offers must label consulting SKUs as SERVICE + DOCS');
 assert(offers.includes('CRM view'), 'setup-quick offer must mention CRM view');
-assert(catalog.includes('DOCUMENT / consulting deliverable'), 'Catalog must label document-primary SKUs');
+assert(catalog.includes('SERVICE + DOCS'), 'Catalog must label consulting SKUs as SERVICE + DOCS');
+assert(catalog.includes('not PDF-only') || catalog.includes('Not PDF-only'), 'Catalog must reject PDF-only theater');
 
 console.log('test-delivery-honesty: ok');

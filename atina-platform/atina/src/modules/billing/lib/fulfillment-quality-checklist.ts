@@ -8,6 +8,10 @@ import {
   type PdfQualityMetrics,
 } from './deliverable-handlers/artifact-helpers';
 import { expectedBundleStepIds } from './deliverable-handlers/bundle-steps';
+import {
+  hasCommercialCompanionArtifact,
+  SERVICE_COMPANION_IDS,
+} from './deliverable-handlers/commercial-companion';
 import { resolveBaseDeliverableId } from './industry-package-id';
 import { MIN_PROBLEMS_COVERED } from './package-industry-problems';
 import { isPlaceholderBrand } from '../service/deliverable-content-generator.service';
@@ -113,6 +117,73 @@ function crmBootstrapOk(result: FulfillmentResult): boolean {
 function kickoffTicketOk(result: FulfillmentResult): boolean {
   const id = result.metadata?.kickoffTicketId;
   return typeof id === 'string' && id.trim().length > 0;
+}
+
+function commercialInvoiceOk(result: FulfillmentResult): boolean {
+  if (result.metadata?.invoiceLinked === true) {
+    const inv = result.metadata?.commercialInvoice as
+      | { invoiceId?: string; invoiceNumber?: string | null }
+      | null
+      | undefined;
+    if (inv && (inv.invoiceId?.trim() || inv.invoiceNumber?.trim())) return true;
+  }
+  const inv = result.metadata?.commercialInvoice as
+    | { invoiceId?: string; invoiceNumber?: string | null }
+    | null
+    | undefined;
+  if (inv && (typeof inv.invoiceId === 'string' && inv.invoiceId.trim())) return true;
+  const invoiceId = result.metadata?.invoiceId;
+  const invoiceNumber = result.metadata?.invoiceNumber;
+  return (
+    (typeof invoiceId === 'string' && invoiceId.trim().length > 0) ||
+    (typeof invoiceNumber === 'string' && invoiceNumber.trim().length > 0)
+  );
+}
+
+function serviceCompanionOk(result: FulfillmentResult): boolean {
+  return (
+    kickoffTicketOk(result) &&
+    Boolean(result.projectId?.trim()) &&
+    hasCommercialCompanionArtifact(result) &&
+    result.metadata?.serviceCompanion === true
+  );
+}
+
+/** Product/service must exist — PDF alone is never enough. */
+function productOrServicePresent(baseId: string, result: FulfillmentResult): boolean {
+  if (LIVE_URL_IDS.has(baseId)) return Boolean(result.publicUrl?.trim());
+  if (SETUP_IDS.has(baseId)) {
+    return Boolean(result.projectId?.trim()) && portalEntitlementsOk(result, baseId === 'setup-quick' || baseId === 'bundle-portal-presence');
+  }
+  if (
+    baseId === 'support-priority' ||
+    baseId === 'support-dedicated' ||
+    baseId === 'lead-gen-retainer' ||
+    baseId === 'ai-support-retainer' ||
+    baseId === 'vertical-package'
+  ) {
+    return Boolean(result.projectId?.trim()) && kickoffTicketOk(result);
+  }
+  if (baseId === 'custom-software') {
+    return (
+      Boolean(result.projectId?.trim()) &&
+      result.artifacts.some(
+        (a) =>
+          a.type === 'software_scaffold' ||
+          /\.tar\.gz$/i.test(a.filename) ||
+          /\.zip$/i.test(a.filename),
+      )
+    );
+  }
+  if (SERVICE_COMPANION_IDS.has(baseId)) {
+    return serviceCompanionOk(result);
+  }
+  return (
+    Boolean(result.publicUrl?.trim()) ||
+    Boolean(result.projectId?.trim()) ||
+    kickoffTicketOk(result) ||
+    modulesOk(result)
+  );
 }
 
 function modulesOk(result: FulfillmentResult): boolean {
@@ -293,6 +364,44 @@ export function runFulfillmentQualityChecklist(
         ? 'Fulfillment status is completed'
         : `Expected completed status, got ${result.status}`,
   });
+
+  // Commercial proof: paid invoice/receipt must be linked so clients see seriousness in Billing.
+  {
+    const ok = commercialInvoiceOk(result);
+    const inv = result.metadata?.commercialInvoice as
+      | { invoiceNumber?: string | null; invoiceId?: string }
+      | undefined;
+    items.push({
+      id: 'commercial_invoice_linked',
+      passed: ok,
+      message: ok
+        ? `Invoice/receipt linked (${inv?.invoiceNumber ?? inv?.invoiceId ?? result.metadata?.invoiceNumber ?? 'ok'}) — visible in Billing`
+        : 'Package requires a paid invoice or payment_receipt linked to this payment (Billing) — docs alone are not commercial delivery',
+    });
+  }
+
+  // Product/service present — documents may accompany but never replace.
+  {
+    const ok = productOrServicePresent(baseId, result);
+    items.push({
+      id: 'product_or_service_present',
+      passed: ok,
+      message: ok
+        ? 'Non-document product/service proof present (URL, portal, ticket, scaffold, or service companion)'
+        : 'Package must deliver a product or service — PDF/MD alone is rejected',
+    });
+  }
+
+  if (SERVICE_COMPANION_IDS.has(baseId)) {
+    const ok = serviceCompanionOk(result);
+    items.push({
+      id: 'service_companion',
+      passed: ok,
+      message: ok
+        ? `Service companion delivered (project=${result.projectId}, ticket=${String(result.metadata?.kickoffTicketId)}, commercial pack)`
+        : 'Document-primary packages require service companion: workspace project + kickoff ticket + commercial-delivery-pack.md (docs accompany service)',
+    });
+  }
 
   // Gate: every sellable package must list/cover ≥5 concrete problems in fulfillment
   // metadata AND embed them in MD/PDF artifacts. Catalog depth alone must NOT pass

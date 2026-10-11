@@ -15,7 +15,19 @@ export function setupTasksWorker(service: TasksService): void {
       logger.info(`Processing task ${taskId} of type ${type}`);
       await service.updateTaskStatus(taskId, 'running');
       try {
-        const result = await executeTaskByType(type, payload);
+        const basePayload =
+          payload && typeof payload === 'object' && !Array.isArray(payload)
+            ? (payload as Record<string, unknown>)
+            : typeof payload === 'string'
+              ? (() => {
+                  try {
+                    return JSON.parse(payload) as Record<string, unknown>;
+                  } catch {
+                    return {};
+                  }
+                })()
+              : {};
+        const result = await executeTaskByType(type, { ...basePayload, taskId });
         await service.updateTaskStatus(taskId, 'completed', result);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);

@@ -160,6 +160,10 @@ export class PaymentsController {
     sendSuccess(res, await this.service.getFoundingPromoStatus());
   };
 
+  getDeliverableIntroPromo = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, await this.service.getDeliverableIntroPromoStatus());
+  };
+
   createManualCheckout = async (req: Request, res: Response): Promise<void> => {
     const body = CheckoutDto.parse(req.body);
     const result = await this.service.createManualCheckout(

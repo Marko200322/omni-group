@@ -30,15 +30,21 @@ type Props = {
 export function HomePageClient({ catalogStats }: Props) {
   const publicCatalog = getPublicCatalogStats();
   const stats = [
-    { label: 'Industry groups', value: String(catalogStats.industryGroups) },
-    { label: 'Vertical landing pages', value: String(catalogStats.verticalLandings) },
+    {
+      label: 'Industry packages',
+      value: publicCatalog.sellablePackages.toLocaleString('en-US'),
+    },
+    {
+      label: 'Industries',
+      value: String(publicCatalog.industryGroups),
+    },
     {
       label: 'SaaS plans from',
       value: `${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'USD'), 'USD')} / ${formatPlanMoney(getSaaSPlanPrice('starter', 'monthly', 'EUR'), 'EUR')}`,
     },
     {
-      label: 'Services + bundles',
-      value: `${publicCatalog.expertServiceCount} + ${publicCatalog.bundleCount}`,
+      label: 'Niche landings',
+      value: String(catalogStats.verticalLandings),
     },
   ];
 
@@ -71,21 +77,22 @@ export function HomePageClient({ catalogStats }: Props) {
                 add fixed-scope expert delivery only when you need it.
               </p>
               <p className="mt-3 text-sm text-slate-500">
-                <Link href="/solutions" className="text-violet-300/90 hover:text-white">
-                  {catalogStats.industryGroups} industry groups
+                <Link href="/products" className="text-violet-300/90 hover:text-white">
+                  {publicCatalog.basePackages} capabilities × {publicCatalog.industryGroups} industries ={' '}
+                  {publicCatalog.sellablePackages.toLocaleString('en-US')} packages
                 </Link>
                 {' · '}
                 <Link href="/solutions" className="text-violet-300/90 hover:text-white">
-                  {catalogStats.verticalLandings} niche landing pages
+                  {catalogStats.verticalLandings} niche landings
                 </Link>
-                {' — each with packages tuned to that vertical.'}
+                .
               </p>
               <div className="mt-10 flex flex-wrap gap-4">
                 <Link href="/pricing" className="btn-primary inline-flex items-center gap-2">
                   Compare plans <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/products" className="btn-glass">
-                  Explore platform
+                  Browse packages
                 </Link>
                 <Link href="/register" className="btn-glass">
                   Create workspace

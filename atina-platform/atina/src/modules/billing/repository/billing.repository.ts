@@ -81,6 +81,16 @@ export class BillingRepository {
     return query('SELECT * FROM invoices WHERE id = $1 AND user_id = $2', [invoiceId, userId]);
   }
 
+  getInvoiceByPaymentId(paymentId: string) {
+    return query(
+      `SELECT * FROM invoices
+       WHERE payment_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [paymentId],
+    );
+  }
+
   getUserPlanLimits(userId: string) {
     return query(
       `SELECT p.limits FROM users u
