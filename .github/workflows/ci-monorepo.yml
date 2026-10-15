@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Doslednost dok — doc gate (audit-doc-gate-references.ps1; md/txt + yaml/ps1/ini; uklj. par EVIDENCE-INDEX / NIVO-1-DRYRUN-LOG; scripts/README.md)
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/audit-doc-gate-references.ps1
       - uses: actions/setup-python@v5
@@ -50,7 +50,7 @@ jobs:
       run:
         working-directory: atina-platform/atina
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: atina-platform/atina/.nvmrc
@@ -83,7 +83,7 @@ jobs:
       run:
         working-directory: apps/omnigroup-web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: apps/omnigroup-web/.nvmrc
@@ -123,7 +123,7 @@ jobs:
       run:
         working-directory: atina-system
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version-file: atina-system/.nvmrc
@@ -137,7 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate Nest stack compose (atina + port 3001 override)
         run: docker compose -f docker-compose.atina.yml -f docker-compose.nest-port-3001.yml config --quiet
       - name: Validate root Python stack compose
