@@ -17,6 +17,7 @@ export const SERVICE_COMPANION_IDS = new Set([
   'integration',
   'sales-enablement',
   'bundle-ops-clarity',
+  'seo-audit',
 ]);
 
 export type CommercialCompanionAttach = {

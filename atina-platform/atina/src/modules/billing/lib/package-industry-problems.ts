@@ -307,6 +307,45 @@ export const PACKAGE_PROBLEM_SPECS: Record<string, PackageProblemSpec> = {
     ],
     businessOutcome: 'Technical audit PDF plus workflow/SOP pack aligned to your industry priorities',
   },
+  'seo-audit': {
+    primaryProblemTemplate:
+      '{industry} businesses lose organic traffic to competitors because technical SEO issues go undiagnosed',
+    secondaryProblems: [
+      'Core Web Vitals failing on mobile devices',
+      'Keyword opportunities missed to competitors',
+      'No structured data or schema markup',
+      'Thin content pages not meeting search intent',
+      'Backlink profile weaker than competitors',
+      'No monthly SEO improvement cadence',
+    ],
+    businessOutcome: 'Technical SEO audit with competitor benchmark and 90-day monthly improvement roadmap',
+  },
+  'email-marketing': {
+    primaryProblemTemplate:
+      '{industry} teams send emails without segmentation, sequences, or compliance — leads go cold',
+    secondaryProblems: [
+      'No welcome sequence for new leads',
+      'Email list unsegmented by lifecycle stage',
+      'SMS campaigns missing for high-intent triggers',
+      'CAN-SPAM / GDPR compliance gaps',
+      'No re-engagement flow for inactive contacts',
+      'Open and click rates untracked',
+    ],
+    businessOutcome: 'Campaign strategy with 4 email sequences, 2 SMS blueprints, and compliance checklist',
+  },
+  'reputation-management': {
+    primaryProblemTemplate:
+      '{industry} businesses lose customers because negative reviews go unanswered and positive ones are never requested',
+    secondaryProblems: [
+      'Google Business Profile incomplete or outdated',
+      'No system for requesting reviews after service',
+      'Negative reviews sit unanswered for days',
+      'Competitor has more reviews and higher rating',
+      'No response templates for different review types',
+      'Review monitoring is manual and inconsistent',
+    ],
+    businessOutcome: 'Review funnel design with response templates, GBP audit, and monthly growth tracking',
+  },
 };
 
 export type PackageIndustryContext = {

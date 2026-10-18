@@ -10,6 +10,7 @@ import {
 } from './vertical-growth.handler';
 import { customSoftwareFulfillmentHandler } from './custom-software.handler';
 import { bundleFulfillmentHandler } from './bundle.handler';
+import { marketingRetainerFulfillmentHandler } from './marketing-retainer.handler';
 
 const HANDLERS: DeliverableFulfillmentHandler[] = [
   websiteFulfillmentHandler,
@@ -20,6 +21,7 @@ const HANDLERS: DeliverableFulfillmentHandler[] = [
   growthFulfillmentHandler,
   customSoftwareFulfillmentHandler,
   bundleFulfillmentHandler,
+  marketingRetainerFulfillmentHandler,
 ];
 
 const BY_ID = new Map<string, DeliverableFulfillmentHandler>();

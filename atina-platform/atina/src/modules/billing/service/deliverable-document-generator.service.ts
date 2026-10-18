@@ -12,6 +12,7 @@ import {
   mergeHintsIntoPayload,
   type FulfillmentGenerationHints,
 } from '../lib/fulfillment-generation-hints';
+import { bindDocToOrder } from '../lib/order-identity';
 import {
   AI_DOC_ACCEPTANCE_FLOOR,
   assessDocumentQuality,
@@ -1076,6 +1077,20 @@ function fallbackSoftwareHandoff(input: {
 }
 
 export class DeliverableDocumentGeneratorService {
+  private finishDoc(
+    doc: StructuredDeliverableDoc,
+    payload: Record<string, unknown>,
+    generationHints?: FulfillmentGenerationHints,
+  ): StructuredDeliverableDoc {
+    const identity = generationHints?.orderIdentity;
+    if (!identity) return doc;
+    const clientName =
+      typeof payload.clientName === 'string' && payload.clientName.trim().length >= 2
+        ? payload.clientName.trim()
+        : 'Client';
+    return bindDocToOrder(doc, identity, clientName);
+  }
+
   private async aiDoc(
     system: string,
     payload: Record<string, unknown>,
@@ -1083,11 +1098,11 @@ export class DeliverableDocumentGeneratorService {
     generationHints?: FulfillmentGenerationHints,
   ): Promise<StructuredDeliverableDoc> {
     const ai = getAiClient();
-    if (!ai.isConfigured()) return fallback;
+    if (!ai.isConfigured()) return this.finishDoc(fallback, payload, generationHints);
     try {
       const chat = await ai.chatCompletions({
         maxTokens: 4500,
-        temperature: 0.45,
+        temperature: generationHints?.orderIdentity ? 0.55 : 0.45,
         messages: [
           {
             role: 'system',
@@ -1095,21 +1110,26 @@ export class DeliverableDocumentGeneratorService {
 
 Hard requirements: JSON only {"title","subtitle","sections":[{"heading","body"}]}.
 Minimum 4 sections; each body ≥ 80 chars; include checklists or numbered milestones.
-Name the client and industry. No lorem ipsum. No stub one-liners.`,
+Name the client and industry. No lorem ipsum. No stub one-liners.
+${
+  generationHints?.orderIdentity
+    ? `This is order ${generationHints.orderIdentity.shortRef} — write order-specific discovery questions and recommendations; never a reusable blank template.`
+    : ''
+}`,
           },
           { role: 'user', content: JSON.stringify(mergeHintsIntoPayload(payload, generationHints)) },
         ],
       });
       if (chat?.content) {
         const parsed = parseDocJson(chat.content);
-        if (parsed) return parsed;
+        if (parsed) return this.finishDoc(parsed, payload, generationHints);
       }
     } catch (err) {
       logger.warn('AI deliverable document generation failed — fallback', {
         error: err instanceof Error ? err.message : String(err),
       });
     }
-    return fallback;
+    return this.finishDoc(fallback, payload, generationHints);
   }
 
   async generateAuditReport(input: {
@@ -1181,6 +1201,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
     deliverableId: string;
     clientName: string;
     industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
   }): Promise<StructuredDeliverableDoc> {
     const d = getDeliverable(input.deliverableId);
     const pack = verticalPackForIndustry(input.industryCategory);
@@ -1255,11 +1276,15 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
         ].join('\n'),
       });
     }
-    return {
-      title: `${d?.name ?? 'Retainer'} — Welcome & Service Scope`,
-      subtitle: `${input.clientName} — ${pack.displayName}`,
-      sections,
-    };
+    return this.finishDoc(
+      {
+        title: `${d?.name ?? 'Retainer'} — Welcome & Service Scope`,
+        subtitle: `${input.clientName} — ${pack.displayName}`,
+        sections,
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
   }
 
   async generateSalesEnablement(input: {
@@ -1279,6 +1304,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
   async generateWhiteLabelPack(input: {
     clientName: string;
     industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
   }): Promise<StructuredDeliverableDoc> {
     const pack = verticalPackForIndustry(input.industryCategory);
     const niche = pack.displayName;
@@ -1394,6 +1420,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
           },
         ],
       },
+      input.generationHints,
     );
   }
 
@@ -1405,6 +1432,7 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
     absoluteUrl: string;
     pageCount?: number | null;
     catalogCount?: number | null;
+    generationHints?: FulfillmentGenerationHints;
   }): Promise<StructuredDeliverableDoc> {
     const d = getDeliverable(input.deliverableId);
     const pack = verticalPackForIndustry(input.industryCategory);
@@ -1600,11 +1628,15 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
         'Honesty: this PDF mirrors the live handoff — downloadable proof in Deliveries, not a one-page stub.',
       ].join('\n'),
     });
-    return {
-      title: `${d?.name ?? 'Site'} — Delivery pack`,
-      subtitle: `${input.clientName} — ${industry}`,
-      sections,
-    };
+    return this.finishDoc(
+      {
+        title: `${d?.name ?? 'Site'} — Delivery pack`,
+        subtitle: `${input.clientName} — ${industry}`,
+        sections,
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
   }
 
   async generateSoftwareHandoff(input: {
@@ -1640,11 +1672,13 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
   async generateVerticalPackBrief(input: {
     clientName: string;
     industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
   }): Promise<StructuredDeliverableDoc> {
     const pack = verticalPackForIndustry(input.industryCategory);
     const sub = substanceForPack(pack);
     const industry = sub.labelEn || pack.displayName;
-    return {
+    return this.finishDoc(
+      {
       title: `Vertical Solution — ${pack.displayName}`,
       subtitle: `${input.clientName} — ${industry}`,
       sections: [
@@ -1750,6 +1784,500 @@ Name the client and industry. No lorem ipsum. No stub one-liners.`,
           ].join('\n'),
         },
       ],
-    };
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
+  }
+
+  async generateSeoAuditReport(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    const sub = substanceForPack(pack);
+    const industry = sub.labelEn || pack.displayName;
+    return this.finishDoc(
+      {
+        title: `SEO Audit & Monthly Optimization Plan`,
+        subtitle: `${input.clientName} — ${industry}`,
+        sections: [
+          {
+            heading: 'Executive summary',
+            body: [
+              `Technical SEO audit for ${input.clientName} in ${industry}.`,
+              '',
+              `This report covers: crawlability, Core Web Vitals, mobile-first indexing, keyword gap analysis, competitor benchmark, and a 90-day monthly improvement roadmap.`,
+              '',
+              `Industry context: ${pack.valueProp}`,
+              '',
+              'Key deliverables: prioritized fix list, keyword opportunity map, monthly SEO task calendar.',
+              'Milestone: Week 1 — implement critical technical fixes. Month 1 — baseline rankings recorded.',
+            ].join('\n'),
+          },
+          {
+            heading: 'Technical SEO crawl',
+            body: [
+              'Crawlability and indexing assessment:',
+              '',
+              bullets([
+                'robots.txt + XML sitemap validation — ensure all key pages are discoverable',
+                'Canonical tags: check for duplicate content and canonical chain issues',
+                'HTTP status codes: identify 404s, redirect chains (3xx), and soft 404s',
+                'Crawl budget: page count vs indexed count ratio analysis',
+                `Internal linking structure for ${industry} service pages`,
+                'Structured data / Schema.org markup (LocalBusiness, Service, FAQ, Review)',
+                'Hreflang tags if multi-language/region applies',
+              ]),
+              '',
+              `Checklist: ☐ sitemap submitted ☐ robots.txt reviewed ☐ canonical tags audited ☐ redirect chains resolved`,
+            ].join('\n'),
+          },
+          {
+            heading: 'Core Web Vitals & page speed',
+            body: [
+              'Performance metrics against Google CWV thresholds:',
+              '',
+              bullets([
+                'LCP (Largest Contentful Paint) — target < 2.5s on mobile',
+                'FID / INP (Interaction to Next Paint) — target < 200ms',
+                'CLS (Cumulative Layout Shift) — target < 0.1',
+                'TTFB (Time to First Byte) — hosting/CDN assessment',
+                'Image optimization: WebP/AVIF, lazy loading, responsive srcset',
+                'JavaScript bundle analysis: render-blocking scripts, unused code',
+                'Font loading strategy: FOUT vs FOIT, preload critical fonts',
+              ]),
+              '',
+              `Each metric includes current value, target, and specific fix action for ${input.clientName}.`,
+              'Checklist: ☐ LCP measured ☐ INP measured ☐ CLS measured ☐ image audit done ☐ JS bundle reviewed',
+            ].join('\n'),
+          },
+          {
+            heading: 'Keyword gap analysis',
+            body: [
+              `Keyword opportunity mapping for ${input.clientName} in ${industry}:`,
+              '',
+              bullets([
+                'Current ranking keywords: position distribution (1-3, 4-10, 11-20, 20+)',
+                'Competitor keyword overlap: terms they rank for that you don\'t',
+                'Long-tail opportunities: low-competition, high-intent keywords',
+                `Industry-specific terms: ${sub.distinctiveTokens.slice(0, 6).join(', ')}`,
+                'Content gap: topics competitors cover with no matching page on your site',
+                'Featured snippet opportunities: question-based queries in your niche',
+              ]),
+              '',
+              'Action: prioritize by search volume × conversion intent × ranking difficulty.',
+              `Milestone: keyword target list finalized by Week 2 for ${input.clientName}.`,
+            ].join('\n'),
+          },
+          {
+            heading: 'Competitor SEO benchmark',
+            body: [
+              'Benchmark against top 3 organic competitors:',
+              '',
+              bullets([
+                'Domain authority / domain rating comparison',
+                'Backlink profile: referring domains count, quality, anchor text distribution',
+                'Content velocity: how often competitors publish and update',
+                'Top-performing pages: which competitor content drives the most organic traffic',
+                `${industry}-specific directories and citations they leverage`,
+              ]),
+              '',
+              'Deliverable: competitor comparison matrix with actionable gaps.',
+              'Checklist: ☐ 3 competitors identified ☐ backlink profiles compared ☐ content gaps mapped',
+            ].join('\n'),
+          },
+          {
+            heading: 'On-page optimization recommendations',
+            body: [
+              'Page-by-page optimization priorities:',
+              '',
+              bullets([
+                'Title tags: include primary keyword, brand, and value proposition (50-60 chars)',
+                'Meta descriptions: compelling CTAs with secondary keywords (150-160 chars)',
+                'H1-H3 hierarchy: one H1 per page, logical heading nesting',
+                'Internal linking: hub-and-spoke model for service clusters',
+                'Content depth: thin pages flagged with minimum 800-word target for key pages',
+                'Image alt text: descriptive, keyword-aware, accessibility-compliant',
+                'URL structure: clean, keyword-bearing, no parameter pollution',
+              ]),
+              '',
+              `Focus: ${input.clientName}'s highest-traffic pages first, then expand to ${industry} landing pages.`,
+            ].join('\n'),
+          },
+          {
+            heading: '90-day monthly SEO roadmap',
+            body: [
+              'Month 1 — Foundation:',
+              numbered([
+                'Implement all critical technical fixes (crawl, speed, mobile)',
+                'Submit corrected sitemap to Google Search Console',
+                'Set up rank tracking for 30 target keywords',
+                'Baseline Core Web Vitals scores recorded',
+              ]),
+              '',
+              'Month 2 — Content & on-page:',
+              numbered([
+                'Publish/update 4 optimized pages targeting keyword gaps',
+                'Internal linking restructure for top service pages',
+                'Schema markup implementation (LocalBusiness, FAQ)',
+                'First backlink outreach campaign (5 targets)',
+              ]),
+              '',
+              'Month 3 — Growth & measure:',
+              numbered([
+                'Keyword position delta report vs baseline',
+                'Core Web Vitals re-test after optimizations',
+                'Content calendar for next quarter based on results',
+                'Competitor re-benchmark to track gap closure',
+              ]),
+              '',
+              'Honesty: monthly on-page improvements require CMS access — NOT CONNECTED until credentials provided.',
+              `Checklist: ☐ GSC access ☐ analytics baseline ☐ rank tracker configured ☐ ${input.clientName} CMS access pending`,
+            ].join('\n'),
+          },
+        ],
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
+  }
+
+  async generateEmailMarketingPack(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    const sub = substanceForPack(pack);
+    const industry = sub.labelEn || pack.displayName;
+    return this.finishDoc(
+      {
+        title: `Email & SMS Marketing Strategy`,
+        subtitle: `${input.clientName} — ${industry}`,
+        sections: [
+          {
+            heading: 'Campaign strategy overview',
+            body: [
+              `Email & SMS marketing blueprint for ${input.clientName} in ${industry}.`,
+              '',
+              `Industry context: ${pack.valueProp}`,
+              '',
+              'This pack delivers:',
+              bullets([
+                'Audience segmentation framework with lifecycle stages',
+                '4 ready-to-customize email sequence templates',
+                '2 SMS campaign blueprints for high-intent triggers',
+                'Compliance checklist (CAN-SPAM / GDPR / TCPA)',
+                'KPI dashboard template for open rate, CTR, conversion tracking',
+              ]),
+              '',
+              'Honesty: sending infrastructure is CONFIGURATION REQUIRED. Resend or Twilio API keys must be provided before live sends.',
+              'Milestone: sequences loaded into send tool within kickoff week.',
+            ].join('\n'),
+          },
+          {
+            heading: 'Audience segmentation',
+            body: [
+              `Segmentation model for ${input.clientName}:`,
+              '',
+              bullets([
+                'New leads (0-7 days): welcome + value demonstration sequence',
+                'Engaged prospects (opened 2+ emails): nurture + case study drip',
+                'Inactive contacts (90+ days no open): re-engagement or sunset',
+                'Customers: onboarding, upsell, review request, renewal reminder',
+                `${industry}-specific segments: ${sub.salesPains.slice(0, 3).join('; ')}`,
+              ]),
+              '',
+              'Each segment has: entry trigger, exit criteria, max frequency cap, and a suppression list rule.',
+              'Checklist: ☐ segments defined ☐ entry/exit triggers mapped ☐ frequency caps set ☐ suppression rules active',
+            ].join('\n'),
+          },
+          {
+            heading: 'Email sequence templates',
+            body: [
+              '4 ready-to-customize sequences:',
+              '',
+              '**Sequence 1 — Welcome (5 emails, 14 days)**',
+              bullets([
+                'Day 0: Welcome + what to expect + quick win CTA',
+                'Day 2: Problem-aware content (industry pain point #1)',
+                'Day 5: Case study / social proof',
+                'Day 9: Value offer + FAQ answers',
+                'Day 14: Direct CTA + reply trigger',
+              ]),
+              '',
+              '**Sequence 2 — Nurture (4 emails, 30 days)**',
+              bullets([
+                'Week 1: Educational content on top industry challenge',
+                'Week 2: How-to guide with actionable steps',
+                'Week 3: Comparison / buying guide',
+                'Week 4: Limited-time offer or consultation CTA',
+              ]),
+              '',
+              '**Sequence 3 — Re-engagement (3 emails, 10 days)**',
+              bullets([
+                'Day 0: "We miss you" + new value since last visit',
+                'Day 4: Exclusive offer for returning contacts',
+                'Day 10: Final notice + unsubscribe option (list hygiene)',
+              ]),
+              '',
+              '**Sequence 4 — Post-purchase (4 emails, 30 days)**',
+              bullets([
+                'Day 0: Thank you + onboarding quick-start',
+                'Day 7: Tips & best practices for their purchase',
+                'Day 21: Review / testimonial request',
+                'Day 30: Upsell / cross-sell recommendation',
+              ]),
+              '',
+              `All templates use ${input.clientName} brand voice and ${industry} terminology.`,
+              'Checklist: ☐ brand voice applied ☐ subject lines A/B variants written ☐ preview text included ☐ unsubscribe link present',
+            ].join('\n'),
+          },
+          {
+            heading: 'SMS campaign blueprints',
+            body: [
+              '2 SMS blueprints for high-intent triggers:',
+              '',
+              '**SMS Blueprint 1 — Appointment / demo reminder**',
+              bullets([
+                '24h before: "Hi {name}, your {service} is tomorrow at {time}. Reply YES to confirm."',
+                '1h before: "Reminder: {service} in 1 hour. Need to reschedule? Reply CHANGE."',
+                'No-show follow-up: "We missed you. Reply REBOOK for a new slot."',
+              ]),
+              '',
+              '**SMS Blueprint 2 — Flash offer / urgency**',
+              bullets([
+                'Trigger: new product/service launch or seasonal promotion',
+                'Template: "{name}, {offer} ends {date}. {link} to claim. Reply STOP to opt out."',
+                'Follow-up (48h): "Last chance: {offer}. {link}"',
+              ]),
+              '',
+              'Compliance: TCPA opt-in required before any SMS. Every message includes opt-out instructions.',
+              'Honesty: SMS sending requires Twilio or equivalent — CONFIGURATION REQUIRED.',
+            ].join('\n'),
+          },
+          {
+            heading: 'Compliance & deliverability',
+            body: [
+              'Legal and deliverability requirements:',
+              '',
+              bullets([
+                'CAN-SPAM: physical address in footer, working unsubscribe, no misleading headers',
+                'GDPR: explicit consent record, data processing basis documented, right to erasure flow',
+                'TCPA (SMS): prior express written consent, opt-out honored within 10 business days',
+                'Domain warmup: start at 50 emails/day, increase 25% daily for 2 weeks',
+                'SPF + DKIM + DMARC configured on sending domain',
+                'Bounce handling: auto-suppress hard bounces, monitor soft bounce rate < 2%',
+                'Spam complaint rate: target < 0.1% (Google postmaster threshold)',
+              ]),
+              '',
+              'Checklist: ☐ SPF ☐ DKIM ☐ DMARC ☐ unsubscribe tested ☐ physical address in footer ☐ SMS consent flow built',
+            ].join('\n'),
+          },
+          {
+            heading: 'KPI tracking & reporting',
+            body: [
+              'Monthly metrics to track:',
+              '',
+              bullets([
+                'Open rate: target 25-40% (industry-adjusted)',
+                'Click-through rate: target 3-8%',
+                'Conversion rate: form fill / purchase from email traffic',
+                'Unsubscribe rate: healthy < 0.5% per campaign',
+                'List growth rate: new subscribers vs churned',
+                'Revenue per email: total email-attributed revenue / emails sent',
+                'SMS response rate: target 15-25% for appointment confirmations',
+              ]),
+              '',
+              `Dashboard template provided for ${input.clientName} to track in their analytics tool.`,
+              'Milestone: first campaign sent within 2 weeks of send tool configuration.',
+            ].join('\n'),
+          },
+        ],
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
+  }
+
+  async generateReputationManagementPack(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    const sub = substanceForPack(pack);
+    const industry = sub.labelEn || pack.displayName;
+    return this.finishDoc(
+      {
+        title: `Reputation & Review Management Plan`,
+        subtitle: `${input.clientName} — ${industry}`,
+        sections: [
+          {
+            heading: 'Reputation strategy overview',
+            body: [
+              `Review management and reputation automation plan for ${input.clientName} in ${industry}.`,
+              '',
+              `Industry context: ${pack.valueProp}`,
+              '',
+              'This pack delivers:',
+              bullets([
+                'Google Business Profile audit and optimization recommendations',
+                'Review funnel design: trigger → ask → respond → amplify',
+                'Response template library (positive, neutral, negative reviews)',
+                'Monitoring dashboard setup for review alerts',
+                'Competitor review benchmark analysis',
+                'Monthly review growth targets and tracking framework',
+              ]),
+              '',
+              'Honesty: automated review requests require Google Business / Yelp API keys — CONFIGURATION REQUIRED.',
+              'Milestone: review funnel active within first 2 weeks of API configuration.',
+            ].join('\n'),
+          },
+          {
+            heading: 'Google Business Profile audit',
+            body: [
+              `Current-state assessment of ${input.clientName}'s online presence:`,
+              '',
+              bullets([
+                'GBP listing completeness: name, address, phone, hours, categories, description',
+                'Photo count and quality: exterior, interior, team, products (target 25+ photos)',
+                'Category accuracy: primary and secondary categories for maximum visibility',
+                'Service area and attributes: ensure all relevant attributes are claimed',
+                'Q&A section: seed with common customer questions and answers',
+                `${industry}-specific attributes: appointment links, service menus, booking buttons`,
+              ]),
+              '',
+              'Action items prioritized by impact on local pack ranking.',
+              'Checklist: ☐ NAP consistency verified ☐ categories optimized ☐ photos uploaded ☐ Q&A seeded ☐ attributes complete',
+            ].join('\n'),
+          },
+          {
+            heading: 'Review funnel design',
+            body: [
+              'Automated review request workflow:',
+              '',
+              '**Step 1 — Trigger identification**',
+              bullets([
+                'Post-purchase / post-service completion (best conversion window: 1-24 hours)',
+                'Positive CSAT score or NPS response (promoters only)',
+                'Milestone completion (e.g., project delivered, support ticket resolved)',
+              ]),
+              '',
+              '**Step 2 — Review ask sequence**',
+              bullets([
+                'SMS (primary): short, direct, one-tap Google review link',
+                'Email (secondary): branded template with embedded star selector',
+                'In-person: QR code at point of service / on receipts',
+              ]),
+              '',
+              '**Step 3 — Sentiment gate**',
+              bullets([
+                'Happy path → direct to Google / Yelp / industry directory',
+                'Unhappy path → redirect to private feedback form (prevent public negative review)',
+                'Neutral → follow up with "how can we do better" before asking for public review',
+              ]),
+              '',
+              '**Step 4 — Amplification**',
+              bullets([
+                'Share positive reviews on website testimonials widget',
+                'Social media highlights for 5-star reviews',
+                'Case study extraction from detailed positive reviews',
+              ]),
+              '',
+              `Designed for ${input.clientName}'s ${industry} customer journey.`,
+              'Checklist: ☐ trigger events defined ☐ SMS template written ☐ email template written ☐ sentiment gate configured ☐ amplification channel chosen',
+            ].join('\n'),
+          },
+          {
+            heading: 'Response template library',
+            body: [
+              '15 response templates organized by review type:',
+              '',
+              '**Positive reviews (5 templates)**',
+              bullets([
+                'Generic thank-you with personal touch',
+                'Highlight-specific: "We\'re glad you loved {specific service}"',
+                'Referral prompt: thank + gentle referral suggestion',
+                'Return customer: acknowledge loyalty',
+                'Team mention: credit specific team member if named',
+              ]),
+              '',
+              '**Neutral reviews (5 templates)**',
+              bullets([
+                'Acknowledge + ask what would make it 5 stars',
+                'Offer to make it right with specific next step',
+                'Request private conversation for detailed feedback',
+                'Thank for honesty + share improvement already made',
+                'Invite to try again with specific value proposition',
+              ]),
+              '',
+              '**Negative reviews (5 templates)**',
+              bullets([
+                'Empathize + apologize + offer resolution (take offline)',
+                'Factual correction (when review contains inaccuracies)',
+                'Service recovery offer with direct contact info',
+                'Systematic issue acknowledgment + fix timeline',
+                'Professional close when resolution is impossible',
+              ]),
+              '',
+              'All templates include: owner name, response within 24h guideline, no defensive language rule.',
+              `Language adapted for ${industry} customer expectations and ${input.clientName} brand voice.`,
+            ].join('\n'),
+          },
+          {
+            heading: 'Monitoring & alerts',
+            body: [
+              'Review monitoring setup:',
+              '',
+              bullets([
+                'Google Business Profile: real-time notifications for new reviews',
+                'Yelp / industry directories: daily scan for new reviews',
+                'Social media mentions: brand name monitoring on key platforms',
+                'Competitor review tracking: monthly benchmark report',
+                'Response time target: < 24 hours for all reviews, < 4 hours for negative',
+                'Alert routing: negative → owner/manager immediately, positive → marketing for amplification',
+              ]),
+              '',
+              'Dashboard metrics: review count, average rating, response rate, response time, sentiment trend.',
+              '',
+              'Honesty: automated monitoring requires API access — CONFIGURATION REQUIRED. Manual monitoring workflow provided as fallback.',
+              'Checklist: ☐ GBP notifications enabled ☐ alert routing configured ☐ response time SLA set ☐ dashboard template deployed',
+            ].join('\n'),
+          },
+          {
+            heading: 'Monthly targets & reporting',
+            body: [
+              'Review growth framework:',
+              '',
+              bullets([
+                'Month 1: baseline current review count, rating, and response rate',
+                'Monthly target: 4-8 new Google reviews (realistic for most SMBs)',
+                'Rating target: maintain or improve average (4.5+ stars)',
+                'Response rate target: 100% of reviews responded to',
+                'Competitor gap: close rating/count gap by 10% per quarter',
+              ]),
+              '',
+              'Monthly report includes:',
+              numbered([
+                'New reviews this month (count + average rating)',
+                'Response rate and average response time',
+                'Sentiment trend (positive / neutral / negative split)',
+                'Competitor comparison update',
+                'Top quotes for marketing amplification',
+                'Action items for next month',
+              ]),
+              '',
+              `Tracking template customized for ${input.clientName} in ${industry}.`,
+              'Milestone: first monthly report delivered 30 days after review funnel goes live.',
+            ].join('\n'),
+          },
+        ],
+      },
+      { clientName: input.clientName },
+      input.generationHints,
+    );
   }
 }

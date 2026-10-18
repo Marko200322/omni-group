@@ -14,19 +14,19 @@ import { runFulfillmentQualityChecklist } from '../../modules/billing/lib/fulfil
 describe('thousand-package-catalog', () => {
   it('exposes ~1000 first-class industry packages (not a combinations narrative)', () => {
     const stats = thousandPackageCatalogStats();
-    expect(stats.baseCount).toBe(20);
+    expect(stats.baseCount).toBe(23);
     expect(stats.industryCount).toBe(50);
-    expect(stats.targetCount).toBe(1000);
+    expect(stats.targetCount).toBe(1150);
     expect(TARGET_PACKAGE_COUNT).toBe(BASE_DELIVERABLE_COUNT * INDUSTRY_CATEGORIES.length);
-    expect(stats.catalogCount).toBe(1000);
+    expect(stats.catalogCount).toBe(1150);
     expect(stats.ready).toBe(true);
     expect(stats.minProblems).toBeGreaterThanOrEqual(MIN_PROBLEMS_COVERED);
     expect(stats.maxProblems).toBeLessThanOrEqual(MAX_PROBLEMS_COVERED);
     expect(stats.belowFloor).toBe(0);
 
     const catalog = listFullPackageCatalog();
-    expect(catalog).toHaveLength(1000);
-    expect(listDeliverables()).toHaveLength(1000);
+    expect(catalog).toHaveLength(1150);
+    expect(listDeliverables()).toHaveLength(1150);
 
     const sample = getDeliverable('landing__healthcare');
     expect(sample).not.toBeNull();

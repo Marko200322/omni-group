@@ -6,6 +6,7 @@ import {
   mergeHintsIntoPayload,
   type FulfillmentGenerationHints,
 } from '../lib/fulfillment-generation-hints';
+import type { OrderIdentity } from '../lib/order-identity';
 
 export type GeneratedSitePage = {
   slug: string;
@@ -13,6 +14,22 @@ export type GeneratedSitePage = {
   kind: string;
   body: string;
 };
+
+function stampPagesWithOrder(
+  pages: GeneratedSitePage[],
+  identity: OrderIdentity | undefined,
+  brandName: string,
+): GeneratedSitePage[] {
+  if (!identity) return pages;
+  return pages.map((p) => {
+    if (p.kind !== 'home' && p.slug !== 'home') return p;
+    if (p.body.includes(identity.shortRef)) return p;
+    return {
+      ...p,
+      body: `${p.body.trim()}\n\n## Delivery scope\nOrder **${identity.shortRef}** for **${brandName}** — this site build is tied to this payment, not a reusable demo clone.\n`,
+    };
+  });
+}
 
 const BUSINESS_PAGE_BLUEPRINT: Array<{ slug: string; title: string; kind: string }> = [
   { slug: 'home', title: 'Home', kind: 'home' },
@@ -143,8 +160,8 @@ export function assessGeneratedSiteQuality(input: {
 }): SiteContentQuality {
   const brand = input.brandName.trim();
   const pages = input.pages ?? [];
-  const homeMin = input.deliverableId === 'landing' ? 420 : 280;
-  const secondaryMin = 160;
+  const homeMin = input.deliverableId === 'landing' ? 480 : 400;
+  const secondaryMin = 200;
   const thinPages = pages
     .filter((p) => {
       const isHome = p.kind === 'home' || p.slug === 'home';
@@ -305,7 +322,7 @@ function nicheCopyPack(niche: string, category?: string | null): NicheCopy {
         'Aftercare and FAQ education',
       ],
       outcomes: ['fewer no-shows', 'clearer intake', 'trustworthy first visit'],
-      audience: 'clinics and practices that need a professional, calm digital presence',
+      audience: 'clinics and practices that need a professional, calm online presence',
       proof: 'Patients know what to expect before they book.',
       products: [
         { name: 'Initial consult', description: 'First visit assessment and care plan.', priceEur: 79 },
@@ -578,11 +595,16 @@ function landingHomeBody(
     '## Outcomes clients care about',
     ...copy.outcomes.map((o) => `- ${o.charAt(0).toUpperCase() + o.slice(1)}`),
     '',
+    '## How we work',
+    `- Scope in writing before kickoff`,
+    `- Live landing URL you can share immediately`,
+    `- EUR invoice trail tied to this delivery — not a demo clone`,
+    '',
     '## Proof, not slogans',
     `"${brand} made the process boring in the best way — clear scope, on-time delivery." — Operations lead`,
     '',
     '## Next step',
-    'Send a short brief or book an intro call. We reply within one business day with a written scope and EUR pricing.',
+    `Send a short brief or book an intro call with ${brand}. We reply within one business day with a written scope and EUR pricing.`,
   ].join('\n');
 }
 
@@ -612,15 +634,21 @@ function fallbackPages(
             '',
             prop,
             '',
-            `We specialize in ${niche.toLowerCase()} — practical delivery and transparent pricing. ${copy.proof}`,
+            `We specialize in ${niche.toLowerCase()} for ${copy.audience}. Practical delivery, transparent EUR pricing, and a live site you can share the same day. ${copy.proof}`,
             '',
             '## What you get',
-            `- Clear scope before work starts`,
-            `- ${copy.outcomes.map((o) => o.charAt(0).toUpperCase() + o.slice(1)).join(', ')}`,
-            `- A single point of contact from kickoff to handoff`,
+            `- Written scope and acceptance criteria before work starts`,
+            `- Outcomes that matter: ${copy.outcomes.map((o) => o.charAt(0).toUpperCase() + o.slice(1)).join(', ')}`,
+            `- Named owner from kickoff to handoff — not a ticket black hole`,
+            `- Industry-fit copy (not a recycled “agency template” site)`,
+            '',
+            '## How engagement works',
+            `1. Brief — goals for the next 30–60 days in ${niche.toLowerCase()}`,
+            '2. Proposal — scope, timeline, and EUR price in writing',
+            '3. Delivery — live URL + downloadable handoff pack + invoice trail',
             '',
             '## Next step',
-            'Book an intro call or send a short brief — we respond within one business day.',
+            `Book an intro call or send a short brief to ${brand} — we respond within one business day.`,
           ].join('\n'),
     services: [
       `# Services for ${niche}`,
@@ -634,9 +662,11 @@ function fallbackPages(
     about: [
       `# About ${brand}`,
       '',
-      `${clientName} built ${brand} to serve ${copy.audience}.`,
+      `${clientName} built ${brand} to serve ${copy.audience} in ${niche.toLowerCase()}.`,
       '',
       `Our approach is simple: understand the problem, propose a scoped plan, deliver in visible increments, and leave you with documentation you can operate without us.`,
+      '',
+      `We refuse one-size-fits-all sites. Every page names ${brand}, speaks to ${niche.toLowerCase()}, and closes with a clear next step.`,
       '',
       copy.proof,
     ].join('\n'),
@@ -706,13 +736,14 @@ function fallbackPages(
     contact: [
       `# Contact ${brand}`,
       '',
-      'Tell us what you need and the outcome you want in the next 30–60 days.',
+      `Tell ${brand} what you need and the ${niche.toLowerCase()} outcome you want in the next 30–60 days.`,
       '',
       '- Response within one business day',
       '- Written proposal before any paid work',
-      '- EUR pricing with a clear invoice reference',
+      '- EUR pricing with a clear invoice / payment reference',
+      '- Live preview URL included when a site package is in scope',
       '',
-      'Prefer email or a short call — whichever is faster for you.',
+      'Prefer email or a short call — whichever is faster for you. Bring goals, brand assets if you have them, and one decision-maker.',
     ].join('\n'),
     shop: shopPageBody(brand, niche, copy),
   };
@@ -824,7 +855,7 @@ export class DeliverableContentGeneratorService {
       );
 
     if (!ai.isConfigured()) {
-      return fallback();
+      return stampPagesWithOrder(fallback(), input.generationHints?.orderIdentity, brandName);
     }
 
     const blueprint =
@@ -880,7 +911,7 @@ Rules:
       if (chat?.content) {
         const fromAi = parsePagesJson(chat.content, Math.min(1, pageCount));
         if (fromAi) {
-          const pages = ensureShopPage(fromAi);
+          const pages = stampPagesWithOrder(ensureShopPage(fromAi), input.generationHints?.orderIdentity, brandName);
           const quality = assessGeneratedSiteQuality({
             pages,
             brandName,
@@ -901,7 +932,8 @@ Rules:
       });
     }
 
-    return fallback();
+    const pages = fallback();
+    return stampPagesWithOrder(pages, input.generationHints?.orderIdentity, brandName);
   }
 
   async generateProjectBrief(input: {

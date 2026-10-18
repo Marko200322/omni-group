@@ -403,6 +403,43 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.serviceCompanion,
     ],
   },
+  'seo-audit': {
+    deliverableId: 'seo-audit',
+    name: 'SEO audit + monthly SEO',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'seo-audit')!.description,
+    billing: 'one_time',
+    criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.serviceCompanion],
+  },
+  'email-marketing': {
+    deliverableId: 'email-marketing',
+    name: 'Email & SMS marketing',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'email-marketing')!.description,
+    billing: 'monthly',
+    criteria: [
+      ...COMMERCIAL_BASE,
+      CR.pdf,
+      CR.docSubstance,
+      CR.retainerProject,
+      CR.slaPack,
+      CR.kickoffTicket,
+      CR.modulesBootstrap,
+    ],
+  },
+  'reputation-management': {
+    deliverableId: 'reputation-management',
+    name: 'Reputation & review automation',
+    description: DELIVERABLE_CATALOG.find((d) => d.id === 'reputation-management')!.description,
+    billing: 'monthly',
+    criteria: [
+      ...COMMERCIAL_BASE,
+      CR.pdf,
+      CR.docSubstance,
+      CR.retainerProject,
+      CR.slaPack,
+      CR.kickoffTicket,
+      CR.modulesBootstrap,
+    ],
+  },
 };
 
 export function getAcceptanceContract(deliverableId: string): DeliverableAcceptanceContract | null {

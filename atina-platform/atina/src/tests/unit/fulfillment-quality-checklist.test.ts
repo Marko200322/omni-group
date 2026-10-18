@@ -422,7 +422,8 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   if (
     deliverableId === 'audit' ||
     deliverableId === 'workflow-design' ||
-    deliverableId === 'sales-enablement'
+    deliverableId === 'sales-enablement' ||
+    deliverableId === 'seo-audit'
   ) {
     return {
       ...base,
@@ -432,6 +433,51 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
         ...passingDocQuality(deliverableId),
         ...serviceCompanionMeta(`ticket-${deliverableId}`),
         ...(deliverableId === 'sales-enablement' ? { salesPackReady: true } : {}),
+        ...(deliverableId === 'seo-audit'
+          ? { seoAuditDelivered: true, monthlySeoPlan: true, cmsAccessRequired: true }
+          : {}),
+      },
+    };
+  }
+
+  if (deliverableId === 'email-marketing') {
+    return {
+      ...base,
+      projectId: 'proj-email-marketing',
+      artifacts: [
+        ...base.artifacts,
+        slaArtifact('email-marketing-sla-onboarding.pdf'),
+      ],
+      metadata: {
+        ...passingDocQuality(deliverableId),
+        modulesActivated: ['email-campaigns', 'sms-outreach'],
+        kickoffTicketId: 'ticket-email-1',
+        emailMarketingDelivered: true,
+        sendInfrastructureConnected: false,
+        sendInfrastructureStatus: 'CONFIGURATION REQUIRED',
+        billing: 'monthly',
+        retainerWorkspace: true,
+      },
+    };
+  }
+
+  if (deliverableId === 'reputation-management') {
+    return {
+      ...base,
+      projectId: 'proj-reputation',
+      artifacts: [
+        ...base.artifacts,
+        slaArtifact('reputation-management-sla-onboarding.pdf'),
+      ],
+      metadata: {
+        ...passingDocQuality(deliverableId),
+        modulesActivated: ['review-automation', 'reputation-monitor'],
+        kickoffTicketId: 'ticket-reputation-1',
+        reputationManagementDelivered: true,
+        reviewAutomationConnected: false,
+        reviewAutomationStatus: 'CONFIGURATION REQUIRED',
+        billing: 'monthly',
+        retainerWorkspace: true,
       },
     };
   }
@@ -452,8 +498,8 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
 
 describe('fulfillment quality checklist — catalog contract', () => {
   it('covers all deliverables in acceptance contract', () => {
-    expect(allDeliverableIdsInContract().length).toBe(20);
-    expect(listAcceptanceContracts().length).toBe(20);
+    expect(allDeliverableIdsInContract().length).toBe(23);
+    expect(listAcceptanceContracts().length).toBe(23);
   });
 
   for (const contract of listAcceptanceContracts()) {

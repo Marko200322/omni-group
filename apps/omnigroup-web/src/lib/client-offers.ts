@@ -256,6 +256,36 @@ export const CLIENT_OFFER_COPY: Record<string, ClientOfferCopy> = {
     youGet: ['Kickoff + commercial companion', 'Audit PDF', 'Workflow/SOP PDF', '90-day priorities'],
     notIncluded: ['On-site visit', 'Automation build in your stack', 'Live connected product'],
   },
+  'seo-audit': {
+    promise: 'Technical SEO audit with competitor benchmark and 90-day improvement roadmap.',
+    summary:
+      'SERVICE + DOCS: crawl analysis, Core Web Vitals, keyword gaps, on-page recommendations, monthly roadmap.',
+    readMore:
+      'Audit report is automated. Monthly on-page improvements require CMS access — CONFIGURATION REQUIRED.',
+    when: 'Usually within 3–4 days',
+    youGet: ['Technical SEO crawl report', 'Core Web Vitals assessment', 'Keyword gap analysis', 'Competitor benchmark', '90-day SEO roadmap', 'Kickoff ticket + companion'],
+    notIncluded: ['CMS access / content changes', 'Backlink building', 'Google Ads management'],
+  },
+  'email-marketing': {
+    promise: 'Campaign strategy with sequence templates and compliance checklist.',
+    summary:
+      'SERVICE + DOCS: 4 email sequences + 2 SMS blueprints + segmentation + compliance. Sending CONFIGURATION REQUIRED.',
+    readMore:
+      'Strategy and templates delivered automatically. Email/SMS sending requires Resend or Twilio API keys — CONFIGURATION REQUIRED.',
+    when: 'Usually within 3–4 days',
+    youGet: ['Campaign strategy PDF', '4 email sequences', '2 SMS blueprints', 'Segmentation framework', 'Compliance checklist', 'KPI dashboard template'],
+    notIncluded: ['Sending infrastructure setup', 'List building', 'Ongoing campaign management'],
+  },
+  'reputation-management': {
+    promise: 'Review funnel design with response templates and monitoring plan.',
+    summary:
+      'SERVICE + DOCS: review funnel + 15 response templates + GBP audit + monitoring dashboard. Automated requests CONFIGURATION REQUIRED.',
+    readMore:
+      'Templates and monitoring plan delivered automatically. Automated review requests require Google Business / Yelp API keys — CONFIGURATION REQUIRED.',
+    when: 'Usually within 3–4 days',
+    youGet: ['GBP audit report', 'Review funnel design', '15 response templates', 'Monitoring plan', 'Competitor benchmark', 'Monthly targets'],
+    notIncluded: ['Google/Yelp API configuration', 'Review outreach execution', 'Social media management'],
+  },
   'custom-software': {
     promise: 'Software starter kit — scaffold + tests, not a finished custom product.',
     summary: 'Isolated Node API + SPA starter with test gate and handoff PDF.',

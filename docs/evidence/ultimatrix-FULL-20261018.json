@@ -1,0 +1,50 @@
+{
+  "agent": "ULTIMATRIX",
+  "stamp": "20261018",
+  "startedAt": "2026-10-18T02:49:38.722Z",
+  "endedAt": "2026-10-18T02:50:42.854Z",
+  "ok": true,
+  "failed": [],
+  "rule": "Every PASS requires this JSON/TXT on disk with matching sha256 — chat claims without files are invalid",
+  "gates": [
+    "product/service + invoice (not PDF theater)",
+    "support AI solver wired",
+    "intro −15% first 50 → full list",
+    "atina↔web M6 price sync",
+    "web honesty + catalog"
+  ],
+  "markoOnlyDeferred": [
+    "firma/VAT",
+    "Stripe LIVE",
+    "PayPal/Wise/Kriptoman"
+  ],
+  "results": [
+    {
+      "label": "atina-jest-ultimatrix-suites",
+      "status": 0,
+      "pass": true,
+      "sha256": "7e185994f054428eaef06f06f519b9cc29c643b7ef3946750c42060bffa96637",
+      "bytes": 788,
+      "stdoutTail": "",
+      "stderrTail": "PASS src/tests/unit/ultimatrix-spec.test.ts (35.924 s)\nPASS src/tests/unit/fulfillment-quality-checklist.test.ts\nPASS src/tests/unit/support-ticket-agent.service.test.ts\nPASS src/tests/unit/omnitrix-spec.test.ts\nPASS src/tests/unit/deliverable-intro-promo.test.ts\n\nTest Suites: 5 passed, 5 total\nTests:       61 passed, 61 total\nSnapshots:   0 total\nTime:        41.083 s\nRan all test suites matching /src\\\\tests\\\\unit\\\\omnitrix-spec.test.ts|src\\\\tests\\\\unit\\\\ultimatrix-spec.test.ts|src\\\\tests\\\\unit\\\\fulfillment-quality-checklist.test.ts|src\\\\tests\\\\unit\\\\deliverable-intro-promo.test.ts|src\\\\tests\\\\unit\\\\support-ticket-agent.service.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?\n"
+    },
+    {
+      "label": "web-delivery-honesty",
+      "status": 0,
+      "pass": true,
+      "sha256": "f1f07961ac4a12d528b3061cf5ba25c58ca8d4e91a8a904e07ffe931c0f7d928",
+      "bytes": 105,
+      "stdoutTail": "\n> omnigroup-web@0.1.0 test:honesty\n> node scripts/test-delivery-honesty.mjs\n\ntest-delivery-honesty: ok\n",
+      "stderrTail": ""
+    },
+    {
+      "label": "web-public-catalog",
+      "status": 0,
+      "pass": true,
+      "sha256": "3e6b198e8e037767acf4cf898c2e2be423d4f2ba390d0745ff224976a848a3a6",
+      "bytes": 232,
+      "stdoutTail": "\n> omnigroup-web@0.1.0 test:catalog\n> node scripts/test-public-catalog-consistency.mjs && node scripts/test-public-catalog-surfaces.mjs\n\ntest-public-catalog-consistency: ok\ntest-public-catalog-surfaces: ok (23 products, 3 bundles)\n",
+      "stderrTail": ""
+    }
+  ]
+}

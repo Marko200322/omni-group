@@ -215,6 +215,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
       absoluteUrl: abs,
       pageCount,
       catalogCount,
+      generationHints: ctx.generationHints,
     });
     const pdf = await persistDeliverablePdf({
       ctx,

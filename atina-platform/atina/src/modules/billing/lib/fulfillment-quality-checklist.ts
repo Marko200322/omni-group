@@ -61,6 +61,9 @@ const PDF_CATALOG_IDS = new Set([
   'landing',
   'website-business',
   'website-ecommerce',
+  'seo-audit',
+  'email-marketing',
+  'reputation-management',
 ]);
 
 /** Consulting / doc / site-handoff packs with minimum PDF+markdown body floors. */
@@ -79,6 +82,9 @@ const DOC_SUBSTANCE_IDS = new Set([
   'landing',
   'website-business',
   'website-ecommerce',
+  'seo-audit',
+  'email-marketing',
+  'reputation-management',
 ]);
 
 const OMNI_CHROME_HTML_RE =
@@ -98,6 +104,8 @@ const MODULE_BOOTSTRAP_IDS = new Set([
   'ai-support-retainer',
   'setup-full',
   'setup-custom',
+  'email-marketing',
+  'reputation-management',
 ]);
 
 const SETUP_IDS = new Set(['setup-quick', 'setup-full', 'setup-custom', 'bundle-portal-presence']);
@@ -160,7 +168,9 @@ function productOrServicePresent(baseId: string, result: FulfillmentResult): boo
     baseId === 'support-dedicated' ||
     baseId === 'lead-gen-retainer' ||
     baseId === 'ai-support-retainer' ||
-    baseId === 'vertical-package'
+    baseId === 'vertical-package' ||
+    baseId === 'email-marketing' ||
+    baseId === 'reputation-management'
   ) {
     return Boolean(result.projectId?.trim()) && kickoffTicketOk(result);
   }
@@ -712,7 +722,9 @@ export function runFulfillmentQualityChecklist(
     baseId === 'support-dedicated' ||
     baseId === 'lead-gen-retainer' ||
     baseId === 'ai-support-retainer' ||
-    baseId === 'vertical-package'
+    baseId === 'vertical-package' ||
+    baseId === 'email-marketing' ||
+    baseId === 'reputation-management'
   ) {
     items.push({
       id: 'retainer_project',
@@ -827,6 +839,17 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
+  if (baseId === 'email-marketing' || baseId === 'reputation-management') {
+    const ticketOk = kickoffTicketOk(result);
+    items.push({
+      id: 'kickoff_ticket',
+      passed: ticketOk,
+      message: ticketOk
+        ? `Kickoff ticket persisted (${String(result.metadata?.kickoffTicketId)})`
+        : `${baseId} retainer requires a persisted kickoff ticket — docs alone are not a service queue`,
+    });
+  }
+
   if (PDF_CATALOG_IDS.has(baseId)) {
     items.push({
       id: 'pdf_artifact',
@@ -858,6 +881,22 @@ export function runFulfillmentQualityChecklist(
             (pageFloor != null ? `, ≥${pageFloor} pages` : '') +
             ') — stub rejected',
     });
+
+    // Fail-closed when fulfillment stamped an order ref: body must embed it (anti clone-across-orders).
+    const orderRef =
+      typeof result.metadata?.contentOrderRef === 'string'
+        ? result.metadata.contentOrderRef.trim()
+        : '';
+    if (orderRef.length >= 8) {
+      const bound = result.metadata?.orderBoundInDoc === true;
+      items.push({
+        id: 'order_bound_content',
+        passed: bound,
+        message: bound
+          ? `Deliverable bound to order ${orderRef} (fingerprint=${String(result.metadata?.contentFingerprint ?? '')})`
+          : `Order ref ${orderRef} missing from document body — clone/template across payments rejected`,
+      });
+    }
   }
 
   const expectedBundleSteps = expectedBundleStepIds(baseId);

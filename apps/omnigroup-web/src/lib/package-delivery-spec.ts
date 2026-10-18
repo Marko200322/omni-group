@@ -677,6 +677,81 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     leanCheckout: true,
     fullCheckout: true,
   },
+  {
+    deliverableId: 'seo-audit',
+    description:
+      'SERVICE + DOCS: technical SEO crawl, Core Web Vitals, keyword gap analysis, competitor benchmark, 90-day monthly roadmap PDF. Monthly on-page improvements NOT CONNECTED until CMS access granted.',
+    descriptionSr:
+      'USLUGA + DOKUMENTI: tehnički SEO audit, Core Web Vitals, analiza ključnih reči, benchmark konkurencije, 90-dnevni mesečni plan.',
+    includes: [
+      'Technical SEO crawl + indexing report',
+      'Core Web Vitals assessment (LCP, INP, CLS)',
+      'Keyword gap analysis vs competitors',
+      'Competitor SEO benchmark (top 3)',
+      'On-page optimization recommendations',
+      '90-day monthly SEO roadmap',
+      'Kickoff ticket + service companion',
+    ],
+    excludes: [
+      'CMS access / content changes (CONFIGURATION REQUIRED)',
+      'Backlink building / outreach',
+      'Google Ads / PPC management',
+    ],
+    anchorByPhase: { M6: 490 },
+    minCheckoutPhase: 'M6',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
+  {
+    deliverableId: 'email-marketing',
+    description:
+      'SERVICE + DOCS: campaign strategy, 4 email sequences, 2 SMS blueprints, audience segmentation, compliance checklist. Sending infrastructure CONFIGURATION REQUIRED (Resend/Twilio API keys).',
+    descriptionSr:
+      'USLUGA + DOKUMENTI: strategija kampanja, 4 email sekvence, 2 SMS šablona, segmentacija publike, compliance checklista.',
+    includes: [
+      'Campaign strategy document',
+      '4 email sequence templates (welcome, nurture, re-engage, post-purchase)',
+      '2 SMS campaign blueprints',
+      'Audience segmentation framework',
+      'CAN-SPAM / GDPR / TCPA compliance checklist',
+      'KPI tracking dashboard template',
+      'Kickoff ticket + SLA pack',
+    ],
+    excludes: [
+      'Sending infrastructure setup (CONFIGURATION REQUIRED)',
+      'List building / lead acquisition',
+      'Ongoing campaign management',
+    ],
+    anchorByPhase: { M6: 349 },
+    minCheckoutPhase: 'M6',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
+  {
+    deliverableId: 'reputation-management',
+    description:
+      'SERVICE + DOCS: review funnel design, response templates, Google Business profile audit, monitoring dashboard. Automated review requests CONFIGURATION REQUIRED (Google/Yelp API keys).',
+    descriptionSr:
+      'USLUGA + DOKUMENTI: dizajn review levka, šabloni odgovora, audit Google Business profila, monitoring dashboard.',
+    includes: [
+      'Google Business Profile audit + optimization guide',
+      'Review funnel design (trigger → ask → respond → amplify)',
+      '15 response templates (positive, neutral, negative)',
+      'Monitoring + alert setup plan',
+      'Competitor review benchmark',
+      'Monthly growth targets + reporting framework',
+      'Kickoff ticket + SLA pack',
+    ],
+    excludes: [
+      'Google Business / Yelp API configuration (CONFIGURATION REQUIRED)',
+      'Review outreach execution',
+      'Social media management',
+    ],
+    anchorByPhase: { M6: 249 },
+    minCheckoutPhase: 'M6',
+    leanCheckout: true,
+    fullCheckout: true,
+  },
 ];
 
 const BY_ID = new Map(PACKAGE_DELIVERY_SPECS.map((s) => [s.deliverableId, s]));

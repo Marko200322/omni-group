@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-10-12T08:04:10.714Z",
+  "mode": "local-generators+catalog+handler+acceptance+delivery-spec",
+  "prodLive": false,
+  "shardCount": 10,
+  "total": 1000,
+  "passed": 1000,
+  "failed": 0,
+  "shards": [
+    {
+      "shard": 0,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 1,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 2,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 3,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 4,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 5,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 6,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 7,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 8,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    },
+    {
+      "shard": 9,
+      "total": 100,
+      "passed": 100,
+      "failed": 0
+    }
+  ],
+  "byBase": {
+    "setup-quick": {
+      "pass": 50,
+      "fail": 0
+    },
+    "website-ecommerce": {
+      "pass": 50,
+      "fail": 0
+    },
+    "setup-full": {
+      "pass": 50,
+      "fail": 0
+    },
+    "white-label-setup": {
+      "pass": 50,
+      "fail": 0
+    },
+    "setup-custom": {
+      "pass": 50,
+      "fail": 0
+    },
+    "sales-enablement": {
+      "pass": 50,
+      "fail": 0
+    },
+    "audit": {
+      "pass": 50,
+      "fail": 0
+    },
+    "vertical-package": {
+      "pass": 50,
+      "fail": 0
+    },
+    "integration": {
+      "pass": 50,
+      "fail": 0
+    },
+    "lead-gen-retainer": {
+      "pass": 50,
+      "fail": 0
+    },
+    "workflow-design": {
+      "pass": 50,
+      "fail": 0
+    },
+    "ai-support-retainer": {
+      "pass": 50,
+      "fail": 0
+    },
+    "support-priority": {
+      "pass": 50,
+      "fail": 0
+    },
+    "custom-software": {
+      "pass": 50,
+      "fail": 0
+    },
+    "support-dedicated": {
+      "pass": 50,
+      "fail": 0
+    },
+    "bundle-portal-presence": {
+      "pass": 50,
+      "fail": 0
+    },
+    "landing": {
+      "pass": 50,
+      "fail": 0
+    },
+    "bundle-sales-launch": {
+      "pass": 50,
+      "fail": 0
+    },
+    "website-business": {
+      "pass": 50,
+      "fail": 0
+    },
+    "bundle-ops-clarity": {
+      "pass": 50,
+      "fail": 0
+    }
+  },
+  "fails": []
+}

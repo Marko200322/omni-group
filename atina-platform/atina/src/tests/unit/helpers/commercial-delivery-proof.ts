@@ -116,6 +116,17 @@ export function withCommercialDeliveryProof(result: FulfillmentResult): Fulfillm
       pdfBytes: Math.max(Number(meta.pdfBytes ?? 0), 15000),
       pdfPageCount: Math.max(Number(meta.pdfPageCount ?? 0), 3),
       pdfSubstanceOk: true,
+      // Real fulfillment always stamps order refs; only preserve when fixtures declare them.
+      ...(typeof meta.contentOrderRef === 'string' && String(meta.contentOrderRef).trim().length >= 8
+        ? {
+            contentOrderRef: meta.contentOrderRef,
+            orderBoundInDoc: true,
+            contentFingerprint:
+              typeof meta.contentFingerprint === 'string'
+                ? meta.contentFingerprint
+                : 'test-fingerprint-0001',
+          }
+        : {}),
       modulesActivated: modules,
       portalEntitlements: {
         ...existingEntitlements,

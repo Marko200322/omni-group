@@ -9,6 +9,7 @@ import {
   runFulfillmentQualityChecklist,
   type FulfillmentChecklistResult,
 } from '../lib/fulfillment-quality-checklist';
+import { buildOrderIdentity } from '../lib/order-identity';
 import { industrySlugFromDeliverableId } from '../lib/industry-package-id';
 import {
   DeliverableFulfillmentRepository,
@@ -181,10 +182,13 @@ export class DeliverableFulfillmentService {
   private buildGenerationHints(input: {
     attemptNumber: number;
     retryNotes?: string | null;
+    paymentId: string;
+    jobId: string;
   }): FulfillmentGenerationHints {
     return {
       attemptNumber: input.attemptNumber,
       retryNotes: input.retryNotes?.trim() || undefined,
+      orderIdentity: buildOrderIdentity(input.paymentId, input.jobId),
     };
   }
 
@@ -220,6 +224,8 @@ export class DeliverableFulfillmentService {
         this.buildGenerationHints({
           attemptNumber: currentAttempt,
           retryNotes: notes,
+          paymentId: ctx.paymentId,
+          jobId: ctx.jobId,
         }),
         ctx.userId,
         ctx.deliverableId,

@@ -1,11 +1,11 @@
 ok=true
 failed=0
-startedAt=2026-10-11T14:37:01.683Z
-endedAt=2026-10-11T14:44:09.328Z
-evidenceJson=C:\dev\omni group\docs\evidence\ultimatrix-FULL-20261011.json
-PASS atina-jest-ultimatrix-suites exit=0 sha256=8118794c1765e8a18132584a4a2a790395bdb57a58706091c606038075c2c4fb bytes=827
+startedAt=2026-10-18T02:49:38.722Z
+endedAt=2026-10-18T02:50:42.854Z
+evidenceJson=C:\dev\omni group\docs\evidence\ultimatrix-FULL-20261018.json
+PASS atina-jest-ultimatrix-suites exit=0 sha256=7e185994f054428eaef06f06f519b9cc29c643b7ef3946750c42060bffa96637 bytes=788
 PASS web-delivery-honesty exit=0 sha256=f1f07961ac4a12d528b3061cf5ba25c58ca8d4e91a8a904e07ffe931c0f7d928 bytes=105
-PASS web-public-catalog exit=0 sha256=bc5dabd26b8e442314cd9dbf5633cc83584d0985811cef18cddd76a017a72a8b bytes=232
+PASS web-public-catalog exit=0 sha256=3e6b198e8e037767acf4cf898c2e2be423d4f2ba390d0745ff224976a848a3a6 bytes=232
 
 Suites: omnitrix + ultimatrix + fulfillment checklist + intro promo + support AI agent
 Web: honesty + public catalog consistency/surfaces

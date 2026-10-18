@@ -28,17 +28,13 @@ WORKDIR /app
 RUN addgroup -g 1001 -S atina && \
     adduser -S atina -u 1001 -G atina
 
-# Install only production system dependencies
+# Runtime deps only — native modules come from builder (avoids a second npm ci)
 RUN apk add --no-cache curl su-exec
 
-# Copy package files
 COPY package*.json ./
-
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy compiled code from builder
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+RUN npm prune --omit=dev && npm cache clean --force
 
 # Copy static files
 COPY --chown=atina:atina src/database/migrations ./src/database/migrations

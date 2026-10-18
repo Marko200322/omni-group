@@ -205,6 +205,39 @@ const ROWS: DeliveryHonesty[] = [
     publicNameNote: 'SERVICE + DOCS — dual consulting pack with kickoff/companion, not PDF theater.',
     label: 'SERVICE + DOCS · ops clarity dual pack',
   },
+  {
+    deliverableId: 'seo-audit',
+    automationLevel: 'AUTOMATED',
+    humanIntervention:
+      'None for SEO audit PDF + service companion. Monthly on-page improvements require CMS access — CONFIGURATION REQUIRED.',
+    nameMatchesScope: true,
+    publicNameNote: 'SERVICE + DOCS — technical SEO crawl, keyword gaps, 90-day roadmap.',
+    label: 'SERVICE + DOCS · SEO audit engagement',
+    prePurchaseWarning:
+      'Monthly SEO improvements require CMS access — CONFIGURATION REQUIRED. Audit report is automated.',
+  },
+  {
+    deliverableId: 'email-marketing',
+    automationLevel: 'SEMI_AUTOMATED',
+    humanIntervention:
+      'Campaign strategy and sequence templates are automated. Sending infrastructure (Resend/Twilio) requires manual API key configuration — CONFIGURATION REQUIRED.',
+    nameMatchesScope: true,
+    publicNameNote: 'SERVICE + DOCS — campaign blueprints + sequence templates, not live sends.',
+    label: 'SERVICE + DOCS · email/SMS campaign strategy',
+    prePurchaseWarning:
+      'Email/SMS sending requires Resend or Twilio API keys — CONFIGURATION REQUIRED. Strategy + templates delivered automatically.',
+  },
+  {
+    deliverableId: 'reputation-management',
+    automationLevel: 'SEMI_AUTOMATED',
+    humanIntervention:
+      'Review funnel design and response templates are automated. Automated review requests require Google Business / Yelp API keys — CONFIGURATION REQUIRED.',
+    nameMatchesScope: true,
+    publicNameNote: 'SERVICE + DOCS — review funnel + response templates, not live review requests.',
+    label: 'SERVICE + DOCS · reputation & review management',
+    prePurchaseWarning:
+      'Automated review requests require Google Business / Yelp API keys — CONFIGURATION REQUIRED. Templates + monitoring plan delivered automatically.',
+  },
 ];
 
 const BY_ID = new Map(ROWS.map((row) => [row.deliverableId, row]));

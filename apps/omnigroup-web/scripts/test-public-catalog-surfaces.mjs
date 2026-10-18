@@ -43,7 +43,7 @@ const pages = {
 
 const ids = [...catalog.matchAll(/id:\s*'([a-z0-9-]+)'/g)].map((m) => m[1]);
 const uniqueIds = [...new Set(ids)];
-assert(uniqueIds.length === 20, `Expected 20 base catalog products, found ${uniqueIds.length}`);
+assert(uniqueIds.length === 23, `Expected 23 base catalog products, found ${uniqueIds.length}`);
 
 const bundleIds = uniqueIds.filter((id) => id.startsWith('bundle-'));
 assert(bundleIds.length === 3, `Expected 3 catalog bundles, found ${bundleIds.join(',')}`);

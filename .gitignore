@@ -35,6 +35,9 @@ deploy-secrets.local/budget-burn-ledger.json
 deploy-secrets.local/*.pem
 deploy-secrets.local/*.key
 deploy-secrets.local/id_*
+deploy-secrets.local/*.env
+deploy-secrets.local/*.env.*
+!deploy-secrets.local/*.env.example
 atina-platform/atina/KLJUCEVI-POPUNI.local.txt
 .docker-wsl/
 

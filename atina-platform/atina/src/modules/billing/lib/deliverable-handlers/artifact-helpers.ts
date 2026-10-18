@@ -11,6 +11,11 @@ import {
   listResolvedPackageIndustryProblems,
   MIN_PROBLEMS_COVERED,
 } from '../package-industry-problems';
+import {
+  contentFingerprint,
+  docBodyBlob,
+  shortOrderRef,
+} from '../order-identity';
 import { DeliverableArtifactStoreService } from '../../service/deliverable-artifact-store.service';
 import { generateDeliverablePdf } from '../../service/deliverable-document-pdf.service';
 import type { StructuredDeliverableDoc } from '../../service/deliverable-document-generator.service';
@@ -96,7 +101,7 @@ export type PdfQualityMetrics = {
 export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold> = {
   audit: {
     minSections: 8,
-    minTotalChars: 4500,
+    minTotalChars: 5000,
     minSectionChars: 180,
     minChecklistHits: 2,
     minPdfBytes: 12000,
@@ -104,7 +109,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'workflow-design': {
     minSections: 5,
-    minTotalChars: 2000,
+    minTotalChars: 2800,
     minSectionChars: 140,
     minChecklistHits: 1,
     minPdfBytes: 8000,
@@ -112,7 +117,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   integration: {
     minSections: 7,
-    minTotalChars: 2400,
+    minTotalChars: 2800,
     minSectionChars: 140,
     minChecklistHits: 1,
     minPdfBytes: 8000,
@@ -120,7 +125,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'setup-quick': {
     minSections: 7,
-    minTotalChars: 3200,
+    minTotalChars: 3500,
     minSectionChars: 120,
     minChecklistHits: 2,
     minPdfBytes: 9000,
@@ -128,7 +133,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'setup-full': {
     minSections: 5,
-    minTotalChars: 2000,
+    minTotalChars: 2800,
     minSectionChars: 120,
     minChecklistHits: 1,
     minPdfBytes: 8000,
@@ -136,7 +141,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'setup-custom': {
     minSections: 5,
-    minTotalChars: 2000,
+    minTotalChars: 2800,
     minSectionChars: 120,
     minChecklistHits: 1,
     minPdfBytes: 8000,
@@ -144,7 +149,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'sales-enablement': {
     minSections: 5,
-    minTotalChars: 1800,
+    minTotalChars: 2500,
     minSectionChars: 140,
     minChecklistHits: 1,
     minPdfBytes: 7000,
@@ -152,15 +157,15 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'custom-software': {
     minSections: 7,
-    minTotalChars: 2200,
+    minTotalChars: 2800,
     minSectionChars: 120,
     minChecklistHits: 1,
-    minPdfBytes: 6000,
+    minPdfBytes: 7000,
     minPdfPages: 2,
   },
   'bundle-ops-clarity': {
     minSections: 5,
-    minTotalChars: 2000,
+    minTotalChars: 2800,
     minSectionChars: 140,
     minChecklistHits: 1,
     minPdfBytes: 8000,
@@ -168,7 +173,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'white-label-setup': {
     minSections: 5,
-    minTotalChars: 1800,
+    minTotalChars: 2500,
     minSectionChars: 120,
     minChecklistHits: 1,
     minPdfBytes: 7000,
@@ -176,15 +181,39 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'vertical-package': {
     minSections: 5,
-    minTotalChars: 1200,
-    minSectionChars: 100,
+    minTotalChars: 2000,
+    minSectionChars: 120,
     minChecklistHits: 1,
-    minPdfBytes: 5000,
+    minPdfBytes: 6000,
+    minPdfPages: 2,
+  },
+  'seo-audit': {
+    minSections: 7,
+    minTotalChars: 4000,
+    minSectionChars: 160,
+    minChecklistHits: 2,
+    minPdfBytes: 9000,
+    minPdfPages: 2,
+  },
+  'email-marketing': {
+    minSections: 6,
+    minTotalChars: 3000,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 7000,
+    minPdfPages: 2,
+  },
+  'reputation-management': {
+    minSections: 6,
+    minTotalChars: 2800,
+    minSectionChars: 140,
+    minChecklistHits: 1,
+    minPdfBytes: 7000,
     minPdfPages: 2,
   },
   landing: {
     minSections: 8,
-    minTotalChars: 3200,
+    minTotalChars: 3600,
     minSectionChars: 140,
     minChecklistHits: 2,
     minPdfBytes: 10000,
@@ -192,7 +221,7 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'website-business': {
     minSections: 8,
-    minTotalChars: 3400,
+    minTotalChars: 3800,
     minSectionChars: 140,
     minChecklistHits: 2,
     minPdfBytes: 10000,
@@ -200,10 +229,10 @@ export const DOC_SUBSTANCE_THRESHOLDS: Record<string, DocumentSubstanceThreshold
   },
   'website-ecommerce': {
     minSections: 9,
-    minTotalChars: 3600,
+    minTotalChars: 4000,
     minSectionChars: 140,
     minChecklistHits: 2,
-    minPdfBytes: 10000,
+    minPdfBytes: 11000,
     minPdfPages: 2,
   },
 };
@@ -283,9 +312,9 @@ export function substanceThresholdFor(deliverableId: string): DocumentSubstanceT
 
 /** Default floor used when accepting AI-parsed docs (reject stub-length replies). */
 export const AI_DOC_ACCEPTANCE_FLOOR: DocumentSubstanceThreshold = {
-  minSections: 4,
-  minTotalChars: 1200,
-  minSectionChars: 80,
+  minSections: 5,
+  minTotalChars: 2000,
+  minSectionChars: 100,
   minChecklistHits: 1,
 };
 
@@ -322,7 +351,10 @@ export function injectProblemsCoveredSection(
 
 export function buildDocumentQualityMetadata(
   doc: StructuredDeliverableDoc,
-  ctx: Pick<FulfillmentContext, 'clientName' | 'industryCategory' | 'deliverableId'>,
+  ctx: Pick<
+    FulfillmentContext,
+    'clientName' | 'industryCategory' | 'deliverableId' | 'paymentId' | 'jobId'
+  >,
   pdf?: PdfQualityMetrics | null,
 ): Record<string, unknown> {
   const industryCategory = ctx.industryCategory?.trim() || null;
@@ -346,6 +378,9 @@ export function buildDocumentQualityMetadata(
         /problems this package addresses|industry problems covered/i.test(s.heading) ||
         problemsMeta.problemsCovered.slice(0, 3).every((p) => s.body.includes(p.slice(0, 24))),
     );
+  const blob = docBodyBlob(doc);
+  const orderRef =
+    ctx.paymentId && ctx.jobId ? shortOrderRef(ctx.paymentId, ctx.jobId) : null;
   return {
     documentTitle: doc.title,
     industryCategory,
@@ -360,6 +395,15 @@ export function buildDocumentQualityMetadata(
     documentSubstanceOk: substanceOk,
     ...problemsMeta,
     problemsEmbeddedInDoc: problemsEmbedded,
+    ...(orderRef
+      ? {
+          contentOrderRef: orderRef,
+          orderBoundInDoc: blob.includes(orderRef),
+          contentFingerprint: contentFingerprint(blob),
+        }
+      : {
+          contentFingerprint: contentFingerprint(blob),
+        }),
   };
 }
 
