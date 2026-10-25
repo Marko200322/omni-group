@@ -871,7 +871,7 @@ export class DeliverableContentGeneratorService {
     try {
       const chat = await ai.chatCompletions({
         maxTokens: 6000,
-        temperature: 0.45,
+        temperature: input.generationHints?.orderIdentity ? 0.7 : 0.45,
         messages: [
           {
             role: 'system',
@@ -884,7 +884,8 @@ Rules:
 - Include niche-specific services, social proof tone, clear CTAs, SEO-friendly phrasing.
 - Keywords (use naturally): ${keywords.slice(0, 8).join(', ') || niche}.
 - No lorem ipsum. No "Digital presence —". No Omni Group marketing speak on client pages.
-- Match EUR ${deliverable?.anchorEur ?? 2000}+ premium positioning.`,
+- Match EUR ${deliverable?.anchorEur ?? 2000}+ premium positioning.
+- UNIQUENESS: write as if only ${brandName} will publish this site — examples, offers, and CTAs must not be interchangeable with another ${niche} competitor.`,
           },
           {
             role: 'user',

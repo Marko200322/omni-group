@@ -1,0 +1,54 @@
+﻿[
+    {
+        "page":  "/pricing",
+        "bytes":  217922,
+        "fffd":  0,
+        "mojibake":  0,
+        "customDeploy":  0,
+        "productionRunbook":  1,
+        "seventeenExpert":  0,
+        "twentyExpert":  0,
+        "twentyPlus3":  0,
+        "seventeenPlus3":  0
+    },
+    {
+        "page":  "/solutions",
+        "bytes":  112727,
+        "fffd":  0,
+        "mojibake":  0,
+        "customDeploy":  0,
+        "productionRunbook":  0,
+        "seventeenExpert":  0,
+        "twentyExpert":  0,
+        "twentyPlus3":  0,
+        "seventeenPlus3":  0
+    },
+    {
+        "page":  "/services",
+        "bytes":  201070,
+        "fffd":  0,
+        "mojibake":  0,
+        "customDeploy":  0,
+        "productionRunbook":  1,
+        "seventeenExpert":  0,
+        "twentyExpert":  0,
+        "twentyPlus3":  0,
+        "seventeenPlus3":  0
+    },
+    {
+        "page":  "/industries",
+        "error":  "The remote server returned an error: (308) Permanent Redirect."
+    },
+    {
+        "page":  "/",
+        "bytes":  41631,
+        "fffd":  0,
+        "mojibake":  0,
+        "customDeploy":  0,
+        "productionRunbook":  0,
+        "seventeenExpert":  0,
+        "twentyExpert":  0,
+        "twentyPlus3":  0,
+        "seventeenPlus3":  0
+    }
+]

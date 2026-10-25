@@ -24,6 +24,8 @@ function signAuthToken(): string {
 }
 
 async function seedAdminUser(): Promise<void> {
+  // Clean up org rows referencing this user before deleting (FK: organizations_owner_user_id_fkey)
+  await query('DELETE FROM organizations WHERE owner_user_id = $1', [TEST_ADMIN_ID]);
   await query('DELETE FROM users WHERE id = $1 OR email = $2', [TEST_ADMIN_ID, TEST_ADMIN_EMAIL]);
   await query(
     `INSERT INTO users (id, email, password_hash, name, role)

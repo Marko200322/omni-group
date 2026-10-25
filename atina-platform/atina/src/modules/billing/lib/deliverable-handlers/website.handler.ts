@@ -19,6 +19,10 @@ import {
   persistDeliverablePdf,
   persistMarkdownBundle,
 } from './artifact-helpers';
+import {
+  attachServiceAndCommercialCompanion,
+  mergeServiceCompanion,
+} from './commercial-companion';
 import type { DeliverableFulfillmentHandler, FulfillmentContext, FulfillmentResult } from './types';
 
 const content = new DeliverableContentGeneratorService();
@@ -235,7 +239,7 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
     });
     const substanceFailed = docMeta.documentSubstanceOk === false;
 
-    return {
+    let result: FulfillmentResult = {
       projectId: pipeline.projectId as string,
       publicUrl,
       artifacts: [pdf.artifact, md],
@@ -273,5 +277,17 @@ export const websiteFulfillmentHandler: DeliverableFulfillmentHandler = {
         },
       },
     };
+
+    // High-ticket site SKUs must ship service companion (kickoff + commercial pack + portal),
+    // not live URL + PDF alone — justifies €2k+ list prices (F-14).
+    if (
+      !substanceFailed &&
+      (ctx.deliverableId === 'website-business' || ctx.deliverableId === 'website-ecommerce')
+    ) {
+      const companion = await attachServiceAndCommercialCompanion(ctx, result);
+      result = mergeServiceCompanion(result, companion);
+    }
+
+    return result;
   },
 };

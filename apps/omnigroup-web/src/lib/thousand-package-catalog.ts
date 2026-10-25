@@ -1,5 +1,5 @@
 /**
- * Client mirror: ~1000 first-class industry packages (base capability × industry).
+ * Client mirror: 23×50 = 1150 first-class industry packages (base capability × industry).
  * Keep in sync with atina-platform/.../thousand-package-catalog.ts
  */
 import { INDUSTRY_CATEGORIES, type IndustryCategoryMeta } from './category-pricing';

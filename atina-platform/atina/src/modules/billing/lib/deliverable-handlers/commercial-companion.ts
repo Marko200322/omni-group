@@ -18,6 +18,11 @@ export const SERVICE_COMPANION_IDS = new Set([
   'sales-enablement',
   'bundle-ops-clarity',
   'seo-audit',
+  'email-marketing',
+  'reputation-management',
+  // High-ticket hosted sites: live URL alone is not enough for list price (F-14).
+  'website-business',
+  'website-ecommerce',
 ]);
 
 export type CommercialCompanionAttach = {

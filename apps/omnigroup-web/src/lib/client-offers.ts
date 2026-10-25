@@ -371,28 +371,37 @@ export function publicOfferWhen(
 }
 
 export function getPublicCatalogStats() {
-  /** First-class sellable industry packages (~1000), not the 20 base templates. */
+  /**
+   * Marketing math (canonical — use everywhere):
+   * - basePackages = 23 capability templates = expertServiceCount (20) + bundleCount (3)
+   * - sellablePackages = 23 × 50 industries ≈ 1,150 industry SKUs (not 1,150 unique base products)
+   * Never count industry-expanded rows as "expert services" (that produced 850/150 lies).
+   * Never show stale 17+3 (=20) — that was pre seo/email/reputation.
+   */
+  const base = BASE_DELIVERABLE_CATALOG;
   const all = FULL_PACKAGE_CATALOG;
+  let bundleCount = 0;
+  let readyBaseCount = 0;
+  for (const d of base) {
+    if (isCatalogBundle(d.id)) bundleCount += 1;
+    if (canCheckoutPackage(d.id)) readyBaseCount += 1;
+  }
   let readyToBuyCount = 0;
   let comingSoonCount = 0;
-  let bundleCount = 0;
   for (const d of all) {
-    if (isCatalogBundle(d.id)) {
-      bundleCount += 1;
-      continue;
-    }
     if (canCheckoutPackage(d.id)) readyToBuyCount += 1;
     else comingSoonCount += 1;
   }
-  const expertServiceCount = all.length - bundleCount;
+  const expertServiceCount = base.length - bundleCount;
   return {
     catalogSkuCount: all.length,
     expertServiceCount,
     bundleCount,
     readyToBuyCount,
+    readyBaseCount,
     comingSoonCount,
     industryGroups: INDUSTRY_CATEGORIES.length,
-    basePackages: BASE_DELIVERABLE_CATALOG.length,
+    basePackages: base.length,
     sellablePackages: all.length,
   };
 }
@@ -505,7 +514,7 @@ export function listClientOffers(opts?: {
   /** Hide bundle SKUs — they have their own Pricing panel. */
   excludeBundles?: boolean;
   /**
-   * When true, iterate FULL_PACKAGE_CATALOG (~1000).
+   * When true, iterate FULL_PACKAGE_CATALOG (1150).
    * Default: industry filter → industry packages for that slug; no filter → base templates (20).
    */
   fullCatalog?: boolean;

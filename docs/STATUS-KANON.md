@@ -1,18 +1,19 @@
-# STATUS-KANON — jedna lista za ceo projekat
+﻿# STATUS-KANON — jedna lista za ceo projekat
 
-**Datum:** 2026-10-09 (Ultimatrix hashed PASS; fulfillment HARD 1000/1000; GTM CONDITIONAL)  
+**Datum:** 2026-10-20 (Ultimatrix PASS 20261020; fulfillment HARD 1150/1150; GTM CONDITIONAL — soft home 164.68.127.15)  
 **Pravilo vlasnika:** firma + Stripe **live** + PayPal/Wise/Kriptoman = **P2 (NA KRAJU)**. Sve ostalo ispod.
 
 **Održavanje:** posle svake sesije ažuriraj ovaj fajl + `node scripts/test-ultimatrix.mjs` + `.\scripts\audit-empty-keys.ps1` + `.\scripts\audit-prod-autonomous.ps1`.  
 **Agent rule:** `.cursor/rules/ultimatrix-evidence.mdc` — nema PASS bez `docs/evidence/ultimatrix-LATEST.txt` + sha256.
 
-**Komercijalna istina (2026-10-09):** Ultimatrix **PASS** · GTM **CONDITIONAL** (Stripe **TEST**) · Intro **−18%** first 50 → full list · M6 “more for less” prices live ([`GROK47-PRICING-APPLIED-20261009.md`](./evidence/GROK47-PRICING-APPLIED-20261009.md)) · SERVICE + DOCS on `/pricing`.  
-Dokaz: [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · [`evidence/DONE-EXCEPT-MARKO-P2-20261009.md`](./evidence/DONE-EXCEPT-MARKO-P2-20261009.md) · [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md).
+**Komercijalna istina (2026-10-09):** Ultimatrix **PASS** · GTM **CONDITIONAL** (Stripe **TEST**) · Intro **−18%** first 50 → full list · M6 “more for less” prices live ([`GROK47-PRICING-APPLIED-20261009.md`](./evidence/GROK47-PRICING-APPLIED-20261009.md)) · SERVICE + DOCS on `/pricing` · **23** base paketa × 50 industrija = **1150** SKU.  
+Dokaz: [`evidence/ultimatrix-FULL-20261020.txt`](./evidence/ultimatrix-FULL-20261020.txt) · [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · [`evidence/DONE-EXCEPT-MARKO-P2-20261009.md`](./evidence/DONE-EXCEPT-MARKO-P2-20261009.md) · [`evidence/_thousand-quality-rerun2-20261020.txt`](./evidence/_thousand-quality-rerun2-20261020.txt).
 
 **Indeks (ne dupliraj stavke drugde):**
 
 | Dokument | Uloga |
 |----------|--------|
+| **[`OMNI-FACTORY.md`](./OMNI-FACTORY.md)** | Fabrika: §A zatvoreno / §B šta fali / soft start — **čitaj pre ponovnog audita** |
 | **Ovaj fajl** | Jedina lista stavki P0–P3 + LIVE |
 | [`generated/EMPTY-KEYS.md`](./generated/EMPTY-KEYS.md) | Auto: prazni vs popunjeni ključevi |
 | [`ADMIN-JEDNA-LISTA.md`](./ADMIN-JEDNA-LISTA.md) | Kratki admin pregled → link ovde |
@@ -30,8 +31,8 @@ Dokaz: [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · [
 
 | ID | Šta | Dokaz |
 |----|-----|-------|
-| LIVE-01 | Site + API · M6 · full · €250 | https://omnigrouptech.com |
-| LIVE-02 | Fulfillment **1000/1000 HARD PASS** (20 pkg × 50 industries, all `checklistScore=100`) | [`evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md`](./evidence/fulfillment-matrix-prod-20x50-HARD-FINAL-20261006.md) · CSV `fulfillment-matrix-prod-20x50-HARD-20261006.csv` · verdict [`FULL-REPO-PASS-VERDICT-20261007.md`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md) |
+| LIVE-01 | Site + API · M6 · full | **staging** `164.68.127.15:8080/:3000` UP (2026-10-19); omnigrouptech.com DNS flip pending (Marko F-02) |
+| LIVE-02 | Fulfillment **1150/1150 HARD PASS** (23 pkg × 50 industries, all `checklistScore=100`) | [`evidence/_thousand-quality-rerun2-20261020.txt`](./evidence/_thousand-quality-rerun2-20261020.txt) · CSV `fulfillment-matrix-prod-20x50-HARD-20261006.csv` · verdict [`FULL-REPO-PASS-VERDICT-20261007.md`](./evidence/FULL-REPO-PASS-VERDICT-20261007.md) |
 | LIVE-03 | Stripe **TEST** + prices + webhook (**ne LIVE**) | prod VPS · GTM CONDITIONAL — vidi P2-02 |
 | LIVE-04 | Instantly + Resend + Hunter + OpenRouter + Apify | SET |
 | LIVE-05 | Apollo · NeverBounce · ZeroBounce · Snov · D-ID · HeyGen · Cartesia | SET |
@@ -43,11 +44,11 @@ Dokaz: [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · [
 | LIVE-11 | n8n outreach stub + guardrails | PASS, **nije live send** |
 | LIVE-12 | Legal stranice u kodu | terms/privacy/refund/impressum/cookies |
 | LIVE-13 | Redizajn UI | **CANCELLED** — vidi P3-C01 |
-| LIVE-14 | Public catalog SSOT | `/pricing` `/products` `/services` checkout — `getPublicListPriceEur` · 20/20 MATCH 2026-09-24 |
+| LIVE-14 | Public catalog SSOT | `/pricing` `/products` `/services` checkout — `getPublicListPriceEur` · 23/23 MATCH 2026-10-20 (catalog grew to 23) |
 | LIVE-15 | Prod schema 038–042 | stripe idempotency · outbound DLQ · orgs · dual currency · RBAC |
 | LIVE-16 | Lead machine: analysis pack → gate → hot-only hunt | shipped + SafeDeploy; live harvest **OFF** dok `LEAD_LIVE_HARVEST_ON_KICKOFF` (Marko) — [`lead-machine-analysis-hunt-smoke-20261007.md`](./evidence/lead-machine-analysis-hunt-smoke-20261007.md) |
 | LIVE-17 | Gap audit + full-repo verdict | [`PROJECT-GAP-AUDIT-20261007.md`](./evidence/PROJECT-GAP-AUDIT-20261007.md) — fulfillment PASS · GTM CONDITIONAL |
-| LIVE-18 | **Ultimatrix** monorepo gate (hashed PASS) | `node scripts/test-ultimatrix.mjs` → [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · agent proof [`evidence/ULTIMATRIX-AGENT-PROOF-20261009.md`](./evidence/ULTIMATRIX-AGENT-PROOF-20261009.md) · rule `.cursor/rules/ultimatrix-evidence.mdc` |
+| LIVE-18 | **Ultimatrix** monorepo gate (hashed PASS) | `node scripts/test-ultimatrix.mjs` → [`evidence/ultimatrix-FULL-20261020.txt`](./evidence/ultimatrix-FULL-20261020.txt) · [`evidence/ultimatrix-LATEST.txt`](./evidence/ultimatrix-LATEST.txt) · agent proof [`evidence/ULTIMATRIX-AGENT-PROOF-20261009.md`](./evidence/ULTIMATRIX-AGENT-PROOF-20261009.md) · rule `.cursor/rules/ultimatrix-evidence.mdc` |
 | LIVE-19 | Intro −15% /50 + commercial companion + support AI solver on VPS | promo API active 50/50 · `COMPANION_OK` / `SUPPORT_AI_OK` / `INTRO_OK` · [`DONE-EXCEPT-MARKO-P2-20261009.md`](./evidence/DONE-EXCEPT-MARKO-P2-20261009.md) |
 | LIVE-20 | Public package honesty **SERVICE + DOCS** (not PDF-pack theater) | SafeDeploy **EXIT 0** [`_tmp-safedeploy-honesty-labels-20261009.txt`](./evidence/_tmp-safedeploy-honesty-labels-20261009.txt) · live `/pricing` has `audit engagement`, zero `consulting PDF pack` |
 
@@ -184,7 +185,7 @@ Clay · Salesforge · Intercom · Sierra · Make · n8n API · Ramp · Vic.ai ·
 ## Brzi redosled rada
 
 ```
-Fulfillment HARD 1000/1000 DONE  →  GTM CONDITIONAL (Marko: firma + Stripe LIVE)
+Fulfillment HARD 1150/1150 DONE  →  GTM CONDITIONAL (Marko: firma + Stripe LIVE)
 Lead: analysis→hunt shipped; harvest flag OFF dok Marko ne uključi
 P2 (firma + live plaćanja)  →  P3 paralelno
 ```
@@ -201,7 +202,7 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 | CEO stavka | Kanonski status |
 |------------|-----------------|
 | Rollback owner | **DONE** → LIVE-09 |
-| Fulfillment matrix | **DONE** → LIVE-02 (1000/1000 HARD, ne 850) |
+| Fulfillment matrix | **DONE** → LIVE-02 (1150/1150 HARD, ne 850) |
 | Stripe/PayPal/Wise live | **P2** (Stripe još TEST) |
 | Lead live harvest | Marko flag `LEAD_LIVE_HARVEST_ON_KICKOFF` |
 | GitHub prv push / Resend lokal / agregatori | verovatno **DONE** na prod — proveri pre `[x]` |
@@ -209,4 +210,4 @@ Istorijski checkboxi mogu biti zastareli. **Kanonski status = ovaj fajl.**
 
 ---
 
-*Poslednja izmena: 2026-10-09 — LIVE-18 Ultimatrix hashed PASS; LIVE-19 intro/companion/support AI; LIVE-20 SERVICE + DOCS honesty SafeDeploy EXIT 0. Stripe ostaje TEST (P2).*
+*Poslednja izmena: 2026-10-20 — Ultimatrix PASS 20261020; 23 base paketa x50 industrija = 1150/1150 PASS; soft home 164.68.127.15 UP.*

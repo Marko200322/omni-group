@@ -1,0 +1,11 @@
+﻿
+page         bytes fffd mojibake customDeploy productionRunbook seventeenExpert twentyExpert twentyPlus3 seventeenPlus3
+----         ----- ---- -------- ------------ ----------------- --------------- ------------ ----------- --------------
+/pricing    217922    0        0            0                 1               0            0           0              0
+/solutions  112727    0        0            0                 0               0            0           0              0
+/services   201070    0        0            0                 1               0            0           0              0
+/industries                                                                                                            
+/            41631    0        0            0                 0               0            0           0              0
+
+
+

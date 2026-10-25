@@ -324,7 +324,7 @@ export class ClientDeliverableBootstrapService {
               ? 'Billing, notifications, and CRM view access are enabled for your workspace.'
               : 'Billing access and notifications are enabled for your workspace.',
             userModulesGranted.includes('tasks')
-              ? 'Open Tasks for your welcome onboarding checklist.'
+              ? 'Open Orders for your welcome onboarding checklist and deliveries.'
               : '',
             input.industryCategory ? `Industry: ${input.industryCategory}.` : '',
             'External automations remain NOT CONNECTED unless a fuller setup package grants and wires them.',
@@ -332,7 +332,7 @@ export class ClientDeliverableBootstrapService {
             .filter(Boolean)
             .join(' '),
           channel: 'in_app',
-          actionUrl: userModulesGranted.includes('crm') ? '/dashboard/crm' : '/dashboard/billing',
+          actionUrl: '/dashboard/orders',
           metadata: {
             modules: userModulesGranted,
             source: 'fulfillment-bootstrap',

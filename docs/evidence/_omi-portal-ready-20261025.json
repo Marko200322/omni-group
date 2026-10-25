@@ -1,0 +1,287 @@
+{
+  "generatedAt": "2026-10-25T10:52:40.469Z",
+  "api": "http://164.68.127.15:3000",
+  "web": "http://164.68.127.15:3010",
+  "probes": {
+    "omiPublic": {
+      "verdict": "PASS_PARTIAL",
+      "passCount": 1,
+      "total": 3,
+      "chats": [
+        {
+          "industry": "healthcare",
+          "verdict": "PASS",
+          "sessionHttp": 201,
+          "chatHttp": 200,
+          "catalogIdHits": [
+            "audit",
+            "landing",
+            "sales-enablement"
+          ],
+          "mentionsPrice": true,
+          "industryContextLikely": true,
+          "replyPreview": "What I understand: (price) I run a small healthcare clinic. Leads are inconsistent and our website does not convert. Which package should I buy and how much in EUR? The main problem: missed inquiries; weak or missing public web presence; traffic without conversion. Why I think this is the bottleneck: it is what you actually described, not a generic industry script. Because the pain is follow-up after interest arrives, I am not steering you to a website rebuild by default. What I would consider: "
+        },
+        {
+          "industry": "construction",
+          "verdict": "FAIL",
+          "sessionHttp": 201,
+          "chatHttp": 429,
+          "catalogIdHits": [],
+          "mentionsPrice": false,
+          "industryContextLikely": false,
+          "replyPreview": "{}"
+        },
+        {
+          "industry": "retail",
+          "verdict": "FAIL",
+          "sessionHttp": 201,
+          "chatHttp": 429,
+          "catalogIdHits": [],
+          "mentionsPrice": false,
+          "industryContextLikely": false,
+          "replyPreview": "{}"
+        }
+      ]
+    },
+    "login": {
+      "verdict": "PASS",
+      "loginHttp": 200,
+      "meHttp": 200,
+      "email": "admin@atina.io",
+      "role": "admin",
+      "userId": "7c941cbe-9f16-4dc7-8bb9-87576cb6cbd2"
+    },
+    "omiAuthed": {
+      "verdict": "PASS",
+      "sessionHttp": 201,
+      "chatHttp": 200,
+      "replyPreview": "Open Orders in the sidebar for live status, or Deliveries when files are ready to download.",
+      "portalHint": true
+    },
+    "portalApis": {
+      "verdict": "PASS",
+      "results": {
+        "me": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":{\"id\":\"7c941cbe-9f16-4dc7-8bb9-87576cb6cbd2\",\"email\":\"admin@atina.io\",\"name\":\"System Admin\",\"role\":\"admin\",\"planSlug\":\"enterprise\",\"isEmailVerified\":true,\"la"
+        },
+        "fulfillmentJobs": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":{\"jobs\":[{\"id\":\"100d1cda-040e-4aa4-bee4-8eacf18821bd\",\"paymentId\":\"0293be83-3abb-42e2-80a1-9ff883f31bc8\",\"deliverableId\":\"reputation-management\",\"planSlug\":n"
+        },
+        "invoices": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":[{\"id\":\"d3dce1c8-105c-4e70-8373-45d453431ca3\",\"invoice_number\":\"INV-202610-0130\",\"user_id\":\"7c941cbe-9f16-4dc7-8bb9-87576cb6cbd2\",\"subscription_id\":null,\"pay"
+        },
+        "paymentsMethods": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":{\"mode\":\"sandbox\",\"stripeLivemode\":false,\"methods\":[{\"id\":\"stripe\",\"label\":\"Card (Stripe)\",\"description\":\"Pay by card — Stripe TEST mode. No live charges.\",\""
+        },
+        "introPromo": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":{\"enabled\":true,\"active\":true,\"discountPct\":18,\"maxSlots\":50,\"redeemed\":1,\"remaining\":49,\"label\":\"First 50 clients: −18% now (49 slots left). Then full regul"
+        },
+        "supportMine": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":[],\"message\":\"Success\"}"
+        },
+        "supportTickets": {
+          "verdict": "ABSENT_OK",
+          "http": 404,
+          "preview": "{\"success\":false,\"error\":{\"code\":\"NOT_FOUND\",\"message\":\"Route not found\"}}"
+        },
+        "notifications": {
+          "verdict": "PASS",
+          "http": 200,
+          "preview": "{\"success\":true,\"data\":[{\"id\":\"8e1bcd53-309d-4123-9e8c-fc42ddf71034\",\"user_id\":\"7c941cbe-9f16-4dc7-8bb9-87576cb6cbd2\",\"type\":\"payment_pending\",\"title\":\"New payment pending\",\"messag"
+        },
+        "documents": {
+          "verdict": "ABSENT_OK",
+          "http": 404,
+          "preview": "{\"success\":false,\"error\":{\"code\":\"NOT_FOUND\",\"message\":\"Route not found\"}}"
+        }
+      }
+    },
+    "portalWeb": {
+      "verdict": "PASS",
+      "routes": [
+        {
+          "path": "/dashboard",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/orders",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Forders",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/deliveries",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fdeliveries",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/projects",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fprojects",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/tasks",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Ftasks",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/billing",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fbilling",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/documents",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fdocuments",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/support",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fsupport",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/consultation",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Fconsultation",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/account",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Faccount",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/order",
+          "http": 307,
+          "location": "/login?next=%2Fdashboard%2Forder",
+          "verdict": "PASS"
+        },
+        {
+          "path": "/login",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/register",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        }
+      ],
+      "webLogin": {
+        "status": 200,
+        "ok": true,
+        "redirectTo": "/admin",
+        "hasCookie": true
+      },
+      "authedRoutes": [
+        {
+          "path": "/dashboard",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/orders",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/deliveries",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/billing",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/support",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/documents",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/dashboard/account",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/admin",
+          "http": 200,
+          "location": null,
+          "verdict": "PASS"
+        }
+      ],
+      "bff": [
+        {
+          "path": "/api/atina/billing/fulfillment/jobs?limit=5",
+          "http": 200,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/api/atina/billing/invoices?limit=5&page=1",
+          "http": 200,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/api/atina/payments/methods",
+          "http": 200,
+          "verdict": "PASS"
+        },
+        {
+          "path": "/api/atina/payments/deliverable-intro-promo",
+          "http": 200,
+          "verdict": "PASS"
+        }
+      ]
+    },
+    "clientRegister": {
+      "verdict": "PASS",
+      "registerHttp": 201,
+      "meHttp": 200,
+      "email": "soft-portal-1792925569180@example.com",
+      "note": "Throwaway client account for soft-start; password not stored in evidence."
+    }
+  },
+  "fixesApplied": [],
+  "overall": "PASS_WITH_WARN",
+  "p2StillBlocked": [
+    "Stripe LIVE",
+    "firma/VAT companyLegalName"
+  ]
+}

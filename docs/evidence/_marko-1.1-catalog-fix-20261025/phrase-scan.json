@@ -1,0 +1,82 @@
+[
+  {
+    "1150": 0,
+    "f": "soft_pricing.html",
+    "bytes": 217922,
+    "fffd": 0,
+    "20_expert": 0,
+    "17_expert": 0,
+    "23_delivery": 0,
+    "23_packages": 0,
+    "Production_runbook": 1,
+    "Custom_deploy": 0,
+    "expert_services_3": 0,
+    "expert_3": 0,
+    "1_150": 6,
+    "_uFFFD": 0,
+    "FFFD_char": 0,
+    "snippets": [
+      "Production runbook",
+      "delivery capabilities ("
+    ]
+  },
+  {
+    "1150": 0,
+    "f": "soft_solutions.html",
+    "bytes": 112727,
+    "fffd": 0,
+    "20_expert": 0,
+    "17_expert": 0,
+    "23_delivery": 0,
+    "23_packages": 0,
+    "Production_runbook": 0,
+    "Custom_deploy": 0,
+    "expert_services_3": 0,
+    "expert_3": 0,
+    "1_150": 6,
+    "_uFFFD": 0,
+    "FFFD_char": 0,
+    "snippets": [
+      "delivery capabilities (",
+      "delivery capabilities (\\\",20,\\\" expert + \\\",3,\\\" bundles =\\\",\\\" \\\",23,\\\"; industry SKUs = \\\",23,\\\" ×\\\",\\\" \\\",50,\\\" ≈ \\\",\\\"1,150\\\",\\\") —\\\",\\\"1"
+    ]
+  },
+  {
+    "1150": 0,
+    "f": "soft_services.html",
+    "bytes": 201070,
+    "fffd": 0,
+    "20_expert": 0,
+    "17_expert": 0,
+    "23_delivery": 0,
+    "23_packages": 0,
+    "Production_runbook": 1,
+    "Custom_deploy": 0,
+    "expert_services_3": 0,
+    "expert_3": 0,
+    "1_150": 3,
+    "_uFFFD": 0,
+    "FFFD_char": 0,
+    "snippets": [
+      "Production runbook"
+    ]
+  },
+  {
+    "1150": 0,
+    "f": "soft_home.html",
+    "bytes": 41631,
+    "fffd": 0,
+    "20_expert": 0,
+    "17_expert": 0,
+    "23_delivery": 0,
+    "23_packages": 0,
+    "Production_runbook": 0,
+    "Custom_deploy": 0,
+    "expert_services_3": 0,
+    "expert_3": 0,
+    "1_150": 2,
+    "_uFFFD": 0,
+    "FFFD_char": 0,
+    "snippets": []
+  }
+]

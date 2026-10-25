@@ -12,6 +12,7 @@ import {
   MIN_PROBLEMS_COVERED,
 } from '../package-industry-problems';
 import {
+  bindDocToOrder,
   contentFingerprint,
   docBodyBlob,
   shortOrderRef,
@@ -366,10 +367,6 @@ export function buildDocumentQualityMetadata(
   const docOk = threshold ? documentSubstancePasses(quality, threshold) : null;
   const pdfOk =
     threshold && pdf ? pdfSubstancePasses(pdf, threshold) : pdf ? true : null;
-  const substanceOk =
-    docOk === null && pdfOk === null
-      ? null
-      : (docOk !== false) && (pdfOk !== false);
   const problemsMeta = buildProblemsCoveredMetadata(ctx.deliverableId, industryCategory);
   const problemsEmbedded =
     problemsMeta.problemsCoveredCount >= MIN_PROBLEMS_COVERED &&
@@ -381,6 +378,12 @@ export function buildDocumentQualityMetadata(
   const blob = docBodyBlob(doc);
   const orderRef =
     ctx.paymentId && ctx.jobId ? shortOrderRef(ctx.paymentId, ctx.jobId) : null;
+  const orderBoundInDoc = orderRef ? blob.includes(orderRef) : true;
+  /** Two paid orders must not share unbound generic prose — require order shortRef in the pack. */
+  const substanceOk =
+    docOk === null && pdfOk === null
+      ? null
+      : (docOk !== false) && (pdfOk !== false) && orderBoundInDoc;
   return {
     documentTitle: doc.title,
     industryCategory,
@@ -398,7 +401,7 @@ export function buildDocumentQualityMetadata(
     ...(orderRef
       ? {
           contentOrderRef: orderRef,
-          orderBoundInDoc: blob.includes(orderRef),
+          orderBoundInDoc,
           contentFingerprint: contentFingerprint(blob),
         }
       : {
@@ -420,11 +423,15 @@ export async function persistDeliverablePdf(input: {
   filename: string;
 }): Promise<PersistedDeliverablePdf & { doc: StructuredDeliverableDoc }> {
   const deliverable = getDeliverable(input.ctx.deliverableId);
-  const doc = injectProblemsCoveredSection(
+  let doc = injectProblemsCoveredSection(
     input.doc,
     input.ctx.deliverableId,
     input.ctx.industryCategory,
   );
+  const identity = input.ctx.generationHints?.orderIdentity;
+  if (identity) {
+    doc = bindDocToOrder(doc, identity, input.ctx.clientName || 'Client');
+  }
   const rendered = await generateDeliverablePdf({
     brandName: 'Omni Group',
     title: doc.title,
@@ -526,6 +533,76 @@ export async function persistSupportHealthCheck(input: {
     filename: `${stem}.pdf`,
   });
   // Always persist the problems-injected doc (pdf.doc), never the bare template.
+  const md = await persistMarkdownBundle({
+    ctx: input.ctx,
+    doc: pdf.doc,
+    artifactType: `${stem}-md`,
+  });
+  return [pdf.artifact, md];
+}
+
+/**
+ * Monthly ops pulse for paid retainers (email / reputation / vertical).
+ * Honest: refreshes the ops pack — does NOT claim live sends, API harvest, or CMS SEO without keys.
+ */
+export async function persistMonthlyOpsPulse(input: {
+  ctx: FulfillmentContext;
+  periodLabel?: string;
+}): Promise<FulfillmentArtifact[]> {
+  const period = input.periodLabel ?? new Date().toISOString().slice(0, 7);
+  const industry = input.ctx.industryCategory?.trim() || 'general';
+  const id = input.ctx.deliverableId;
+  const focus =
+    id === 'email-marketing'
+      ? [
+          'Re-check sequence priorities (welcome / nurture / re-engage) against this month’s offer.',
+          'Confirm compliance checklist still matches current send markets (CAN-SPAM / GDPR / TCPA).',
+          'Sending remains CONFIGURATION REQUIRED until Resend/Twilio keys are wired — this pulse does not send mail.',
+        ]
+      : id === 'reputation-management'
+        ? [
+            'Refresh review response priorities for positive / neutral / negative templates.',
+            'Re-state Google Business checklist owners for this period.',
+            'Automated review requests remain CONFIGURATION REQUIRED until Google/Yelp API keys exist.',
+          ]
+        : [
+            'Confirm CRM DEMO vs live rows are still labeled correctly.',
+            'Re-check module entitlements: CRM, automation, billing (ads stay NOT CONNECTED without keys).',
+            'Vertical ops refresh — not a claim of live harvest or ads spend.',
+          ];
+  const doc: StructuredDeliverableDoc = {
+    title: `Monthly ops pulse — ${input.ctx.clientName}`,
+    subtitle: `${id} · ${period} · ${industry}`,
+    sections: [
+      {
+        heading: 'Period status',
+        body: [
+          `Client: ${input.ctx.clientName}. Package: ${id}. Industry: ${industry}. Period: ${period}.`,
+          'This artifact is the monthly retainer refresh for an active subscription — not a one-shot dump.',
+          'Open Deliveries for this pulse and Tasks for any open kickoff / change requests.',
+        ].join(' '),
+      },
+      {
+        heading: 'This month’s ops checklist',
+        body: focus.map((line, i) => `${i + 1}. ${line}`).join('\n'),
+      },
+      {
+        heading: 'Honesty',
+        body: [
+          'We do not invent live sends, review API calls, Apollo harvests, or CMS edits in this pulse.',
+          'CONFIGURATION REQUIRED / NOT CONNECTED items stay blocked until you provide credentials or access.',
+          `Next pulse is scheduled ~30 days after ${period} while the retainer stays paid.`,
+        ].join(' '),
+      },
+    ],
+  };
+  const stem = `${id}-monthly-${period}`;
+  const pdf = await persistDeliverablePdf({
+    ctx: input.ctx,
+    doc,
+    artifactType: 'monthly_ops_pulse',
+    filename: `${stem}.pdf`,
+  });
   const md = await persistMarkdownBundle({
     ctx: input.ctx,
     doc: pdf.doc,

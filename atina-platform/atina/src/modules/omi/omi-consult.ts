@@ -81,7 +81,7 @@ const THIN_MESS =
 const REASSESS =
   /\b(not the (actual )?problem|that'?s not (it|the problem|right)|doesn'?t solve|does not solve|ne re[sš]ava|nije to problem|pogre[sš]an paket|no that'?s not right)\b/i;
 const EXPLICIT_BUY =
-  /\b(what should i buy|šta mi preporu[cč]uje[sš]|sta mi preporucujes|recommend( a package)?|which package|koji paket|koliko ko[sš]ta|how much (is|does)|price of|cena)\b/i;
+  /\b(what should i buy|šta mi preporu[cč]uje[sš]|sta mi preporucujes|recommend( a package)?|which(?:\s+\w+){0,3}\s+package|koji paket|koliko ko[sš]ta|how much(?:\s+\w+){0,4}|what(?:\s+\w+){0,2}\s+price|price of|cena)\b/i;
 const CONVERSION_SIGNAL =
   /\b(visitors?|posetilac|posete|traffic).{0,48}\b(buy|convert|kupuj|purchase)|hardly anyone buys|niko ne kupuje|poor conversion|slaba konverzij|few purchases/i;
 const HARD_TOPIC_RESET =

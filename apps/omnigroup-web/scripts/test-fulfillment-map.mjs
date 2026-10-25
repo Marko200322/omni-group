@@ -32,6 +32,9 @@ const retainer = readRepo('atina-platform/atina/src/modules/billing/lib/delivera
 const growth = readRepo('atina-platform/atina/src/modules/billing/lib/deliverable-handlers/vertical-growth.handler.ts');
 const custom = readRepo('atina-platform/atina/src/modules/billing/lib/deliverable-handlers/custom-software.handler.ts');
 const bundle = readRepo('atina-platform/atina/src/modules/billing/lib/deliverable-handlers/bundle.handler.ts');
+const marketing = readRepo(
+  'atina-platform/atina/src/modules/billing/lib/deliverable-handlers/marketing-retainer.handler.ts',
+);
 
 assert(payments.includes('handleDeliverableStripeCheckoutCompleted'), 'Webhook handler must exist');
 assert(payments.includes("session.payment_status !== 'paid'"), 'Webhook must ignore unpaid success redirects');
@@ -41,9 +44,14 @@ assert(payments.includes('charge.refunded'), 'Webhook must mark Stripe refunds')
 assert(payments.includes('markPaymentRefunded'), 'Refunded charges must update payment status');
 assert(payments.includes('getPackageAnchorEur') || payments.includes('getSaaSPrice'), 'Checkout must re-price on the server');
 
-const handlers = [registry, setup, website, consulting, retainer, growth, custom, bundle].join('\n');
+const handlers = [registry, setup, website, consulting, retainer, growth, custom, bundle, marketing].join('\n');
 const ids = [...catalog.matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
-assert(ids.length >= 20, `Expected 20 catalog IDs, found ${ids.length}`);
+assert(ids.length >= 23, `Expected 23 catalog IDs, found ${ids.length}`);
+assert(registry.includes('marketingRetainerFulfillmentHandler'), 'Registry must wire marketing-retainer handler');
+assert(
+  marketing.includes("ids: ['seo-audit', 'email-marketing', 'reputation-management']"),
+  'Marketing handler must cover seo/email/reputation',
+);
 for (const id of ids) {
   assert(handlers.includes(`'${id}'`), `${id} missing from fulfillment handlers`);
   assert(honesty.includes(`deliverableId: '${id}'`), `${id} missing automation classification`);
@@ -52,10 +60,16 @@ for (const id of ids) {
 assert(setup.includes("filename: `setup-${tier}.pdf`"), 'Setup must persist a PDF');
 assert(setup.includes('persistMarkdownBundle'), 'Setup must persist markdown');
 assert(setup.includes('runAutomatedClientOrder'), 'Setup must create a project');
-assert(setup.includes('saveMigrationTemplate'), 'Full onboarding must create a migration CSV');
-assert(setup.includes('saveTrainingOutline'), 'Full onboarding must create a training outline');
+assert(setup.includes('persistMigrationTemplate'), 'Full onboarding must create a migration CSV');
+assert(
+  setup.includes('persistTrainingOutlineMarkdown') || setup.includes('persistTrainingOutlinePdf'),
+  'Full onboarding must create a training outline',
+);
 assert(setup.includes('scheduleSupportWindow'), 'Full onboarding must open a support window');
-assert(setup.includes('saveProductionDeployManifest'), 'Custom deploy must write a deploy manifest — not a live VPS');
+assert(
+  setup.includes('persistProductionDeployManifest'),
+  'Custom deploy must write a deploy manifest — not a live VPS',
+);
 assert(consulting.includes('technical-audit.pdf'), 'Audit must generate a PDF');
 assert(consulting.includes('workflow-sop-pack.pdf'), 'Workflow design must generate a PDF');
 assert(consulting.includes('integration-guide.pdf'), 'Integration must generate a PDF');

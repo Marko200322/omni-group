@@ -35,10 +35,15 @@ export class FactoryPhaseMetricsRepository {
       );
 
       const { rows: mrrRows } = await query<{ mrr: string }>(
-        `SELECT COALESCE(SUM(amount), 0)::text AS mrr
-         FROM subscriptions
-         WHERE status = 'active'
-           AND (current_period_end IS NULL OR current_period_end > NOW())`,
+        `SELECT COALESCE(SUM(
+           CASE WHEN s.billing_cycle = 'yearly' THEN p.price_yearly / 12.0
+                ELSE p.price_monthly
+           END
+         ), 0)::text AS mrr
+         FROM subscriptions s
+         JOIN plans p ON s.plan_id = p.id
+         WHERE s.status = 'active'
+           AND (s.current_period_end IS NULL OR s.current_period_end > NOW())`,
       );
 
       return {

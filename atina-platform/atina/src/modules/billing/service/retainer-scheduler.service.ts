@@ -2,9 +2,18 @@ import { config } from '../../../config';
 import logger from '../../../utils/logger';
 import { DeliverableFulfillmentRepository } from '../repository/deliverable-fulfillment.repository';
 import { ClientDeliverableBootstrapService } from './client-deliverable-bootstrap.service';
-import { persistSupportHealthCheck } from '../lib/deliverable-handlers/artifact-helpers';
+import {
+  persistMonthlyOpsPulse,
+  persistSupportHealthCheck,
+} from '../lib/deliverable-handlers/artifact-helpers';
 import type { FulfillmentArtifact, FulfillmentContext } from '../lib/deliverable-handlers/types';
 import { getSlackNotifier } from '../../../utils/slack-notifier.service';
+
+const MONTHLY_OPS_RETAINERS = [
+  'email-marketing',
+  'reputation-management',
+  'vertical-package',
+] as const;
 
 const MONTHLY_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -73,11 +82,12 @@ export class RetainerSchedulerService {
       }
 
       processed += await this.refreshSupportHealthChecks(now);
+      processed += await this.refreshMonthlyOpsPulses(now);
     } finally {
       running = false;
     }
     if (processed > 0) {
-      logger.info('Retainer scheduler processed monthly lead-gen runs', { processed });
+      logger.info('Retainer scheduler processed monthly runs', { processed });
     }
     return { processed };
   }
@@ -125,6 +135,51 @@ export class RetainerSchedulerService {
             ...meta,
             lastMonthlyHealthCheckAt: new Date(now).toISOString(),
             clientName,
+          },
+        });
+        processed += 1;
+      }
+    }
+    return processed;
+  }
+
+  /** Monthly ops pulse for email / reputation / vertical retainers (F-16). */
+  private async refreshMonthlyOpsPulses(now: number): Promise<number> {
+    let processed = 0;
+    for (const deliverableId of MONTHLY_OPS_RETAINERS) {
+      const jobs = await this.repo.listCompletedRetainers(deliverableId);
+      for (const job of jobs) {
+        const result = (job.result ?? {}) as Record<string, unknown>;
+        const meta = metadataOf(result);
+        const lastRunRaw = meta.lastMonthlyOpsPulseAt;
+        const lastRun = lastRunRaw ? new Date(String(lastRunRaw)).getTime() : 0;
+        if (lastRun && now - lastRun < MONTHLY_MS) continue;
+
+        const clientName =
+          typeof meta.clientName === 'string' && meta.clientName.trim()
+            ? meta.clientName.trim()
+            : 'Client';
+        const industryCategory =
+          typeof meta.industryCategory === 'string' ? meta.industryCategory : null;
+        const period = new Date(now).toISOString().slice(0, 7);
+        const ctx: FulfillmentContext = {
+          paymentId: job.payment_id,
+          userId: job.user_id,
+          deliverableId,
+          jobId: job.id,
+          clientName,
+          industryCategory,
+          purchaseType: 'deliverable',
+        };
+        const fresh = await persistMonthlyOpsPulse({ ctx, periodLabel: period });
+        const artifacts = mergeArtifacts(result.artifacts, fresh);
+        await this.repo.patchResultMetadata(job.payment_id, {
+          artifacts,
+          metadata: {
+            ...meta,
+            lastMonthlyOpsPulseAt: new Date(now).toISOString(),
+            clientName,
+            industryCategory,
           },
         });
         processed += 1;

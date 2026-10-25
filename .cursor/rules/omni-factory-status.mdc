@@ -1,0 +1,28 @@
+---
+description: Omni Factory living status — read before re-auditing; update after work so the same gaps are not chased 20 times.
+alwaysApply: true
+---
+
+# Omni Factory — ne jurimo isto 20×
+
+## Source of truth
+- **`docs/OMNI-FACTORY.md`**
+  - **§A ZATVORENO** — ima evidence; **ne** radi novi full audit iste stvari bez novog fail-a / novog VPS.
+  - **§B OTVORENO** — jedina lista šta fali (F-01…). Radi samo te ID-jeve.
+  - **§C MARKO** — P2 firma/Stripe LIVE; agent ne “zatvara”.
+
+## Before starting “proveri sistem / factory / moduli”
+1. Read `docs/OMNI-FACTORY.md` §A and §B.
+2. If the ask is already in §A with evidence → cite that evidence; do not re-run the same matrix from scratch.
+3. If VPS is down → say BLOCKED_LIVE for live claims; local Ultimatrix is separate.
+
+## After meaningful work
+1. Move closed items §B → §A (or update row).
+2. Changelog §H (newest first).
+3. Header date. Cite evidence paths for any PASS.
+4. Sync STATUS-KANON only when P0–P3 IDs change — do not duplicate the whole kanon here.
+
+## Forbidden
+- Re-opening HARD 1000× / honesty / companion as “unknown” when §A already cites proof.
+- Claiming GTM LIVE while F-01…F-04 open or Stripe still TEST.
+- Filling firma / Stripe LIVE without Marko.

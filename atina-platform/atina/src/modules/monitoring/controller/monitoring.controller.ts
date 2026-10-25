@@ -7,6 +7,7 @@ import type {
   MonitoringListQueryDto,
   PatchIncidentBodyDto,
 } from '../dto/monitoring.dto';
+import { getMonitoringScheduler } from '../service/monitoring-scheduler.service';
 
 type ListQuery = z.infer<typeof MonitoringListQueryDto>;
 type EngineRunBody = z.infer<typeof EngineRunBodyDto>;
@@ -18,6 +19,15 @@ function actor(req: Request) {
 
 export class MonitoringController {
   private readonly service = new MonitoringService();
+
+  getSchedulerStatus = async (_req: Request, res: Response): Promise<void> => {
+    sendSuccess(res, getMonitoringScheduler().getStatus());
+  };
+
+  tickScheduler = async (_req: Request, res: Response): Promise<void> => {
+    const result = await getMonitoringScheduler().tick();
+    sendSuccess(res, { ...result, status: getMonitoringScheduler().getStatus() });
+  };
 
   getOverview = async (_req: Request, res: Response): Promise<void> => {
     const data = await this.service.getOverview();

@@ -34,6 +34,7 @@ export const SUBSYSTEM_CODES = [
   'omi',
   'queues',
   'reinvestment',
+  'marketing',
   'monitoring',
 ] as const;
 export type SubsystemCode = (typeof SUBSYSTEM_CODES)[number];

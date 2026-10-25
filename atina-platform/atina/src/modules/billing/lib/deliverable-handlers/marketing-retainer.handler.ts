@@ -38,7 +38,7 @@ async function createRetainerProject(ctx: FulfillmentContext, title: string, des
 
 /**
  * Fulfillment handler for marketing/growth retainer packages:
- * - seo-audit: Technical SEO audit + monthly SEO plan (SERVICE + DOCS)
+ * - seo-audit: Technical SEO audit + 90-day roadmap (SERVICE + DOCS; not a monthly retainer)
  * - email-marketing: Campaign strategy + sequence templates (monthly retainer)
  * - reputation-management: Review funnel + response templates (monthly retainer)
  *
@@ -156,7 +156,7 @@ async function fulfillEmailMarketing(
   });
 
   const ticketOk = Boolean(kickoffTicketId);
-  return {
+  const base: FulfillmentResult = {
     projectId,
     artifacts: [pdf.artifact, md, slaPack],
     status: docMeta.documentSubstanceOk === false || !ticketOk ? 'partial' : 'completed',
@@ -172,6 +172,17 @@ async function fulfillEmailMarketing(
       ...(ticketOk ? {} : { reason: 'kickoff_ticket_missing' }),
     },
   };
+  try {
+    const companion = await attachServiceAndCommercialCompanion(ctx, base);
+    return mergeServiceCompanion(base, companion);
+  } catch (err) {
+    logger.warn('Email-marketing commercial companion failed', {
+      paymentId: ctx.paymentId,
+      deliverableId: ctx.deliverableId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return base;
+  }
 }
 
 async function fulfillReputationManagement(
@@ -236,7 +247,7 @@ async function fulfillReputationManagement(
   });
 
   const ticketOk = Boolean(kickoffTicketId);
-  return {
+  const base: FulfillmentResult = {
     projectId,
     artifacts: [pdf.artifact, md, slaPack],
     status: docMeta.documentSubstanceOk === false || !ticketOk ? 'partial' : 'completed',
@@ -252,4 +263,15 @@ async function fulfillReputationManagement(
       ...(ticketOk ? {} : { reason: 'kickoff_ticket_missing' }),
     },
   };
+  try {
+    const companion = await attachServiceAndCommercialCompanion(ctx, base);
+    return mergeServiceCompanion(base, companion);
+  } catch (err) {
+    logger.warn('Reputation-management commercial companion failed', {
+      paymentId: ctx.paymentId,
+      deliverableId: ctx.deliverableId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return base;
+  }
 }

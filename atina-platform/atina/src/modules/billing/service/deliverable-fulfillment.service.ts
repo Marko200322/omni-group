@@ -11,6 +11,7 @@ import {
 } from '../lib/fulfillment-quality-checklist';
 import { buildOrderIdentity } from '../lib/order-identity';
 import { industrySlugFromDeliverableId } from '../lib/industry-package-id';
+import { getPackageIndustryContext } from '../lib/package-industry-problems';
 import {
   DeliverableFulfillmentRepository,
   type FulfillmentJobRow,
@@ -184,11 +185,26 @@ export class DeliverableFulfillmentService {
     retryNotes?: string | null;
     paymentId: string;
     jobId: string;
+    clientName: string;
+    deliverableId: string;
+    industryCategory?: string | null;
   }): FulfillmentGenerationHints {
+    const industry = (input.industryCategory || '').trim();
+    const ctx = industry
+      ? getPackageIndustryContext(input.deliverableId, industry)
+      : null;
     return {
       attemptNumber: input.attemptNumber,
       retryNotes: input.retryNotes?.trim() || undefined,
       orderIdentity: buildOrderIdentity(input.paymentId, input.jobId),
+      uniquenessBrief: {
+        clientName: input.clientName.trim() || 'Client',
+        industryLabel: ctx?.industryLabel ?? (industry || 'general'),
+        primaryProblem: ctx?.primaryProblem ?? `${input.clientName} needs scoped delivery for ${input.deliverableId}`,
+        secondaryProblems: ctx?.secondaryProblems?.slice(0, 8) ?? [],
+        industryPainPoints: ctx?.industryPainPoints?.slice(0, 6) ?? [],
+        businessOutcome: ctx?.businessOutcome ?? 'Order-specific pack delivered to portal',
+      },
     };
   }
 
@@ -226,6 +242,9 @@ export class DeliverableFulfillmentService {
           retryNotes: notes,
           paymentId: ctx.paymentId,
           jobId: ctx.jobId,
+          clientName: ctx.clientName,
+          deliverableId: ctx.deliverableId,
+          industryCategory: ctx.industryCategory,
         }),
         ctx.userId,
         ctx.deliverableId,

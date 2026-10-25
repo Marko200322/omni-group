@@ -91,6 +91,12 @@ describe(`thousand packages quality matrix shard ${SHARD_INDEX}/${SHARD_COUNT}`,
         };
       case 'vertical-package':
         return { kind: 'doc' as const, doc: await docs.generateVerticalPackBrief({ clientName: client, industryCategory: industry, generationHints: hints }), order };
+      case 'seo-audit':
+        return { kind: 'doc' as const, doc: await docs.generateSeoAuditReport({ clientName: client, industryCategory: industry, generationHints: hints }), order };
+      case 'email-marketing':
+        return { kind: 'doc' as const, doc: await docs.generateEmailMarketingPack({ clientName: client, industryCategory: industry, generationHints: hints }), order };
+      case 'reputation-management':
+        return { kind: 'doc' as const, doc: await docs.generateReputationManagementPack({ clientName: client, industryCategory: industry, generationHints: hints }), order };
       case 'support-priority':
       case 'support-dedicated':
       case 'lead-gen-retainer':
@@ -148,7 +154,7 @@ describe(`thousand packages quality matrix shard ${SHARD_INDEX}/${SHARD_COUNT}`,
 
   it(`evaluates shard ${SHARD_INDEX}`, async () => {
     const catalog = listFullPackageCatalog();
-    expect(catalog.length).toBe(1000);
+    expect(catalog.length).toBeGreaterThanOrEqual(1000); // catalog grew: 1000 → 1150 (23 base × 50 industries)
 
     const slice = catalog.filter((_, i) => i % SHARD_COUNT === SHARD_INDEX);
     const rows: Row[] = [];

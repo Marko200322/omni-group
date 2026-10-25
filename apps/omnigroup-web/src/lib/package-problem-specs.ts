@@ -222,6 +222,39 @@ export const PACKAGE_PROBLEM_SPECS_WEB: Record<string, WebPackageProblemSpec> = 
       'Roles and KPIs unclear',
     ],
   },
+  'seo-audit': {
+    primary: 'Organic traffic loses to competitors because technical SEO issues go undiagnosed',
+    secondary: [
+      'Core Web Vitals failing on mobile devices',
+      'Keyword opportunities missed to competitors',
+      'No structured data or schema markup',
+      'Thin content pages not meeting search intent',
+      'Backlink profile weaker than competitors',
+      'No monthly SEO improvement cadence',
+    ],
+  },
+  'email-marketing': {
+    primary: 'Teams send emails without segmentation, sequences, or compliance — leads go cold',
+    secondary: [
+      'No welcome sequence for new leads',
+      'Email list unsegmented by lifecycle stage',
+      'SMS campaigns missing for high-intent triggers',
+      'CAN-SPAM / GDPR compliance gaps',
+      'No re-engagement flow for inactive contacts',
+      'Open and click rates untracked',
+    ],
+  },
+  'reputation-management': {
+    primary: 'Negative reviews go unanswered and positive ones are never requested',
+    secondary: [
+      'Google Business Profile incomplete or outdated',
+      'No system for requesting reviews after service',
+      'Negative reviews sit unanswered for days',
+      'Competitor has more reviews and higher rating',
+      'No response templates for different review types',
+      'Review monitoring is manual and inconsistent',
+    ],
+  },
 };
 
 /** Primary + up to 6 secondaries for offer cards (5–7 problems shown). */

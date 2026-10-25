@@ -7,7 +7,7 @@ import {
 
 /**
  * Public catalog counts / industry-filtered sample for buyers and audits.
- * Does not dump all ~1000 rows unless `?industry=` is set (then ~20 for that industry).
+ * Does not dump all 1150 rows unless `?industry=` is set (then 23 for that industry).
  */
 export async function GET(req: NextRequest) {
   const industry = (req.nextUrl.searchParams.get('industry') || '').trim().toLowerCase();

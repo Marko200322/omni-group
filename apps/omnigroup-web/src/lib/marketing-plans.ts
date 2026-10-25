@@ -110,9 +110,9 @@ export const IMPLEMENTATION_ADDONS = [
   },
   {
     id: 'setup-custom',
-    name: 'Custom deploy',
+    name: 'Production runbook',
     price: formatEur(getPublicListPriceEur('setup-custom')),
     once: true,
-    desc: 'Integrations, custom workflows, deploy on your domain, and a written support target.',
+    desc: 'Executable production deploy runbook (DNS/SSL/backup PENDING) + CRM seed — you deploy; not remote go-live.',
   },
 ];

@@ -1,0 +1,114 @@
+{
+  "generatedAt": "2026-10-24T23:00:06.622Z",
+  "targets": {
+    "api": "https://api.omnigrouptech.com",
+    "web": "https://omnigrouptech.com"
+  },
+  "checks": {
+    "apiHealth": {
+      "http": 200,
+      "db": "up",
+      "redis": "up",
+      "status": "ok",
+      "pass": true,
+      "elapsedMs": 2511,
+      "error": null
+    },
+    "webPages": {
+      "pages": [
+        {
+          "path": "/",
+          "http": 200,
+          "ok": true,
+          "elapsedMs": 429,
+          "error": null
+        },
+        {
+          "path": "/pricing",
+          "http": 200,
+          "ok": true,
+          "elapsedMs": 183,
+          "error": null
+        },
+        {
+          "path": "/products",
+          "http": 200,
+          "ok": true,
+          "elapsedMs": 125,
+          "error": null
+        },
+        {
+          "path": "/solutions",
+          "http": 200,
+          "ok": true,
+          "elapsedMs": 234,
+          "error": null
+        },
+        {
+          "path": "/login",
+          "http": 200,
+          "ok": true,
+          "elapsedMs": 39,
+          "error": null
+        }
+      ],
+      "pass": true
+    },
+    "publicCatalog": {
+      "http": 200,
+      "basePackages": 23,
+      "sellablePackages": 1150,
+      "industryGroups": 50,
+      "okFlag": true,
+      "pass": true,
+      "elapsedMs": 37
+    },
+    "paymentsMode": {
+      "http": 200,
+      "mode": "sandbox",
+      "stripeLivemode": false,
+      "secretModeInferred": "sk_test_ (inferred)",
+      "methodIds": [
+        "stripe",
+        "manual"
+      ],
+      "note": "Card checkout via Stripe TEST. Live charges are not enabled.",
+      "verdict": "BLOCKED_P2_FOR_LIVE_CARDS",
+      "pass": true,
+      "adminLoginUsed": false
+    },
+    "omiAnonymous": {
+      "sessionHttp": 201,
+      "chatHttp": 200,
+      "sessionId": "e8c0397c…",
+      "firstTurn": {
+        "catalogIdHits": [],
+        "replyPreview": "I want to understand the situation before recommending anything. In one or two sentences: what breaks today, and what would a good week look like instead?",
+        "pass": false,
+        "note": "Discovery gate on minimal prompt — expected OMI behavior"
+      },
+      "followUpTurn": {
+        "sessionFresh": true,
+        "chatHttp": 200,
+        "catalogIdHits": ["setup-quick"],
+        "replyPreview": "What I understand: Healthcare clinic in Berlin: no CRM, website from 2019, need HIPAA-aware lead capture and booking. Budget under 3000 EUR one-time. Name the exact Omni package i The bottleneck I would test first: reservation / booking communication. Other issues in play: missed inquiries; weak or missing public web presence. I will not treat them as one package by default. I disagree that a website rebuild is the first fix if leads already arrive and follow-up is weak — that is a response process problem. Roughly how many hours a month does this consume? If you confirm this bottleneck, I would consider Quick setup (€690 one_time) because it maps to that job — not because it is more expensive. It would not automatically fix missed inquiries. /products#setup-quick I will not upsell a larger package unless the facts require it.",
+        "pass": true
+      },
+      "catalogIdHits": ["setup-quick"],
+      "pass": true,
+      "error": null
+    },
+    "ibanSmoke": {
+      "skipped": true,
+      "reason": "portfolio-multi run active/completed on 2026-10-25; skip checkout to avoid rate-limit collision with portfolio-23 IBAN matrix.",
+      "evidenceRef": "docs/evidence/_portfolio-multi-20261025-0013/README.md"
+    }
+  },
+  "verdict": "SOFT_READY",
+  "reasons": [
+    "API db/redis up; WEB marketing routes 200; catalog 23 / 1150 / 50",
+    "Payments: mode=sandbox, stripeLivemode=false (sk_test_ inferred) — BLOCKED_P2 for LIVE card GTM",
+    "OMI anonymous: setup-quick recommended after contextual follow-up (first turn discovery-only)",
+    "IBAN checkout smoke skipped — portfolio-23 owns live IBAN matrix (docs/evidence/_portfolio-multi-20261025-0013/)"
+  ]
+}

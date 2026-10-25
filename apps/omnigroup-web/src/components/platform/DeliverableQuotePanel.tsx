@@ -390,7 +390,7 @@ export function DeliverableQuotePanel({ disabled }: Props) {
               After the first {introPromo.maxSlots} paying clients, price returns to regular{' '}
               <span className="font-semibold text-white">{formatEur(listPriceEur)}</span>
               {formatBillingLabel(deliverable.billing) ? ` ${formatBillingLabel(deliverable.billing)}` : ''}.{' '}
-              {introPromo.remaining} of {introPromo.maxSlots} intro slots left (−{introPromo.discountPct}%).
+              {introPromo.remaining} of {introPromo.maxSlots} intro slots left (-{introPromo.discountPct}%).
             </span>
           </>
         ) : (

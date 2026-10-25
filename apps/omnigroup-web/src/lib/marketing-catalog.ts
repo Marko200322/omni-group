@@ -288,8 +288,9 @@ const SERVICE_CATEGORIES_SOURCE: CatalogCategory[] = [
       },
       {
         id: 'setup-custom',
-        name: 'Custom deploy',
-        description: 'Your domain, SSL, backup, monitoring, and a written support target.',
+        name: 'Production runbook',
+        description:
+          'Client-executable production deploy runbook (DNS/SSL/backup/monitoring PENDING) — your ops team runs go-live.',
         priceLabel: '',
         href: serviceCatalogHref('setup-custom'),
       },

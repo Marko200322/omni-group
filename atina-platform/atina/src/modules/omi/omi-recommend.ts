@@ -107,7 +107,7 @@ export function isOmiThisPackageAsk(message: string): boolean {
 }
 
 export function formatOmiCatalogPageReply(): string {
-  return 'This page is the expert catalog — 17 services plus 3 bundles, same list prices as /pricing. Open a package card or name the SKU and I will quote that verified item. SaaS plans stay on /pricing: Launch €79/$89, Growth €249/$279, Scale €429/$469 monthly.';
+  return 'This page is the expert catalog — 20 expert services + 3 bundles (23 capabilities), same list prices as /pricing. Open a package card or name the SKU and I will quote that verified item. SaaS plans stay on /pricing: Launch €79/$89, Growth €249/$279, Scale €429/$469 monthly.';
 }
 
 function cardFor(id: string, why?: string): OmiProductCard | null {

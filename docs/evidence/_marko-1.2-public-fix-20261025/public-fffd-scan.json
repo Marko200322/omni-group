@@ -1,0 +1,51 @@
+[
+  {
+    "url": "https://omnigrouptech.com/pricing",
+    "status": 200,
+    "len": 217922,
+    "fffd": 0,
+    "latin1Em": 0,
+    "pdfCtx": [
+      "svg><span>PDF report (6+ sections) + markdown</span></li><li class=\"flex gap-2 text-sm tex"
+    ],
+    "badSpans": []
+  },
+  {
+    "url": "https://omnigrouptech.com/services",
+    "status": 200,
+    "len": 201070,
+    "fffd": 0,
+    "latin1Em": 0,
+    "pdfCtx": [
+      "svg><span>PDF report (6+ sections) + markdown</span></li><li class=\"flex gap-2 text-sm tex"
+    ],
+    "badSpans": []
+  },
+  {
+    "url": "https://omnigrouptech.com/products",
+    "status": 200,
+    "len": 51439,
+    "fffd": 0,
+    "latin1Em": 0,
+    "pdfCtx": [],
+    "badSpans": []
+  },
+  {
+    "url": "https://omnigrouptech.com/solutions",
+    "status": 200,
+    "len": 112727,
+    "fffd": 0,
+    "latin1Em": 0,
+    "pdfCtx": [],
+    "badSpans": []
+  },
+  {
+    "url": "https://omnigrouptech.com/",
+    "status": 200,
+    "len": 41631,
+    "fffd": 0,
+    "latin1Em": 0,
+    "pdfCtx": [],
+    "badSpans": []
+  }
+]

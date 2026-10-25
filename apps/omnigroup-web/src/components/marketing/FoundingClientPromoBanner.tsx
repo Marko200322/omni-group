@@ -36,7 +36,9 @@ export function FoundingClientPromoBanner({ industryCategory, currency = 'USD' }
       className="mt-8 rounded-2xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/10 to-violet-500/5 p-5 md:p-6"
       aria-label="Founding client promotion"
     >
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">Founding client promo</p>
+      <p className="text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">
+        SaaS founding promo (subscriptions only)
+      </p>
       {regulated ? (
         <p className="mt-2 text-sm text-slate-300">
           Subscription founding discount applies to non-regulated industries. Your category uses{' '}
@@ -55,9 +57,10 @@ export function FoundingClientPromoBanner({ industryCategory, currency = 'USD' }
             {discountPct}% off for the first {lockMonths} months
           </p>
           <p className="mt-1 text-sm text-slate-300">
-            Growth is {formatPlanMoney(founding, currency)}/mo for {lockMonths} months, then the list{' '}
+            Applies to platform subscriptions only (Launch / Growth / Scale) — not to expert packages below. Growth is{' '}
+            {formatPlanMoney(founding, currency)}/mo for {lockMonths} months, then the list{' '}
             {formatPlanMoney(list, currency)}/mo. Same for Launch and Scale. Yearly is {discountPct}% off the first
-            year, then list.
+            year, then list. Separate from the package intro (-18%) promo.
           </p>
           <p className="mt-2 text-sm text-emerald-200/90">
             {typeof remaining === 'number'

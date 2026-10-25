@@ -29,6 +29,8 @@ import { DeliveriesPanel } from '@/components/platform/DeliveriesPanel';
 import { ClientOrdersPanel } from '@/components/platform/ClientOrdersPanel';
 import { BillingCheckoutPanel } from '@/components/platform/BillingCheckoutPanel';
 import { SupportMeetingPanel } from '@/components/platform/SupportMeetingPanel';
+import { SupportTicketsPanel } from '@/components/platform/SupportTicketsPanel';
+import { ClientDocumentsPanel } from '@/components/platform/ClientDocumentsPanel';
 import { SalesMeetingPanel } from '@/components/platform/SalesMeetingPanel';
 import { FileUploadPanel } from '@/components/platform/FileUploadPanel';
 import { TwoFactorSettings } from '@/components/platform/TwoFactorSettings';
@@ -325,8 +327,9 @@ export default function DashboardClient({
         <GlassCard delay={0.22}>
           <h2 className="font-display text-lg font-semibold text-white">Documents</h2>
           <p className="mt-2 text-sm text-slate-400">
-            Upload briefs, contracts, or reference files for your project team.
+            Billing receipts/invoices from Atina, plus optional uploads for briefs and contracts.
           </p>
+          {sessionUser && !isDemo ? <ClientDocumentsPanel /> : null}
           <div className="mt-4">
             <FileUploadPanel
               disabled={
@@ -348,7 +351,10 @@ export default function DashboardClient({
           {sessionUser &&
           !isDemo &&
           hasOrgPermission(sessionUser.orgRole ?? 'owner', 'support.use', sessionUser.role) ? (
-            <SupportMeetingPanel />
+            <>
+              <SupportTicketsPanel />
+              <SupportMeetingPanel />
+            </>
           ) : sessionUser && !isDemo ? (
             <p className="mt-4 text-sm text-slate-500">
               Your workspace role can view this page, but only members with support access can book a call.

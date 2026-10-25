@@ -76,7 +76,7 @@ describe('BillingController', () => {
     expect(payload.data.optionalMaintenanceTiers).toHaveLength(3);
   });
 
-  it('getPackageMatrix returns 20 packages for industry', async () => {
+  it('getPackageMatrix returns 23 packages for industry', async () => {
     const r = res();
     await controller.getPackageMatrix(
       { query: { industryCategory: 'marketing' } } as unknown as Request,
@@ -84,7 +84,7 @@ describe('BillingController', () => {
     );
     expect(r.status).toHaveBeenCalledWith(200);
     const payload = (r.json as jest.Mock).mock.calls[0][0];
-    expect(payload.data.packages).toHaveLength(20);
+    expect(payload.data.packages).toHaveLength(23); // catalog grew 20 → 23 (seo/email/reputation)
   });
 
   it('getPlans delegates to service', async () => {

@@ -194,14 +194,28 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
             claimsFullMerchantStore: false,
           }
         : {};
+    const needsSiteCompanion =
+      deliverableId === 'website-business' || deliverableId === 'website-ecommerce';
     return {
       ...base,
       publicUrl: '/sites/north-peak-demo',
       projectId: 'proj-1',
+      artifacts: needsSiteCompanion
+        ? [
+            ...base.artifacts,
+            {
+              type: 'commercial_companion',
+              filename: 'commercial-delivery-pack.md',
+              downloadLabel: 'Commercial delivery pack',
+              storagePath: '/c',
+            },
+          ]
+        : base.artifacts,
       metadata: {
         ...passingDocQuality(deliverableId),
         pageCount: 6,
         includesLanding: deliverableId === 'white-label-setup',
+        ...(needsSiteCompanion ? serviceCompanionMeta(`ticket-${deliverableId}`) : {}),
         ...siteMeta(ecommerce),
       },
     };
@@ -447,9 +461,11 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       artifacts: [
         ...base.artifacts,
         slaArtifact('email-marketing-sla-onboarding.pdf'),
+        commercialCompanionArtifact(),
       ],
       metadata: {
         ...passingDocQuality(deliverableId),
+        ...serviceCompanionMeta('ticket-email-1'),
         modulesActivated: ['email-campaigns', 'sms-outreach'],
         kickoffTicketId: 'ticket-email-1',
         emailMarketingDelivered: true,
@@ -468,9 +484,11 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
       artifacts: [
         ...base.artifacts,
         slaArtifact('reputation-management-sla-onboarding.pdf'),
+        commercialCompanionArtifact(),
       ],
       metadata: {
         ...passingDocQuality(deliverableId),
+        ...serviceCompanionMeta('ticket-reputation-1'),
         modulesActivated: ['review-automation', 'reputation-monitor'],
         kickoffTicketId: 'ticket-reputation-1',
         reputationManagementDelivered: true,

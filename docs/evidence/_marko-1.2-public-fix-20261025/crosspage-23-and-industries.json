@@ -1,0 +1,687 @@
+{
+  "webBase": "http://164.68.127.15:3010",
+  "apiBase": "http://164.68.127.15:3000",
+  "catalogIds": 23,
+  "industries": 50,
+  "fffdTotal": 0,
+  "crossPageErrors": 0,
+  "industryErrors": 0,
+  "industryOk": 50,
+  "errors": [],
+  "rows": [
+    {
+      "id": "setup-quick",
+      "name": "Quick setup",
+      "prices": {
+        "pricing": 690,
+        "products": null,
+        "services": 690
+      },
+      "names": {
+        "pricing": "Quick setup",
+        "products": null,
+        "services": "Quick setup"
+      }
+    },
+    {
+      "id": "setup-full",
+      "name": "Full onboarding",
+      "prices": {
+        "pricing": 1590,
+        "products": null,
+        "services": 1590
+      },
+      "names": {
+        "pricing": "Full onboarding",
+        "products": null,
+        "services": "Full onboarding"
+      }
+    },
+    {
+      "id": "setup-custom",
+      "name": "Production runbook",
+      "prices": {
+        "pricing": 1290,
+        "products": null,
+        "services": 1290
+      },
+      "names": {
+        "pricing": "Production runbook",
+        "products": null,
+        "services": "Production runbook"
+      }
+    },
+    {
+      "id": "audit",
+      "name": "Technical audit",
+      "prices": {
+        "pricing": 890,
+        "products": null,
+        "services": 890
+      },
+      "names": {
+        "pricing": "Technical audit",
+        "products": null,
+        "services": "Technical audit"
+      }
+    },
+    {
+      "id": "integration",
+      "name": "Custom integration",
+      "prices": {
+        "pricing": 890,
+        "products": null,
+        "services": 890
+      },
+      "names": {
+        "pricing": "Custom integration",
+        "products": null,
+        "services": "Custom integration"
+      }
+    },
+    {
+      "id": "workflow-design",
+      "name": "Workflow design",
+      "prices": {
+        "pricing": 890,
+        "products": null,
+        "services": 890
+      },
+      "names": {
+        "pricing": "Workflow design",
+        "products": null,
+        "services": "Workflow design"
+      }
+    },
+    {
+      "id": "support-priority",
+      "name": "Priority support",
+      "prices": {
+        "pricing": 299,
+        "products": null,
+        "services": 299
+      },
+      "names": {
+        "pricing": "Priority support",
+        "products": null,
+        "services": "Priority support"
+      }
+    },
+    {
+      "id": "support-dedicated",
+      "name": "Dedicated support",
+      "prices": {
+        "pricing": 790,
+        "products": null,
+        "services": 790
+      },
+      "names": {
+        "pricing": "Dedicated support",
+        "products": null,
+        "services": "Dedicated support"
+      }
+    },
+    {
+      "id": "landing",
+      "name": "Landing + copy",
+      "prices": {
+        "pricing": 1290,
+        "products": null,
+        "services": 1290
+      },
+      "names": {
+        "pricing": "Landing + copy",
+        "products": null,
+        "services": "Landing + copy"
+      }
+    },
+    {
+      "id": "website-business",
+      "name": "Business website",
+      "prices": {
+        "pricing": 2290,
+        "products": null,
+        "services": 2290
+      },
+      "names": {
+        "pricing": "Business website",
+        "products": null,
+        "services": "Business website"
+      }
+    },
+    {
+      "id": "website-ecommerce",
+      "name": "E-commerce storefront",
+      "prices": {
+        "pricing": 2790,
+        "products": null,
+        "services": 2790
+      },
+      "names": {
+        "pricing": "E-commerce storefront",
+        "products": null,
+        "services": "E-commerce storefront"
+      }
+    },
+    {
+      "id": "white-label-setup",
+      "name": "White-label packaging",
+      "prices": {
+        "pricing": 1590,
+        "products": null,
+        "services": 1590
+      },
+      "names": {
+        "pricing": "White-label packaging",
+        "products": null,
+        "services": "White-label packaging"
+      }
+    },
+    {
+      "id": "sales-enablement",
+      "name": "Sales enablement",
+      "prices": {
+        "pricing": 890,
+        "products": null,
+        "services": 890
+      },
+      "names": {
+        "pricing": "Sales enablement",
+        "products": null,
+        "services": "Sales enablement"
+      }
+    },
+    {
+      "id": "vertical-package",
+      "name": "Vertical solution",
+      "prices": {
+        "pricing": 349,
+        "products": null,
+        "services": 349
+      },
+      "names": {
+        "pricing": "Vertical solution",
+        "products": null,
+        "services": "Vertical solution"
+      }
+    },
+    {
+      "id": "lead-gen-retainer",
+      "name": "Lead gen ops retainer",
+      "prices": {
+        "pricing": 449,
+        "products": null,
+        "services": 449
+      },
+      "names": {
+        "pricing": "Lead gen ops retainer",
+        "products": null,
+        "services": "Lead gen ops retainer"
+      }
+    },
+    {
+      "id": "ai-support-retainer",
+      "name": "AI support retainer",
+      "prices": {
+        "pricing": 349,
+        "products": null,
+        "services": 349
+      },
+      "names": {
+        "pricing": "AI support retainer",
+        "products": null,
+        "services": "AI support retainer"
+      }
+    },
+    {
+      "id": "custom-software",
+      "name": "Software starter kit",
+      "prices": {
+        "pricing": 1490,
+        "products": null,
+        "services": 1490
+      },
+      "names": {
+        "pricing": "Software starter kit",
+        "products": null,
+        "services": "Software starter kit"
+      }
+    },
+    {
+      "id": "bundle-portal-presence",
+      "name": "Portal + presence bundle",
+      "prices": {
+        "pricing": 1590,
+        "products": 1590,
+        "services": 1590
+      },
+      "names": {
+        "pricing": "Portal + presence bundle",
+        "products": "Portal + presence bundle",
+        "services": "Portal + presence bundle"
+      }
+    },
+    {
+      "id": "bundle-sales-launch",
+      "name": "Sales launch bundle",
+      "prices": {
+        "pricing": 1790,
+        "products": 1790,
+        "services": 1790
+      },
+      "names": {
+        "pricing": "Sales launch bundle",
+        "products": "Sales launch bundle",
+        "services": "Sales launch bundle"
+      }
+    },
+    {
+      "id": "bundle-ops-clarity",
+      "name": "Ops clarity bundle",
+      "prices": {
+        "pricing": 1490,
+        "products": 1490,
+        "services": 1490
+      },
+      "names": {
+        "pricing": "Ops clarity bundle",
+        "products": "Ops clarity bundle",
+        "services": "Ops clarity bundle"
+      }
+    },
+    {
+      "id": "seo-audit",
+      "name": "SEO audit + 90-day roadmap",
+      "prices": {
+        "pricing": 490,
+        "products": null,
+        "services": 490
+      },
+      "names": {
+        "pricing": "SEO audit + 90-day roadmap",
+        "products": null,
+        "services": "SEO audit + 90-day roadmap"
+      }
+    },
+    {
+      "id": "email-marketing",
+      "name": "Email &amp; SMS marketing",
+      "prices": {
+        "pricing": 349,
+        "products": null,
+        "services": 349
+      },
+      "names": {
+        "pricing": "Email &amp; SMS marketing",
+        "products": null,
+        "services": "Email &amp; SMS marketing"
+      }
+    },
+    {
+      "id": "reputation-management",
+      "name": "Reputation &amp; review automation",
+      "prices": {
+        "pricing": 249,
+        "products": null,
+        "services": 249
+      },
+      "names": {
+        "pricing": "Reputation &amp; review automation",
+        "products": null,
+        "services": "Reputation &amp; review automation"
+      }
+    }
+  ],
+  "industryResults": [
+    {
+      "slug": "admin_support",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "ai_data",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "audio_music",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "business_consulting",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "community_moderation",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "creator_services",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "customer_service",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "design_creative",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "development_it",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "ecommerce",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "education_training",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "engineering_architecture",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "engineering_science",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "finance_accounting",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "hr_recruiting",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "legal_services",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "localization",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "marketing",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "photography",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "product_project_management",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "real_estate_services",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "sales",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "video_animation",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "web3",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "writing_translation",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "healthcare",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "legal",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "retail",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "hospitality",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "construction",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "education",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "finance",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "logistics",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "beauty",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "fitness",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "agriculture",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "automotive",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "real-estate",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "manufacturing",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "technology",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "media",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "nonprofit",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "government",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "energy",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "travel",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "professional",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "entertainment",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "home_services",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "pets",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    },
+    {
+      "slug": "industrial",
+      "http": 200,
+      "count": 23,
+      "missing": 0,
+      "ok": true
+    }
+  ]
+}

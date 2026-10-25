@@ -66,6 +66,7 @@ export function Footer({ impressum, supportEmail = PUBLIC_SUPPORT_EMAIL }: Foote
               { href: '/products', label: 'Platform' },
               { href: '/solutions', label: 'Solutions' },
               { href: '/pricing', label: 'Pricing' },
+              { href: '/portfolio', label: 'Portfolio' },
               { href: '/services', label: 'Expert services' },
               { href: '/contact', label: 'Contact' },
               { href: '/status', label: 'System status' },

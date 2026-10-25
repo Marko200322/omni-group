@@ -24,14 +24,15 @@ export const KANON_SECTIONS: KanonSection[] = [
   {
     id: 'live',
     title: 'LIVE — potvrđeno',
-    subtitle: 'Fulfillment HARD 1000/1000 · GTM CONDITIONAL (Stripe TEST) — sync docs/STATUS-KANON.md',
+    subtitle:
+      'Catalog 23×50=1150 · historical HARD 20×50=1000 · GTM CONDITIONAL (Stripe TEST) — sync docs/STATUS-KANON.md',
     items: [
-      { id: 'LIVE-01', title: 'Site + API · M6 · full · €250', status: 'DONE', link: 'https://omnigrouptech.com' },
+      { id: 'LIVE-01', title: 'Site + API · M6 · soft €200', status: 'DONE', link: 'https://omnigrouptech.com' },
       {
         id: 'LIVE-02',
-        title: 'Fulfillment 1000/1000 HARD PASS (20×50, checklistScore=100)',
+        title: 'Fulfillment HARD PASS (historical 20×50=1000; catalog now 23×50=1150)',
         status: 'DONE',
-        note: 'HARD-FINAL + FULL-REPO-PASS-VERDICT — not 850/850',
+        note: 'HARD-FINAL 2026-10-06 + thousand quality 1150/1150 2026-10-20 — see OMNI-FACTORY.md',
         link: '/dev/docs',
       },
       {

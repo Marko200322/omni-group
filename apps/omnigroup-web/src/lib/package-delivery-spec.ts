@@ -1,5 +1,5 @@
 /**
- * Honest delivery contract per package � keep in sync with
+ * Honest delivery contract per package — keep in sync with
  * atina-platform/atina/src/modules/billing/lib/package-delivery-spec.ts
  *
  * Pricing: anchorByPhase reflects what the factory can deliver today.
@@ -20,7 +20,7 @@ import { parseIndustryPackageId } from './thousand-package-catalog';
 
 export type { OfferSaleStatus } from './sale-status';
 
-/** Recommended first-sale list � not a checkout gate. */
+/** Recommended first-sale list — not a checkout gate. */
 export const BUDGET_LAUNCH_PACKAGE_IDS = [
   'setup-quick',
   'audit',
@@ -43,15 +43,15 @@ export type PackageDeliverySpec = {
   /** Base delivery at current factory phase (before phaseUnlocks merge). */
   includes: string[];
   excludes: string[];
-  /** EUR anchor per factory phase � price = highest defined phase = current. */
+  /** EUR anchor per factory phase — price = highest defined phase = current. */
   anchorByPhase: Partial<Record<FactoryPhase, number>>;
-  /** Factory phase where extra capability is included � does not block checkout. */
+  /** Factory phase where extra capability is included — does not block checkout. */
   minCheckoutPhase?: FactoryPhase;
   /** Extra deliverables auto-added when factory reaches phase. */
   phaseUnlocks?: PhaseUnlock[];
   leanCheckout: boolean;
   fullCheckout: boolean;
-  /** When true, never show Buy now � route to quote/contact. */
+  /** When true, never show Buy now — route to quote/contact. */
   quoteOnly?: boolean;
 };
 
@@ -59,9 +59,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-quick',
     description:
-      'PRODUCT/OPS: real portal entitlements (notifications + billing + CRM view + tasks), welcome onboarding tasks, setup PDF � automated in 24�48h. Automations NOT CONNECTED.',
+      'PRODUCT/OPS: real portal entitlements (notifications + billing + CRM view + tasks), welcome onboarding tasks, setup PDF — automated in 24–48h. Automations NOT CONNECTED.',
     descriptionSr:
-      'PROIZVOD/OPS: prava portal ovla�cenja (obave�tenja + billing + CRM pregled + tasks), welcome onboarding taskovi, setup PDF � 24�48h. Automatizacije NOT CONNECTED.',
+      'PROIZVOD/OPS: prava portal ovlašćenja (obaveštenja + billing + CRM pregled + tasks), welcome onboarding taskovi, setup PDF — 24–48h. Automatizacije NOT CONNECTED.',
     includes: [
       'Downloadable setup PDF + markdown pack',
       'Portal entitlements: notifications + billing + CRM view + tasks (not task-only theater)',
@@ -101,7 +101,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M4',
         includes: ['EU SMB competitive benchmark sheet (PDF) for your industry'],
-        includesSr: ['EU SMB benchmark cena/ponuda (PDF) za va�u industriju'],
+        includesSr: ['EU SMB benchmark cena/ponuda (PDF) za vašu industriju'],
       },
     ],
     leanCheckout: true,
@@ -132,7 +132,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M2',
         includes: ['Automation workflow templates seeded from your industry'],
-        includesSr: ['Automation workflow �abloni po va�oj industriji'],
+        includesSr: ['Automation workflow templates seeded from your industry'],
       },
     ],
     leanCheckout: true,
@@ -141,9 +141,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'setup-custom',
     description:
-      'Client-executable production deploy runbook (DNS/SSL/backup/monitoring marked PENDING), CRM seed, entitlements, enterprise setup PDF � your ops team executes go-live.',
+      'Client-executable production deploy runbook (DNS/SSL/backup/monitoring marked PENDING), CRM seed, entitlements, enterprise setup PDF — your ops team executes go-live.',
     descriptionSr:
-      'Klijentski production deploy runbook (DNS/SSL/backup/monitoring = PENDING), CRM seed, ovla�cenja, enterprise setup PDF � va� ops tim izvr�ava go-live.',
+      'Klijentski production deploy runbook (DNS/SSL/backup/monitoring = PENDING), CRM seed, ovlašćenja, enterprise setup PDF — vaš ops tim izvršava go-live.',
     includes: [
       'Production deploy runbook JSON (actionable checklist)',
       'Honest PENDING status for DNS/SSL/backup/monitoring',
@@ -165,19 +165,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'audit',
     description:
-      'DOCUMENT / consulting deliverable: AI technical audit PDF (executive summary, security, stack, 90-day roadmap, ROI) � not a live connected product.',
+      'SERVICE + DOCS: workspace, kickoff ticket, Billing invoice, commercial pack + AI-assisted audit PDF (not a pentest; not PDF-only).',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: AI tehnicki audit PDF (rezime, bezbednost, stack, 90-dnevni plan, ROI) � nije live povezan proizvod.',
+      'USLUGA + DOCS: workspace, kickoff ticket, faktura u Billing, commercial pack + AI audit PDF (nije pentest; nije samo PDF).',
     includes: [
-      'PDF report (6+ sections) � consulting document pack',
-      'Markdown source bundle',
+      'Kickoff ticket + workspace project',
+      'Invoice / receipt in Billing',
+      'Commercial delivery pack',
+      'PDF report (6+ sections) + markdown',
       'Industry-specific recommendations',
     ],
     excludes: [
       'On-site inspection',
       'Penetration testing',
       'Legal compliance sign-off',
-      'Live connected product / portal module activation',
+      'Live product hosting',
     ],
     anchorByPhase: { M0: 449, M2: 539, M4: 539, M6: 890 },
     phaseUnlocks: [
@@ -189,7 +191,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M1',
         includes: ['Stack comparison table vs 3 common alternatives in your niche'],
-        includesSr: ['Tabela poredenja stack-a sa 3 uobicajene alternative u ni�i'],
+        includesSr: ['Tabela poređenja stack-a sa 3 uobičajene alternative u niši'],
       },
       {
         fromPhase: 'M2',
@@ -199,7 +201,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M4',
         includes: ['Lead-enrichment notes for sales follow-up'],
-        includesSr: ['Lead enrichment bele�ke za sales follow-up'],
+        includesSr: ['Lead enrichment beleške za sales follow-up'],
       },
     ],
     leanCheckout: true,
@@ -208,21 +210,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'integration',
     description:
-      'DOCUMENT / consulting deliverable (docs + config): integration guide PDF plus integration-config.json (env map, webhooks, retry) � tools are not pre-connected; not a live connected product.',
+      'SERVICE + DOCS + config: kickoff/workspace + integration-config.json (DOCUMENTED_NOT_LIVE) + guide PDF — tools not pre-wired.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka (docs + config): integration vodic PDF + integration-config.json (env mapa, webhookovi, retry) � alati nisu unapred povezani; nije live povezan proizvod.',
+      'USLUGA + DOCS + config: kickoff/workspace + integration-config.json (DOCUMENTED_NOT_LIVE) + vodic PDF — alati nisu unapred povezani.',
     includes: [
-      'Integration guide PDF (document pack)',
-      'integration-config.json (env map, webhook endpoints, retry policy)',
-      'Onboarding checklist when you add API keys (PDF section + Markdown)',
-      'Auth notes for third-party connectors',
+      'Kickoff ticket + workspace + invoice',
+      'Integration guide PDF',
+      'integration-config.json (env map, webhooks, retry — not live)',
+      'Onboarding checklist for when you add API keys',
       'Sample event payloads for developers',
     ],
     excludes: [
-      'Live connection to client Stripe/ERP/CRM (CONFIGURATION REQUIRED � external credentials)',
-      'OAuth app registration on third-party tools (CONFIGURATION REQUIRED � external)',
+      'Live connection to client Stripe/ERP/CRM (CONFIGURATION REQUIRED — external credentials)',
+      'OAuth app registration on third-party tools (CONFIGURATION REQUIRED — external)',
       'Claiming tools are already connected without your API keys',
-      'Live connected product',
+      'Live wired integration',
     ],
     anchorByPhase: { M2: 690, M4: 690, M6: 890 },
     minCheckoutPhase: 'M2',
@@ -232,26 +234,26 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'workflow-design',
     description:
-      'DOCUMENT / consulting deliverable: workflow & SOP PDF (process map, automation steps, roles, KPIs, rollout) � not a live connected product.',
+      'SERVICE + DOCS: kickoff ticket, workspace, invoice + workflow/SOP PDF pack — documents accompany the engagement.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: workflow i SOP PDF (mapa procesa, koraci automatizacije, uloge, KPI, rollout) � nije live povezan proizvod.',
+      'USLUGA + DOCS: kickoff ticket, workspace, faktura + workflow/SOP PDF — dokument prati uslugu.',
     includes: [
-      'Workflow design PDF � consulting document pack',
+      'Kickoff ticket + workspace + invoice',
+      'Workflow design PDF + markdown',
       'SOP sections per process step',
-      'Module mapping',
       'Roles and KPIs section',
       'Rollout plan section',
     ],
     excludes: [
       'Building automations in client tools (add Setup or Integration)',
-      'Live connected product / automation CONNECTED',
+      'Live automation CONNECTED',
     ],
     anchorByPhase: { M0: 590, M2: 690, M4: 690, M6: 890 },
     phaseUnlocks: [
       {
         fromPhase: 'M3',
         includes: ['Automation module activation map for your portal'],
-        includesSr: ['Mapa automation modula za va� portal'],
+        includesSr: ['Mapa automation modula za vaš portal'],
       },
     ],
     leanCheckout: true,
@@ -260,9 +262,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'support-priority',
     description:
-      'Monthly retainer: welcome PDF, SLA/onboarding pack, support queue with a 24h response target, kickoff ticket, portal modules � human replies by our team.',
+      'Monthly retainer: welcome PDF, SLA/onboarding pack, support queue with a 24h response target, kickoff ticket, portal modules — human replies by our team.',
     descriptionSr:
-      'Mesecni retainer: welcome PDF, SLA/onboarding paket, support queue SLA 24h, kickoff tiket, moduli na portalu � odgovori na�eg tima.',
+      'Mesecni retainer: welcome PDF, SLA/onboarding paket, support queue SLA 24h, kickoff tiket, moduli na portalu — odgovori našeg tima.',
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
@@ -289,12 +291,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M0',
         includes: ['Support ticket categories preset in portal'],
-        includesSr: ['Unapred pode�ene kategorije support tiketa u portalu'],
+        includesSr: ['Unapred podešene kategorije support tiketa u portalu'],
       },
       {
         fromPhase: 'M1',
         includes: ['Email notification on new support ticket'],
-        includesSr: ['Email obave�tenje na novi support ticket'],
+        includesSr: ['Email obaveštenje na novi support ticket'],
       },
       {
         fromPhase: 'M3',
@@ -315,7 +317,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     description:
       'Dedicated retainer: 8h response target, SLA pack, kickoff ticket, video-meetings module, monthly health-check task, Slack notify when configured.',
     descriptionSr:
-      'Dedicated retainer: SLA 8h, SLA paket, kickoff tiket, video-meetings modul, mesecni health-check, Slack obave�tenje.',
+      'Dedicated retainer: SLA 8h, SLA paket, kickoff tiket, video-meetings modul, mesecni health-check, Slack obaveštenje.',
     includes: [
       'Welcome PDF',
       'SLA & onboarding pack (downloadable)',
@@ -339,9 +341,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'landing',
     description:
-      'Live client-branded landing at /sites/{slug} with niche sales copy (AI + vertical pack) � complete product after publish.',
+      'Live client-branded landing at /sites/{slug} with niche sales copy (AI + vertical pack) — complete product after publish.',
     descriptionSr:
-      'Live klijentski landing na /sites/{slug} sa niche copy-jem (AI + vertical pack) � kompletan proizvod nakon objave.',
+      'Live klijentski landing na /sites/{slug} sa niche copy-jem (AI + vertical pack) — kompletan proizvod nakon objave.',
     includes: [
       'Published live URL under client brand title',
       'Niche-specific sales copy (not Omni template chrome)',
@@ -382,12 +384,13 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'website-business',
     description:
-      'Multi-page client-branded business site (5+ pages with real section copy): services, pricing, contact � live at /sites/{slug}. Complete hosted site product.',
+      'PRODUCT + SERVICE + DOCS: multi-page client-branded business site (5+ pages) live at /sites/{slug}, kickoff ticket, commercial delivery pack, portal Billing/Tasks — not URL+PDF alone.',
     descriptionSr:
-      'Vi�estrani klijentski sajt (5+ strana sa realnim copy-jem): usluge, cene, kontakt � live na /sites/{slug}. Kompletan hostovani sajt.',
+      'PROIZVOD + USLUGA + DOCS: visestrani klijentski sajt (5+ strana) live na /sites/{slug}, kickoff ticket, commercial pack, portal Billing/Tasks — nije samo URL+PDF.',
     includes: [
       'Live URL with 5+ niche pages under client brand',
-      'Linked to your workspace project',
+      'Workspace project + kickoff support ticket',
+      'Commercial delivery pack + portal Billing/Tasks entitlements',
       'Services, pricing, contact (and supporting) pages with multi-section copy',
       'Delivery handoff PDF (URL + GBP/analytics guides)',
     ],
@@ -455,9 +458,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'white-label-setup',
     description:
-      'White-label brand PDF plus live partner landing (client-branded, not Omni chrome) � complete packaging product.',
+      'White-label brand PDF plus live partner landing (client-branded, not Omni chrome) — complete packaging product.',
     descriptionSr:
-      'White-label brand PDF plus live partner landing (klijentski brand, bez Omni chrome-a) � kompletan packaging proizvod.',
+      'White-label brand PDF plus live partner landing (klijentski brand, bez Omni chrome-a) — kompletan packaging proizvod.',
     includes: [
       'Brand & packaging PDF',
       'Live partner landing under client brand',
@@ -466,8 +469,8 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'One-pager section for partner pitch in PDF',
     ],
     excludes: [
-      'Partner legal agreements (CONFIGURATION REQUIRED � external counsel)',
-      'Custom domain DNS (not automated � partner owns DNS)',
+      'Partner legal agreements (CONFIGURATION REQUIRED — external counsel)',
+      'Custom domain DNS (not automated — partner owns DNS)',
     ],
     anchorByPhase: { M2: 1290, M4: 1290, M6: 1590 },
     minCheckoutPhase: 'M2',
@@ -477,17 +480,17 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'sales-enablement',
     description:
-      'DOCUMENT / consulting deliverable: sales enablement PDF (demo script, outreach hooks, FAQ, closing checklist) � not a live connected product.',
+      'SERVICE + DOCS: kickoff ticket, workspace, invoice + sales scripts/FAQ/closing checklist PDF.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: sales enablement PDF (demo skripta, outreach hook-ovi, FAQ, closing checklist) � nije live povezan proizvod.',
+      'USLUGA + DOCS: kickoff ticket, workspace, faktura + sales skripte/FAQ/closing checklist PDF.',
     includes: [
-      'Sales enablement PDF � consulting document pack',
+      'Kickoff ticket + workspace + invoice',
+      'Sales enablement PDF + markdown',
       'Industry-specific hooks',
       'FAQ from catalog',
-      'Demo script section',
-      'Closing checklist section',
+      'Demo script + closing checklist',
     ],
-    excludes: ['Live sales calls', 'CRM setup for sales team', 'Live connected product'],
+    excludes: ['Live sales calls', 'CRM setup for sales team'],
     anchorByPhase: { M2: 690, M4: 690, M6: 890 },
     minCheckoutPhase: 'M2',
     leanCheckout: true,
@@ -506,12 +509,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'FAQ seed (industry Q&A)',
       'Workspace project visible in portal',
       'Modules: CRM, automation, billing',
-      'Ongoing maintenance & vertical updates included monthly',
+      'Monthly vertical ops refresh (CRM/module status pack via retainer scheduler)',
     ],
     excludes: [
-      'Video avatar (CONFIGURATION REQUIRED � AI-support retainer + HeyGen/D-ID keys)',
+      'Video avatar (CONFIGURATION REQUIRED — AI-support retainer + HeyGen/D-ID keys)',
       'Outbound lead hunting in lean mode',
-      'Live LinkedIn/Google Ads API (CONFIGURATION REQUIRED � LINKEDIN_ADS_* / GOOGLE_ADS_* + live sync for CONNECTED)',
+      'Live LinkedIn/Google Ads API (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* + live sync for CONNECTED)',
     ],
     anchorByPhase: { M2: 249, M4: 249, M6: 349 },
     minCheckoutPhase: 'M2',
@@ -519,7 +522,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M4',
         includes: ['Weekly lead report artifact in CRM'],
-        includesSr: ['Nedeljni lead izve�taj u CRM-u'],
+        includesSr: ['Nedeljni lead izveštaj u CRM-u'],
       },
     ],
     leanCheckout: true,
@@ -528,12 +531,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'lead-gen-retainer',
     description:
-      'Monthly lead-gen ops pack COMPLETE after payment: deterministic CRM stages, sequence templates, weekly plan, channel board (same industry ? same structure), honest CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF � else leads_generated=0; Titanis never invents; simulated harvest cannot PASS.',
+      'Monthly lead-gen ops pack COMPLETE after payment: deterministic CRM stages, sequence templates, weekly plan, channel board (same industry ? same structure), honest CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — else leads_generated=0; Titanis never invents; simulated harvest cannot PASS.',
     descriptionSr:
-      'Mesecni lead-gen ops paket COMPLETE nakon placanja: deterministicki CRM stage-ovi, sequence �abloni, nedeljni plan, channel board (ista industrija ? ista struktura), po�ten CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF � inace leads_generated=0; Titanis ne izmi�lja; simulirani harvest ne mo�e PASS.',
+      'Mesecni lead-gen ops paket COMPLETE nakon placanja: deterministicki CRM stage-ovi, sequence šabloni, nedeljni plan, channel board (ista industrija ? ista struktura), pošten CONNECTED / NOT CONNECTED. Ads sync: LINKEDIN_ADS_* / GOOGLE_ADS_* + MARKETING_ADS_LIVE_SYNC. Live harvest: APOLLO_API_KEY + LEAD_DATABASE_ENABLED + LEAD_DATABASE_ROLLOUT_PHASE=F4 + LEAD_LIVE_HARVEST_ON_KICKOFF — inace leads_generated=0; Titanis ne izmišlja; simulirani harvest ne može PASS.',
     includes: [
       'Welcome PDF',
-      'Honest channel status board (CONNECTED / NOT CONNECTED � ads/Apollo CONFIGURATION REQUIRED)',
+      'Honest channel status board (CONNECTED / NOT CONNECTED · ads/Apollo CONFIGURATION REQUIRED)',
       'Deterministic pipeline workspace: CRM stages, sequence templates, weekly plan (industry-aware, reproducible)',
       'CRM and outreach workspace + actionable portal tasks + kickoff ticket',
       'Kickoff report (live harvest only when LEAD_LIVE_HARVEST_ON_KICKOFF + enrichment returns contacts; else leads_generated=0)',
@@ -544,7 +547,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
     ],
     excludes: [
       'Guaranteed qualified meetings',
-      'LinkedIn/Google Ads/Apollo live harvest without API credentials (CONFIGURATION REQUIRED � LINKEDIN_ADS_* / GOOGLE_ADS_* / Apollo keys + LEAD_* flags)',
+      'LinkedIn/Google Ads/Apollo live harvest without API credentials (CONFIGURATION REQUIRED — LINKEDIN_ADS_* / GOOGLE_ADS_* / Apollo keys + LEAD_* flags)',
       'Invented Titanis lead counts / simulated harvest / Math.random theater as fulfillment PASS',
       'Works fully in lean prod (scraper/outbound off)',
     ],
@@ -554,12 +557,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M5',
         includes: ['Autonomy micro-campaign suggestions in monthly report'],
-        includesSr: ['Autonomy micro-kampanje u mesecnom izve�taju'],
+        includesSr: ['Autonomy micro-kampanje u mesečnom izveštaju'],
       },
       {
         fromPhase: 'M6',
-        includes: ['Apollo-enriched lead batches when F4 is live (CONFIGURATION REQUIRED � Apollo keys)'],
-        includesSr: ['Apollo lead batch-evi kad je F4 aktivan (CONFIGURATION REQUIRED � Apollo kljucevi)'],
+        includes: ['Apollo-enriched lead batches when F4 is live (CONFIGURATION REQUIRED — Apollo keys)'],
+        includesSr: ['Apollo lead batch-evi kad je F4 aktivan (CONFIGURATION REQUIRED — Apollo ključevi)'],
       },
     ],
     leanCheckout: true,
@@ -581,7 +584,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'AI support maintenance & knowledge updates included monthly',
     ],
     excludes: [
-      'Ultra-realistic video avatar without HeyGen/D-ID keys (CONFIGURATION REQUIRED � external)',
+      'Ultra-realistic video avatar without HeyGen/D-ID keys (CONFIGURATION REQUIRED — external)',
     ],
     anchorByPhase: { M3: 279, M4: 279, M5: 279, M6: 349 },
     minCheckoutPhase: 'M3',
@@ -589,7 +592,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       {
         fromPhase: 'M6',
         includes: ['HeyGen/D-ID video avatar render when keys configured (CONFIGURATION REQUIRED)'],
-        includesSr: ['HeyGen/D-ID video avatar kad su kljucevi pode�eni (CONFIGURATION REQUIRED)'],
+        includesSr: ['HeyGen/D-ID video avatar kad su ključevi podešeni (CONFIGURATION REQUIRED)'],
       },
     ],
     leanCheckout: true,
@@ -598,9 +601,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'custom-software',
     description:
-      'Productized starter software: downloadable Node API + SPA scaffold archive (tar.gz) with README, .env.example, smoke tests, and handoff PDF � not a finished custom product or unlimited build hours.',
+      'Productized starter software: downloadable Node API + SPA scaffold archive (tar.gz) with README, .env.example, smoke tests, and handoff PDF — not a finished custom product or unlimited build hours.',
     descriptionSr:
-      'Produktivizovani starter softver: preuzimivi Node API + SPA scaffold arhiv (tar.gz) sa README, .env.example, smoke testovima i handoff PDF � nije gotov custom proizvod ni neograniceni razvoj.',
+      'Produktivizovani starter softver: preuzimivi Node API + SPA scaffold arhiv (tar.gz) sa README, .env.example, smoke testovima i handoff PDF — nije gotov custom proizvod ni neograničeni razvoj.',
     includes: [
       'Downloadable software-scaffold.tar.gz from portal fulfillment artifacts',
       'README with run and deploy instructions inside the archive',
@@ -618,9 +621,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-portal-presence',
     description:
-      'PRODUCT/OPS: quick client portal (login, billing, CRM view, welcome tasks, setup PDF) plus live niche landing � cheaper than buying setup + landing separately.',
+      'PRODUCT/OPS: quick client portal (login, billing, CRM view, welcome tasks, setup PDF) plus live niche landing — cheaper than buying setup + landing separately.',
     descriptionSr:
-      'PROIZVOD/OPS: brzi portal (login, billing, CRM pregled, welcome taskovi, setup PDF) + live landing za ni�u � jeftinije nego setup + landing odvojeno.',
+      'PROIZVOD/OPS: brzi portal (login, billing, CRM pregled, welcome taskovi, setup PDF) + live landing za nišu — jeftinije nego setup + landing odvojeno.',
     includes: [
       'Everything in Quick setup (incl. CRM view + onboarding tasks)',
       'Everything in Landing + copy',
@@ -640,9 +643,9 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-sales-launch',
     description:
-      'Live landing plus sales enablement PDF (demo script, FAQ, hooks) � launch sales and marketing together.',
+      'Live landing plus sales enablement (service companion + PDF) — launch sales and marketing together.',
     descriptionSr:
-      'Live landing + sales enablement PDF (demo script, FAQ, hookovi) � prodaja i marketing odjednom.',
+      'Live landing + sales enablement (service companion + PDF) — prodaja i marketing odjednom.',
     includes: [
       'Live public landing URL',
       'Sales enablement PDF + markdown',
@@ -658,19 +661,19 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'bundle-ops-clarity',
     description:
-      'DOCUMENT / consulting deliverable: technical audit PDF plus workflow/SOP design � docs pack, not a live connected product.',
+      'SERVICE + DOCS: audit + workflow PDFs with kickoff/service companion + invoice — dual consulting pack, not PDF theater.',
     descriptionSr:
-      'DOKUMENT / consulting isporuka: tehnicki audit PDF + workflow/SOP dizajn � paket dokumenata, nije live povezan proizvod.',
+      'USLUGA + DOCS: audit + workflow PDF sa kickoff/service companion + fakturom — dual consulting pack, ne PDF theater.',
     includes: [
-      'Full audit PDF + markdown � consulting document pack',
-      'Workflow & SOP PDF � consulting document pack',
+      'Kickoff ticket + workspace + invoice',
+      'Full audit PDF + markdown',
+      'Workflow & SOP PDF + markdown',
+      'Commercial delivery pack',
       '90-day roadmap cross-linked in audit',
-      'Industry-specific recommendations in both docs',
     ],
     excludes: [
       'On-site visit',
       'Building automations in your tools',
-      'Live connected product / portal module activation',
     ],
     anchorByPhase: { M3: 1090, M4: 1090, M6: 1490 },
     minCheckoutPhase: 'M3',
@@ -680,20 +683,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'seo-audit',
     description:
-      'SERVICE + DOCS: technical SEO crawl, Core Web Vitals, keyword gap analysis, competitor benchmark, 90-day monthly roadmap PDF. Monthly on-page improvements NOT CONNECTED until CMS access granted.',
+      'SERVICE + DOCS: technical SEO crawl, Core Web Vitals, keyword gap analysis, competitor benchmark, 90-day roadmap PDF (one-time). On-page CMS edits NOT CONNECTED until CMS access granted.',
     descriptionSr:
-      'USLUGA + DOKUMENTI: tehnički SEO audit, Core Web Vitals, analiza ključnih reči, benchmark konkurencije, 90-dnevni mesečni plan.',
+      'USLUGA + DOKUMENTI: tehnicki SEO audit, Core Web Vitals, analiza kljucnih reci, benchmark, 90-dnevni plan (jednokratno). CMS izmene NOT CONNECTED dok nema pristupa.',
     includes: [
       'Technical SEO crawl + indexing report',
       'Core Web Vitals assessment (LCP, INP, CLS)',
       'Keyword gap analysis vs competitors',
       'Competitor SEO benchmark (top 3)',
       'On-page optimization recommendations',
-      '90-day monthly SEO roadmap',
+      '90-day SEO roadmap (client-executable; not auto CMS edits)',
       'Kickoff ticket + service companion',
     ],
     excludes: [
       'CMS access / content changes (CONFIGURATION REQUIRED)',
+      'Automatic monthly on-page SEO without CMS access',
       'Backlink building / outreach',
       'Google Ads / PPC management',
     ],
@@ -716,11 +720,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'CAN-SPAM / GDPR / TCPA compliance checklist',
       'KPI tracking dashboard template',
       'Kickoff ticket + SLA pack',
+      'Monthly campaign ops refresh pack (scheduler) while subscription is active',
     ],
     excludes: [
-      'Sending infrastructure setup (CONFIGURATION REQUIRED)',
+      'Sending infrastructure setup (CONFIGURATION REQUIRED — Resend/Twilio keys)',
       'List building / lead acquisition',
-      'Ongoing campaign management',
+      'Sending live campaigns without your send keys',
     ],
     anchorByPhase: { M6: 349 },
     minCheckoutPhase: 'M6',
@@ -741,10 +746,11 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Competitor review benchmark',
       'Monthly growth targets + reporting framework',
       'Kickoff ticket + SLA pack',
+      'Monthly reputation ops pulse (scheduler) while subscription is active',
     ],
     excludes: [
       'Google Business / Yelp API configuration (CONFIGURATION REQUIRED)',
-      'Review outreach execution',
+      'Automated review requests without API keys',
       'Social media management',
     ],
     anchorByPhase: { M6: 249 },
@@ -786,7 +792,7 @@ export function getPackageAnchorEur(deliverableId: string, phase: FactoryPhase =
 export type ResolvedPackageOffer = {
   includes: string[];
   includesSr: string[];
-  /** Unlocks not yet active at current phase � shown as �coming with factory growth�. */
+  /** Unlocks not yet active at current phase — shown as "coming with factory growth". */
   upcomingUnlocks: PhaseUnlock[];
 };
 
@@ -832,7 +838,7 @@ export type PackageAvailability = {
   statusLabel: string;
 };
 
-/** UI label for pricing / products � matches factory phase and lean checkout gates. */
+/** UI label for pricing / products — matches factory phase and lean checkout gates. */
 export function getPackageAvailability(deliverableId: string, mode?: ProdMode): PackageAvailability {
   const spec = getPackageDeliverySpec(deliverableId);
   const checkoutAllowed = canCheckoutPackage(deliverableId, mode) && !spec?.quoteOnly;
@@ -857,7 +863,7 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
       saleStatus,
       badge: 'Request a quote',
       badgeTone: 'contact',
-      statusLabel: 'This package is sold via quote � contact us for a written proposal.',
+      statusLabel: 'This package is sold via quote — contact us for a written proposal.',
     };
   }
 
@@ -871,7 +877,7 @@ export function getPackageAvailability(deliverableId: string, mode?: ProdMode): 
     badge: 'Currently under construction',
     badgeTone: 'upcoming',
     statusLabel: opensAt
-      ? 'Currently under construction. Contact us for early access � checkout opens when this package is ready.'
+      ? 'Currently under construction. Contact us for early access — checkout opens when this package is ready.'
       : 'Currently under construction. Contact us if you want to be notified when checkout opens.',
   };
 }

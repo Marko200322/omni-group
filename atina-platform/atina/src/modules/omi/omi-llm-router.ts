@@ -1,5 +1,5 @@
 import { config } from '../../config';
-import { getAiClient, type AiChatMessage } from '../../integrations';
+import { getAiClient, AiClient, type AiChatMessage } from '../../integrations';
 
 export type OmiModelTier = 'simple' | 'primary' | 'expert';
 
@@ -194,7 +194,12 @@ export async function completeOmiLlmTurn(input: {
     return null;
   }
 
-  const ai = getAiClient();
+  // Use dedicated Omi API key/URL if configured — keeps factory OpenRouter key separate.
+  const omiKey = config.aggregators.omiApiKey?.trim();
+  const omiUrl = config.aggregators.omiApiUrl?.trim() || 'https://api.deepseek.com/v1';
+  const ai = omiKey
+    ? new AiClient({ url: omiUrl, key: omiKey })
+    : getAiClient();
   if (!ai.isConfigured()) return null;
 
   let tier = resolveOmiModelTier({

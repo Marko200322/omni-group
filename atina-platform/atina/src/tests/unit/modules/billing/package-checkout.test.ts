@@ -19,7 +19,7 @@ describe('catalog checkout', () => {
 
   it('opens all catalog packages for self-serve checkout', () => {
     expect(PACKAGE_DELIVERY_SPECS).toHaveLength(DELIVERABLE_CATALOG.length);
-    expect(DELIVERABLE_CATALOG.length).toBe(20);
+    expect(DELIVERABLE_CATALOG.length).toBe(23); // catalog grew 20 → 23 (seo/email/reputation)
     for (const item of DELIVERABLE_CATALOG) {
       expect(canCheckoutPackage(item.id)).toBe(true);
     }

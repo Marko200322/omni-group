@@ -178,6 +178,17 @@ describe('OMI multi-turn conversation intelligence', () => {
     expect(formatOmiAdvisorReply(r7)).not.toMatch(/12,000|12000/);
   });
 
+  it('explicit buy with words between which and package goes to recommend', () => {
+    const msg =
+      'Retail shop needs better Google reviews and reputation. Which Omni package and what price?';
+    const rec = recommendOmiProducts({ message: msg });
+    expect(rec.consultStage).toBe('recommend');
+    expect(rec.products[0]?.id).toBe('reputation-management');
+    expect(formatOmiAdvisorReply(rec)).toMatch(/€|reputation|review/i);
+    expect(formatOmiAdvisorReply(rec)).not.toMatch(/understand the situation before recommending/i);
+    expect(formatOmiAdvisorReply(rec)).not.toMatch(/I would consider setup-quick/i);
+  });
+
   it('handles short continuity replies against prior state', () => {
     const prior = [
       'People copy orders between Excel and the shop about 80 hours a month.',

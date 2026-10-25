@@ -11,9 +11,9 @@ export function getPublicCatalogStats() {
   const online = listOnlineVerticalEntries().length;
   return {
     industryGroups: INDUSTRY_CATEGORIES.length,
-    /** Base fulfillment capability templates */
+    /** Base fulfillment capability templates (always 23 = 20 expert + 3 bundles; never 17/20) */
     basePackages: BASE_DELIVERABLE_CATALOG.length,
-    /** First-class sellable industry packages (~1000) */
+    /** First-class sellable industry packages (base × industries; skip if no problem specs) */
     sellablePackages: FULL_PACKAGE_CATALOG.length,
     /** Alias used by some surfaces — same as sellablePackages */
     catalogSkuCount: FULL_PACKAGE_CATALOG.length,

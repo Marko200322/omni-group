@@ -21,7 +21,7 @@ export class AiRagRepository {
       return query(
         `SELECT id, source_id, chunk_index, content, metadata, created_at
          FROM ai_rag_chunks
-         WHERE user_id = $1 AND source_id = $2 AND content ILIKE $3
+         WHERE (user_id = $1 OR source_id = 'omni-system-faq') AND source_id = $2 AND content ILIKE $3
          ORDER BY created_at DESC
          LIMIT $4`,
         [userId, sourceId, `%${pattern}%`, limit]
@@ -30,7 +30,7 @@ export class AiRagRepository {
     return query(
       `SELECT id, source_id, chunk_index, content, metadata, created_at
        FROM ai_rag_chunks
-       WHERE user_id = $1 AND content ILIKE $2
+       WHERE (user_id = $1 OR source_id = 'omni-system-faq') AND content ILIKE $2
        ORDER BY created_at DESC
        LIMIT $3`,
       [userId, `%${pattern}%`, limit]

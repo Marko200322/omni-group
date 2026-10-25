@@ -90,6 +90,26 @@ export class MonitoringRepository {
     );
   }
 
+  /** Idempotent seed for probe codes added after migration 045. */
+  ensureService(input: {
+    code: string;
+    name: string;
+    layer: string;
+    isCritical?: boolean;
+  }) {
+    return query(
+      `INSERT INTO monitoring_services (code, name, layer, is_critical)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (code) DO UPDATE
+         SET name = EXCLUDED.name,
+             layer = EXCLUDED.layer,
+             is_critical = EXCLUDED.is_critical,
+             is_active = TRUE,
+             updated_at = NOW()`,
+      [input.code, input.name, input.layer, input.isCritical ?? false],
+    );
+  }
+
   insertHealthCheck(input: {
     serviceCode: string;
     status: string;

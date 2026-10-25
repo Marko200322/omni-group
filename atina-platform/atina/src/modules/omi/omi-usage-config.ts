@@ -48,7 +48,7 @@ export function getOmiUsageConfig(): OmiUsageConfig {
     dailyBudgetUsd: clampFloat(optionalNumber('OMI_DAILY_BUDGET_USD', 5), 0.5, 100_000),
     budgetReservePercent: clampFloat(optionalNumber('OMI_BUDGET_RESERVE_PERCENT', 20), 0, 90),
     anonymousDailyMessages: clampInt(optionalNumber('OMI_ANONYMOUS_DAILY_MESSAGES', 20), 1, 10_000),
-    anonymousHourlyMessages: clampInt(optionalNumber('OMI_ANONYMOUS_HOURLY_MESSAGES', 8), 1, 1000),
+    anonymousHourlyMessages: clampInt(optionalNumber('OMI_ANONYMOUS_HOURLY_MESSAGES', 24), 1, 1000),
     authDailyMessages: clampInt(optionalNumber('OMI_AUTH_DAILY_MESSAGES', 60), 1, 50_000),
     authMonthlyMessages: clampInt(optionalNumber('OMI_AUTH_MONTHLY_MESSAGES', 500), 1, 500_000),
     ipPerMinute: clampInt(optionalNumber('OMI_IP_PER_MINUTE', 6), 1, 600),

@@ -266,7 +266,7 @@ export class SupportTicketAgentService {
           .join('\n')
           .slice(0, 3500),
         channel: 'in_app',
-        actionUrl: '/dashboard/tasks',
+        actionUrl: '/dashboard/projects',
         metadata: {
           taskId,
           solved: input.solved,

@@ -373,12 +373,13 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'website-business',
     description:
-      'Multi-page client-branded business site (5+ pages with real section copy): services, pricing, contact — live at /sites/{slug}. Complete hosted site product.',
+      'PRODUCT + SERVICE + DOCS: multi-page client-branded business site (5+ pages) live at /sites/{slug}, kickoff ticket, commercial delivery pack, portal Billing/Tasks — not URL+PDF alone.',
     descriptionSr:
-      'Višestrani klijentski sajt (5+ strana sa realnim copy-jem): usluge, cene, kontakt — live na /sites/{slug}. Kompletan hostovani sajt.',
+      'PROIZVOD + USLUGA + DOCS: višestrani klijentski sajt (5+ strana) live na /sites/{slug}, kickoff ticket, commercial pack, portal Billing/Tasks — nije samo URL+PDF.',
     includes: [
       'Live URL with 5+ niche pages under client brand',
-      'Linked to your workspace project',
+      'Workspace project + kickoff support ticket',
+      'Commercial delivery pack + portal Billing/Tasks entitlements',
       'Services, pricing, contact (and supporting) pages with multi-section copy',
       'Delivery handoff PDF (URL + GBP/analytics guides)',
     ],
@@ -498,7 +499,7 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'FAQ seed (industry Q&A)',
       'Workspace project visible in portal',
       'Modules: CRM, automation, billing',
-      'Ongoing maintenance & vertical updates included monthly',
+      'Monthly vertical ops refresh (CRM/module status pack via retainer scheduler)',
     ],
     excludes: [
       'Video avatar (CONFIGURATION REQUIRED — AI-support retainer + HeyGen/D-ID keys)',
@@ -676,20 +677,21 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
   {
     deliverableId: 'seo-audit',
     description:
-      'SERVICE + DOCS: technical SEO crawl, Core Web Vitals, keyword gap analysis, competitor benchmark, 90-day monthly roadmap PDF. Monthly on-page improvements NOT CONNECTED until CMS access granted.',
+      'SERVICE + DOCS: technical SEO crawl, Core Web Vitals, keyword gap analysis, competitor benchmark, 90-day roadmap PDF (one-time engagement). On-page CMS edits NOT CONNECTED until CMS access granted.',
     descriptionSr:
-      'USLUGA + DOKUMENTI: tehnički SEO audit, Core Web Vitals, analiza ključnih reči, benchmark konkurencije, 90-dnevni mesečni plan.',
+      'USLUGA + DOKUMENTI: tehnički SEO audit, Core Web Vitals, analiza ključnih reči, benchmark konkurencije, 90-dnevni plan (jednokratno). CMS izmene NOT CONNECTED dok nema pristupa.',
     includes: [
       'Technical SEO crawl + indexing report',
       'Core Web Vitals assessment (LCP, INP, CLS)',
       'Keyword gap analysis vs competitors',
       'Competitor SEO benchmark (top 3)',
       'On-page optimization recommendations',
-      '90-day monthly SEO roadmap',
+      '90-day SEO roadmap (client-executable; not auto CMS edits)',
       'Kickoff ticket + service companion',
     ],
     excludes: [
       'CMS access / content changes (CONFIGURATION REQUIRED)',
+      'Automatic monthly on-page SEO without CMS access',
       'Backlink building / outreach',
       'Google Ads / PPC management',
     ],
@@ -712,11 +714,12 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'CAN-SPAM / GDPR / TCPA compliance checklist',
       'KPI tracking dashboard template',
       'Kickoff ticket + SLA pack',
+      'Monthly campaign ops refresh pack (scheduler) while subscription is active',
     ],
     excludes: [
-      'Sending infrastructure setup (CONFIGURATION REQUIRED)',
+      'Sending infrastructure setup (CONFIGURATION REQUIRED — Resend/Twilio keys)',
       'List building / lead acquisition',
-      'Ongoing campaign management',
+      'Sending live campaigns without your send keys',
     ],
     anchorByPhase: { M6: 349 },
     minCheckoutPhase: 'M6',
@@ -737,10 +740,11 @@ export const PACKAGE_DELIVERY_SPECS: PackageDeliverySpec[] = [
       'Competitor review benchmark',
       'Monthly growth targets + reporting framework',
       'Kickoff ticket + SLA pack',
+      'Monthly reputation ops pulse (scheduler) while subscription is active',
     ],
     excludes: [
       'Google Business / Yelp API configuration (CONFIGURATION REQUIRED)',
-      'Review outreach execution',
+      'Automated review requests without API keys',
       'Social media management',
     ],
     anchorByPhase: { M6: 249 },

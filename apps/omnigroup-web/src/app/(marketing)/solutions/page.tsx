@@ -66,14 +66,17 @@ export default async function SolutionsPage({
           Industry catalog
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-slate-400">
-          {total} industry landings. Each starts from one of {SAAS_PLANS.length} SaaS plans, then can add any of
-          the {catalogStats.expertServiceCount} expert services or {catalogStats.bundleCount} catalog bundles —{' '}
-          {catalogStats.catalogSkuCount} SKUs, same catalog and list prices as Pricing.{' '}
-          {catalogStats.readyToBuyCount} SKUs are ready to buy now. Ready packages with fixed scope are on{' '}
+          {total.toLocaleString('en-US')} niche landing pages (paginated — {PAGE_SIZE} per page). Each niche can start
+          from one of {SAAS_PLANS.length} SaaS plans, then add any of the {catalogStats.basePackages} delivery
+          capabilities ({catalogStats.expertServiceCount} expert + {catalogStats.bundleCount} bundles ={' '}
+          {catalogStats.basePackages}; industry SKUs = {catalogStats.basePackages} ×{' '}
+          {catalogStats.industryGroups} ≈ {catalogStats.sellablePackages.toLocaleString('en-US')}) —
+          {catalogStats.sellablePackages.toLocaleString('en-US')} industry packages on the same price book as{' '}
           <Link href="/pricing" className="text-violet-300 hover:text-white">
             Pricing
           </Link>
-          .
+          .{' '}
+          {catalogStats.readyToBuyCount.toLocaleString('en-US')} marked Ready to buy.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

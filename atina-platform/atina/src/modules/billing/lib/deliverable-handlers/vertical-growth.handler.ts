@@ -27,6 +27,7 @@ export const verticalPackFulfillmentHandler: DeliverableFulfillmentHandler = {
     const doc = await docs.generateVerticalPackBrief({
       clientName: ctx.clientName,
       industryCategory: ctx.industryCategory,
+      generationHints: ctx.generationHints,
     });
     const pdf = await persistDeliverablePdf({
       ctx,
@@ -140,10 +141,12 @@ export const growthFulfillmentHandler: DeliverableFulfillmentHandler = {
         ? await docs.generateWhiteLabelPack({
             clientName: ctx.clientName,
             industryCategory: ctx.industryCategory,
+            generationHints: ctx.generationHints,
           })
         : await docs.generateSalesEnablement({
             clientName: ctx.clientName,
             industryCategory: ctx.industryCategory,
+            generationHints: ctx.generationHints,
           });
 
     const pdf = await persistDeliverablePdf({

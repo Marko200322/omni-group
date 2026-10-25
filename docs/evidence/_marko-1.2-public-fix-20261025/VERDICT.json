@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-25",
+  "verdict": "MARKO_1_2_PUBLIC_COPY_PASS",
+  "probeBase": "http://164.68.127.15:3010",
+  "apiBase": "http://164.68.127.15:3000",
+  "checks": {
+    "fffdOnPricingServices": 0,
+    "consultingDocumentPack": 0,
+    "pdfReportClean": true,
+    "twoPromoFaq": true,
+    "saasFoundingLabel": true,
+    "crossPagePricingVsServices": "MATCH_23",
+    "productsUnfilteredCards": "NONE_BY_DESIGN",
+    "industryMatrix": "50/50"
+  },
+  "notTestedThisRound": ["checkout_purchase", "omi_chat", "logged_in_portal"]
+}

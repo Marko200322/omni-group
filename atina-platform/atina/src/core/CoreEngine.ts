@@ -27,6 +27,8 @@ import { PaymentsModule } from '../modules/payments/payments.module';
 import { VideoMeetingsModule } from '../modules/video-meetings/video-meetings.module';
 import { LiveCallAvatarModule } from '../modules/live-call-avatar/live-call-avatar.module';
 import { TasksModule } from '../modules/tasks/tasks.module';
+import { DocumentsModule } from '../modules/documents/documents.module';
+import { SupportModule } from '../modules/support/support.module';
 import { AutomationModule } from '../modules/automation/automation.module';
 import { CrmModule } from '../modules/crm/crm.module';
 import { TemplateEngineModule } from '../modules/template-engine/template-engine.module';
@@ -134,6 +136,8 @@ export class CoreEngine {
     moduleRegistry.register(new VideoMeetingsModule());
     moduleRegistry.register(new LiveCallAvatarModule());
     moduleRegistry.register(new TasksModule());
+    moduleRegistry.register(new DocumentsModule());
+    moduleRegistry.register(new SupportModule());
     if (config.features.crm) moduleRegistry.register(new CrmModule());
     moduleRegistry.register(new TemplateEngineModule());
     moduleRegistry.register(new TitanScoreModule());
@@ -455,6 +459,15 @@ export class CoreEngine {
       factoryPhaseAutoService.startPeriodicEvaluation();
     } catch (error) {
       logger.warn('Factory phase AUTO evaluator not started', { error });
+    }
+
+    try {
+      const { SystemFaqSeedService } = await import(
+        '../modules/ai-rag/service/system-faq-seed.service'
+      );
+      await SystemFaqSeedService.seedSystemFaq();
+    } catch (error) {
+      logger.warn('System FAQ seed failed (non-fatal)', { error });
     }
 
     process.on('SIGTERM', () => this.shutdown('SIGTERM'));

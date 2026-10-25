@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-25",
+  "probeBase": "http://164.68.127.15:3010",
+  "note": "nginx :8080 down this probe; web container :3010 healthy after soft deploy",
+  "checks": {
+    "mojibakeFFFD": {
+      "pricing": 0,
+      "solutions": 0,
+      "services": 0,
+      "home": 0,
+      "pass": true
+    },
+    "customDeploy": {
+      "pricing": 0,
+      "services": 0,
+      "pass": true
+    },
+    "productionRunbook": {
+      "pricing": 1,
+      "services": 1,
+      "pass": true
+    },
+    "seventeenExpert": {
+      "all": 0,
+      "pass": true
+    },
+    "formula23": {
+      "solutionsRsc": "20 expert + 3 bundles = 23; 23 × 50 ≈ 1,150",
+      "pass": true
+    },
+    "sellable1150": {
+      "pricingMentions_1_150": 6,
+      "solutions": 6,
+      "services": 3,
+      "pass": true
+    }
+  },
+  "markoEmailItems": {
+    "P0_skuCount": "FIXED — single formula 20 expert + 3 bundles = 23 base; no 17+3 drift in live HTML",
+    "P0_naming": "FIXED — setup-custom displayed as Production runbook (Custom deploy=0)",
+    "P1_mojibake": "FIXED — U+FFFD count 0 on /pricing /solutions /services",
+    "P1_industryGenericity": "OPEN — not claimed fixed this pass; needs niche relevance pass later",
+    "statusHonesty": "KEEP — Stripe/email not auto-green (unchanged)"
+  },
+  "verdict": "MARKO_1_1_CATALOG_COPY_PASS"
+}

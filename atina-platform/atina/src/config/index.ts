@@ -144,6 +144,9 @@ export const config = {
     omiExpertModel: optional('OMI_EXPERT_MODEL', ''),
     omiHistoryTurns: optionalNumber('OMI_HISTORY_TURNS', 6),
     omiMaxContextChars: optionalNumber('OMI_MAX_CONTEXT_CHARS', 3500),
+    /** Dedicated Omi chat API (separate from factory OpenRouter key). Empty → falls back to main AI_KEY/AI_URL. */
+    omiApiKey: optional('OMI_API_KEY', ''),
+    omiApiUrl: optional('OMI_API_URL', ''),
     businessDev: {
       url: optional('BUSINESS_AND_DEV_URL', ''),
       key: optional('BUSINESS_AND_DEV_KEY', ''),
@@ -387,7 +390,7 @@ export const config = {
     dailyBudgetUsd: optionalNumber('OMI_DAILY_BUDGET_USD', 5),
     budgetReservePercent: optionalNumber('OMI_BUDGET_RESERVE_PERCENT', 20),
     anonymousDailyMessages: optionalNumber('OMI_ANONYMOUS_DAILY_MESSAGES', 20),
-    anonymousHourlyMessages: optionalNumber('OMI_ANONYMOUS_HOURLY_MESSAGES', 8),
+    anonymousHourlyMessages: optionalNumber('OMI_ANONYMOUS_HOURLY_MESSAGES', 24),
     authDailyMessages: optionalNumber('OMI_AUTH_DAILY_MESSAGES', 60),
     authMonthlyMessages: optionalNumber('OMI_AUTH_MONTHLY_MESSAGES', 500),
     ipPerMinute: optionalNumber('OMI_IP_PER_MINUTE', 6),
@@ -406,6 +409,9 @@ export const config = {
   },
   monitoring: {
     enabled: optionalBool('MONITORING_ENABLED', true),
+    /** Periodic probe suite so admin Monitoring stays fresh (default every 5 min). */
+    schedulerEnabled: optionalBool('MONITORING_SCHEDULER_ENABLED', true),
+    schedulerIntervalMs: optionalNumber('MONITORING_SCHEDULER_INTERVAL_MS', 300_000),
     workflowTemplateSuccessAlertThreshold: optionalNumber(
       'WORKFLOW_TEMPLATE_SUCCESS_ALERT_THRESHOLD',
       80

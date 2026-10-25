@@ -12,6 +12,12 @@ import {
   PatchIncidentBodyDto,
 } from './dto/monitoring.dto';
 import { MONITORING_ENGINE_VERSION } from './lib/constants';
+import { config } from '../../config';
+import logger from '../../utils/logger';
+import {
+  getMonitoringScheduler,
+  stopMonitoringScheduler,
+} from './service/monitoring-scheduler.service';
 
 export class MonitoringModule implements IModule {
   name = 'Omni Monitoring & Intelligence Engine';
@@ -27,6 +33,22 @@ export class MonitoringModule implements IModule {
 
   async initialize(): Promise<void> {
     const auth = [authenticate, requireAdmin];
+
+    this.router.get(
+      '/scheduler/status',
+      ...auth,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.getSchedulerStatus
+    );
+
+    this.router.post(
+      '/scheduler/tick',
+      ...auth,
+      validateQuery(StrictEmptyQueryDto),
+      validateBody(StrictEmptyBodyDto),
+      this.controller.tickScheduler
+    );
 
     this.router.get(
       '/overview',
@@ -116,5 +138,18 @@ export class MonitoringModule implements IModule {
       validateBody(PatchIncidentBodyDto),
       this.controller.patchIncident
     );
+
+    if (config.monitoring.enabled && config.monitoring.schedulerEnabled) {
+      logger.info('Monitoring: starting probe scheduler', {
+        intervalMs: config.monitoring.schedulerIntervalMs,
+      });
+      getMonitoringScheduler().start();
+    } else {
+      logger.info('Monitoring: probe scheduler disabled');
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    stopMonitoringScheduler();
   }
 }

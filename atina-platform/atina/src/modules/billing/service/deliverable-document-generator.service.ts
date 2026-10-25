@@ -1102,18 +1102,23 @@ export class DeliverableDocumentGeneratorService {
     try {
       const chat = await ai.chatCompletions({
         maxTokens: 4500,
-        temperature: generationHints?.orderIdentity ? 0.55 : 0.45,
+        temperature: generationHints?.orderIdentity ? 0.72 : 0.45,
         messages: [
           {
             role: 'system',
             content: `${system}
 
 Hard requirements: JSON only {"title","subtitle","sections":[{"heading","body"}]}.
-Minimum 4 sections; each body ≥ 80 chars; include checklists or numbered milestones.
-Name the client and industry. No lorem ipsum. No stub one-liners.
+Minimum 5 sections; each body ≥ 120 chars; include checklists or numbered milestones.
+Name the client and industry in the title/subtitle and in at least 3 section bodies.
+No lorem ipsum. No stub one-liners. No interchangeable agency boilerplate.
 ${
   generationHints?.orderIdentity
-    ? `This is order ${generationHints.orderIdentity.shortRef} — write order-specific discovery questions and recommendations; never a reusable blank template.`
+    ? `UNIQUENESS (mandatory): order ${generationHints.orderIdentity.shortRef} for this buyer only.
+- Weave order ${generationHints.orderIdentity.shortRef} into discovery questions and acceptance criteria.
+- Address mustSolveProblems / industryPainPoints from the user JSON with concrete owners, tools, and 30-day KPIs for THIS client — not generic "portal + CRM" filler that fits any niche.
+- Never write a reusable blank template another payment could reuse verbatim.
+- If two different clients in the same industry ordered the same package, their packs must still differ in examples, risks, and next actions.`
     : ''
 }`,
           },

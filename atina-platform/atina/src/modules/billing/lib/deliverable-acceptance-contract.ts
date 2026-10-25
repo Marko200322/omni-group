@@ -169,7 +169,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   },
   'setup-custom': {
     deliverableId: 'setup-custom',
-    name: 'Custom deploy',
+    name: 'Production runbook',
     description: DELIVERABLE_CATALOG[2].description,
     billing: 'one_time',
     criteria: [
@@ -255,6 +255,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.businessProject,
       CR.businessPages,
       CR.pdf,
+      CR.serviceCompanion,
     ],
   },
   'website-ecommerce': {
@@ -272,6 +273,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.ecommerceCatalogVisible,
       CR.ecommerceHonesty,
       CR.pdf,
+      CR.serviceCompanion,
     ],
   },
   'white-label-setup': {
@@ -405,7 +407,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   },
   'seo-audit': {
     deliverableId: 'seo-audit',
-    name: 'SEO audit + monthly SEO',
+    name: 'SEO audit + 90-day roadmap',
     description: DELIVERABLE_CATALOG.find((d) => d.id === 'seo-audit')!.description,
     billing: 'one_time',
     criteria: [...COMMERCIAL_BASE, CR.pdf, CR.docSubstance, CR.serviceCompanion],
@@ -423,6 +425,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.slaPack,
       CR.kickoffTicket,
       CR.modulesBootstrap,
+      CR.serviceCompanion,
     ],
   },
   'reputation-management': {
@@ -438,6 +441,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
       CR.slaPack,
       CR.kickoffTicket,
       CR.modulesBootstrap,
+      CR.serviceCompanion,
     ],
   },
 };

@@ -17,6 +17,8 @@ const ANGLES = [
   'expert services when this niche needs a human to implement it',
   'subscription plans that match how this niche actually ships',
   'one source of truth for this niche — orders, files, and invoices',
+  'scoped delivery packs (setup, audit, or growth) sized for this niche',
+  'billing and delivery status that clients in this niche can see without chasing email',
 ];
 
 function isGenericCatalogBlurb(text: string): boolean {
@@ -42,7 +44,13 @@ export function buildVerticalLandingCopy(input: {
   const angle = ANGLES[seed % ANGLES.length] as string;
   const launch = SAAS_PLANS[0];
   const existing = fixPublicAcronyms(input.valueProp?.trim() ?? '');
-  const generated = `${work} teams usually stall when ${pain}. Omni Group gives ${category} operators ${angle}, starting from ${launch.name} at €${launch.monthly.EUR} / $${launch.monthly.USD} per month. Expert services for ${work} are scoped deliverables — a portal, documents, or a live page — not a custom rebuild of the whole practice.`;
+  const closers = [
+    `Expert services for ${work} are fixed-scope deliverables — portal, docs, or a live page — not a rebuild of the whole practice.`,
+    `Add a ${work}-specific package only when you need it; the workspace already covers day-to-day ops.`,
+    `Same catalog price book as every other niche — problems and extras change with ${work}, not the SKU list.`,
+  ];
+  const closer = closers[seed % closers.length] as string;
+  const generated = `${work} teams usually stall when ${pain}. Omni Group gives ${category} operators ${angle}, starting from ${launch.name} at €${launch.monthly.EUR} / $${launch.monthly.USD} per month. ${closer}`;
   const lede = existing.length >= 80 && !isGenericCatalogBlurb(existing) ? existing : generated;
   const headlines = [
     `${name}: ${work} operations for ${category} teams`,

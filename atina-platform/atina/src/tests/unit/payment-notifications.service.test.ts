@@ -18,6 +18,12 @@ jest.mock('../../modules/admin/service/admin-ops-notifier.service', () => ({
   adminOpsNotifier: { notify: jest.fn().mockResolvedValue(true) },
 }));
 
+// Mock PDF generators to avoid accumulating large buffers across tests (prevents GC pressure / OOM)
+jest.mock('../../modules/payments/service/invoice-pdf.service', () => ({
+  generateInvoicePdfBuffer: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')),
+  generateProformaPdfBuffer: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')),
+}));
+
 describe('PaymentNotificationsService', () => {
   let service: PaymentNotificationsService;
 

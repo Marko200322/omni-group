@@ -14,7 +14,8 @@ export type OmiProblemConcept =
   | 'BOOKING_FRICTION'
   | 'BILLING_SCATTERED'
   | 'DEMAND_UNSPECIFIED'
-  | 'PROCESS_ERRORS_OR_CHURN';
+  | 'PROCESS_ERRORS_OR_CHURN'
+  | 'WEAK_REPUTATION';
 
 export type OmiCapability =
   | 'integration'
@@ -29,7 +30,10 @@ export type OmiCapability =
   | 'reporting'
   | 'support_deflection'
   | 'billing_ops'
-  | 'demand_discovery';
+  | 'demand_discovery'
+  | 'reputation_ops'
+  | 'seo_ops'
+  | 'email_ops';
 
 export type OmiProblemClassification = {
   concepts: OmiProblemConcept[];
@@ -49,6 +53,7 @@ export const CONCEPT_LABEL: Record<OmiProblemConcept, string> = {
   BILLING_SCATTERED: 'billing scattered across tools',
   DEMAND_UNSPECIFIED: 'need for demand, conversion, or follow-up — not specified which',
   PROCESS_ERRORS_OR_CHURN: 'errors or customer loss in the current process',
+  WEAK_REPUTATION: 'weak reviews / reputation online',
 };
 
 export const CONCEPT_CAPABILITIES: Record<OmiProblemConcept, OmiCapability[]> = {
@@ -63,6 +68,7 @@ export const CONCEPT_CAPABILITIES: Record<OmiProblemConcept, OmiCapability[]> = 
   BILLING_SCATTERED: ['billing_ops', 'customer_portal'],
   DEMAND_UNSPECIFIED: ['demand_discovery'],
   PROCESS_ERRORS_OR_CHURN: ['workflow_automation', 'process_automation'],
+  WEAK_REPUTATION: ['reputation_ops'],
 };
 
 /** Catalog SKUs only — capabilities they actually cover. Bundles are broad, not specialists. */
@@ -85,6 +91,9 @@ export const SKU_CAPABILITIES: Record<string, OmiCapability[]> = {
   'bundle-portal-presence': ['customer_portal', 'public_web'],
   'bundle-sales-launch': ['public_web', 'lead_followup'],
   'bundle-ops-clarity': ['workflow_automation', 'reporting'],
+  'reputation-management': ['reputation_ops', 'support_deflection'],
+  'seo-audit': ['seo_ops', 'public_web', 'conversion_investigation'],
+  'email-marketing': ['email_ops', 'lead_followup', 'demand_discovery'],
 };
 
 const GENERIC_BUNDLES = new Set([
@@ -195,6 +204,12 @@ export function classifyOmiProblems(message: string): OmiProblemClassification {
   if (/\b(more customers|vise kupac|vise klijen|more sales|vise prodaj)\b/.test(n)) {
     add('DEMAND_UNSPECIFIED');
   }
+  if (
+    /\b(review|reviews|reputation|reputacij|google business|google maps|yelp|ocen|recenzij)\b/.test(n) ||
+    (hasStem(stems, 'google') && anyStem(stems, ['review', 'rating', 'star', 'maps', 'business']))
+  ) {
+    add('WEAK_REPUTATION');
+  }
 
   const capabilities: OmiCapability[] = [];
   for (const concept of concepts) {
@@ -274,8 +289,21 @@ export function scoreOmiPackage(
   if (overlap.includes('reporting') && classified.concepts.includes('POOR_REPORTING')) {
     score += 24;
   }
+  if (overlap.includes('reputation_ops') && classified.concepts.includes('WEAK_REPUTATION')) {
+    score += 32;
+  }
   if (classified.concepts.includes('MISSED_INQUIRIES') && sku.id === 'setup-quick') {
     score -= 14;
+  }
+  if (classified.concepts.includes('WEAK_REPUTATION') && sku.id === 'setup-quick') {
+    score -= 20;
+  }
+  // email-marketing is specialist for email/SMS ops — not a default lead-followup substitute
+  if (
+    sku.id === 'email-marketing' &&
+    !/\b(email|newsletter|sms|sequence|drip)\b/i.test(hints.message)
+  ) {
+    score -= 28;
   }
   if (overlap.length) score += 20;
   if (hints.clusterSkuIds?.includes(sku.id)) score += 10;
@@ -291,6 +319,9 @@ export function scoreOmiPackage(
       'process_automation',
       'lead_followup',
       'reporting',
+      'reputation_ops',
+      'seo_ops',
+      'email_ops',
     ].includes(cap),
   );
   if (GENERIC_BUNDLES.has(sku.id) && specialistExists) score -= 22;

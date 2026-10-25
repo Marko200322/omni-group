@@ -350,6 +350,59 @@ export async function probeMonitoringSelf(): Promise<ProbeResult> {
   }
 }
 
+/**
+ * Marketing engine observability — never spends ads.
+ * Reports ACTUAL health when engine responds; warning when ads live sync is off (soft start).
+ */
+export async function probeMarketing(): Promise<ProbeResult> {
+  const started = Date.now();
+  try {
+    if (config.marketing?.enabled === false) {
+      return base('marketing', 'warning', 'marketing_engine_disabled', {
+        latencyMs: Date.now() - started,
+        evidence: { enabled: false },
+        isCritical: false,
+      });
+    }
+    const { fetchMarketingAnomaliesForMonitoring } = await import(
+      '../../marketing/lib/monitoring-bridge'
+    );
+    const signal = await fetchMarketingAnomaliesForMonitoring();
+    if (signal.kind === 'UNAVAILABLE') {
+      return base('marketing', 'unavailable', 'marketing_bridge_unavailable', {
+        latencyMs: Date.now() - started,
+        evidence: { notes: signal.notes },
+        isCritical: false,
+      });
+    }
+    const adsLive = Boolean(config.marketing?.adsLiveSync);
+    const status: HealthStatus =
+      signal.openAlerts > 0 ? 'warning' : adsLive ? 'healthy' : 'warning';
+    const message =
+      signal.openAlerts > 0
+        ? `marketing_open_alerts_${signal.openAlerts}`
+        : adsLive
+          ? 'marketing_engine_actual'
+          : 'marketing_ads_sync_off_observe_only';
+    return base('marketing', status, message, {
+      latencyMs: Date.now() - started,
+      evidence: {
+        kind: signal.kind,
+        overallHealth: signal.overallHealth,
+        openAlerts: signal.openAlerts,
+        adsLiveSync: adsLive,
+        note: 'observe_only_no_ad_spend',
+      },
+      isCritical: false,
+    });
+  } catch (err) {
+    return base('marketing', 'unavailable', err instanceof Error ? err.message : 'marketing_probe_failed', {
+      latencyMs: Date.now() - started,
+      isCritical: false,
+    });
+  }
+}
+
 /** Run the full probe suite fail-soft (never throws). */
 export async function runAllProbes(): Promise<ProbeResult[]> {
   const results: ProbeResult[] = [];
@@ -374,6 +427,7 @@ export async function runAllProbes(): Promise<ProbeResult[]> {
   results.push(await wrap(probeEmail, 'email', false));
   results.push(await wrap(probeOmi, 'omi', false));
   results.push(await wrap(probeReinvestment, 'reinvestment', false));
+  results.push(await wrap(probeMarketing, 'marketing', false));
   results.push(await wrap(probeMonitoringSelf, 'monitoring', true));
 
   return results;

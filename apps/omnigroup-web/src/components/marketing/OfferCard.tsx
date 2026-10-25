@@ -136,7 +136,8 @@ export function OfferCard({ offer, id, compact }: Props) {
         <span className="text-3xl font-bold text-gradient">{formatEur(offer.priceEur)}</span>
         <span className="text-sm text-slate-500">{priceSuffix}</span>
         <span className="mt-1 block text-xs text-slate-500">
-          Regular list price. First 50 package clients get −18% at checkout while slots last — then this full price.
+          Regular list price. First 50 package clients get -18% at package checkout while slots last — then this full
+          price (separate from SaaS founding promo).
         </span>
       </p>
 

@@ -7,7 +7,7 @@ const base = (process.argv[2] || 'https://omnigrouptech.com').replace(/\/$/, '')
 const EXPECTED = [
   ['setup-quick', 'Quick setup', 549, 'one_time'],
   ['setup-full', 'Full onboarding', 1690, 'one_time'],
-  ['setup-custom', 'Custom deploy', 4900, 'one_time'],
+  ['setup-custom', 'Production runbook', 1290, 'one_time'],
   ['audit', 'Technical audit', 790, 'one_time'],
   ['integration', 'Custom integration', 1990, 'one_time'],
   ['workflow-design', 'Workflow design', 990, 'one_time'],

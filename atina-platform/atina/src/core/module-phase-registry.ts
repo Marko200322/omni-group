@@ -5,6 +5,8 @@ export const MODULE_PHASE_REGISTRY: Record<string, Phase> = {
   auth: 'v1',
   users: 'v1',
   tasks: 'v1',
+  documents: 'v1',
+  support: 'v1',
   subscriptions: 'v1',
   crm: 'v1',
   'template-engine': 'v2',
