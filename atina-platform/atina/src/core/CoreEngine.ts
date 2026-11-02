@@ -235,7 +235,10 @@ export class CoreEngine {
       // Custom bearer key — disable IPv6 keyGenerator validation (v7).
       validate: false,
       skip: (req) =>
-        req.path === '/health' || req.path === '/api/v1/health' || req.path === '/metrics',
+        req.path === '/health' ||
+        req.path === '/api/v1/health' ||
+        req.path === '/metrics' ||
+        process.env.RATE_LIMIT_DISABLED === 'true',
       keyGenerator: (req) => {
         const auth = req.get('authorization');
         if (auth && auth.startsWith('Bearer ') && auth.length > 20) {
