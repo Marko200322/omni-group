@@ -225,7 +225,7 @@ export class CoreEngine {
       max: config.rateLimit.max,
       standardHeaders: true,
       legacyHeaders: false,
-      skip: (req) => req.path === '/health',
+      skip: (req) => req.path === '/health' || process.env.RATE_LIMIT_DISABLED === 'true',
       message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' } },
     });
     this.app.use(limiter);

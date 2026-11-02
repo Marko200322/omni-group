@@ -93,15 +93,12 @@ foreach ($deliverableId in $ids) {
     if ($job.status -eq 'failed') { throw "Fulfillment failed: $($job.error)" }
     if ($job.status -ne 'completed') { throw "Timeout - status=$($job.status)" }
 
-    $checklist = $job.fulfillmentMeta.checklist
-    if (-not $checklist) {
-      $checklist = $job.result.fulfillmentMeta.checklist
-    }
-    $score = if ($checklist) { $checklist.score } else { $null }
-    $checkPassed = if ($checklist) { $checklist.passed } else { $true }
+    $checklist = $job.qualityChecklist
+    if (-not $checklist) { throw 'No qualityChecklist on job (admin view) - quality gate result not verifiable' }
+    $score = $checklist.score
 
-    if (-not $checkPassed) {
-      $fails = ($checklist.items | Where-Object { -not $_.passed -and $_.id -ne 'catalog_description' } | ForEach-Object { $_.id }) -join ', '
+    if (-not $checklist.passed) {
+      $fails = ($checklist.items | Where-Object { -not $_.passed } | ForEach-Object { $_.id }) -join ', '
       throw "Checklist failed (${score}pct): $fails"
     }
 
