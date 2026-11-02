@@ -13,6 +13,22 @@ import { getFactoryRuntimeSnapshot } from '../lib/factory-phase-runtime';
 import { getCatalogAuditSummary } from '../lib/package-catalog-audit';
 import { getPackageIndustryContext, listPackageIndustryMatrix } from '../lib/package-industry-problems';
 
+/** Node rejects non-latin1 header values; labels like "Setup — Checklist" need an RFC 5987 filename*. */
+export function attachmentDisposition(downloadName: string): string {
+  const ascii =
+    downloadName
+      .normalize('NFKD')
+      .replace(/[^\x20-\x7E]/g, '')
+      .replace(/["\\]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim() || 'download';
+  const encoded = encodeURIComponent(downloadName).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
 export class BillingController {
   private service: BillingService;
   private revenueAllocation: RevenueAllocationService;
@@ -159,7 +175,7 @@ export class BillingController {
       role: req.user!.role,
     });
     res.setHeader('Content-Type', file.contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.downloadName.replace(/"/g, '')}"`);
+    res.setHeader('Content-Disposition', attachmentDisposition(file.downloadName));
     fs.createReadStream(file.filePath).pipe(res);
   };
 
