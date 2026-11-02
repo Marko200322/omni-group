@@ -9,6 +9,27 @@ import type {
 } from '../dto/public-site.dto';
 import { PublicSiteRepository } from '../repository/public-site.repository';
 
+type ShopOrderItem = ClientSiteShopOrderDtoType['items'][number];
+
+/** Prices and names come from the published site catalog; the buyer only chooses ids and quantities. */
+export function priceItemsFromCatalog(branding: Record<string, unknown>, requested: ShopOrderItem[]): ShopOrderItem[] {
+  const raw = Array.isArray(branding?.catalog) ? (branding.catalog as unknown[]) : [];
+  const catalog = new Map<string, { name: string; priceEur: number }>();
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const e = entry as Record<string, unknown>;
+    const price = Number(e.priceEur);
+    if (typeof e.id === 'string' && typeof e.name === 'string' && Number.isFinite(price) && price >= 0) {
+      catalog.set(e.id, { name: e.name, priceEur: price });
+    }
+  }
+  return requested.map((item) => {
+    const product = catalog.get(item.id);
+    if (!product) throw new ValidationError(`Unknown product: ${item.id}`);
+    return { id: item.id, name: product.name, priceEur: product.priceEur, quantity: item.quantity };
+  });
+}
+
 const DEFAULT_BUSINESS_PAGES = (title: string, tagline?: string) => [
   {
     slug: 'home',
@@ -217,7 +238,8 @@ export class PublicSiteService {
       throw new NotFoundError('E-commerce site');
     }
 
-    const total = body.items.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
+    const items = priceItemsFromCatalog(site.branding, body.items);
+    const total = items.reduce((sum, item) => sum + item.priceEur * item.quantity, 0);
     if (total <= 0) throw new ValidationError('Order total must be positive');
 
     const paymentReference = `SHOP-${slug.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
@@ -227,7 +249,7 @@ export class PublicSiteService {
       buyerName: body.buyerName,
       buyerEmail: body.buyerEmail,
       buyerPhone: body.buyerPhone ?? null,
-      items: body.items,
+      items,
       totalEur: Math.round(total * 100) / 100,
       paymentReference,
       notes: body.notes ?? null,
@@ -264,7 +286,7 @@ export class PublicSiteService {
           ownerUserId: site.owner_user_id,
           buyerEmail: body.buyerEmail,
           buyerName: body.buyerName,
-          items: body.items.map((i) => ({
+          items: items.map((i) => ({
             name: i.name,
             priceEur: i.priceEur,
             quantity: i.quantity,
