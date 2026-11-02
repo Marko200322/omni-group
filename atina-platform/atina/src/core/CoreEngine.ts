@@ -11,6 +11,7 @@ import { testConnection } from '../database/connection';
 import { config } from '../config';
 import logger from '../utils/logger';
 import { firstCommaSegment, headerFirst } from '../utils/http-headers';
+import { rateLimitKey } from '../utils/rate-limit-key';
 import { AppError } from '../utils/errors';
 import { sendError } from '../utils/response';
 import { validateBody, validateQuery } from '../api/middleware/validate.middleware';
@@ -239,13 +240,8 @@ export class CoreEngine {
         req.path === '/api/v1/health' ||
         req.path === '/metrics' ||
         process.env.RATE_LIMIT_DISABLED === 'true',
-      keyGenerator: (req) => {
-        const auth = req.get('authorization');
-        if (auth && auth.startsWith('Bearer ') && auth.length > 20) {
-          return `bearer:${auth.slice(7, 55)}`;
-        }
-        return req.ip || req.socket.remoteAddress || 'unknown';
-      },
+      keyGenerator: (req) =>
+        rateLimitKey(req.get('authorization'), req.ip || req.socket.remoteAddress),
       message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' } },
     });
     this.app.use(limiter);
