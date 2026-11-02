@@ -310,10 +310,15 @@ export class AuthService {
       expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'],
     });
 
+    // jwtid keeps refresh tokens unique when the same user signs in twice within one second
+    // (register → login, double submit); refresh_tokens.token_hash is UNIQUE.
     const refreshToken = jwt.sign(
       { userId: payload.userId },
       config.jwt.refreshSecret,
-      { expiresIn: rememberMe ? '90d' : (config.jwt.refreshExpiresIn as jwt.SignOptions['expiresIn']) }
+      {
+        expiresIn: rememberMe ? '90d' : (config.jwt.refreshExpiresIn as jwt.SignOptions['expiresIn']),
+        jwtid: crypto.randomUUID(),
+      }
     );
 
     return { accessToken, refreshToken, expiresIn: config.jwt.expiresIn };
