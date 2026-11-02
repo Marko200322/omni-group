@@ -1385,9 +1385,7 @@ export class PaymentsService {
       industryCategory: input.industryCategory ?? null,
       billingCycle: deliverable.billing,
       paymentProvider: 'stripe',
-      marketIntensity: input.marketIntensity ?? 55,
-      tamEstimateUsd: input.tamEstimateUsd,
-      competitionScore: input.competitionScore,
+      ...checkoutMarketInputs(),
     });
 
     let maintenanceTier: ReturnType<typeof resolveOptionalMaintenanceTier> = null;

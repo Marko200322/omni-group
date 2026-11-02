@@ -233,6 +233,32 @@ describe('PaymentsService', () => {
     });
   });
 
+  describe('createDeliverableStripeCheckout', () => {
+    it('charges the UI quote and ignores client pricing factors', async () => {
+      mockQuery.mockResolvedValue({ rows: [{ id: 'deliv-stripe-1', email: 'c@test.com', name: 'C' }], rowCount: 1 } as never);
+      const uiQuote = calculateDeliverableQuote({
+        deliverableId: 'audit',
+        industryCategory: 'healthcare',
+        paymentProvider: 'stripe',
+        marketIntensity: 55,
+        tamEstimateUsd: 50_000 + 55 * 1200,
+        competitionScore: Math.min(100, 30 + Math.round(55 / 2)),
+      });
+
+      const out = await service.createDeliverableStripeCheckout('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', {
+        deliverableId: 'audit',
+        industryCategory: 'healthcare',
+        marketIntensity: 0,
+        tamEstimateUsd: 0,
+        competitionScore: 100,
+      });
+
+      expect(out.amount).toBe(uiQuote.clientPriceEur);
+      const session = testStripeApi.checkout.sessions.create.mock.calls[0][0];
+      expect(session.line_items[0].price_data.unit_amount).toBe(Math.round(uiQuote.clientPriceEur * 100));
+    });
+  });
+
   describe('handleStripeWebhook', () => {
     it('throws on invalid signature', async () => {
       testStripeApi.webhooks.constructEvent.mockImplementation(() => {
