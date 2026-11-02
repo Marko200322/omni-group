@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { NotFoundError, AuthorizationError } from '../../../utils/errors';
 import { DeliverableFulfillmentRepository, type FulfillmentJobRow } from '../repository/deliverable-fulfillment.repository';
+import type { FulfillmentChecklistResult } from '../lib/fulfillment-quality-checklist';
 
 export type FulfillmentArtifactView = {
   type: string;
@@ -27,13 +28,38 @@ export type FulfillmentJobView = {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
+  /** Admin views only — automated quality gate result stored with the job. */
+  qualityChecklist?: (FulfillmentChecklistResult & { attemptNumber: number }) | null;
 };
 
 function isAdminRole(role: string): boolean {
   return role === 'admin' || role === 'superadmin' || role === 'operator';
 }
 
-function toView(row: FulfillmentJobRow): FulfillmentJobView {
+function readQualityChecklist(result: Record<string, unknown>): FulfillmentJobView['qualityChecklist'] {
+  const meta = result.fulfillmentMeta;
+  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return null;
+  const checklist = (meta as Record<string, unknown>).checklist;
+  if (!checklist || typeof checklist !== 'object' || Array.isArray(checklist)) return null;
+  const c = checklist as Record<string, unknown>;
+  const items = Array.isArray(c.items)
+    ? c.items
+        .filter((i): i is Record<string, unknown> => !!i && typeof i === 'object')
+        .map((i) => ({
+          id: String(i.id ?? ''),
+          passed: i.passed === true,
+          message: typeof i.message === 'string' ? i.message : '',
+        }))
+    : [];
+  return {
+    passed: c.passed === true,
+    score: Number.isFinite(Number(c.score)) ? Number(c.score) : 0,
+    items,
+    attemptNumber: DeliverableFulfillmentRepository.readAttemptNumber(result),
+  };
+}
+
+function toView(row: FulfillmentJobRow, includeQuality = false): FulfillmentJobView {
   const result = (row.result ?? {}) as Record<string, unknown>;
   const rawArtifacts = Array.isArray(result.artifacts) ? result.artifacts : [];
   const artifacts: FulfillmentArtifactView[] = [];
@@ -67,6 +93,7 @@ function toView(row: FulfillmentJobRow): FulfillmentJobView {
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     completedAt: row.completed_at ? row.completed_at.toISOString() : null,
+    ...(includeQuality ? { qualityChecklist: readQualityChecklist(result) } : {}),
   };
 }
 
@@ -75,12 +102,12 @@ export class DeliverableFulfillmentReadService {
 
   async listForUser(userId: string, limit = 50): Promise<FulfillmentJobView[]> {
     const rows = await this.repo.listByUserId(userId, limit);
-    return rows.map(toView);
+    return rows.map((row) => toView(row));
   }
 
   async listForAdmin(input: { limit?: number; status?: FulfillmentJobRow['status'] }): Promise<FulfillmentJobView[]> {
     const rows = await this.repo.listAdmin(input);
-    return rows.map(toView);
+    return rows.map((row) => toView(row, true));
   }
 
   async getJob(paymentId: string, userId: string, role: string): Promise<FulfillmentJobView> {
@@ -89,7 +116,7 @@ export class DeliverableFulfillmentReadService {
     if (row.user_id !== userId && !isAdminRole(role)) {
       throw new AuthorizationError('Not allowed to view this fulfillment job');
     }
-    return toView(row);
+    return toView(row, isAdminRole(role));
   }
 
   async getArtifactFile(input: {
@@ -138,9 +165,16 @@ export class DeliverableFulfillmentReadService {
             ? 'application/json'
             : 'application/octet-stream';
 
+    const label = typeof match?.downloadLabel === 'string' ? match.downloadLabel.trim() : '';
+    const downloadName = !label
+      ? safeName
+      : ext && !label.toLowerCase().endsWith(ext)
+        ? `${label}${ext}`
+        : label;
+
     return {
       filePath: resolved,
-      downloadName: typeof match?.downloadLabel === 'string' ? match.downloadLabel : safeName,
+      downloadName,
       contentType,
     };
   }

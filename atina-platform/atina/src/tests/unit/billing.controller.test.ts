@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { BillingController } from '../../modules/billing/controller/billing.controller';
+import { validateHeaderValue } from 'http';
+import { BillingController, attachmentDisposition } from '../../modules/billing/controller/billing.controller';
 import { BillingService } from '../../modules/billing/service/billing.service';
 
 jest.mock('../../modules/billing/service/billing.service');
@@ -175,5 +176,18 @@ describe('BillingController', () => {
       role: 'user',
     });
     expect(r.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf');
+  });
+
+  it('attachmentDisposition keeps non-ASCII labels out of the plain filename', () => {
+    const header = attachmentDisposition('Quick Setup — Go-Live Checklist.pdf');
+    expect(header).toBe(
+      'attachment; filename="Quick Setup Go-Live Checklist.pdf"; ' +
+        "filename*=UTF-8''Quick%20Setup%20%E2%80%94%20Go-Live%20Checklist.pdf",
+    );
+    expect(() => validateHeaderValue('Content-Disposition', header)).not.toThrow();
+  });
+
+  it('attachmentDisposition falls back when the label has no ASCII characters', () => {
+    expect(attachmentDisposition('Ђ"')).toBe("attachment; filename=\"download\"; filename*=UTF-8''%D0%82%22");
   });
 });
