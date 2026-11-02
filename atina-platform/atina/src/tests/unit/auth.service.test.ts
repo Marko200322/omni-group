@@ -457,6 +457,39 @@ describe('AuthService', () => {
       await service.login('r@example.com', 'p', '', '', true);
       expect(mockRepo.saveRefreshToken).toHaveBeenCalled();
     });
+
+    it('signs every refresh token with a unique jwtid so same-second logins do not collide', async () => {
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockRepo.findUserByEmail.mockResolvedValue({
+        id: 'uid',
+        email: 'r@example.com',
+        password_hash: '$2b$12$ok',
+        name: 'R',
+        role: 'user',
+        plan_id: null,
+        plan_slug: undefined,
+        is_active: true,
+        is_email_verified: true,
+        email_verification_token: null,
+        password_reset_token: null,
+        password_reset_expires: null,
+        last_login_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      mockRepo.updateLastLogin.mockResolvedValue(undefined);
+      mockRepo.saveRefreshToken.mockResolvedValue(undefined);
+
+      await service.login('r@example.com', 'p', '', '');
+      await service.login('r@example.com', 'p', '', '');
+
+      const refreshJtis = (jwt.sign as jest.Mock).mock.calls
+        .filter(([payload]) => Object.keys(payload as object).length === 1)
+        .map(([, , opts]) => (opts as { jwtid?: string }).jwtid);
+      expect(refreshJtis).toHaveLength(2);
+      expect(refreshJtis[0]).toEqual(expect.any(String));
+      expect(refreshJtis[0]).not.toBe(refreshJtis[1]);
+    });
   });
 
   describe('refreshTokens', () => {
