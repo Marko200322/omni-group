@@ -98,6 +98,26 @@ export function computeResourceCostEur(
   return roundPriceEur(usd * eurUsd);
 }
 
+/**
+ * Market inputs every deliverable checkout is priced with. Must stay identical to what the
+ * omnigroup-web purchase UI shows (DeliverableQuotePanel: intensity 55 + the same derivation),
+ * otherwise the displayed price differs from the bank-transfer amount.
+ */
+export const CHECKOUT_MARKET_INTENSITY = 55;
+
+export function checkoutMarketInputs(): {
+  marketIntensity: number;
+  tamEstimateUsd: number;
+  competitionScore: number;
+} {
+  const intensity = CHECKOUT_MARKET_INTENSITY;
+  return {
+    marketIntensity: intensity,
+    tamEstimateUsd: 50_000 + intensity * 1200,
+    competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
+  };
+}
+
 /** Market willingness-to-pay from TAM, competition, category tier. */
 export function computeMarketValueEur(input: {
   anchorEur: number;

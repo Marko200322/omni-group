@@ -10,6 +10,7 @@ import { getIndustryCategory, getPlanPriceForCategory, type PlanSlug } from '../
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
 import {
   calculateDeliverableQuote,
+  checkoutMarketInputs,
   type PaymentProviderId,
 } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
@@ -1082,14 +1083,14 @@ export class PaymentsService {
     const deliverable = getDeliverable(input.deliverableId);
     if (!deliverable) throw new PaymentError('Unknown deliverable');
 
+    // Client-sent marketIntensity / tamEstimateUsd / competitionScore are ignored: they would let a
+    // buyer lower their own price, and the purchase UI always quotes with checkoutMarketInputs().
     const quote = calculateDeliverableQuote({
       deliverableId: input.deliverableId,
       industryCategory: input.industryCategory ?? null,
       billingCycle: deliverable.billing,
       paymentProvider: input.paymentProvider ?? 'manual',
-      marketIntensity: input.marketIntensity ?? 55,
-      tamEstimateUsd: input.tamEstimateUsd,
-      competitionScore: input.competitionScore,
+      ...checkoutMarketInputs(),
     });
 
     const amount = quote.clientPriceEur;

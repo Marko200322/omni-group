@@ -2,6 +2,7 @@ import * as db from '../../database/connection';
 import axios from 'axios';
 import { config } from '../../config';
 import { PaymentError, NotFoundError } from '../../utils/errors';
+import { calculateDeliverableQuote } from '../../modules/billing/lib/dynamic-pricing.engine';
 
 jest.mock('../../database/connection');
 
@@ -1005,6 +1006,30 @@ describe('PaymentsService', () => {
       expect(out.reference).toContain('ATINA-');
       expect(out.instructions.accountName).toBeTruthy();
       expect(paymentNotifyApi.sendManualCheckoutInstructions).toHaveBeenCalled();
+    });
+
+    it('createDeliverableManualCheckout charges the UI quote and ignores client pricing factors', async () => {
+      mockQuery.mockResolvedValue({ rows: [{ id: 'deliv-pay-1', email: 'c@test.com', name: 'C' }], rowCount: 1 } as never);
+      const uiQuote = calculateDeliverableQuote({
+        deliverableId: 'audit',
+        industryCategory: 'healthcare',
+        paymentProvider: 'manual',
+        marketIntensity: 55,
+        tamEstimateUsd: 50_000 + 55 * 1200,
+        competitionScore: Math.min(100, 30 + Math.round(55 / 2)),
+      });
+
+      await service.createDeliverableManualCheckout('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', {
+        deliverableId: 'audit',
+        industryCategory: 'healthcare',
+        paymentProvider: 'manual',
+        marketIntensity: 0,
+        tamEstimateUsd: 0,
+        competitionScore: 100,
+      });
+
+      const insert = mockQuery.mock.calls.find((c) => String(c[0]).includes('INSERT INTO payments'));
+      expect(insert?.[1]?.[1]).toBe(uiQuote.clientPriceEur);
     });
 
     it('markManualPaymentSent updates status to processing', async () => {
