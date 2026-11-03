@@ -17,6 +17,9 @@ export type FulfillmentChecklistResult = {
 const WEBSITE_IDS = new Set(['landing', 'website-business', 'website-ecommerce']);
 const PDF_CATALOG_IDS = new Set([
   'audit',
+  'ai-pilot',
+  'billing-automation',
+  'compliance-pack',
   'workflow-design',
   'integration',
   'setup-quick',
@@ -24,8 +27,13 @@ const PDF_CATALOG_IDS = new Set([
   'setup-custom',
   'support-priority',
   'support-dedicated',
+  'website-care',
   'lead-gen-retainer',
+  'lead-list',
   'ai-support-retainer',
+  'ai-receptionist',
+  'seo-geo-retainer',
+  'video-pipeline-retainer',
   'vertical-package',
   'white-label-setup',
   'sales-enablement',
@@ -40,11 +48,16 @@ const MODULE_BOOTSTRAP_IDS = new Set([
   'vertical-package',
   'lead-gen-retainer',
   'ai-support-retainer',
+  'ai-receptionist',
   'setup-full',
   'setup-custom',
 ]);
 
 const SETUP_IDS = new Set(['setup-quick', 'setup-full', 'setup-custom']);
+const LEAD_DELIVERY_IDS = new Set(['lead-gen-retainer', 'lead-list']);
+const SUPPORT_SLA_IDS = new Set(['support-priority', 'support-dedicated', 'website-care']);
+const AI_RECEPTION_IDS = new Set(['ai-support-retainer', 'ai-receptionist']);
+const INTEGRATION_CONFIG_IDS = new Set(['integration', 'billing-automation']);
 
 function crmBootstrapOk(result: FulfillmentResult): boolean {
   const crm = result.metadata?.crmBootstrap as { importedLeads?: number } | undefined;
@@ -195,7 +208,7 @@ export function runFulfillmentQualityChecklist(
     }
   }
 
-  if (deliverableId === 'lead-gen-retainer') {
+  if (LEAD_DELIVERY_IDS.has(deliverableId)) {
     const stats = result.metadata?.leadGenStats as { leadsGenerated?: number } | undefined;
     items.push({
       id: 'lead_gen_kickoff',
@@ -203,11 +216,11 @@ export function runFulfillmentQualityChecklist(
       message:
         Number(stats?.leadsGenerated ?? 0) > 0
           ? `Lead gen pipeline started (${stats?.leadsGenerated} leads)`
-          : 'Lead gen retainer requires active pipeline kickoff',
+          : 'Lead delivery requires a completed lead-generation run',
     });
   }
 
-  if (deliverableId === 'support-priority' || deliverableId === 'support-dedicated') {
+  if (SUPPORT_SLA_IDS.has(deliverableId)) {
     const support = result.metadata?.supportAutomation as
       | { slaHours?: number; modulesActivated?: string[] }
       | undefined;
@@ -220,7 +233,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'ai-support-retainer') {
+  if (AI_RECEPTION_IDS.has(deliverableId)) {
     const ai = result.metadata?.aiSupportSetup as {
       ragSeeded?: boolean;
       modulesActivated?: string[];
@@ -276,7 +289,7 @@ export function runFulfillmentQualityChecklist(
     });
   }
 
-  if (deliverableId === 'integration') {
+  if (INTEGRATION_CONFIG_IDS.has(deliverableId)) {
     items.push({
       id: 'integration_config',
       passed: result.artifacts.some((a) => a.type.includes('integration') || a.filename.includes('integration')),

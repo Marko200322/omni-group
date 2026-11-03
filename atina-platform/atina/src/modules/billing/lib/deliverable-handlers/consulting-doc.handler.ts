@@ -18,30 +18,35 @@ async function deliverDocPack(
 }
 
 export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {
-  ids: ['audit', 'workflow-design', 'integration'] as const,
+  ids: ['audit', 'workflow-design', 'integration', 'ai-pilot', 'compliance-pack', 'billing-automation'] as const,
 
   async fulfill(ctx: FulfillmentContext): Promise<FulfillmentResult> {
-    if (ctx.deliverableId === 'audit') {
-      const doc = await docs.generateAuditReport({
-        clientName: ctx.clientName,
-        industryCategory: ctx.industryCategory,
-        generationHints: ctx.generationHints,
-      });
-      return deliverDocPack(ctx, 'audit_report', 'technical-audit.pdf', doc);
-    }
-    if (ctx.deliverableId === 'workflow-design') {
-      const doc = await docs.generateWorkflowDesign({
-        clientName: ctx.clientName,
-        industryCategory: ctx.industryCategory,
-        generationHints: ctx.generationHints,
-      });
-      return deliverDocPack(ctx, 'workflow_design', 'workflow-sop-pack.pdf', doc);
-    }
-    const doc = await docs.generateIntegrationGuide({
+    const docInput = {
       clientName: ctx.clientName,
       industryCategory: ctx.industryCategory,
       generationHints: ctx.generationHints,
-    });
+    };
+    if (ctx.deliverableId === 'audit') {
+      const doc = await docs.generateAuditReport(docInput);
+      return deliverDocPack(ctx, 'audit_report', 'technical-audit.pdf', doc);
+    }
+    if (ctx.deliverableId === 'workflow-design') {
+      const doc = await docs.generateWorkflowDesign(docInput);
+      return deliverDocPack(ctx, 'workflow_design', 'workflow-sop-pack.pdf', doc);
+    }
+    if (ctx.deliverableId === 'ai-pilot') {
+      const doc = await docs.generateAiPilotPlan(docInput);
+      return deliverDocPack(ctx, 'ai_pilot_plan', 'ai-pilot-30-day-plan.pdf', doc);
+    }
+    if (ctx.deliverableId === 'compliance-pack') {
+      const doc = await docs.generateCompliancePack(docInput);
+      return deliverDocPack(ctx, 'compliance_pack', 'gdpr-einvoice-compliance-pack.pdf', doc);
+    }
+    // 'integration' and 'billing-automation' both ship a guide plus a signed integration config artifact.
+    const isBilling = ctx.deliverableId === 'billing-automation';
+    const doc = isBilling
+      ? await docs.generateBillingAutomationGuide(docInput)
+      : await docs.generateIntegrationGuide(docInput);
     const pack = bootstrap.resolvePack(ctx.industryCategory);
     const integrationConfig = bootstrap.buildIntegrationConfig({
       userId: ctx.userId,
@@ -54,7 +59,9 @@ export const consultingDocFulfillmentHandler: DeliverableFulfillmentHandler = {
       paymentId: ctx.paymentId,
       config: integrationConfig,
     });
-    const base = await deliverDocPack(ctx, 'integration_guide', 'integration-guide.pdf', doc);
+    const base = isBilling
+      ? await deliverDocPack(ctx, 'billing_automation_guide', 'billing-automation-guide.pdf', doc)
+      : await deliverDocPack(ctx, 'integration_guide', 'integration-guide.pdf', doc);
     return {
       ...base,
       artifacts: [...base.artifacts, configArtifact],

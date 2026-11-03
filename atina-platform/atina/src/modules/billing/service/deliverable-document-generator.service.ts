@@ -212,6 +212,100 @@ Professional English. No lorem ipsum. Specific to industry and client.`,
     );
   }
 
+  async generateAiPilotPlan(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    const firstStep = pack.workflowSteps[0];
+    return this.aiDoc(
+      `AI delivery lead. JSON only, 6+ sections: Use case selection, Success metrics (KPI baseline), 30-day plan (week by week), Data & integrations, Risks & guardrails, Go/no-go criteria. Professional English, specific to industry.`,
+      { clientName: input.clientName, industry: pack.displayName, workflowSteps: pack.workflowSteps, coreModules: pack.coreModules },
+      {
+        title: 'AI Pilot — 30-Day Plan',
+        subtitle: `${input.clientName} — ${pack.displayName}`,
+        sections: [
+          {
+            heading: 'Use case selection',
+            body: `Pilot scope: ${firstStep ? `${firstStep.step} — ${firstStep.action}` : 'one repetitive, high-volume process'}. One process, one owner, one measurable outcome.`,
+          },
+          {
+            heading: 'Success metrics',
+            body: 'Baseline measured in week 1: handling time, response time, conversion or error rate. Target: 30% time saved or 15% conversion uplift by day 30.',
+          },
+          {
+            heading: '30-day plan',
+            body: 'Week 1 — discovery, data access, KPI baseline. Week 2 — build and internal test. Week 3 — shadow mode with real traffic. Week 4 — live, review, go/no-go.',
+          },
+          {
+            heading: 'Data & integrations',
+            body: `Modules used: ${pack.coreModules.join(', ')}. Sources connected read-only first; write access only after shadow-mode sign-off.`,
+          },
+          {
+            heading: 'Risks & guardrails',
+            body: 'Human-in-the-loop for all customer-facing output, PII minimisation, logging of every automated action, kill switch documented.',
+          },
+          {
+            heading: 'Go/no-go criteria',
+            body: 'Proceed to setup + retainer when KPI target is met and the process owner signs off. Pilot fee is credited toward the follow-on project.',
+          },
+        ],
+      },
+      input.generationHints,
+    );
+  }
+
+  async generateBillingAutomationGuide(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    return this.aiDoc(
+      `Finance-ops automation architect. JSON only, 6+ sections: Invoice flow, Reminders & dunning, Payment reconciliation, E-invoice & tax rules, Webhooks & config, Testing checklist and SOP.`,
+      { clientName: input.clientName, industry: pack.displayName, modules: pack.coreModules },
+      {
+        title: 'Invoicing & Billing Automation Guide',
+        subtitle: input.clientName,
+        sections: [
+          { heading: 'Invoice flow', body: 'Order or subscription → invoice draft → approval → send (PDF + email) → status tracking. Numbering sequence and currency rules confirmed with the client.' },
+          { heading: 'Reminders & dunning', body: 'Automatic reminders at due date, +3, +7 and +14 days; escalation task to the account owner after the last reminder.' },
+          { heading: 'Payment reconciliation', body: 'Bank transfer reference matching, card/crypto provider webhooks, and a daily unmatched-payments report.' },
+          { heading: 'E-invoice & tax rules', body: 'VAT / reverse-charge handling per customer country, e-invoice export format where mandatory (e.g. SEF in Serbia, XRechnung/ZUGFeRD in Germany).' },
+          { heading: 'Webhooks & config', body: 'Integration config JSON with signed webhooks for payment events is attached to this delivery. Rotate the webhook secret after go-live.' },
+          { heading: 'Testing checklist & SOP', body: 'Test invoice, test reminder, test refund, month-end close checklist, and owner of each step documented.' },
+        ],
+      },
+      input.generationHints,
+    );
+  }
+
+  async generateCompliancePack(input: {
+    clientName: string;
+    industryCategory?: string | null;
+    generationHints?: FulfillmentGenerationHints;
+  }): Promise<StructuredDeliverableDoc> {
+    const pack = verticalPackForIndustry(input.industryCategory);
+    return this.aiDoc(
+      `Privacy & compliance consultant (GDPR, e-invoicing). JSON only, 6+ sections: Data inventory, Privacy notice, Data processing agreement, Retention & deletion, Security measures, E-invoice readiness checklist. Not legal advice disclaimer in last section.`,
+      { clientName: input.clientName, industry: pack.displayName, modules: pack.coreModules },
+      {
+        title: 'GDPR & E-Invoice Compliance Pack',
+        subtitle: `${input.clientName} — ${pack.displayName}`,
+        sections: [
+          { heading: 'Data inventory', body: `Personal data processed by the ${pack.displayName} stack: contacts, leads, invoices, support transcripts. Systems: ${pack.coreModules.join(', ')}.` },
+          { heading: 'Privacy notice', body: 'Template privacy notice covering purposes, legal bases, retention, processors, and data-subject rights — ready to publish on the website.' },
+          { heading: 'Data processing agreement', body: 'Controller–processor agreement (AV-Vertrag / DPA) template with sub-processor list and technical and organisational measures annex.' },
+          { heading: 'Retention & deletion', body: 'Leads 24 months after last contact, invoices per statutory bookkeeping period, support transcripts 12 months; deletion and export procedures documented.' },
+          { heading: 'Security measures', body: 'TLS everywhere, role-based access, encrypted backups, audit log, incident response contact, and annual access review.' },
+          { heading: 'E-invoice readiness checklist', body: 'Tax ID and registry data, invoice numbering, mandatory fields, export format per country, archiving. This pack is a technical and organisational checklist, not legal advice.' },
+        ],
+      },
+      input.generationHints,
+    );
+  }
+
   async generateRetainerWelcome(input: {
     deliverableId: string;
     clientName: string;

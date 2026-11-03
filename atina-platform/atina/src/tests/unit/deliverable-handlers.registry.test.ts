@@ -4,7 +4,7 @@ import { allDeliverableIdsInContract } from '../../modules/billing/lib/deliverab
 import { generateDeliverablePdfBuffer } from '../../modules/billing/service/deliverable-document-pdf.service';
 
 describe('deliverable fulfillment registry', () => {
-  it('covers all 17 catalog deliverables', () => {
+  it('covers all 25 catalog deliverables', () => {
     const covered = new Set<string>();
     for (const handler of listDeliverableFulfillmentHandlers()) {
       for (const id of handler.ids) covered.add(id);
@@ -12,11 +12,11 @@ describe('deliverable fulfillment registry', () => {
     for (const d of DELIVERABLE_CATALOG) {
       expect(covered.has(d.id)).toBe(true);
     }
-    expect(covered.size).toBe(17);
+    expect(covered.size).toBe(25);
   });
 
-  it('has acceptance contract for all 17 deliverables', () => {
-    expect(allDeliverableIdsInContract().length).toBe(17);
+  it('has acceptance contract for all 25 deliverables', () => {
+    expect(allDeliverableIdsInContract().length).toBe(25);
     for (const id of allDeliverableIdsInContract()) {
       expect(resolveDeliverableFulfillmentHandler(id)).not.toBeNull();
     }
@@ -30,6 +30,15 @@ describe('deliverable fulfillment registry', () => {
   it('resolves audit to consulting handler', () => {
     const h = resolveDeliverableFulfillmentHandler('audit');
     expect(h?.ids).toContain('audit');
+  });
+
+  it('routes market-v2 packages to the right handlers', () => {
+    expect(resolveDeliverableFulfillmentHandler('ai-receptionist')?.ids).toContain('ai-support-retainer');
+    expect(resolveDeliverableFulfillmentHandler('lead-list')?.ids).toContain('lead-gen-retainer');
+    expect(resolveDeliverableFulfillmentHandler('website-care')?.ids).toContain('support-priority');
+    expect(resolveDeliverableFulfillmentHandler('billing-automation')?.ids).toContain('integration');
+    expect(resolveDeliverableFulfillmentHandler('ai-pilot')?.ids).toContain('audit');
+    expect(resolveDeliverableFulfillmentHandler('compliance-pack')?.ids).toContain('audit');
   });
 });
 

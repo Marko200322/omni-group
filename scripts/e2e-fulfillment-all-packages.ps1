@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  E2E: all 17 deliverable packages — checkout, confirm, fulfillment checklist pass.
+  E2E: all 25 deliverable packages — checkout, confirm, fulfillment checklist pass.
 
 .EXAMPLE
   .\scripts\e2e-fulfillment-all-packages.ps1
@@ -27,7 +27,8 @@ $allIds = @(
   'setup-quick', 'setup-full', 'setup-custom', 'audit', 'integration', 'workflow-design',
   'support-priority', 'support-dedicated', 'landing', 'website-business', 'website-ecommerce',
   'white-label-setup', 'sales-enablement', 'vertical-package', 'lead-gen-retainer',
-  'ai-support-retainer', 'custom-software'
+  'ai-support-retainer', 'custom-software', 'ai-pilot', 'billing-automation', 'compliance-pack',
+  'website-care', 'lead-list', 'seo-geo-retainer', 'video-pipeline-retainer', 'ai-receptionist'
 )
 
 $slowIds = @('website-business', 'website-ecommerce', 'white-label-setup', 'custom-software', 'setup-custom')

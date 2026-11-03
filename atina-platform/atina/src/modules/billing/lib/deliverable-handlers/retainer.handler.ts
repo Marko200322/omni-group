@@ -10,8 +10,21 @@ const docs = new DeliverableDocumentGeneratorService();
 const autonomy = new AutonomyOrchestratorService();
 const bootstrap = new ClientDeliverableBootstrapService();
 
+const SUPPORT_SLA_IDS = new Set(['support-priority', 'support-dedicated', 'website-care']);
+const AI_RECEPTION_IDS = new Set(['ai-support-retainer', 'ai-receptionist']);
+
 export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
-  ids: ['support-priority', 'support-dedicated', 'lead-gen-retainer', 'ai-support-retainer'] as const,
+  ids: [
+    'support-priority',
+    'support-dedicated',
+    'website-care',
+    'lead-gen-retainer',
+    'lead-list',
+    'ai-support-retainer',
+    'ai-receptionist',
+    'seo-geo-retainer',
+    'video-pipeline-retainer',
+  ] as const,
 
   async fulfill(ctx: FulfillmentContext): Promise<FulfillmentResult> {
     const deliverable = getDeliverable(ctx.deliverableId)!;
@@ -35,17 +48,33 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
     let modulesActivated: string[] = [];
     let supportAutomation: { modulesActivated: string[]; slaHours: number } | null = null;
 
-    if (
-      ctx.deliverableId === 'support-priority' ||
-      ctx.deliverableId === 'support-dedicated'
-    ) {
+    if (SUPPORT_SLA_IDS.has(ctx.deliverableId)) {
       supportAutomation = await bootstrap.bootstrapAutomatedSupport({
         userId: ctx.userId,
         clientName: ctx.clientName,
-        deliverableId: ctx.deliverableId,
+        deliverableId: ctx.deliverableId as 'support-priority' | 'support-dedicated' | 'website-care',
         industryCategory: ctx.industryCategory,
       });
       modulesActivated = supportAutomation.modulesActivated;
+    }
+
+    if (ctx.deliverableId === 'lead-list') {
+      // One-off lead delivery: run the scraper/qualification pass and ship the report, no CRM seeding or monthly loop.
+      const pack = bootstrap.resolvePack(ctx.industryCategory);
+      leadGenStats = await bootstrap.runLeadGenKickoff({
+        userId: ctx.userId,
+        industryCategory: ctx.industryCategory,
+        pack,
+      });
+      artifacts.push(
+        bootstrap.saveLeadGenReport({
+          userId: ctx.userId,
+          paymentId: ctx.paymentId,
+          pack,
+          stats: leadGenStats,
+          clientName: ctx.clientName,
+        }),
+      );
     }
 
     if (ctx.deliverableId === 'lead-gen-retainer') {
@@ -86,7 +115,7 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       avatarConfigured?: boolean;
     } | null = null;
 
-    if (ctx.deliverableId === 'ai-support-retainer') {
+    if (AI_RECEPTION_IDS.has(ctx.deliverableId)) {
       const aiSetup = await bootstrap.bootstrapAiSupportRetainer({
         userId: ctx.userId,
         clientName: ctx.clientName,
@@ -104,11 +133,21 @@ export const retainerFulfillmentHandler: DeliverableFulfillmentHandler = {
       artifacts.push(aiSetup.setupArtifact);
     }
 
-    if (
-      modules.includes('outreach') ||
-      modules.includes('client-hunter') ||
-      ctx.deliverableId === 'lead-gen-retainer'
-    ) {
+    if (modulesActivated.length === 0 && modules.length > 0 && !supportAutomation && !aiSupportSetup) {
+      modulesActivated = await bootstrap.activateModules({
+        userId: ctx.userId,
+        moduleSlugs: modules,
+        clientName: ctx.clientName,
+        industryCategory: ctx.industryCategory,
+      });
+    }
+
+    const wantsAutonomyLoop =
+      ctx.deliverableId !== 'lead-list' &&
+      (modules.includes('outreach') ||
+        modules.includes('client-hunter') ||
+        ctx.deliverableId === 'lead-gen-retainer');
+    if (wantsAutonomyLoop) {
       try {
         const verticalSlug =
           ctx.industryCategory?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ?? 'general-business';

@@ -399,14 +399,17 @@ ${pack.outreachHooks.map((h) => `- ${h}`).join('\n')}
   async bootstrapAutomatedSupport(input: {
     userId: string;
     clientName: string;
-    deliverableId: 'support-priority' | 'support-dedicated';
+    deliverableId: 'support-priority' | 'support-dedicated' | 'website-care';
     industryCategory?: string | null;
   }): Promise<{ modulesActivated: string[]; slaHours: number }> {
-    const slaHours = input.deliverableId === 'support-dedicated' ? 8 : 24;
+    const slaHours =
+      input.deliverableId === 'support-dedicated' ? 8 : input.deliverableId === 'website-care' ? 48 : 24;
     const slugs =
       input.deliverableId === 'support-dedicated'
         ? ['notifications', 'support-avatar', 'video-meetings', 'ai-rag']
-        : ['notifications', 'support-avatar', 'ai-rag'];
+        : input.deliverableId === 'website-care'
+          ? ['notifications', 'product-factory']
+          : ['notifications', 'support-avatar', 'ai-rag'];
 
     const modulesActivated = await this.activateModules({
       userId: input.userId,

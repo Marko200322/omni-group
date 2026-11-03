@@ -9,7 +9,8 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     metadata: {},
   };
 
-  if (deliverableId.includes('website') || deliverableId === 'landing' || deliverableId === 'white-label-setup') {
+  const isSiteBuild = deliverableId.startsWith('website-') && deliverableId !== 'website-care';
+  if (isSiteBuild || deliverableId === 'landing' || deliverableId === 'white-label-setup') {
     return {
       ...base,
       publicUrl: '/sites/demo',
@@ -45,7 +46,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     };
   }
 
-  if (deliverableId === 'integration') {
+  if (deliverableId === 'integration' || deliverableId === 'billing-automation') {
     return {
       ...base,
       artifacts: [
@@ -55,7 +56,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     };
   }
 
-  if (deliverableId === 'lead-gen-retainer') {
+  if (deliverableId === 'lead-gen-retainer' || deliverableId === 'lead-list') {
     return {
       ...base,
       metadata: {
@@ -66,7 +67,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     };
   }
 
-  if (deliverableId === 'ai-support-retainer') {
+  if (deliverableId === 'ai-support-retainer' || deliverableId === 'ai-receptionist') {
     return {
       ...base,
       artifacts: [
@@ -80,7 +81,7 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
     };
   }
 
-  if (deliverableId.startsWith('support-')) {
+  if (deliverableId.startsWith('support-') || deliverableId === 'website-care') {
     return {
       ...base,
       metadata: {
@@ -111,10 +112,10 @@ function mockPassingResult(deliverableId: string): FulfillmentResult {
   return base;
 }
 
-describe('fulfillment quality checklist — 17 package contract', () => {
-  it('covers all 17 deliverables in acceptance contract', () => {
-    expect(allDeliverableIdsInContract().length).toBe(17);
-    expect(listAcceptanceContracts().length).toBe(17);
+describe('fulfillment quality checklist — 25 package contract', () => {
+  it('covers all 25 deliverables in acceptance contract', () => {
+    expect(allDeliverableIdsInContract().length).toBe(25);
+    expect(listAcceptanceContracts().length).toBe(25);
   });
 
   for (const contract of listAcceptanceContracts()) {

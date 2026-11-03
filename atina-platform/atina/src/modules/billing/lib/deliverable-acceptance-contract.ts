@@ -3,7 +3,7 @@
  * Used by fulfillment-quality-checklist and E2E tests.
  */
 
-import { DELIVERABLE_CATALOG, type DeliverableDefinition } from './deliverable-catalog';
+import { DELIVERABLE_CATALOG, getDeliverable, type DeliverableDefinition } from './deliverable-catalog';
 
 export type AcceptanceCriterion = {
   id: string;
@@ -44,18 +44,22 @@ const CR = {
   testGate: { id: 'software_test_gate', label: 'Build/test gate recorded', required: true },
 };
 
+function descOf(id: string): string {
+  return getDeliverable(id)?.description ?? '';
+}
+
 const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   'setup-quick': {
     deliverableId: 'setup-quick',
     name: 'Quick setup',
-    description: DELIVERABLE_CATALOG[0].description,
+    description: descOf('setup-quick'),
     billing: 'one_time',
     criteria: [CR.status, CR.pdf, CR.setupProject, CR.portalModules],
   },
   'setup-full': {
     deliverableId: 'setup-full',
     name: 'Full onboarding',
-    description: DELIVERABLE_CATALOG[1].description,
+    description: descOf('setup-full'),
     billing: 'one_time',
     criteria: [
       CR.status,
@@ -70,7 +74,7 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   'setup-custom': {
     deliverableId: 'setup-custom',
     name: 'Custom deploy',
-    description: DELIVERABLE_CATALOG[2].description,
+    description: descOf('setup-custom'),
     billing: 'one_time',
     criteria: [
       CR.status,
@@ -84,98 +88,154 @@ const CONTRACTS: Record<string, DeliverableAcceptanceContract> = {
   audit: {
     deliverableId: 'audit',
     name: 'Technical audit',
-    description: DELIVERABLE_CATALOG[3].description,
+    description: descOf('audit'),
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf],
+  },
+  'ai-pilot': {
+    deliverableId: 'ai-pilot',
+    name: 'AI pilot (30 days)',
+    description: descOf('ai-pilot'),
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf],
+  },
+  'billing-automation': {
+    deliverableId: 'billing-automation',
+    name: 'Invoicing & billing automation',
+    description: descOf('billing-automation'),
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf, CR.integrationConfig],
+  },
+  'compliance-pack': {
+    deliverableId: 'compliance-pack',
+    name: 'GDPR & e-invoice compliance pack',
+    description: descOf('compliance-pack'),
     billing: 'one_time',
     criteria: [CR.status, CR.pdf],
   },
   integration: {
     deliverableId: 'integration',
     name: 'Custom integration',
-    description: DELIVERABLE_CATALOG[4].description,
+    description: descOf('integration'),
     billing: 'one_time',
     criteria: [CR.status, CR.pdf, CR.integrationConfig],
   },
   'workflow-design': {
     deliverableId: 'workflow-design',
     name: 'Workflow design',
-    description: DELIVERABLE_CATALOG[5].description,
+    description: descOf('workflow-design'),
     billing: 'one_time',
     criteria: [CR.status, CR.pdf],
   },
   'support-priority': {
     deliverableId: 'support-priority',
     name: 'Priority support',
-    description: DELIVERABLE_CATALOG[6].description,
+    description: descOf('support-priority'),
     billing: 'monthly',
     criteria: [CR.status, CR.pdf, CR.supportAutomation],
   },
   'support-dedicated': {
     deliverableId: 'support-dedicated',
     name: 'Dedicated support',
-    description: DELIVERABLE_CATALOG[7].description,
+    description: descOf('support-dedicated'),
+    billing: 'monthly',
+    criteria: [CR.status, CR.pdf, CR.supportAutomation],
+  },
+  'website-care': {
+    deliverableId: 'website-care',
+    name: 'Website care plan',
+    description: descOf('website-care'),
     billing: 'monthly',
     criteria: [CR.status, CR.pdf, CR.supportAutomation],
   },
   landing: {
     deliverableId: 'landing',
     name: 'Landing + copy',
-    description: DELIVERABLE_CATALOG[8].description,
+    description: descOf('landing'),
     billing: 'one_time',
     criteria: [CR.status, CR.publicUrl],
   },
   'website-business': {
     deliverableId: 'website-business',
     name: 'Business website',
-    description: DELIVERABLE_CATALOG[9].description,
+    description: descOf('website-business'),
     billing: 'one_time',
     criteria: [CR.status, CR.publicUrl, CR.businessProject, CR.businessPages],
   },
   'website-ecommerce': {
     deliverableId: 'website-ecommerce',
     name: 'E-commerce website',
-    description: DELIVERABLE_CATALOG[10].description,
+    description: descOf('website-ecommerce'),
     billing: 'one_time',
     criteria: [CR.status, CR.publicUrl, CR.ecommerceCatalog],
   },
   'white-label-setup': {
     deliverableId: 'white-label-setup',
     name: 'White-label packaging',
-    description: DELIVERABLE_CATALOG[11].description,
+    description: descOf('white-label-setup'),
     billing: 'one_time',
     criteria: [CR.status, CR.pdf, CR.whiteLabelSite],
   },
   'sales-enablement': {
     deliverableId: 'sales-enablement',
     name: 'Sales enablement',
-    description: DELIVERABLE_CATALOG[12].description,
+    description: descOf('sales-enablement'),
     billing: 'one_time',
+    criteria: [CR.status, CR.pdf],
+  },
+  'lead-list': {
+    deliverableId: 'lead-list',
+    name: 'Verified lead list',
+    description: descOf('lead-list'),
+    billing: 'one_time',
+    criteria: [CR.status, CR.pdf, CR.leadGenKickoff],
+  },
+  'seo-geo-retainer': {
+    deliverableId: 'seo-geo-retainer',
+    name: 'SEO + AI search visibility',
+    description: descOf('seo-geo-retainer'),
+    billing: 'monthly',
+    criteria: [CR.status, CR.pdf],
+  },
+  'video-pipeline-retainer': {
+    deliverableId: 'video-pipeline-retainer',
+    name: 'Content & video pipeline',
+    description: descOf('video-pipeline-retainer'),
+    billing: 'monthly',
     criteria: [CR.status, CR.pdf],
   },
   'vertical-package': {
     deliverableId: 'vertical-package',
     name: 'Vertical solution',
-    description: DELIVERABLE_CATALOG[13].description,
+    description: descOf('vertical-package'),
     billing: 'monthly',
     criteria: [CR.status, CR.pdf, CR.crmBootstrap, CR.modulesBootstrap],
   },
   'lead-gen-retainer': {
     deliverableId: 'lead-gen-retainer',
     name: 'Lead gen retainer',
-    description: DELIVERABLE_CATALOG[14].description,
+    description: descOf('lead-gen-retainer'),
     billing: 'monthly',
     criteria: [CR.status, CR.pdf, CR.leadGenKickoff, CR.crmBootstrap, CR.modulesBootstrap],
   },
   'ai-support-retainer': {
     deliverableId: 'ai-support-retainer',
     name: 'AI support retainer',
-    description: DELIVERABLE_CATALOG[15].description,
+    description: descOf('ai-support-retainer'),
+    billing: 'monthly',
+    criteria: [CR.status, CR.pdf, CR.aiSupportSetup, CR.modulesBootstrap],
+  },
+  'ai-receptionist': {
+    deliverableId: 'ai-receptionist',
+    name: 'AI receptionist + booking',
+    description: descOf('ai-receptionist'),
     billing: 'monthly',
     criteria: [CR.status, CR.pdf, CR.aiSupportSetup, CR.modulesBootstrap],
   },
   'custom-software': {
     deliverableId: 'custom-software',
     name: 'Custom software',
-    description: DELIVERABLE_CATALOG[16].description,
+    description: descOf('custom-software'),
     billing: 'one_time',
     criteria: [CR.status, CR.softwareProject, CR.handoffPdf, CR.testGate],
   },
