@@ -34,6 +34,7 @@ const DeliverableCheckoutDto = z
     marketIntensity: z.number().min(0).max(100).optional(),
     tamEstimateUsd: z.number().finite().optional(),
     competitionScore: z.number().min(0).max(100).optional(),
+    marketRegion: z.enum(['balkan', 'eu', 'dach', 'global']).optional(),
   })
   .strict();
 

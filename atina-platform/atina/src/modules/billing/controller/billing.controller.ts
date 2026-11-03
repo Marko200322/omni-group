@@ -7,7 +7,7 @@ import { DeliverableFulfillmentService } from '../service/deliverable-fulfillmen
 import { sendSuccess, paginate } from '../../../utils/response';
 import { NotFoundError } from '../../../utils/errors';
 import type { StrictPaginationQuery } from '../../../api/dto/pagination-query.dto';
-import type { QuoteInput, PaymentProviderId } from '../lib/dynamic-pricing.engine';
+import type { QuoteInput, PaymentProviderId, MarketRegion } from '../lib/dynamic-pricing.engine';
 
 export class BillingController {
   private service: BillingService;
@@ -56,6 +56,7 @@ export class BillingController {
       tamEstimateUsd?: number;
       competitionScore?: number;
       marketIntensity?: number;
+      marketRegion?: MarketRegion;
     };
     const quotes = this.service.quoteCatalog({
       industryCategory: q.industryCategory,
@@ -64,6 +65,7 @@ export class BillingController {
       tamEstimateUsd: q.tamEstimateUsd,
       competitionScore: q.competitionScore,
       marketIntensity: q.marketIntensity,
+      marketRegion: q.marketRegion,
     });
     sendSuccess(res, { quotes, deliverables: this.service.getDeliverableCatalog() });
   };

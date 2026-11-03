@@ -14,10 +14,11 @@ import {
   calculateDeliverableQuote,
   formatBillingLabel,
   quoteAllDeliverables,
+  type MarketRegion,
   type PaymentProviderId,
   type QuoteBreakdown,
 } from '@/lib/dynamic-pricing';
-import { getCategoryMarketIndex } from '@/lib/market-pricing';
+import { getCategoryMarketIndex, MARKET_REGION_MULTIPLIER } from '@/lib/market-pricing';
 import { getIndustryCategory } from '@/lib/category-pricing';
 
 const DELIVERABLE_CATEGORY_LABELS_EN: Record<DeliverableDefinition['category'], string> = {
@@ -34,6 +35,13 @@ function formatMarketIndexLabelEn(index: number): string {
   if (index >= 0.95) return 'Average market';
   return 'Budget segment';
 }
+
+const REGION_OPTIONS: { id: MarketRegion; label: string }[] = [
+  { id: 'balkan', label: `Balkans / Serbia (×${MARKET_REGION_MULTIPLIER.balkan})` },
+  { id: 'eu', label: 'EU remote (base)' },
+  { id: 'dach', label: `DACH — Germany, Austria, Switzerland (×${MARKET_REGION_MULTIPLIER.dach})` },
+  { id: 'global', label: 'Global / US remote' },
+];
 
 const PAYMENT_OPTIONS: { id: PaymentProviderId; label: string }[] = [
   { id: 'manual', label: 'Bank transfer (no fee)' },
@@ -89,6 +97,7 @@ function QuoteCard({
           <li>Margin: {formatEur(quote.marginEur)}</li>
           <li>Fee {quote.paymentProvider}: {formatEur(quote.paymentFeeEur)}</li>
           <li>Industry: {quote.pricingTier} · market ×{quote.factors.categoryMarketIndex.toFixed(2)}</li>
+          <li>Region: {quote.marketRegion} ×{quote.factors.marketRegionFactor.toFixed(2)}</li>
         </ul>
       )}
       <div className="mt-4 flex flex-col gap-2">
@@ -110,6 +119,7 @@ export default function PricingPage() {
   const [industryCategory, setIndustryCategory] = useState('');
   const [verticalSlug, setVerticalSlug] = useState('');
   const [paymentProvider, setPaymentProvider] = useState<PaymentProviderId>('manual');
+  const [marketRegion, setMarketRegion] = useState<MarketRegion>('eu');
   const [intensity, setIntensity] = useState(55);
   const [liveQuotes, setLiveQuotes] = useState<QuoteBreakdown[] | null>(null);
 
@@ -119,11 +129,12 @@ export default function PricingPage() {
         industryCategory: industryCategory || null,
         verticalSlug: verticalSlug || null,
         paymentProvider,
+        marketRegion,
         marketIntensity: intensity,
         tamEstimateUsd: 50_000 + intensity * 1200,
         competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
       }),
-    [industryCategory, verticalSlug, paymentProvider, intensity],
+    [industryCategory, verticalSlug, paymentProvider, marketRegion, intensity],
   );
 
   useEffect(() => {
@@ -131,6 +142,7 @@ export default function PricingPage() {
     if (industryCategory) params.set('industryCategory', industryCategory);
     if (verticalSlug) params.set('verticalSlug', verticalSlug);
     params.set('paymentProvider', paymentProvider);
+    params.set('marketRegion', marketRegion);
     params.set('marketIntensity', String(intensity));
     params.set('tamEstimateUsd', String(50_000 + intensity * 1200));
     params.set('competitionScore', String(Math.min(100, 30 + Math.round(intensity / 2))));
@@ -148,7 +160,7 @@ export default function PricingPage() {
     return () => {
       cancelled = true;
     };
-  }, [industryCategory, verticalSlug, paymentProvider, intensity]);
+  }, [industryCategory, verticalSlug, paymentProvider, marketRegion, intensity]);
 
   const quotes = liveQuotes ?? localQuotes;
 
@@ -161,6 +173,7 @@ export default function PricingPage() {
     industryCategory: industryCategory || null,
     verticalSlug: verticalSlug || null,
     paymentProvider,
+    marketRegion,
     marketIntensity: intensity,
     tamEstimateUsd: 50_000 + intensity * 1200,
     competitionScore: Math.min(100, 30 + Math.round(intensity / 2)),
@@ -217,6 +230,20 @@ export default function PricingPage() {
               {PAYMENT_OPTIONS.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm sm:col-span-2">
+            <span className="text-slate-400">Target market region</span>
+            <select
+              className="mt-1 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white"
+              value={marketRegion}
+              onChange={(e) => setMarketRegion(e.target.value as MarketRegion)}
+            >
+              {REGION_OPTIONS.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.label}
                 </option>
               ))}
             </select>

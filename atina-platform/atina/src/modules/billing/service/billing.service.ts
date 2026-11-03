@@ -14,6 +14,7 @@ import { listDeliverables } from '../lib/deliverable-catalog';
 import {
   calculateDeliverableQuote,
   quoteAllDeliverables,
+  type MarketRegion,
   type PaymentProviderId,
   type QuoteInput,
 } from '../lib/dynamic-pricing.engine';
@@ -85,6 +86,7 @@ export class BillingService {
     tamEstimateUsd?: number | null;
     competitionScore?: number | null;
     marketIntensity?: number | null;
+    marketRegion?: MarketRegion | null;
   }) {
     return quoteAllDeliverables({
       industryCategory: input.industryCategory,
@@ -93,6 +95,7 @@ export class BillingService {
       tamEstimateUsd: input.tamEstimateUsd,
       competitionScore: input.competitionScore,
       marketIntensity: input.marketIntensity,
+      marketRegion: input.marketRegion,
     });
   }
 

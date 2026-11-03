@@ -7,7 +7,9 @@ import { config } from '../../../config';
 import { resolveIndustryContext } from '../../../shared/industry/industry-catalog';
 import { type PricingTier } from './category-pricing';
 import { getDeliverable, listDeliverables, type DeliverableBilling, type DeliverableDefinition } from './deliverable-catalog';
-import { getCategoryMarketIndex } from './market-pricing';
+import { getCategoryMarketIndex, getMarketRegionMultiplier, type MarketRegion } from './market-pricing';
+
+export type { MarketRegion } from './market-pricing';
 
 export type PaymentProviderId = 'manual' | 'kriptoman' | 'stripe' | 'paypal' | 'wise';
 
@@ -22,6 +24,8 @@ export type QuoteInput = {
   tamEstimateUsd?: number | null;
   competitionScore?: number | null;
   marketIntensity?: number | null;
+  /** Target market region — scales willingness-to-pay (Balkan < EU < DACH). Default 'eu'. */
+  marketRegion?: MarketRegion | null;
 };
 
 export type QuoteBreakdown = {
@@ -42,12 +46,14 @@ export type QuoteBreakdown = {
   industryCategory: string | null;
   verticalSlug: string | null;
   verticalName: string | null;
+  marketRegion: MarketRegion;
   factors: {
     tamFactor: number;
     competitionFactor: number;
     intensityFactor: number;
     tierMultiplier: number;
     categoryMarketIndex: number;
+    marketRegionFactor: number;
   };
   resources: DeliverableDefinition['resources'];
 };
@@ -106,9 +112,11 @@ export function computeMarketValueEur(input: {
   tamEstimateUsd?: number | null;
   competitionScore?: number | null;
   marketIntensity?: number | null;
+  marketRegion?: MarketRegion | null;
 }): { marketEur: number; factors: QuoteBreakdown['factors'] } {
   const tierMultiplier = getPricingConfig().tierMultipliers[input.pricingTier] ?? 1;
   const categoryMarketIndex = getCategoryMarketIndex(input.industryCategory);
+  const marketRegionFactor = getMarketRegionMultiplier(input.marketRegion);
   const tam = input.tamEstimateUsd ?? getPricingConfig().defaultTamUsd;
   const tamFactor = clamp(Math.log10(Math.max(tam, 5000) / 10_000) + 1.15, 0.75, 2.2);
 
@@ -119,10 +127,16 @@ export function computeMarketValueEur(input: {
   const intensityFactor = 0.82 + intensity / 250;
 
   const marketEur =
-    input.anchorEur * tierMultiplier * categoryMarketIndex * tamFactor * competitionFactor * intensityFactor;
+    input.anchorEur *
+    tierMultiplier *
+    categoryMarketIndex *
+    marketRegionFactor *
+    tamFactor *
+    competitionFactor *
+    intensityFactor;
   return {
     marketEur,
-    factors: { tamFactor, competitionFactor, intensityFactor, tierMultiplier, categoryMarketIndex },
+    factors: { tamFactor, competitionFactor, intensityFactor, tierMultiplier, categoryMarketIndex, marketRegionFactor },
   };
 }
 
@@ -147,6 +161,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
   });
   const pricingTier = ctx.pricingTier;
   const provider = input.paymentProvider ?? (config.payments.mode === 'live' ? 'stripe' : 'manual');
+  const marketRegion: MarketRegion = input.marketRegion ?? 'eu';
   const subtypeIntensityBoost = ctx.vertical ? 1.04 : 1;
 
   const resourceCostEur = computeResourceCostEur(deliverable.resources, billing);
@@ -157,13 +172,13 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     tamEstimateUsd: input.tamEstimateUsd,
     competitionScore: input.competitionScore,
     marketIntensity: input.marketIntensity,
+    marketRegion,
   });
 
   const marginPct = getPricingConfig().targetMarginPct / 100;
   const costFloor = resourceCostEur * (1 + marginPct);
-  const subtotalEur = roundPriceEur(
-    Math.max(marketEur, costFloor, deliverable.anchorEur * factors.tierMultiplier * 0.65) * subtypeIntensityBoost,
-  );
+  const anchorFloor = deliverable.anchorEur * factors.tierMultiplier * factors.marketRegionFactor * 0.65;
+  const subtotalEur = roundPriceEur(Math.max(marketEur, costFloor, anchorFloor) * subtypeIntensityBoost);
   const marginEur = roundPriceEur(Math.max(0, subtotalEur - resourceCostEur));
 
   const { feeEur, clientEur } = applyPaymentFees(subtotalEur, provider);
@@ -185,6 +200,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     industryCategory: ctx.industryCategory,
     verticalSlug: ctx.verticalSlug,
     verticalName: ctx.vertical?.name ?? null,
+    marketRegion,
     factors,
     resources: deliverable.resources,
   };
@@ -199,9 +215,14 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
       tamEstimateUsd: input.tamEstimateUsd,
       competitionScore: input.competitionScore,
       marketIntensity: input.marketIntensity,
+      marketRegion,
     });
     const yearlySubtotal = roundPriceEur(
-      Math.max(yearlyMarket.marketEur, yearlyResourceCost * (1 + marginPct), deliverable.anchorEur * 10 * factors.tierMultiplier * 0.6),
+      Math.max(
+        yearlyMarket.marketEur,
+        yearlyResourceCost * (1 + marginPct),
+        deliverable.anchorEur * 10 * factors.tierMultiplier * factors.marketRegionFactor * 0.6,
+      ),
     );
     quote.clientPriceYearlyEur = applyPaymentFees(yearlySubtotal, provider).clientEur;
   }
@@ -222,6 +243,7 @@ export function quoteVerticalPackage(input: {
   competitionScore?: number | null;
   marketIntensity?: number | null;
   paymentProvider?: PaymentProviderId;
+  marketRegion?: MarketRegion | null;
 }): QuoteBreakdown {
   return calculateDeliverableQuote({
     deliverableId: 'vertical-package',
@@ -232,5 +254,6 @@ export function quoteVerticalPackage(input: {
     competitionScore: input.competitionScore,
     marketIntensity: input.marketIntensity,
     paymentProvider: input.paymentProvider,
+    marketRegion: input.marketRegion,
   });
 }

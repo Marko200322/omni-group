@@ -10,6 +10,7 @@ import { getIndustryCategory, getPlanPriceForCategory, type PlanSlug } from '../
 import { getDeliverable } from '../../billing/lib/deliverable-catalog';
 import {
   calculateDeliverableQuote,
+  type MarketRegion,
   type PaymentProviderId,
 } from '../../billing/lib/dynamic-pricing.engine';
 import { PaymentNotificationsService } from './payment-notifications.service';
@@ -1072,6 +1073,7 @@ export class PaymentsService {
       marketIntensity?: number;
       tamEstimateUsd?: number;
       competitionScore?: number;
+      marketRegion?: MarketRegion;
     }
   ) {
     const methods = this.getPaymentMethods();
@@ -1090,6 +1092,7 @@ export class PaymentsService {
       marketIntensity: input.marketIntensity ?? 55,
       tamEstimateUsd: input.tamEstimateUsd,
       competitionScore: input.competitionScore,
+      marketRegion: input.marketRegion,
     });
 
     const amount = quote.clientPriceEur;

@@ -68,6 +68,7 @@ export const BillingQuoteCatalogQueryDto = z
     tamEstimateUsd: z.coerce.number().finite().optional(),
     competitionScore: z.coerce.number().min(0).max(100).optional(),
     marketIntensity: z.coerce.number().min(0).max(100).optional(),
+    marketRegion: z.enum(['balkan', 'eu', 'dach', 'global']).optional(),
   })
   .strict();
 
@@ -93,6 +94,7 @@ export const BillingQuoteBodyDto = z
     tamEstimateUsd: z.number().finite().optional(),
     competitionScore: z.number().min(0).max(100).optional(),
     marketIntensity: z.number().min(0).max(100).optional(),
+    marketRegion: z.enum(['balkan', 'eu', 'dach', 'global']).optional(),
   })
   .strict();
 

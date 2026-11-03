@@ -46,6 +46,39 @@ describe('dynamic-pricing.engine', () => {
     expect(heavy).toBeGreaterThan(light);
   });
 
+  it('scales price by market region (balkan < eu < dach) and defaults to eu', () => {
+    const base = { deliverableId: 'ai-receptionist', paymentProvider: 'manual' as const };
+    const balkan = calculateDeliverableQuote({ ...base, marketRegion: 'balkan' });
+    const eu = calculateDeliverableQuote({ ...base, marketRegion: 'eu' });
+    const dach = calculateDeliverableQuote({ ...base, marketRegion: 'dach' });
+    const implicit = calculateDeliverableQuote(base);
+    expect(balkan.clientPriceEur).toBeLessThan(eu.clientPriceEur);
+    expect(dach.clientPriceEur).toBeGreaterThan(eu.clientPriceEur);
+    expect(implicit.clientPriceEur).toBe(eu.clientPriceEur);
+    expect(implicit.marketRegion).toBe('eu');
+    expect(dach.factors.marketRegionFactor).toBeCloseTo(1.8);
+    expect(balkan.factors.marketRegionFactor).toBeCloseTo(0.8);
+    // DACH anchor floor must lift the yearly price too.
+    expect(dach.clientPriceYearlyEur ?? 0).toBeGreaterThan(eu.clientPriceYearlyEur ?? 0);
+  });
+
+  it('quotes every catalog deliverable including market-v2 packages', () => {
+    for (const id of [
+      'ai-receptionist',
+      'ai-pilot',
+      'billing-automation',
+      'compliance-pack',
+      'website-care',
+      'lead-list',
+      'seo-geo-retainer',
+      'video-pipeline-retainer',
+    ]) {
+      const q = calculateDeliverableQuote({ deliverableId: id, paymentProvider: 'manual' });
+      expect(q.clientPriceEur).toBeGreaterThan(0);
+      expect(q.subtotalEur).toBeGreaterThanOrEqual(q.resourceCostEur);
+    }
+  });
+
   it('never prices below anchor-adjusted floor for setup-full', () => {
     const q = calculateDeliverableQuote({
       deliverableId: 'setup-full',

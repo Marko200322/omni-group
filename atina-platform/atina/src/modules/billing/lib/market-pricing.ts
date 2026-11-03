@@ -55,6 +55,27 @@ export const CATEGORY_MARKET_INDEX: Record<string, number> = {
   industrial: 1.35,
 };
 
+/**
+ * Regionalni množilac tržišta (2026): Balkan ~0.8× EU prosek, DACH ~1.8× (nearshore pozicija 55–60% nemačke cene).
+ * 'eu' je podrazumevana baza na koju su kalibrisane anchor cene kataloga.
+ */
+export type MarketRegion = 'balkan' | 'eu' | 'dach' | 'global';
+
+export const MARKET_REGION_MULTIPLIER: Record<MarketRegion, number> = {
+  balkan: 0.8,
+  eu: 1,
+  dach: 1.8,
+  global: 1,
+};
+
+export const MARKET_REGIONS: MarketRegion[] = ['balkan', 'eu', 'dach', 'global'];
+
+export function getMarketRegionMultiplier(region?: MarketRegion | string | null): number {
+  if (!region?.trim()) return 1;
+  const key = region.trim().toLowerCase() as MarketRegion;
+  return MARKET_REGION_MULTIPLIER[key] ?? 1;
+}
+
 export function getCategoryMarketIndex(categorySlug?: string | null): number {
   if (!categorySlug?.trim()) return 1;
   const key = categorySlug.trim().toLowerCase().replace(/\s+/g, '_');

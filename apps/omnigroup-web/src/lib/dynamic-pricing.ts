@@ -2,7 +2,9 @@
 
 import { resolveIndustryContext } from './industry-catalog';
 import { type PricingTier } from './category-pricing';
-import { getCategoryMarketIndex } from './market-pricing';
+import { getCategoryMarketIndex, getMarketRegionMultiplier, type MarketRegion } from './market-pricing';
+
+export type { MarketRegion } from './market-pricing';
 import {
   getDeliverable,
   type DeliverableBilling,
@@ -21,6 +23,7 @@ export type QuoteInput = {
   tamEstimateUsd?: number | null;
   competitionScore?: number | null;
   marketIntensity?: number | null;
+  marketRegion?: MarketRegion | null;
 };
 
 export type QuoteBreakdown = {
@@ -38,12 +41,14 @@ export type QuoteBreakdown = {
   clientPriceEur: number;
   clientPriceYearlyEur?: number;
   pricingTier: PricingTier;
+  marketRegion: MarketRegion;
   factors: {
     tamFactor: number;
     competitionFactor: number;
     intensityFactor: number;
     tierMultiplier: number;
     categoryMarketIndex: number;
+    marketRegionFactor: number;
   };
 };
 
@@ -108,9 +113,11 @@ function computeMarketValueEur(input: {
   tamEstimateUsd?: number | null;
   competitionScore?: number | null;
   marketIntensity?: number | null;
+  marketRegion?: MarketRegion | null;
 }) {
   const tierMultiplier = PRICING.tierMultipliers[input.pricingTier] ?? 1;
   const categoryMarketIndex = getCategoryMarketIndex(input.industryCategory);
+  const marketRegionFactor = getMarketRegionMultiplier(input.marketRegion);
   const tam = input.tamEstimateUsd ?? PRICING.defaultTamUsd;
   const tamFactor = clamp(Math.log10(Math.max(tam, 5000) / 10_000) + 1.15, 0.75, 2.2);
   const competition = clamp(input.competitionScore ?? 50, 0, 100);
@@ -119,8 +126,14 @@ function computeMarketValueEur(input: {
   const intensityFactor = 0.82 + intensity / 250;
   return {
     marketEur:
-      input.anchorEur * tierMultiplier * categoryMarketIndex * tamFactor * competitionFactor * intensityFactor,
-    factors: { tamFactor, competitionFactor, intensityFactor, tierMultiplier, categoryMarketIndex },
+      input.anchorEur *
+      tierMultiplier *
+      categoryMarketIndex *
+      marketRegionFactor *
+      tamFactor *
+      competitionFactor *
+      intensityFactor,
+    factors: { tamFactor, competitionFactor, intensityFactor, tierMultiplier, categoryMarketIndex, marketRegionFactor },
   };
 }
 
@@ -141,6 +154,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
   });
   const pricingTier = ctx.pricingTier;
   const provider = input.paymentProvider ?? 'manual';
+  const marketRegion: MarketRegion = input.marketRegion ?? 'eu';
   const subtypeIntensityBoost = ctx.vertical ? 1.04 : 1;
 
   const resourceCostEur = computeResourceCostEur(deliverable.resources, billing);
@@ -151,13 +165,13 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     tamEstimateUsd: input.tamEstimateUsd,
     competitionScore: input.competitionScore,
     marketIntensity: input.marketIntensity,
+    marketRegion,
   });
 
   const marginPct = PRICING.targetMarginPct / 100;
   const costFloor = resourceCostEur * (1 + marginPct);
-  const subtotalEur = roundPriceEur(
-    Math.max(marketEur, costFloor, deliverable.anchorEur * factors.tierMultiplier * 0.65) * subtypeIntensityBoost,
-  );
+  const anchorFloor = deliverable.anchorEur * factors.tierMultiplier * factors.marketRegionFactor * 0.65;
+  const subtotalEur = roundPriceEur(Math.max(marketEur, costFloor, anchorFloor) * subtypeIntensityBoost);
   const { feeEur, clientEur } = applyPaymentFees(subtotalEur, provider);
 
   const quote: QuoteBreakdown = {
@@ -174,6 +188,7 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
     paymentProvider: provider,
     clientPriceEur: clientEur,
     pricingTier,
+    marketRegion,
     factors,
   };
 
@@ -186,9 +201,14 @@ export function calculateDeliverableQuote(input: QuoteInput): QuoteBreakdown {
       tamEstimateUsd: input.tamEstimateUsd,
       competitionScore: input.competitionScore,
       marketIntensity: input.marketIntensity,
+      marketRegion,
     });
     const yearlySubtotal = roundPriceEur(
-      Math.max(yearlyMarket.marketEur, yearlyResourceCost * (1 + marginPct), deliverable.anchorEur * 10 * factors.tierMultiplier * 0.6),
+      Math.max(
+        yearlyMarket.marketEur,
+        yearlyResourceCost * (1 + marginPct),
+        deliverable.anchorEur * 10 * factors.tierMultiplier * factors.marketRegionFactor * 0.6,
+      ),
     );
     quote.clientPriceYearlyEur = applyPaymentFees(yearlySubtotal, provider).clientEur;
   }
