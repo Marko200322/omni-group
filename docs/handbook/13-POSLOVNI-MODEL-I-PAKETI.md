@@ -82,7 +82,7 @@ cena             = max(tržišna vrednost, pod troška, sidro × tier × REGION 
 
 ### Indikativne cene po regionu (manual, standard tier, intenzitet 55)
 
-Vrednosti izračunate motorom 2026-11-03 sa podrazumevanom konfiguracijom (TAM ≈ 116 k, konkurencija 57) — pri tim ulazima motor daje ≈ 1.96 × sidro. Zaokruženo na ceo evro; mesečni paketi označeni „/mes”.
+Vrednosti izračunate motorom 2026-11-03 sa podrazumevanom konfiguracijom i intenzitetom 55 (podrazumevana vrednost klizača na `/pricing`; TAM ≈ 116 k, konkurencija 57) — pri tim ulazima motor daje ≈ 1.96 × sidro. API poziv bez `marketIntensity` koristi 50 i daje ≈ 1.65 × sidro (npr. `audit` 647 / 809 / 1455 € za Balkan / EU / DACH). Zaokruženo na ceo evro; mesečni paketi označeni „/mes”.
 
 | ID | Balkan € | EU € | DACH € |
 |----|----------|------|--------|
