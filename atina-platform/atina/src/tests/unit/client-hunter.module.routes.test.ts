@@ -4,7 +4,7 @@ import express from 'express';
 import 'express-async-errors';
 import { ClientHunterModule } from '../../modules/client-hunter/client-hunter.module';
 import { sendError } from '../../utils/response';
-import { AppError, AuthenticationError } from '../../utils/errors';
+import { AppError, AuthenticationError, AuthorizationError } from '../../utils/errors';
 
 // eslint-disable-next-line no-var
 var clientHunterRepo: {
@@ -62,6 +62,7 @@ jest.mock('../../modules/client-hunter/service/hunting-stack.service', () => ({
 }));
 
 let authEnabled = true;
+let userRole = 'admin';
 jest.mock('../../api/middleware/auth.middleware', () => ({
   authenticate: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
     if (!authEnabled) {
@@ -69,9 +70,14 @@ jest.mock('../../api/middleware/auth.middleware', () => ({
     }
     (req as express.Request & { user?: { userId: string; role: string; email: string } }).user = {
       userId: 'u1',
-      role: 'user',
+      role: userRole,
       email: 'u@test.com',
     };
+    next();
+  },
+  requireAdmin: (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    const user = (req as express.Request & { user?: { role: string } }).user;
+    if (user?.role !== 'admin') throw new AuthorizationError('Insufficient permissions');
     next();
   },
 }));
@@ -113,6 +119,7 @@ describe('ClientHunterModule HTTP routes', () => {
 
   beforeEach(() => {
     authEnabled = true;
+    userRole = 'admin';
     jest.clearAllMocks();
     clientHunterRepo.listByUser.mockResolvedValue({ rows: [{ id: 'w1' }] });
     clientHunterRepo.create.mockResolvedValue({ rows: [{ id: 'new-w' }] });
@@ -154,6 +161,12 @@ describe('ClientHunterModule HTTP routes', () => {
     expect(res.status).toBe(200);
     expectSuccessSchema(res.body);
     expect(res.body.data.workspaces).toMatchObject({ total: 7 });
+  });
+
+  it('POST /bootstrap is admin-only', async () => {
+    userRole = 'user';
+    const res = await request(server).post('/client-hunter/bootstrap').send({});
+    expect(res.status).toBe(403);
   });
 
   it('POST /pipeline/run executes nurture loop', async () => {

@@ -92,7 +92,7 @@ describe('PaymentsModule HTTP routes', () => {
       .mockResolvedValue(undefined);
     getPaymentMethodsSpy = jest
       .spyOn(PaymentsService.prototype, 'getPaymentMethods')
-      .mockReturnValue({ mode: 'manual', methods: [], manualConfigured: false, note: undefined });
+      .mockReturnValue({ mode: 'manual', methods: [], manualConfigured: false, note: undefined, manualSetupMissing: true });
     createManualCheckoutSpy = jest
       .spyOn(PaymentsService.prototype, 'createManualCheckout')
       .mockResolvedValue({ paymentId: 'p-manual', reference: 'ATINA-X', amount: 29, currency: 'EUR', instructions: {} });
@@ -388,6 +388,10 @@ describe('PaymentsModule HTTP routes', () => {
       .post('/payments/manual/checkout')
       .send({ planSlug: 'pro', billingCycle: 'monthly' });
     expect(res.status).toBe(201);
-    expect(createManualCheckoutSpy).toHaveBeenCalledWith('u1', 'pro', 'monthly', undefined);
+    expect(createManualCheckoutSpy).toHaveBeenCalledWith('u1', 'pro', 'monthly', undefined, {
+      buyerBillingAddress: undefined,
+      buyerCompany: undefined,
+      buyerVatId: undefined,
+    });
   });
 });

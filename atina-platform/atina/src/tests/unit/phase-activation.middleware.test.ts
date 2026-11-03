@@ -149,19 +149,40 @@ describe('phase activation middleware', () => {
     expect(getPhaseOrder()).toEqual(['v1', 'v2', 'v3', 'v4', 'v5', 'v6']);
   });
 
-  it('allows write on DB error (fail-open) and logs a warning', async () => {
+  it('on DB error falls back to v1 and blocks writes to higher-phase modules', async () => {
     mockQuery.mockRejectedValueOnce(new Error('db down'));
 
     const guard = createPhaseActivationGuard('forge');
     const req = { method: 'POST' } as Request;
+    const json = jest.fn();
+    const res = { status: jest.fn(() => ({ json })) } as unknown as Response;
     const next = jest.fn() as NextFunction;
 
-    await guard(req, {} as Response, next);
+    await guard(req, res, next);
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'Phase activation guard fallback (allowing request)',
-      expect.objectContaining({ moduleSlug: 'forge' })
+      'Phase read from DB failed; using env/default',
+      expect.objectContaining({ error: 'db down' })
     );
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({ code: 'PHASE_LOCKED' }),
+      })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('on DB error honours the PHASE env fallback', async () => {
+    process.env.PHASE = 'v3';
+    mockQuery.mockRejectedValueOnce(new Error('db down'));
+
+    const guard = createPhaseActivationGuard('forge');
+    const next = jest.fn() as NextFunction;
+
+    await guard({ method: 'POST' } as Request, {} as Response, next);
+
     expect(next).toHaveBeenCalled();
   });
 

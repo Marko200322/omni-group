@@ -37,7 +37,7 @@ describe('PaymentsController', () => {
       } as Request,
       r
     );
-    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined);
+    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined, { buyerBillingAddress: undefined, buyerCompany: undefined, buyerVatId: undefined });
     expect(r.status).toHaveBeenCalledWith(201);
     expect(r.json).toHaveBeenCalled();
   });
@@ -49,7 +49,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'starter' } } as Request,
       r
     );
-    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'starter', 'monthly', undefined);
+    expect(mockService.createStripeCheckoutSession).toHaveBeenCalledWith('u1', 'starter', 'monthly', undefined, { buyerBillingAddress: undefined, buyerCompany: undefined, buyerVatId: undefined });
   });
 
   it('stripeWebhook forwards buffer and signature', async () => {
@@ -100,7 +100,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'enterprise', billingCycle: 'monthly' } } as Request,
       r
     );
-    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined);
+    expect(mockService.createPayPalOrder).toHaveBeenCalledWith('u1', 'enterprise', 'monthly', undefined, { buyerBillingAddress: undefined, buyerCompany: undefined, buyerVatId: undefined });
     expect(r.status).toHaveBeenCalledWith(201);
   });
 
@@ -119,7 +119,7 @@ describe('PaymentsController', () => {
       { ...authed(), body: { planSlug: 'pro', billingCycle: 'yearly' } } as Request,
       r
     );
-    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined);
+    expect(mockService.createWiseTransfer).toHaveBeenCalledWith('u1', 'pro', 'yearly', undefined, { buyerBillingAddress: undefined, buyerCompany: undefined, buyerVatId: undefined });
     expect(r.status).toHaveBeenCalledWith(201);
   });
 

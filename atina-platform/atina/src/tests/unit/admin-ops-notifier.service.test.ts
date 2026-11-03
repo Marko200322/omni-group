@@ -1,5 +1,3 @@
-import { adminOpsNotifier } from '../../modules/admin/service/admin-ops-notifier.service';
-
 jest.mock('../../integrations/telegram-direct', () => ({
   sendTelegramDirect: jest.fn().mockResolvedValue(true),
 }));
@@ -19,9 +17,13 @@ describe('AdminOpsNotifierService', () => {
   });
 
   it('sends when telegram is configured', async () => {
+    jest.resetModules();
     const { sendTelegramDirect } = await import('../../integrations/telegram-direct');
-    expect(adminOpsNotifier.isConfigured()).toBe(true);
-    const ok = await adminOpsNotifier.notify('payment_pending', ['Test line']);
+    const { adminOpsNotifier: onNotifier } = await import(
+      '../../modules/admin/service/admin-ops-notifier.service'
+    );
+    expect(onNotifier.isConfigured()).toBe(true);
+    const ok = await onNotifier.notify('payment_pending', ['Test line']);
     expect(ok).toBe(true);
     expect(sendTelegramDirect).toHaveBeenCalled();
   });
