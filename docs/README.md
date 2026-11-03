@@ -6,6 +6,10 @@ Ovo je središte sve dokumentacije monorepa. Ako prvi put gledaš ovaj direktori
 
 ---
 
+## 0) Priručnik projekta (kompletna dokumentacija, čitljiv pregled)
+
+Tematski uređena dokumentacija celog monorepa — arhitektura, sve komponente, API referenca (61 modul / 348 ruta), model podataka, env, razvoj, deploy, poslovni model (25 isporuka), analiza tržišta 2026 i predlog paketa: **[`handbook/README.md`](./handbook/README.md)**. Operativne checkliste i evidencije ispod ostaju izvor za korak-po-korak rad; priručnik ih ne zamenjuje.
+
 ## 1) Vlasnik dolazi prvi put — odakle krenuti
 
 | Cilj | Ulazni dokument |

@@ -6,6 +6,8 @@
 
 Status legenda: `[ ]` todo · `[~]` u toku · `[x]` done · `[!]` blokirano (spoljni API)
 
+> **Napomena (2026-11-03):** ova checklista opisuje katalog **v1 (17 paketa)**. Katalog **v2** ima **25 paketa** (dodati `ai-pilot`, `billing-automation`, `compliance-pack`, `website-care`, `lead-list`, `seo-geo-retainer`, `video-pipeline-retainer`, `ai-receptionist`; `audit` repozicioniran na 490 €) i dimenziju `marketRegion` u motoru cena. Aktuelna tabela paketa, handlera i acceptance ugovora: [`handbook/13-POSLOVNI-MODEL-I-PAKETI.md`](./handbook/13-POSLOVNI-MODEL-I-PAKETI.md); obrazloženje: [`handbook/15-PREDLOG-NOVIH-PAKETA.md`](./handbook/15-PREDLOG-NOVIH-PAKETA.md). E2E skripta `scripts/e2e-fulfillment-all-packages.ps1` pokriva svih 25.
+
 ---
 
 ## Faza 0 — Contract (acceptance criteria)

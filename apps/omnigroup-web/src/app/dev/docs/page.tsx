@@ -12,6 +12,27 @@ export const metadata: Metadata = {
 
 const sections: DocSection[] = [
   {
+    title: 'Handbook (priručnik projekta)',
+    paths: [
+      'docs/handbook/README.md',
+      'docs/handbook/01-PREGLED-PROJEKTA.md',
+      'docs/handbook/02-ARHITEKTURA.md',
+      'docs/handbook/03-PYTHON-FORGE-ASTRA.md',
+      'docs/handbook/04-ATINA-EXPRESS-SAAS.md',
+      'docs/handbook/05-ATINA-SYSTEM-NEST.md',
+      'docs/handbook/06-OMNIGROUP-WEB.md',
+      'docs/handbook/07-ALATI-YOUTUBE-NAPLATA.md',
+      'docs/handbook/08-API-REFERENCA.md',
+      'docs/handbook/09-MODEL-PODATAKA.md',
+      'docs/handbook/10-KONFIGURACIJA-I-ENV.md',
+      'docs/handbook/11-RAZVOJ-I-TESTIRANJE.md',
+      'docs/handbook/12-DEPLOY-I-OPERACIJE.md',
+      'docs/handbook/13-POSLOVNI-MODEL-I-PAKETI.md',
+      'docs/handbook/14-ANALIZA-TRZISTA-2026.md',
+      'docs/handbook/15-PREDLOG-NOVIH-PAKETA.md',
+    ],
+  },
+  {
     title: 'Entry and navigation',
     paths: [
       'README.md',
