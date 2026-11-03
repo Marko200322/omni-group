@@ -5,6 +5,7 @@ import {
   getPlanPriceForCategory,
   type PlanSlug,
 } from './category-pricing';
+import { getDeliverable } from './deliverable-catalog';
 
 export { formatEur };
 
@@ -92,23 +93,19 @@ export function getMarketingPlansForCategory(industryCategory?: string | null): 
   }));
 }
 
+function addonFromCatalog(id: string, desc: string, from = false) {
+  const d = getDeliverable(id);
+  return {
+    name: d?.name ?? id,
+    price: `${from ? 'from ' : ''}${formatEur(d?.anchorEur ?? 0)}`,
+    once: true,
+    desc,
+  };
+}
+
+/** Derived from the deliverable catalog so plan add-on prices never drift from /pricing. */
 export const IMPLEMENTATION_ADDONS = [
-  {
-    name: 'Quick setup',
-    price: '€290',
-    once: true,
-    desc: 'Env, login, manual billing, contact form — ready for first clients in 1–2 days.',
-  },
-  {
-    name: 'Full onboarding',
-    price: '€890',
-    once: true,
-    desc: 'Data migration, CRM, automations, team training, and 30 days of support.',
-  },
-  {
-    name: 'Custom project',
-    price: 'from €2,490',
-    once: true,
-    desc: 'Integrations, custom workflows, deploy on your domain, and SLA.',
-  },
+  addonFromCatalog('setup-quick', 'Env, login, manual billing, contact form — ready for first clients in 5–7 days.'),
+  addonFromCatalog('setup-full', 'Data migration, CRM, automations, team training, and 30 days of support.'),
+  addonFromCatalog('setup-custom', 'Integrations, custom workflows, deploy on your domain, and SLA.', true),
 ];

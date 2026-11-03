@@ -31,6 +31,8 @@ export function serviceCatalogHref(serviceId: string): string {
 
 export type CatalogItem = {
   id: string;
+  /** Set when the item maps 1:1 to a billing-engine deliverable; price then comes from the catalog anchor. */
+  deliverableId?: string;
   name: string;
   description: string;
   priceLabel: string;
@@ -257,71 +259,81 @@ export const PRODUCT_CATEGORIES: CatalogCategory[] = [
   },
 ];
 
+/**
+ * Build a service item from the deliverable catalog so /services never drifts from the billing engine.
+ * Prices shown are EU-base anchors; the live quote on /pricing applies industry + region factors.
+ */
+function serviceFromCatalog(
+  id: string,
+  overrides: Partial<Pick<CatalogItem, 'description' | 'badge'>> & { from?: boolean } = {},
+): CatalogItem {
+  const d = getDeliverable(id);
+  if (!d) throw new Error(`Unknown deliverable in SERVICE_CATEGORIES: ${id}`);
+  const isMonthly = d.billing === 'monthly';
+  const price = formatEur(d.anchorEur);
+  return {
+    id: d.id,
+    deliverableId: d.id,
+    name: d.name,
+    description: overrides.description ?? d.description,
+    priceLabel: `${overrides.from ? 'from ' : ''}${price}${isMonthly ? '/mo' : ''}`,
+    priceMonthly: isMonthly ? d.anchorEur : undefined,
+    priceOnce: isMonthly ? undefined : d.anchorEur,
+    href: serviceCatalogHref(d.id),
+    badge: overrides.badge,
+  };
+}
+
 /** Services — what the team delivers around the platform (one-time or retainer). */
 export const SERVICE_CATEGORIES: CatalogCategory[] = [
+  {
+    id: 'ai-automation',
+    title: 'AI & automation',
+    subtitle: 'Start small, measure, then scale — audit → pilot → retainer',
+    icon: Bot,
+    items: [
+      serviceFromCatalog('audit', {
+        description: 'Stack, security, and AI-readiness review with an automation roadmap — fee credited to your first project.',
+        badge: 'Start here',
+      }),
+      serviceFromCatalog('ai-pilot', { badge: 'Popular' }),
+      serviceFromCatalog('ai-receptionist'),
+      serviceFromCatalog('billing-automation'),
+      serviceFromCatalog('compliance-pack'),
+    ],
+  },
   {
     id: 'implementation',
     title: 'Implementation & go-live',
     subtitle: 'From empty repo to first paying client',
     icon: Wrench,
     items: [
-      {
-        id: 'setup-quick',
-        name: 'Quick setup',
+      serviceFromCatalog('setup-quick', {
         description: 'Env, Docker, login, manual billing, contact form, smoke test.',
-        priceLabel: '€290',
-        priceOnce: 290,
-        href: serviceCatalogHref('setup-quick'),
-      },
-      {
-        id: 'setup-full',
-        name: 'Full onboarding',
+      }),
+      serviceFromCatalog('setup-full', {
         description: 'CRM, automations, data migration, team training, 30 days of support.',
-        priceLabel: '€890',
-        priceOnce: 890,
-        href: serviceCatalogHref('setup-full'),
         badge: 'Popular',
-      },
-      {
-        id: 'setup-custom',
-        name: 'Custom deploy',
+      }),
+      serviceFromCatalog('setup-custom', {
         description: 'Your domain, SSL, backup, monitoring, and SLA agreement.',
-        priceLabel: 'from €2,490',
-        priceOnce: 2490,
-        href: serviceCatalogHref('setup-custom'),
-      },
+        from: true,
+      }),
     ],
   },
   {
     id: 'consulting',
     title: 'Consulting & architecture',
-    subtitle: 'Strategy, integrations, and technical audit',
+    subtitle: 'Integrations and process design',
     icon: Cpu,
     items: [
-      {
-        id: 'audit',
-        name: 'Technical audit',
-        description: 'Stack review, security, env check, and production migration plan.',
-        priceLabel: '€490',
-        priceOnce: 490,
-        href: serviceCatalogHref('audit'),
-      },
-      {
-        id: 'integration',
-        name: 'Custom integration',
+      serviceFromCatalog('integration', {
         description: 'Nango, OpenRouter, scraper, email — connect your existing tools.',
-        priceLabel: 'from €790',
-        priceOnce: 790,
-        href: serviceCatalogHref('integration'),
-      },
-      {
-        id: 'workflow-design',
-        name: 'Workflow design',
+        from: true,
+      }),
+      serviceFromCatalog('workflow-design', {
         description: 'Map business processes into automations and task templates.',
-        priceLabel: '€590',
-        priceOnce: 590,
-        href: serviceCatalogHref('workflow-design'),
-      },
+      }),
     ],
   },
   {
@@ -338,55 +350,32 @@ export const SERVICE_CATEGORIES: CatalogCategory[] = [
         priceMonthly: 39,
         href: '/pricing',
       },
-      {
-        id: 'support-priority',
-        name: 'Priority support',
+      serviceFromCatalog('website-care'),
+      serviceFromCatalog('support-priority', {
         description: 'Response within 24h, help with env and minor changes.',
-        priceLabel: '€149/mo',
-        priceMonthly: 149,
-        href: serviceCatalogHref('support-priority'),
-      },
-      {
-        id: 'support-dedicated',
-        name: 'Dedicated support',
+      }),
+      serviceFromCatalog('support-dedicated', {
         description: 'Slack channel, 8h response, monthly health check.',
-        priceLabel: '€390/mo',
-        priceMonthly: 390,
-        href: serviceCatalogHref('support-dedicated'),
         badge: 'Partner',
-      },
+      }),
     ],
   },
   {
     id: 'growth',
     title: 'Growth & marketing',
-    subtitle: 'Help selling the platform to your clients',
+    subtitle: 'Leads, visibility, and content — delivered monthly or as a one-off',
     icon: LineChart,
     items: [
-      {
-        id: 'landing',
-        name: 'Landing + copy',
-        description: 'Custom homepage and copy for your niche.',
-        priceLabel: '€690',
-        priceOnce: 690,
-        href: serviceCatalogHref('landing'),
-      },
-      {
-        id: 'white-label-setup',
-        name: 'White-label packaging',
+      serviceFromCatalog('lead-list'),
+      serviceFromCatalog('seo-geo-retainer'),
+      serviceFromCatalog('video-pipeline-retainer'),
+      serviceFromCatalog('landing', { description: 'Custom homepage and copy for your niche.' }),
+      serviceFromCatalog('white-label-setup', {
         description: 'Branding, domain, pricing, and materials for partner sales.',
-        priceLabel: '€1,490',
-        priceOnce: 1490,
-        href: serviceCatalogHref('white-label-setup'),
-      },
-      {
-        id: 'sales-enablement',
-        name: 'Sales enablement',
+      }),
+      serviceFromCatalog('sales-enablement', {
         description: 'Demo script, FAQ, onboarding materials for your sales team.',
-        priceLabel: '€990',
-        priceOnce: 990,
-        href: serviceCatalogHref('sales-enablement'),
-      },
+      }),
     ],
   },
 ];
@@ -405,7 +394,7 @@ export function withCatalogPricing(
   return categories.map((cat) => ({
     ...cat,
     items: cat.items.map((item) => {
-      if (item.priceOnce != null) return item;
+      if (item.priceOnce != null || item.deliverableId) return item;
       if (item.priceLabel === 'included') return item;
       if (item.id === 'support-basic') {
         const starter = getPlanPriceForCategory('starter', 'monthly', industryCategory);
